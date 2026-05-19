@@ -1,5 +1,7 @@
 package com.autowashpro.backend.model.entity;
 
+import java.time.LocalDateTime;
+
 public class Vehicle {
     private Long id;
     private Long customerId;
