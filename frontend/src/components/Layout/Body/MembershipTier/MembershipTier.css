@@ -1,0 +1,181 @@
+/* =========================================
+   MEMBERSHIP TIER SECTION
+   ========================================= */
+.membership {
+    background-color: #f4f6fb;
+    padding: 64px 24px;
+}
+
+.membership__container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 48px;
+}
+
+/* ---- PHẦN TRÁI ---- */
+.membership__intro {
+    flex: 0 0 260px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.membership__title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: #0d1b4b;
+    line-height: 1.25;
+    letter-spacing: 0.02em;
+}
+
+.membership__desc {
+    font-size: 0.9rem;
+    color: #555;
+    line-height: 1.7;
+}
+
+.membership__cta {
+    align-self: flex-start;
+    padding: 12px 24px;
+    background-color: #0d1b4b;
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.membership__cta:hover {
+    background-color: #1a2d6b;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(13, 27, 75, 0.25);
+}
+
+/* ---- PHẦN PHẢI: 3 CARDS ---- */
+.membership__cards {
+    flex: 1;
+    display: flex;
+    gap: 16px;
+    align-items: stretch;
+}
+
+/* ---- CARD CƠ BẢN ---- */
+.tier-card {
+    flex: 1;
+    background-color: #ffffff;
+    border: 1px solid #e4e8f0;
+    border-radius: 14px;
+    padding: 28px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tier-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+}
+
+/* ---- CARD NỔI BẬT (GOLD) ---- */
+.tier-card--featured {
+    background-color: #0d1b4b;
+    border-color: #0d1b4b;
+    color: #ffffff;
+    box-shadow: 0 8px 32px rgba(13, 27, 75, 0.3);
+}
+
+.tier-card--featured:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(13, 27, 75, 0.4);
+}
+
+/* ---- HEADER (icon + level badge) ---- */
+.tier-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.tier-card__icon {
+    font-size: 1.6rem;
+}
+
+.tier-card__level {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: #888;
+    background-color: #f0f2f8;
+    padding: 3px 10px;
+    border-radius: 99px;
+}
+
+.tier-card--featured .tier-card__level {
+    color: #f5a623;
+    background-color: rgba(245, 166, 35, 0.15);
+}
+
+/* ---- TÊN TIER ---- */
+.tier-card__name {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #0d1b4b;
+    margin: 0;
+}
+
+.tier-card--featured .tier-card__name {
+    color: #f5a623;
+}
+
+/* ---- DANH SÁCH QUYỀN LỢI ---- */
+.tier-card__perks {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+}
+
+.tier-card__perk {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 0.875rem;
+    color: #444;
+    line-height: 1.5;
+}
+
+.tier-card--featured .tier-card__perk {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.tier-card__check {
+    font-size: 0.8rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+/* ---- HIGHLIGHT (discount text) ---- */
+.tier-card__highlight {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #0d1b4b;
+    letter-spacing: 0.04em;
+    padding-top: 12px;
+    border-top: 1px solid #e4e8f0;
+    margin: 0;
+}
+
+.tier-card--featured .tier-card__highlight {
+    color: #f5a623;
+    border-top-color: rgba(255, 255, 255, 0.15);
+}

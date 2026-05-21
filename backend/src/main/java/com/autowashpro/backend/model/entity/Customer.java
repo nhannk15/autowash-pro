@@ -1,24 +1,45 @@
 package com.autowashpro.backend.model.entity;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.util.List;
 
-public class Customer {
-    private Long id;
-    private Long userId;
-    private String fullName;
-    private String phoneNumber;
-    private String email;
-    private LocalDate dateOfBirth;
-    private Long tierId;
-    private Long currentPoints;
-    private Long lifetimePoints;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "customers")
+public class Customer extends User {
+
+    @ManyToOne
+    @JoinColumn(name = "tier_id", nullable = true)
+    private MembershipTier tier;
+
+    @Column(name = "current_points")
+    private Long currentPoints = 0L;
+
+    @Column(name = "lifetime_points")
+    private Long lifetimePoints = 0L;
+
+    @Column(name = "tier_start_date", nullable = false)
     private LocalDate tierStartDate;
-    private LocalDate tierEndDate; // new
+
+    @Column(name = "tier_end_date", nullable = false)
+    private LocalDate tierEndDate;
+
+    @Column(name = "last_review_date", nullable = true)
     private LocalDate lastReviewDate;
+
+    @Column(name = "next_review_date", nullable = false)
     private LocalDate nextReviewDate;
-    private Boolean isActive;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "customer")
+    private List<Vehicle> vehicles;
+
+    @OneToMany(mappedBy = "customer")
+    private List<Booking> bookings;
 
 }
