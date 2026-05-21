@@ -1,12 +1,11 @@
 .login-container {
     max-width: 420px;
     width: 100%;
-    margin: 100px auto;
     padding: 40px;
     border-radius: 12px;
-    border: 1px solid #e8e8e8;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    background: #fff;
+    border: 1px solid #DCCFBC;
+    box-shadow: 0 4px 24px rgba(44, 57, 65, 0.12);
+    background: #FAF9F7;
 }
 
 .login-title {
@@ -15,7 +14,40 @@
     margin-bottom: 24px;
     font-size: 24px;
     font-weight: 600;
-    color: #1a1a1a;
+    color: #2C3941;
+}
+
+.login-container .ant-btn-primary {
+    background: #2C3941;
+    border-color: #2C3941;
+    transition: all 0.3s ease;
+}
+
+.login-container .ant-btn-primary:hover {
+    background: #6a767b !important;
+    border-color: #6a767b !important;
+}
+
+.login-container .ant-divider {
+    border-color: #DCCFBC;
+}
+
+.login-container .ant-input:focus,
+.login-container .ant-input-focused,
+.login-container .ant-input:hover,
+.login-container .ant-input-password:hover .ant-input,
+.login-container .ant-input-affix-wrapper:hover {
+    border-color: #96AAB0 !important;
+}
+
+.login-container .ant-checkbox-checked .ant-checkbox-inner {
+    background-color: #2C3941;
+    border-color: #2C3941;
+}
+
+.login-container .ant-form-item-label>label {
+    color: #2C3941;
+    font-weight: 500;
 }
 
 .google-btn {
@@ -23,20 +55,49 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    border: 1px solid #d9d9d9;
-    color: #595959;
+    border: 1px solid #DCCFBC;
+    color: #2C3941;
     font-weight: 500;
+    background: #fff;
     transition: all 0.3s ease;
 }
 
 .google-btn:hover {
-    border-color: #1C2830 !important;
-    color: #3D4F58 !important;
-    background: #FAF9F7 !important;
+    border-color: #2C3941 !important;
+    color: #2C3941 !important;
+    background: #F5ECDA !important;
 }
 
 .google-btn img {
     height: 16px;
     width: 16px;
     object-fit: contain;
+}
+
+/* Tablet */
+@media (max-width: 768px) {
+    .login-container {
+        max-width: 380px;
+        padding: 32px 28px;
+    }
+
+    .login-title {
+        font-size: 22px;
+        margin-bottom: 20px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+    .login-container {
+        max-width: 100%;
+        padding: 24px 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 12px rgba(44, 57, 65, 0.08);
+    }
+
+    .login-title {
+        font-size: 20px;
+        margin-bottom: 16px;
+    }
 }
