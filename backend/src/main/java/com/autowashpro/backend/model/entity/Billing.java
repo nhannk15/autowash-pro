@@ -3,16 +3,52 @@ package com.autowashpro.backend.model.entity;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
 
+import org.springframework.boot.autoconfigure.jms.JmsProperties.Listener.Session;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "billings")
 public class Billing {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long sessionId;
+
+    @OneToOne
+    @JoinColumn(name = "session_id")
+    private Session session;
+
+    @OneToOne(optional = true)
+    @JoinColumn(name = "voucher_id", nullable = true)
     private Long voucherId;
+
+    @Column(name = "original_amount", nullable = false)
     private BigInteger originalAmount;
+
+    @Column(name = "discount_amount", nullable = true)
     private BigInteger discountAmount;
+
+    @Column(name = "final_amount", nullable = false)
     private BigInteger finalAmount;
+
+    @Column(name = "payment_method", nullable = false)
     private String paymentMethod;
+
+    @Column(name = "payment_status", nullable = false)
     private String paymentStatus;
+
+    @Column(name = "paid_at", nullable = false)
     private LocalDateTime paidAt;
+
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
     /**
