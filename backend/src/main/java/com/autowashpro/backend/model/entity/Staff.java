@@ -1,17 +1,16 @@
 package com.autowashpro.backend.model.entity;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
-public class Staff {
-    private Long id;
-    private Long userId;
-    private String fullName;
-    private String phoneNumber;
-    private String role;
-    private Boolean isActive;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "staff")
+public class Staff extends User {
+
+    @Column(name = "hire_date", nullable = false)
     private LocalDate hireDate;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt; // new
 
 }
