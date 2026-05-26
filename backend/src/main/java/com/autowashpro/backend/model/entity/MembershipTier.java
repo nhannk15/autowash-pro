@@ -49,4 +49,7 @@ public class MembershipTier {
 
     @OneToMany(mappedBy = "downgradeTier")
     private List<TierRule> downgradedRules;
+
+    @OneToMany(mappedBy = "membershipTier")
+    private List<Promotion> promotions;
 }

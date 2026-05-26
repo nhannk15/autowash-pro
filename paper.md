@@ -34,7 +34,7 @@
                          │   User   │
                          └────┬─────┘
                   ┌───────────┴───────────┐
-                0..1                    1:1
+                  1:1                    1:1
                   │                       │
           ┌───────┴────────┐     ┌────────┴───────┐
           │    Customer    │     │     Staff      │
@@ -115,7 +115,7 @@
 
 | # | Từ | Tới | Kiểu | FK | Mô tả |
 |---|----|----|------|-----|-------|
-| 1 | User | Customer | 1:0..1 | Customer.user_id | Walk-in không cần User |
+| 1 | User | Customer | 1:1 | Customer.user_id | Bắt buộc có User để tính điểm |
 | 2 | User | Staff | 1:1 | Staff.user_id | 1 User = 1 Staff |
 | 3 | Customer | MembershipTier | N:1 | Customer.tier_id | Khách thuộc 1 hạng |
 | 4 | Customer | Vehicle | 1:N | Vehicle.customer_id | 1 khách nhiều xe |
@@ -169,7 +169,7 @@
 | Thuộc tính | Kiểu | Ràng buộc | Mô tả |
 |---|---|---|---|
 | customer_id | INT | PK, AUTO_INCREMENT | |
-| user_id | INT | FK → User, UNIQUE, NULL | NULL = vãng lai (walk-in) |
+| user_id | INT | FK → User, UNIQUE, NOT NULL | Bắt buộc có để tính điểm |
 | full_name | VARCHAR(100) | NOT NULL | Họ tên |
 | phone_number | VARCHAR(15) | UNIQUE, NOT NULL | SĐT — định danh chính |
 | email | VARCHAR(100) | UNIQUE, NULL | Email tùy chọn |

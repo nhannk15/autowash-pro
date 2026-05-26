@@ -1,16 +1,28 @@
 package com.autowashpro.backend.model.entity;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "staff")
 public class Staff extends User {
 
-    @Column(name = "hire_date", nullable = false)
-    private LocalDate hireDate;
+    @Column(name = "hired_date", nullable = false)
+    private LocalDate hiredDate;
 
+    @OneToMany
+    @JoinColumn(name = "staff_id")
+    private List<WashSession> washSessions;
+
+    @OneToMany(mappedBy = "staff")
+    private List<Promotion> promotions;
+
+    @OneToMany(mappedBy = "staff")
+    private List<PointTransaction> pointTransactions;
 }
