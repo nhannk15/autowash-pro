@@ -3,6 +3,7 @@ import googleIcon from '../../assets/google.svg';
 import "./LoginForm.css";
 
 export function LoginForm() {
+
     const onFinish = (values) => {
         console.log("Success:", values);
     };
@@ -43,6 +44,20 @@ export function LoginForm() {
                 <Form.Item>
                     <Button block type="primary" htmlType="submit" size="large">
                         Login
+                    </Button>
+                </Form.Item>
+
+                <Form.Item>
+                    <p>Don't have an account?</p>
+                    <Button className="register-btn" block type="default" size="large">
+                        Register
+                    </Button>
+                </Form.Item>
+
+                <Form.Item>
+                    <p>Forgot password?</p>
+                    <Button className="forgot-password-btn" block type="default" size="large">
+                        Forgot password
                     </Button>
                 </Form.Item>
             </Form>

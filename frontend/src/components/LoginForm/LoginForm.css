@@ -24,8 +24,8 @@
 }
 
 .login-container .ant-btn-primary:hover {
-    background: #6a767b !important;
-    border-color: #6a767b !important;
+    background: #61717b !important;
+    border-color: #61717b !important;
 }
 
 .login-container .ant-divider {
@@ -50,6 +50,31 @@
     font-weight: 500;
 }
 
+.forgot-password-btn,
+.register-btn {
+    background: #FAF9F7;
+    border: 1px solid #2C3941;
+    color: #2C3941;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.forgot-password-btn,
+.register-btn {
+    background: #FAF9F7;
+    border: 1px solid #2C3941;
+    color: #2C3941;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.forgot-password-btn:hover,
+.register-btn:hover {
+    background: #F5ECDA !important;
+    color: #2C3941 !important;
+    border-color: #96AAB0 !important;
+}
+
 .google-btn {
     display: flex;
     align-items: center;
@@ -58,7 +83,7 @@
     border: 1px solid #DCCFBC;
     color: #2C3941;
     font-weight: 500;
-    background: #fff;
+    background: #FAF9F7;
     transition: all 0.3s ease;
 }
 
