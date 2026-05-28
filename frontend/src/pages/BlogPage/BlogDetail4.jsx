@@ -27,10 +27,10 @@ const relatedPosts = [
     },
     {
         id: 3,
-        title: 'Tác dụng vượt trội của việc khử mùi diệt khuẩn dàn lạnh ô tô',
+        title: 'Cách chăm sóc ngoại thất ô tô tại nhà an toàn, tài mới đều làm được',
         date: '04/05/2026',
-        image: imgKhuMui,
-        link: '#'
+        image: imgKhoangMay,
+        link: '/blog/cach-cham-soc-ngoai-that-o-to-tai-nha'
     }
 ]
 

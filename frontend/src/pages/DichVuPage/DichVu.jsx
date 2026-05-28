@@ -5,8 +5,9 @@ import interiorImg from '../../assets/Service/VeSinhNoiThat.jpg';
 import ceramicImg from '../../assets/Service/PhuCeramic.png';
 import engineImg from '../../assets/Service/VeSinhKhoangMay.png';
 import odorImg from '../../assets/Service/KhuMui.png';
-import maintenanceImg from '../../assets/Service/BaoDuongNhanh.png';
 import tintingImg from '../../assets/Service/DanPhimCachNhiet.png';
+import baoDuong from '../../assets/Service/baoDuong.jpg';
+import cachNhiet from '../../assets/Service/cachNhiet.jpg';
 
 const services = [
     {
@@ -129,7 +130,7 @@ const services = [
         name: 'Bảo dưỡng nhanh tổng quát',
         type: 'basic',
         shortDesc: 'Kiểm tra và bảo dưỡng các bộ phận thiết yếu như Bugi, lọc gió, phanh, nước làm mát để xe luôn vận hành tin cậy.',
-        image: maintenanceImg,
+        image: baoDuong,
         duration: '60 - 90 phút',
         priceSedan: '350.000đ',
         priceSuv: '450.000đ',
@@ -152,7 +153,7 @@ const services = [
         name: 'Dán phim cách nhiệt chống nóng cao cấp',
         type: 'premium',
         shortDesc: 'Bảo vệ sức khỏe và nội thất xe bằng dòng phim cách nhiệt quang học cao cấp, cản 99% tia UV và giảm nhiệt lượng cabin vượt trội.',
-        image: tintingImg,
+        image: cachNhiet,
         duration: '1 ngày',
         priceSedan: '7.500.000đ',
         priceSuv: '9.500.000đ',

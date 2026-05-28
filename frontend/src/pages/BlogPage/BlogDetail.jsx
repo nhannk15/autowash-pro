@@ -13,21 +13,24 @@ import imgCeramic from '../../assets/Service/PhuCeramic.png'
 const relatedPosts = [
     {
         id: 2,
-        title: 'Bí quyết vệ sinh nội thất ô tô luôn sạch bóng như mới ngay tại nhà',
+        title: 'Bảng Giá Vệ Sinh Nội Thất Ô Tô Tại Nhà TPHCM Chất Lượng Cao',
         date: '12/05/2026',
-        image: imgNoiThat
+        image: imgNoiThat,
+        link: '/blog/bang-gia-ve-sinh-noi-that-o-to-tai-nha'
     },
     {
         id: 3,
-        title: 'Vì sao khoang máy ô tô cần được chăm sóc và vệ sinh định kỳ?',
+        title: 'Cách chăm sóc ngoại thất ô tô tại nhà an toàn, tài mới đều làm được',
         date: '04/05/2026',
-        image: imgKhoangMay
+        image: imgKhoangMay,
+        link: '/blog/cach-cham-soc-ngoai-that-o-to-tai-nha'
     },
     {
         id: 4,
-        title: 'Tác dụng vượt trội của việc khử mùi diệt khuẩn dàn lạnh ô tô',
+        title: 'Các tiêu chí đánh giá trung tâm rửa xe ô tô uy tín, chất lượng cao',
         date: '28/04/2026',
-        image: imgKhuMui
+        image: imgRuaXe,
+        link: '/blog/tieu-chi-danh-gia-trung-tam-rua-xe-o-to'
     }
 ]
 
@@ -185,13 +188,13 @@ export default function BlogDetail() {
                         <h4 className="blog-detail__widget-title">Bài viết liên quan</h4>
                         <div className="blog-detail__related-list">
                             {relatedPosts.map((post) => (
-                                <a href="#" key={post.id} className="blog-detail__related-item" onClick={(e) => e.preventDefault()}>
+                                <Link to={post.link} key={post.id} className="blog-detail__related-item">
                                     <img src={post.image} alt={post.title} className="blog-detail__related-img" />
                                     <div className="blog-detail__related-info">
                                         <h5 className="blog-detail__related-post-title">{post.title}</h5>
                                         <span className="blog-detail__related-post-date">{post.date}</span>
                                     </div>
-                                </a>
+                                </Link>
                             ))}
                         </div>
                     </div>

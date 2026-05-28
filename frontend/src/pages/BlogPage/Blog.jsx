@@ -9,6 +9,7 @@ import imgKhoangMay from '../../assets/Service/VeSinhKhoangMay.png'
 import imgKhuMui from '../../assets/Service/KhuMui.png'
 import imgBaoDuong from '../../assets/Service/BaoDuongNhanh.png'
 import imgCeramic from '../../assets/Service/PhuCeramic.png'
+import tayKinh from '../../assets/Service/tayKinh.jpg'
 
 const blogPosts = [
     {
@@ -17,7 +18,7 @@ const blogPosts = [
         category: 'Rửa xe đúng cách',
         date: '18/05/2026',
         summary: 'Kính bị ố, có đốm nước, vảy trắng là điều gây khó chịu với nhiều người sau khi vừa rửa sạch xe. Nếu biết xử lý đúng cách, các vết bẩn này dễ dàng bị loại bỏ. Ngược lại, xử lý vết ố nước không đúng kỹ thuật sẽ để lại nhiều hậu quả nghiêm […]',
-        image: imgRuaXe,
+        image: tayKinh,
         link: '/blog/huong-dan-tay-o-kinh-o-to'
     },
     {
