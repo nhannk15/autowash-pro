@@ -5,12 +5,28 @@
 }
 
 .login-page {
+    background-image: url("../../assets/System/loginBackground.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #F5ECDA;
     padding: 24px;
+}
+
+.login-page::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.45);
+    z-index: 0;
+}
+
+.login-page>* {
+    position: relative;
+    z-index: 1;
 }
 
 /* Tablet */

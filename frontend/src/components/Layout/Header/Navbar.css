@@ -107,6 +107,7 @@
 
 .navbar__btn--login {
     color: #0d1b4b;
+    border: 1px solid #0d1b4b;
     background: transparent;
 }
 
