@@ -1,19 +1,17 @@
-import BookingForm from "../../components/Layout/Body/BookingForm/BookingForm.jsx"
-import HeroSlider from "../../components/Layout/Body/HeroSlider/HeroSlider.jsx"
-import MembershipTier from "../../components/Layout/Body/MembershipTier/MembershipTier.jsx"
-import ServicesSlider from "../../components/Layout/Body/ServicesSlider/ServicesSlider.jsx"
-import Footer from "../../components/Layout/Footer/Footer.jsx"
-import Navbar from "../../components/Layout/Header/Navbar.jsx"
+import HeroSlider from "../../components/Layout/BodyHome/HeroSlider/HeroSlider.jsx"
+import MembershipTier from "../../components/Layout/BodyHome/MembershipTier/MembershipTier.jsx"
+import ServicesSlider from "../../components/Layout/BodyHome/ServicesSlider/ServicesSlider.jsx"
+import StatsSection from "../../components/Layout/BodyHome/StatsSection/StatsSection.jsx"
+import CTARegister from "../../components/Layout/BodyHome/CTARegister/CTARegister.jsx"
 
 export default function Home() {
     return (
         <>
-            <Navbar></Navbar>
-            <HeroSlider></HeroSlider>
-            <MembershipTier></MembershipTier>
-            <ServicesSlider></ServicesSlider>
-            <BookingForm></BookingForm>
-            <Footer></Footer>
+            <HeroSlider />
+            <MembershipTier />
+            <ServicesSlider />
+            <StatsSection />
+            <CTARegister />
         </>
     )
 }

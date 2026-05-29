@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import './ServicesSlider.css'
 import ceramicImg from '../../../../assets/Service/PhuCeramic.png';
 import exteriorImg from '../../../../assets/Service/RuaXeNgoaiThat.jpg';
@@ -54,15 +55,15 @@ const GAP = 16
 const STEP = CARD_WIDTH + GAP
 
 export default function ServicesSlider() {
+    const navigate = useNavigate()
     const [currentIndex, setCurrentIndex] = useState(0)
     const maxIndex = services.length - VISIBLE // = 1 (chỉ có 1 bước trượt)
 
     const prev = () => setCurrentIndex(i => Math.max(0, i - 1))
     const next = () => setCurrentIndex(i => Math.min(maxIndex, i + 1))
 
-    // TODO: khi tích hợp React Router → thay bằng navigate('/dich-vu')
     const handleViewMore = () => {
-        alert('Trang dịch vụ đang được phát triển!')
+        navigate('/dich-vu')
     }
 
     return (
