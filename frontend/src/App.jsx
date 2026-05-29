@@ -9,7 +9,7 @@ import BlogDetail2 from './pages/BlogPage/BlogDetail2.jsx'
 import BlogDetail3 from './pages/BlogPage/BlogDetail3.jsx'
 import BlogDetail4 from './pages/BlogPage/BlogDetail4.jsx'
 import BlogDetail5 from './pages/BlogPage/BlogDetail5.jsx'
-
+import LoginPage from './pages/LoginPage/LoginPage.jsx'
 
 // Layout chung: Navbar + nội dung + Footer
 function MainLayout({ children }) {
@@ -50,7 +50,12 @@ function App() {
       <Route path="/blog/cach-cham-soc-noi-that-o-to-tai-nha" element={
         <MainLayout><BlogDetail5 /></MainLayout>
       } />
-
+      <Route path="/dang-nhap" element={
+        <>
+        <LoginPage />
+        <Footer />
+        </>
+      } />
       {/* Trang Login: không có Navbar/Footer */}
 
     </Routes>

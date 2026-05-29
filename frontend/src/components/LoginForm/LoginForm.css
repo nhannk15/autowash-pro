@@ -3,9 +3,9 @@
     width: 100%;
     padding: 40px;
     border-radius: 12px;
-    border: 1px solid #DCCFBC;
+    border: 1px solid #0d1b4b;
     box-shadow: 0 4px 24px rgba(44, 57, 65, 0.12);
-    background: #FAF9F7;
+    background: white;
 }
 
 .login-title {
@@ -14,22 +14,22 @@
     margin-bottom: 24px;
     font-size: 24px;
     font-weight: 600;
-    color: #2C3941;
+    color: #0d1b4b;
 }
 
 .login-container .ant-btn-primary {
-    background: #2C3941;
-    border-color: #2C3941;
+    background: #0d1b4b;
+    border-color: #0d1b4b;
     transition: all 0.3s ease;
 }
 
 .login-container .ant-btn-primary:hover {
-    background: #61717b !important;
-    border-color: #61717b !important;
+    background: #1a2d6b !important;
+    border-color: #1a2d6b !important;
 }
 
 .login-container .ant-divider {
-    border-color: #DCCFBC;
+    border-color: #0d1b4b;
 }
 
 .login-container .ant-input:focus,
@@ -37,42 +37,33 @@
 .login-container .ant-input:hover,
 .login-container .ant-input-password:hover .ant-input,
 .login-container .ant-input-affix-wrapper:hover {
-    border-color: #96AAB0 !important;
+    border-color: #0d1b4b !important;
 }
 
 .login-container .ant-checkbox-checked .ant-checkbox-inner {
-    background-color: #2C3941;
-    border-color: #2C3941;
+    background-color: #0d1b4b;
+    border-color: #0d1b4b;
 }
 
 .login-container .ant-form-item-label>label {
-    color: #2C3941;
+    color: #0d1b4b;
     font-weight: 500;
 }
 
 .forgot-password-btn,
 .register-btn {
-    background: #FAF9F7;
-    border: 1px solid #2C3941;
-    color: #2C3941;
-    font-weight: 500;
-    transition: all 0.3s ease;
-}
-
-.forgot-password-btn,
-.register-btn {
-    background: #FAF9F7;
-    border: 1px solid #2C3941;
-    color: #2C3941;
+    background: white;
+    border: 1px solid #0d1b4b;
+    color: #0d1b4b;
     font-weight: 500;
     transition: all 0.3s ease;
 }
 
 .forgot-password-btn:hover,
 .register-btn:hover {
-    background: #F5ECDA !important;
-    color: #2C3941 !important;
-    border-color: #96AAB0 !important;
+    background: #f0f2f8 !important;
+    color: #0d1b4b !important;
+    border-color: #0d1b4b !important;
 }
 
 .google-btn {
@@ -80,17 +71,17 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    border: 1px solid #DCCFBC;
-    color: #2C3941;
+    border: 1px solid #0d1b4b;
+    color: #0d1b4b;
     font-weight: 500;
-    background: #FAF9F7;
+    background: white;
     transition: all 0.3s ease;
 }
 
 .google-btn:hover {
-    border-color: #2C3941 !important;
-    color: #2C3941 !important;
-    background: #F5ECDA !important;
+    border-color: #0d1b4b !important;
+    color: #0d1b4b !important;
+    background: #f0f2f8 !important;
 }
 
 .google-btn img {
