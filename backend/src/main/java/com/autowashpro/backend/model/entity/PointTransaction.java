@@ -60,6 +60,6 @@ public class PointTransaction {
     @JoinColumn(name = "created_by_staff_id")
     private Staff staff;
 
-    @Column(name = "transaction_type", nullable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 }
