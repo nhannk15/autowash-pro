@@ -17,6 +17,7 @@ import com.autowashpro.backend.repository.UserRepository;
 import com.nimbusds.jose.JOSEException;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -60,8 +61,14 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             ex.printStackTrace();
         }
 
-        response.sendRedirect("http://localhost:8080/api/access-token?token=" +
-                accessToken);
+        Cookie cookie = new Cookie("access_token", accessToken);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false);
+        cookie.setPath("/");
+        cookie.setMaxAge(60 * 60);
+        response.addCookie(cookie);
+        response.sendRedirect("http://localhost:5173/");
+        
     }
 
     @Bean

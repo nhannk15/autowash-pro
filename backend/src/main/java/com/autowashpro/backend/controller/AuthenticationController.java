@@ -43,7 +43,7 @@ public class AuthenticationController {
 
         HashMap<String, String> result = new HashMap<>();
 
-        result.put("accessToken", token);
+        result.put("access_token", token);
 
         return ResponseEntity.ok().body(result);
     }
