@@ -21,7 +21,7 @@ public class BackendApplication {
 	public CommandLineRunner commandLineRunner(UserRepository repository, PasswordEncoder encoder) {
 		return args -> {
 			String password = encoder.encode("21012006");
-			User user = new User(
+			User user1 = new User(
 					null,
 					"nhannk15@gmail.com",
 					null,
@@ -33,7 +33,21 @@ public class BackendApplication {
 					false,
 					null,
 					null);
-			repository.save(user);
+			repository.save(user1);
+
+			User user2 = new User(
+					null,
+					"nhannk2101@gmail.com",
+					null,
+					password,
+					"Dang Nhat Thien Bao",
+					"0333666666",
+					"AVATAR",
+					Role.CUSTOMER,
+					false,
+					null,
+					null);
+			repository.save(user2);
 		};
 	}
 

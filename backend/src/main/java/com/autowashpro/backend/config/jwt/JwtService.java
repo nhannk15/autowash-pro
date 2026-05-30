@@ -71,4 +71,9 @@ public class JwtService {
         return signature.verify(new MACVerifier(this.secretKey));
     }
 
+    public String extractEmail(String token) throws ParseException {
+        SignedJWT signedJWT = SignedJWT.parse(token);
+        return signedJWT.getJWTClaimsSet().getSubject();
+    }
+
 }
