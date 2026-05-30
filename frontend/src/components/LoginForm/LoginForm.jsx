@@ -68,7 +68,7 @@ export function LoginForm() {
                     icon={<img src={googleIcon} />}
                     className="google-btn"
                     onClick={() => {
-                        window.location.href = "...";
+                        window.location.href = "http://localhost:8080/oauth2/authorization/google";
                     }}
                     size="large"
                 >

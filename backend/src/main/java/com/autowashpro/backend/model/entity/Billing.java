@@ -3,8 +3,6 @@ package com.autowashpro.backend.model.entity;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
 
-import org.springframework.boot.autoconfigure.jms.JmsProperties.Listener.Session;
-
 import com.autowashpro.backend.model.enums.PaymentMethod;
 import com.autowashpro.backend.model.enums.PaymentStatus;
 
@@ -37,11 +35,11 @@ public class Billing {
 
     @OneToOne
     @JoinColumn(name = "session_id")
-    private Session session;
+    private WashSession session;
 
     @OneToOne(optional = true)
     @JoinColumn(name = "voucher_id", nullable = true)
-    private Long voucherId;
+    private Voucher voucherId;
 
     @Column(name = "original_amount", nullable = false)
     private BigInteger originalAmount;
