@@ -2,7 +2,7 @@ name: Deploy to EC2
 
 on:
   push:
-    branches: [main]
+    branches: [develop, main]
 
 jobs:
   deploy:
@@ -19,5 +19,5 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd /home/ubuntu/autowash-pro
-            git pull origin main
+            git pull origin develop
             docker compose up -d --build

@@ -4,8 +4,8 @@ import './ServicesSlider.css'
 import ceramicImg from '../../../../assets/Service/PhuCeramic.png';
 import exteriorImg from '../../../../assets/Service/RuaXeNgoaiThat.jpg';
 import interiorImg from '../../../../assets/Service/VeSinhNoiThat.jpg';
-import khuMui from '../../../../assets/Service/khuMui.png';
-import baoDuongNhanh from '../../../../assets/Service/baoDuongNhanh.png';
+import khuMui from '../../../../assets/Service/KhuMui.png';
+import baoDuongNhanh from '../../../../assets/Service/BaoDuongNhanh.png';
 
 
 // Dữ liệu 5 dịch vụ - dùng màu tạm, thay ảnh sau
