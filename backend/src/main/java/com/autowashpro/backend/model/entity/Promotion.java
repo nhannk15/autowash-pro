@@ -56,7 +56,7 @@ public class Promotion {
     private Service service;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "min_tier_id")
+    @JoinColumn(name = "min_tire_id")
     private MembershipTier membershipTier;
 
     @Column(name = "max_uses_total", nullable = false)

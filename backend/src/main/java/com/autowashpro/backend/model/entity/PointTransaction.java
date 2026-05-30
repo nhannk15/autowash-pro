@@ -37,9 +37,9 @@ public class PointTransaction {
     private Customer customer;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "session_id")
+    @JoinColumn(name = "sessionId")
     private WashSession washSession;
-
+    
     @Column(name = "transaction_type", nullable = false)
     @Enumerated(EnumType.STRING)
     private TransactionType transactionType;

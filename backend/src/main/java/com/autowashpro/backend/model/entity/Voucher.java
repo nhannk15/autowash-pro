@@ -41,7 +41,7 @@ public class Voucher {
     private Reward reward;
 
     @Column(name = "discount_type", nullable = false)
-    @Enumerated(EnumType.STRING) // --- The same
+    @Enumerated(EnumType.STRING) //--- The same
     private RewardType discountType;
 
     @Column(name = "discount_value", nullable = false)
@@ -61,7 +61,7 @@ public class Voucher {
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
 
-    @Column(name = "used_at", nullable = true)
+    @Column(name = "used_at", nullable = false)
     private LocalDateTime usedAt;
-
+    
 }
