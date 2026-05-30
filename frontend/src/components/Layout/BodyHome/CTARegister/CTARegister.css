@@ -1,0 +1,374 @@
+/* =============================================
+   CTA REGISTER SECTION — CTARegister.css
+   ============================================= */
+
+.cta-register {
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    padding: 100px 24px;
+    overflow: hidden;
+}
+
+/* Dark overlay để text dễ đọc trên ảnh */
+.cta-register::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        135deg,
+        rgba(49, 53, 70, 0.9) 0%,
+        rgba(13, 27, 75, 0.85) 50%,
+        rgba(41, 52, 97, 0.8) 100%
+    );
+    z-index: 0;
+}
+
+/* Decorative blobs */
+.cta-register__blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.cta-register__blob--1 {
+    width: 400px;
+    height: 400px;
+    background: rgba(245, 166, 35, 0.06);
+    top: -100px;
+    right: 10%;
+}
+
+.cta-register__blob--2 {
+    width: 300px;
+    height: 300px;
+    background: rgba(100, 140, 255, 0.04);
+    bottom: -80px;
+    left: 5%;
+}
+
+/* ── INNER LAYOUT ─────────────────────────── */
+.cta-register__inner {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: center;
+}
+
+/* ── LEFT CONTENT ─────────────────────────── */
+.cta-register__badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: #f5a623;
+    background: rgba(245, 166, 35, 0.12);
+    border: 1px solid rgba(245, 166, 35, 0.25);
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+}
+
+.cta-register__title {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.25;
+    margin-bottom: 16px;
+}
+
+.cta-register__desc {
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.65);
+    line-height: 1.7;
+    margin-bottom: 32px;
+    max-width: 420px;
+}
+
+/* ── BENEFITS ─────────────────────────────── */
+.cta-register__benefits {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 40px;
+}
+
+.cta-register__benefit {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.92rem;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.cta-register__benefit-icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    width: 28px;
+    text-align: center;
+}
+
+/* ── ACTIONS ──────────────────────────────── */
+.cta-register__actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.cta-register__btn {
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 14px 28px;
+    border-radius: 8px;
+    transition: all 0.25s ease;
+    white-space: nowrap;
+    display: inline-block;
+}
+
+.cta-register__btn--primary {
+    background: linear-gradient(135deg, #f5a623, #e8960f);
+    color: #0d1b4b;
+    box-shadow: 0 6px 20px rgba(245, 166, 35, 0.35);
+}
+
+.cta-register__btn--primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 28px rgba(245, 166, 35, 0.5);
+}
+
+.cta-register__btn--secondary {
+    color: rgba(255, 255, 255, 0.85);
+    border: 1.5px solid rgba(255, 255, 255, 0.25);
+    background: transparent;
+}
+
+.cta-register__btn--secondary:hover {
+    border-color: rgba(255, 255, 255, 0.6);
+    color: #fff;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+/* ── RIGHT VISUAL ─────────────────────────── */
+.cta-register__visual {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Member card */
+.cta-register__card {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
+    padding: 32px;
+    width: 100%;
+    max-width: 360px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* Card header */
+.cta-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+}
+
+.cta-card__logo {
+    display: flex;
+    align-items: baseline;
+    gap: 0;
+}
+
+.cta-card__logo-bold {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.cta-card__logo-accent {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #f5a623;
+}
+
+.cta-card__member-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: #f5a623;
+    border: 1px solid rgba(245, 166, 35, 0.4);
+    padding: 3px 10px;
+    border-radius: 12px;
+    background: rgba(245, 166, 35, 0.08);
+}
+
+/* Avatar + greeting */
+.cta-card__user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 28px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cta-card__avatar {
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+}
+
+.cta-card__greeting {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.cta-card__username {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+/* Stats mini */
+.cta-card__stats {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.cta-card__stat {
+    flex: 1;
+    text-align: center;
+}
+
+.cta-card__stat-value {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #f5a623;
+}
+
+.cta-card__stat-label {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.45);
+    margin-top: 3px;
+    display: block;
+}
+
+.cta-card__stat-divider {
+    width: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+}
+
+/* Card CTA */
+.cta-card__action {
+    background: linear-gradient(135deg, rgba(245, 166, 35, 0.15), rgba(245, 166, 35, 0.05));
+    border: 1px solid rgba(245, 166, 35, 0.2);
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.cta-card__action:hover {
+    background: linear-gradient(135deg, rgba(245, 166, 35, 0.25), rgba(245, 166, 35, 0.1));
+}
+
+.cta-card__action-text {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #f5a623;
+}
+
+/* Floating badges */
+.cta-register__float {
+    position: absolute;
+    background: #fff;
+    color: #0d1b4b;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 8px 16px;
+    border-radius: 24px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    white-space: nowrap;
+    animation: float 3s ease-in-out infinite;
+}
+
+.cta-register__float--top {
+    top: -16px;
+    right: -20px;
+    animation-delay: 0s;
+}
+
+.cta-register__float--bottom {
+    bottom: -16px;
+    left: -20px;
+    animation-delay: 1.5s;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+}
+
+/* ── RESPONSIVE ───────────────────────────── */
+@media (max-width: 900px) {
+    .cta-register__inner {
+        grid-template-columns: 1fr;
+        gap: 48px;
+    }
+
+    .cta-register__visual {
+        order: -1;
+    }
+
+    .cta-register__float--top {
+        right: 0;
+    }
+
+    .cta-register__float--bottom {
+        left: 0;
+    }
+}
+
+@media (max-width: 540px) {
+    .cta-register {
+        padding: 64px 20px;
+    }
+
+    .cta-register__title {
+        font-size: 1.7rem;
+    }
+
+    .cta-register__actions {
+        flex-direction: column;
+    }
+
+    .cta-register__btn {
+        text-align: center;
+    }
+}
