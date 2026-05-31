@@ -57,9 +57,6 @@ public class Service {
     private List<ServicePrice> servicePrices;
 
     @OneToMany(mappedBy = "service")
-    private List<WashSession> washSessions;
-
-    @OneToMany(mappedBy = "service")
     private List<Reward> rewards;
 
     @OneToMany(mappedBy = "service")
