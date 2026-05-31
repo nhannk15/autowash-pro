@@ -105,13 +105,15 @@
     white-space: nowrap;
 }
 
-.navbar__btn--login {
+.navbar__btn--login,
+.navbar__btn--logout {
     color: #0d1b4b;
     border: 1px solid #0d1b4b;
     background: transparent;
 }
 
-.navbar__btn--login:hover {
+.navbar__btn--login:hover,
+.navbar__btn--logout:hover {
     background-color: #f0f2f8;
 }
 

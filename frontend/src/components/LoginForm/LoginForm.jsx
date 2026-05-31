@@ -1,11 +1,22 @@
-import { Form, Input, Button, Checkbox, Divider } from "antd";
+import { Form, Input, Button, Checkbox, Divider, message } from "antd";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { loginGoogle } from "../../service/authService";
 import googleIcon from '../../assets/google.svg';
 import "./LoginForm.css";
 
 export function LoginForm() {
+    const { login } = useAuth();
+    const navigate = useNavigate();
 
-    const onFinish = (values) => {
-        console.log("Success:", values);
+    const onFinish = async (values) => {
+        try {
+            await login(values.email, values.password);
+            message.success("Đăng nhập thành công!");
+            navigate("/");
+        } catch (e) {
+            message.error("Sai tài khoản hoặc mật khẩu!");
+        }
     };
 
     const onFinishFailed = (errorInfo) => {
@@ -22,11 +33,11 @@ export function LoginForm() {
                 onFinishFailed={onFinishFailed}
             >
                 <Form.Item
-                    label="Username"
-                    name="username"
-                    rules={[{ required: true, message: "Please enter your username" }]}
+                    label="Email"
+                    name="email"
+                    rules={[{ required: true, message: "Please enter your email", type: "email" }]}
                 >
-                    <Input size="large" placeholder="Enter your username" />
+                    <Input size="large" placeholder="Enter your email" />
                 </Form.Item>
 
                 <Form.Item
@@ -67,9 +78,7 @@ export function LoginForm() {
                     block
                     icon={<img src={googleIcon} />}
                     className="google-btn"
-                    onClick={() => {
-                        window.location.href = "http://localhost:8080/oauth2/authorization/google";
-                    }}
+                    onClick={loginGoogle}
                     size="large"
                 >
                     Login with Google
