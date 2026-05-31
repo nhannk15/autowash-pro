@@ -1,6 +1,6 @@
 package com.autowashpro.backend.model.entity;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.autowashpro.backend.model.enums.BayStatus;
@@ -14,6 +14,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -40,7 +41,10 @@ public class WashBay {
     private BayStatus status;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDate createdAt;
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "bay")
     private List<Booking> bookings;
@@ -48,8 +52,15 @@ public class WashBay {
     @OneToMany(mappedBy = "bay")
     private List<WashSession> washSessions;
 
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
+    // Và cập nhật PrePersist
     @PrePersist
-    public void onCreate() {
-        this.createdAt = LocalDate.now();
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
     }
 }

@@ -30,10 +30,10 @@ public class Customer extends User {
     @JoinColumn(name = "tier_id", nullable = false)
     private MembershipTier tier;
 
-    @Column(name = "current_points")
+    @Column(name = "current_points", nullable = false)
     private Long currentPoints = 0L;
 
-    @Column(name = "lifetime_points")
+    @Column(name = "lifetime_points", nullable = false)
     private Long lifetimePoints = 0L;
 
     @Column(name = "tier_start_date", nullable = false)
@@ -53,5 +53,8 @@ public class Customer extends User {
 
     @OneToMany(mappedBy = "customer")
     private List<Booking> bookings;
+
+    @OneToMany(mappedBy = "customer")
+    private List<WashSession> washSessions;
 
 }

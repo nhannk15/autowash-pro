@@ -23,29 +23,39 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "promotion_usages")
-public class PromotionUsage {
+@Table(name = "booking_details")
+public class BookingDetail {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "promotion_id", nullable = false)
-    private Promotion promotion;
+    @JoinColumn(name = "booking_id", nullable = false)
+    private Booking booking;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "billing_id", nullable = false)
-    private Billing billing;
+    @JoinColumn(name = "service_price_id", nullable = false)
+    private ServicePrice servicePrice;
 
-    @Column(name = "discount_amount", nullable = false)
+    @Column(name = "price_at_booking", nullable = false, precision = 10, scale = 2)
+    private BigDecimal priceAtBooking;
+
+    @Column(name = "discount_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal discountAmount;
 
-    @Column(name = "used_at", nullable = false)
-    private LocalDateTime usedAt;
+    @Column(name = "final_price", nullable = false, precision = 10, scale = 2)
+    private BigDecimal finalPrice;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "promotion_id")
+    private Promotion promotion;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
-        usedAt = LocalDateTime.now();
+        createdAt = LocalDateTime.now();
     }
 }

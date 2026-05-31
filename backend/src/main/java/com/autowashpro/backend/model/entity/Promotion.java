@@ -15,6 +15,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -56,7 +57,7 @@ public class Promotion {
     private Service service;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "min_tire_id")
+    @JoinColumn(name = "min_tier_id")
     private MembershipTier membershipTier;
 
     @Column(name = "max_uses_total", nullable = false)
@@ -75,6 +76,11 @@ public class Promotion {
     @JoinColumn(name = "created_by_staff_id")
     private Staff staff;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 }

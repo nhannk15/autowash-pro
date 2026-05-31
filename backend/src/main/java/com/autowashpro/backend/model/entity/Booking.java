@@ -1,9 +1,11 @@
 package com.autowashpro.backend.model.entity;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.autowashpro.backend.model.enums.BookingStatus;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -14,7 +16,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -42,9 +44,8 @@ public class Booking {
     @JoinColumn(name = "vehicle_id", nullable = false)
     private Vehicle vehicle;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "service_id", nullable = false)
-    private Service service;
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
+    private List<BookingDetail> bookingDetails;
 
     @Column(name = "scheduled_date_time", nullable = false)
     private LocalDateTime scheduledDateTime;
@@ -65,8 +66,8 @@ public class Booking {
     @Column(name = "cancel_reason", nullable = true)
     private String cancelReason;
 
-    @OneToOne(mappedBy = "booking", fetch = FetchType.LAZY)
-    private WashSession washSession;
+    @OneToMany(mappedBy = "booking")
+    private List<WashSession> washSessions;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "bay_id")
