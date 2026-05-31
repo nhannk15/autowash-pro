@@ -39,7 +39,7 @@ public class WashSessionService {
     }
 
     @SuppressWarnings("null")
-    public void deleteById(@NonNull Long id) {
+    public void delete(@NonNull Long id) {
         WashSession session = findById(id);
         repository.delete(session);
     }

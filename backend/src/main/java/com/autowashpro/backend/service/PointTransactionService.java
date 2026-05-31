@@ -3,10 +3,12 @@ package com.autowashpro.backend.service;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.autowashpro.backend.model.entity.PointTransaction;
 import com.autowashpro.backend.repository.PointTransactionRepository;
 
+@Service
 public class PointTransactionService {
     
     private PointTransactionRepository repository;

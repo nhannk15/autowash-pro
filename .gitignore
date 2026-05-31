@@ -1,1 +1,3 @@
 backend/src/main/resources/application.yaml
+# Local config
+backend/src/main/resources/application.properties

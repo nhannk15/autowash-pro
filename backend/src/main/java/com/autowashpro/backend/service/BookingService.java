@@ -15,6 +15,7 @@ public class BookingService {
     public BookingService() {
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
     public BookingService(BookingRepository repository) {
         this.repository = repository;
     }

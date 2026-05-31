@@ -15,6 +15,7 @@ public class TierRuleService {
     public TierRuleService() {
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
     public TierRuleService(TierRuleRepository repository) {
         this.repository = repository;
     }

@@ -16,6 +16,7 @@ public class VoucherService {
     public VoucherService() {
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
     public VoucherService(VoucherRepository repository) {
         this.repository = repository;
     }

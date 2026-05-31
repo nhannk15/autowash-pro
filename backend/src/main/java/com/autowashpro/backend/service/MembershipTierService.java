@@ -15,6 +15,7 @@ public class MembershipTierService {
     public MembershipTierService() {
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
     public MembershipTierService(MembershipTierRepository repository) {
         this.repository = repository;
     }
