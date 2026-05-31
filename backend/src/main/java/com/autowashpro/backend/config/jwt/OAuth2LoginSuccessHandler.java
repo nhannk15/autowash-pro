@@ -3,10 +3,7 @@ package com.autowashpro.backend.config.jwt;
 import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -45,7 +42,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                     String avatarUrl = oAuth2User.getAttribute("picture");
                     Role role = Role.CUSTOMER;
 
-                    User newUser = new User(null, email, googleId, "1", fullName, null, avatarUrl, role, false, null,
+                    User newUser = new User(null, email, googleId, "1", fullName, null, avatarUrl, role, true, null,
                             null);
 
                     return userRepository.save(newUser);
@@ -71,8 +68,4 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 }
