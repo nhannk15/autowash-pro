@@ -14,6 +14,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -33,17 +34,17 @@ public class Notification {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id")
+    @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
 
-    @Column(name = "notification_type", nullable = true)
+    @Column(name = "notification_type", nullable = false)
     @Enumerated(EnumType.STRING)
     private NotificationType notificationType;
 
-    @Column(name = "title", nullable = true)
+    @Column(name = "title", nullable = false)
     private String title;
 
-    @Column(name = "body", nullable = true)
+    @Column(name = "body", nullable = false)
     private String body;
 
     @Column(name = "ref_id", nullable = true)
@@ -52,9 +53,15 @@ public class Notification {
     @Column(name = "ref_type", nullable = true)
     private String refType;
 
-    @Column(name = "is_read", nullable = true)
-    private boolean isRead;
+    @Column(name = "is_read", nullable = false)
+    private boolean isRead = false;
 
-    @Column(name = "created_at", nullable = true)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        isRead = false;
+    }
 }

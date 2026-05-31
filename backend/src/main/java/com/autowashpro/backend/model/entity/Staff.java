@@ -5,7 +5,6 @@ import java.util.List;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -24,8 +23,7 @@ public class Staff extends User {
     @Column(name = "hired_date", nullable = false)
     private LocalDate hiredDate;
 
-    @OneToMany
-    @JoinColumn(name = "staff_id")
+    @OneToMany(mappedBy = "staff")
     private List<WashSession> washSessions;
 
     @OneToMany(mappedBy = "staff")

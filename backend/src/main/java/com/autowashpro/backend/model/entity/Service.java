@@ -1,6 +1,7 @@
 package com.autowashpro.backend.model.entity;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.autowashpro.backend.model.enums.ServiceCategory;
@@ -12,8 +13,9 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -38,9 +40,6 @@ public class Service {
     @Column(name = "description", nullable = true)
     private String description;
 
-    @Column(name = "base_price", nullable = false, precision = 10, scale = 2)
-    private BigDecimal basePrice;
-
     @Column(name = "duration_minutes", nullable = false)
     private int durationMinutes;
 
@@ -55,10 +54,9 @@ public class Service {
     private boolean isActive;
 
     @OneToMany(mappedBy = "service")
-    private List<Booking> bookings;
+    private List<ServicePrice> servicePrices;
 
-    @OneToMany
-    @JoinColumn(name = "service_id")
+    @OneToMany(mappedBy = "service")
     private List<WashSession> washSessions;
 
     @OneToMany(mappedBy = "service")
@@ -66,4 +64,21 @@ public class Service {
 
     @OneToMany(mappedBy = "service")
     private List<Promotion> promotions;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

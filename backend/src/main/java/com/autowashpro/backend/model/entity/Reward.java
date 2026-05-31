@@ -15,6 +15,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -43,7 +44,7 @@ public class Reward {
     @Column(name = "point_cost", nullable = false)
     private Long pointCost;
 
-    @Column(name = "discount_Value", nullable = false)
+    @Column(name = "discount_value", nullable = false)
     private BigDecimal discountValue;
 
     @Column(name = "validity_days", nullable = false)
@@ -61,4 +62,9 @@ public class Reward {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 }

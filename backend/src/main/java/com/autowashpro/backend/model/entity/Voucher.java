@@ -16,6 +16,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -33,7 +34,7 @@ public class Voucher {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "voucher_code", nullable = false)
+    @Column(name = "voucher_code", nullable = false, unique = true)
     private String voucherCode;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -41,7 +42,7 @@ public class Voucher {
     private Reward reward;
 
     @Column(name = "discount_type", nullable = false)
-    @Enumerated(EnumType.STRING) //--- The same
+    @Enumerated(EnumType.STRING) // --- The same
     private RewardType discountType;
 
     @Column(name = "discount_value", nullable = false)
@@ -61,7 +62,12 @@ public class Voucher {
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
 
-    @Column(name = "used_at", nullable = false)
+    @Column(name = "used_at", nullable = true)
     private LocalDateTime usedAt;
-    
+
+    @PrePersist
+    protected void onCreate() {
+        issuedAt = LocalDateTime.now();
+    }
+
 }
