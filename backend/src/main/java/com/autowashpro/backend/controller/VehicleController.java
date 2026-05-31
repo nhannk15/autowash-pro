@@ -3,7 +3,6 @@ package com.autowashpro.backend.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,9 +14,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.autowashpro.backend.mapper.VehicleMapper;
+import com.autowashpro.backend.model.dto.ApiResponse;
 import com.autowashpro.backend.model.entity.Vehicle;
 import com.autowashpro.backend.service.VehicleService;
-
 
 @RestController
 @RequestMapping("/api/vehicles")
@@ -30,31 +29,35 @@ public class VehicleController {
     private VehicleMapper vehicleMapper;
 
     @GetMapping
-    public List<Vehicle> findAllVehicles() {
-        return service.findAll();
+    public ResponseEntity<ApiResponse<List<Vehicle>>> findAllVehicles() {
+        List<Vehicle> vehicles = service.findAll();
+        return ResponseEntity.ok(ApiResponse.success(vehicles));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> findVehicleById(@PathVariable Long id) {
-        return ResponseEntity.ok().body(service.findById(id));
+    public ResponseEntity<ApiResponse<Vehicle>> findVehicleById(@PathVariable Long id) {
+        Vehicle vehicle = service.findById(id);
+        return ResponseEntity.ok(ApiResponse.success(vehicle));
     }
 
     @PostMapping
-    public ResponseEntity<?> addNewVehicle(@RequestBody Vehicle newVehicle) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(service.createNew(newVehicle));
+    public ResponseEntity<ApiResponse<Vehicle>> addNewVehicle(@RequestBody Vehicle newVehicle) {
+        Vehicle created = service.createNew(newVehicle);
+        return ResponseEntity.ok(ApiResponse.created(created));
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<?> updateVehicle(@RequestBody Vehicle vehicle, @PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Vehicle>> updateVehicle(@RequestBody Vehicle vehicle, @PathVariable Long id) {
         Vehicle target = service.findById(id);
         vehicleMapper.updateVehicleFromRequest(vehicle, target);
-        return ResponseEntity.ok().body(service.update(target));
+        Vehicle updated = service.update(target);
+        return ResponseEntity.ok(ApiResponse.success(updated));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteVehicle(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteVehicle(@PathVariable Long id) {
         service.delete(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.noContent());
     }
 
 }

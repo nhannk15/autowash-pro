@@ -27,6 +27,7 @@ services:
       SPRING_DATASOURCE_USERNAME: autowash
       SPRING_DATASOURCE_PASSWORD: autowash123
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      JWT_SECRET_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
     ports:
       - "8080:8080"
     depends_on:

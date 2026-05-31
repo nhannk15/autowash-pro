@@ -15,6 +15,7 @@ public class StaffService {
     public StaffService() {
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
     public StaffService(StaffRepository repository) {
         this.repository = repository;
     }

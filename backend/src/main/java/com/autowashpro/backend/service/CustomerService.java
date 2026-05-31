@@ -15,6 +15,7 @@ public class CustomerService {
     public CustomerService() {
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
     public CustomerService(CustomerRepository repository) {
         this.repository = repository;
     }

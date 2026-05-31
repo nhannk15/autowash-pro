@@ -15,6 +15,7 @@ public class NotificationService {
     public NotificationService() {
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
     public NotificationService(NotificationRepository repository) {
         this.repository = repository;
     }

@@ -15,6 +15,7 @@ public class UserService {
     public UserService() {
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
     public UserService(UserRepository repository) {
         this.repository = repository;
     }

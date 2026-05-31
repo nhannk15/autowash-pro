@@ -1,5 +1,7 @@
 package com.autowashpro.backend.service;
 
+import org.springframework.stereotype.Service;
+
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.autowashpro.backend.model.entity.PromotionUsage;
 import com.autowashpro.backend.repository.PromotionUsageRepository;
 
+@Service
 public class PromotionUsageService {
     
     private PromotionUsageRepository repository;

@@ -15,6 +15,7 @@ public class WashBayService {
     public WashBayService() {
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
     public WashBayService(WashBayRepository repository) {
         this.repository = repository;
     }
@@ -29,6 +30,15 @@ public class WashBayService {
 
     public List<WashBay> findAll() {
         return repository.findAll();
+    }
+
+    public WashBay update(WashBay washBay) {
+        return repository.save(washBay);
+    }
+
+    public void delete(Long id) {
+        WashBay washBay = findById(id);
+        repository.delete(washBay);
     }
 
 }

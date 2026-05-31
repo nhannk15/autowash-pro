@@ -2,6 +2,8 @@ package com.autowashpro.backend.service;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.autowashpro.backend.model.entity.Service;
 import com.autowashpro.backend.repository.ServiceRepository;
 
@@ -13,6 +15,7 @@ public class ServiceService {
     public ServiceService() {
     }
 
+    @Autowired
     public ServiceService(ServiceRepository repository) {
         this.repository = repository;
     }

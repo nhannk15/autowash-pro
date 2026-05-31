@@ -15,6 +15,7 @@ public class VehicleService {
     public VehicleService() {
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
     public VehicleService(VehicleRepository repository) {
         this.repository = repository;
     }
