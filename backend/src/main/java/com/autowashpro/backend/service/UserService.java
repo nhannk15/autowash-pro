@@ -32,6 +32,10 @@ public class UserService {
         return repository.findAll();
     }
 
+    public User findByEmail(String email) {
+        return repository.findByEmail(email).orElse(null);
+    }
+
     public User update(User user) {
         return repository.save(user);
     }

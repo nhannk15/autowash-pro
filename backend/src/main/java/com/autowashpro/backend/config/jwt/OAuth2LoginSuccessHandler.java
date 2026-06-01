@@ -64,7 +64,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         cookie.setPath("/");
         cookie.setMaxAge(60 * 60);
         response.addCookie(cookie);
-        response.sendRedirect("http://localhost:5173/");
+        response.sendRedirect("http://3.36.70.151/");
         
     }
 

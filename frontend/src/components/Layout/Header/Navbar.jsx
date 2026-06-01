@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom'
+import { useAuth } from '../../../context/AuthContext'
 import './Navbar.css'
 
 const navLinks = [
@@ -8,12 +9,14 @@ const navLinks = [
 ]
 
 export default function NavBar() {
+    const { user, logout } = useAuth()
+
     return (
         <nav className="navbar">
             <div className="navbar__container">
                 <div className="navbar__logo">
-                    <span className="navbar__logo--bold">CARWASH</span>
-                    <span className="navbar__logo--accent">Centre</span>
+                    <span className="navbar__logo--bold">Autowash</span>
+                    <span className="navbar__logo--accent">PRO</span>
 
                 </div>
 
@@ -33,10 +36,15 @@ export default function NavBar() {
                     ))}
                 </ul>
 
-                <div className="navbar__auth">
+                 {user ? (
+                    <div className="navbar__auth">
+                        <span>Xin chào, {user.fullname}</span>
+                        <button className="navbar__btn navbar__btn--logout" onClick={logout}>Logout</button>
+                    </div>
+                ) : (<div className="navbar__auth">
                     <NavLink to="/dang-nhap" className="navbar__btn navbar__btn--login">Login</NavLink>
                     <a href="#" className="navbar__btn navbar__btn--signup">Sign Up</a>
-                </div>
+                    </div>)}
             </div>
         </nav>
     )
