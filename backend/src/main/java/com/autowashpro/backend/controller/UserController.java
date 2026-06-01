@@ -12,9 +12,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 
 import com.autowashpro.backend.mapper.UserMapper;
 import com.autowashpro.backend.model.dto.ApiResponse;
+import com.autowashpro.backend.model.dto.UserResponse;
 import com.autowashpro.backend.model.entity.User;
 import com.autowashpro.backend.service.UserService;
 
@@ -32,6 +36,22 @@ public class UserController {
     public ResponseEntity<ApiResponse<List<User>>> findAllUsers() {
         List<User> users = service.findAll();
         return ResponseEntity.ok(ApiResponse.success(users));
+    }
+
+      @GetMapping("/me")
+    public ResponseEntity<UserResponse> getMe(Authentication authentication) {
+        String email = (String) authentication.getPrincipal(); // lấy email từ JWT token
+        // Dùng UserService thay vì gọi trực tiếp Repository
+        User user = service.findByEmail(email);
+        
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+        }
+        return ResponseEntity.ok(new UserResponse(
+                user.getEmail(),
+                user.getFullName(),
+                user.getAvatarUrl(),
+                user.getRole().toString()));
     }
 
     @GetMapping("/{id}")

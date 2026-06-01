@@ -51,4 +51,15 @@ public class AuthenticationController {
         response.addCookie(cookie);
         return ResponseEntity.ok(new LoginResponse(token, "Bearer", 3600));
     }
+
+    @PostMapping("/auth/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+        Cookie cookie = new Cookie("access_token", null);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false);
+        cookie.setPath("/");
+        cookie.setMaxAge(0); // Xóa cookie
+        response.addCookie(cookie);
+        return ResponseEntity.ok().build();
+    }
 }
