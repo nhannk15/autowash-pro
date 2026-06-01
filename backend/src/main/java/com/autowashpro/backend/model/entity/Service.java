@@ -34,10 +34,10 @@ public class Service {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "service_name", nullable = false)
+    @Column(name = "service_name", nullable = false, columnDefinition = "NVARCHAR(150)")
     private String serviceName;
 
-    @Column(name = "description", nullable = true)
+    @Column(name = "description", nullable = true, columnDefinition = "NVARCHAR(150)")
     private String description;
 
     @Column(name = "duration_minutes", nullable = false)
@@ -51,7 +51,7 @@ public class Service {
     private ServiceCategory category;
 
     @Column(name = "is_active", nullable = false)
-    private boolean isActive;
+    private boolean isActive = true;
 
     @OneToMany(mappedBy = "service")
     private List<ServicePrice> servicePrices;

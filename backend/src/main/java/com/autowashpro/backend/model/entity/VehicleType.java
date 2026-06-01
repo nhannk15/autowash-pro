@@ -36,7 +36,7 @@ public class VehicleType {
     private String description;
 
     @Column(name = "active", nullable = false)
-    private boolean isActive;
+    private boolean isActive = true;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
