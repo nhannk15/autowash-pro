@@ -2,14 +2,18 @@ import { NavLink } from 'react-router-dom'
 import { useAuth } from '../../../context/AuthContext'
 import './Navbar.css'
 
-const navLinks = [
-    { label: 'Trang Chủ', to: '/' },
-    { label: 'Dịch Vụ',   to: '/dich-vu' },
-    { label: 'Blog',       to: '/blog' },
-]
-
 export default function NavBar() {
     const { user, logout } = useAuth()
+
+    const navLinks = [
+        { label: 'Trang Chủ', to: '/' },
+        { label: 'Dịch Vụ',   to: '/dich-vu' },
+        { label: 'Blog',       to: '/blog' },
+    ]
+
+    if (user) {
+        navLinks.push({ label: 'Cá nhân', to: '/ca-nhan/ho-so' })
+    }
 
     return (
         <nav className="navbar">
