@@ -43,7 +43,7 @@ public class User {
     @Column(name = "password_hash", nullable = true)
     private String password;
 
-    @Column(name = "full_name", nullable = false)
+    @Column(name = "full_name", nullable = false, columnDefinition = "NVARCHAR(150)")
     private String fullName;
 
     @Column(name = "phone_number", nullable = true)
