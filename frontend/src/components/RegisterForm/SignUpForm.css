@@ -1,5 +1,5 @@
-.login-container {
-    max-width: 450px;
+.signup-container {
+    max-width: 520px;
     width: 100%;
     padding: 40px;
     border-radius: 12px;
@@ -8,7 +8,7 @@
     background: white;
 }
 
-.login-title {
+.signup-title {
     font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
     text-align: center;
     margin-bottom: 24px;
@@ -17,47 +17,50 @@
     color: #0d1b4b;
 }
 
-.login-container .ant-form-item-label {
-    width: 90px;
-    min-width: 90px;
+.signup-container .ant-picker {
+    width: 100%;
+}
+
+.signup-container .ant-form-item-label {
+    width: 150px;
+    min-width: 150px;
     text-align: left;
 }
 
-.login-container .ant-btn-primary {
+.signup-container .ant-btn-primary {
     background: #0d1b4b;
     border-color: #0d1b4b;
     transition: all 0.3s ease;
 }
 
-.login-container .ant-btn-primary:hover {
+.signup-container .ant-btn-primary:hover {
     background: #1a2d6b !important;
     border-color: #1a2d6b !important;
 }
 
-.login-container .ant-divider {
+.signup-container .ant-divider {
     border-color: #0d1b4b;
 }
 
-.login-container .ant-input:focus,
-.login-container .ant-input-focused,
-.login-container .ant-input:hover,
-.login-container .ant-input-password:hover .ant-input,
-.login-container .ant-input-affix-wrapper:hover {
+.signup-container .ant-input:focus,
+.signup-container .ant-input-focused,
+.signup-container .ant-input:hover,
+.signup-container .ant-input-password:hover .ant-input,
+.signup-container .ant-input-affix-wrapper:hover {
     border-color: #0d1b4b !important;
 }
 
-.login-container .ant-checkbox-checked .ant-checkbox-inner {
+.signup-container .ant-checkbox-checked .ant-checkbox-inner {
     background-color: #0d1b4b;
     border-color: #0d1b4b;
 }
 
-.login-container .ant-form-item-label>label {
+.signup-container .ant-form-item-label>label {
     color: #0d1b4b;
     font-weight: 500;
 }
 
-.forgot-password-btn,
-.register-btn {
+.signup-btn {
     background: white;
     border: 1px solid #0d1b4b;
     color: #0d1b4b;
@@ -65,45 +68,21 @@
     transition: all 0.3s ease;
 }
 
-.forgot-password-btn:hover,
-.register-btn:hover {
+.signup-btn:hover {
     background: #f0f2f8 !important;
     color: #0d1b4b !important;
     border-color: #0d1b4b !important;
 }
 
-.google-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    border: 1px solid #0d1b4b;
-    color: #0d1b4b;
-    font-weight: 500;
-    background: white;
-    transition: all 0.3s ease;
-}
-
-.google-btn:hover {
-    border-color: #0d1b4b !important;
-    color: #0d1b4b !important;
-    background: #f0f2f8 !important;
-}
-
-.google-btn img {
-    height: 16px;
-    width: 16px;
-    object-fit: contain;
-}
 
 /* Tablet */
 @media (max-width: 768px) {
-    .login-container {
+    .signup-container {
         max-width: 380px;
         padding: 32px 28px;
     }
 
-    .login-title {
+    .signup-title {
         font-size: 22px;
         margin-bottom: 20px;
     }
@@ -111,14 +90,14 @@
 
 /* Mobile */
 @media (max-width: 480px) {
-    .login-container {
+    .signup-container {
         max-width: 100%;
         padding: 24px 20px;
         border-radius: 8px;
         box-shadow: 0 2px 12px rgba(44, 57, 65, 0.08);
     }
 
-    .login-title {
+    .signup-title {
         font-size: 20px;
         margin-bottom: 16px;
     }
