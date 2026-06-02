@@ -14,7 +14,9 @@ export function LoginForm() {
         try {
             await login(values.email, values.password);
             message.success("Đăng nhập thành công!");
-            navigate("/");
+            setTimeout(() => {
+                navigate("/");
+            }, 500);
         } catch (e) {
             message.error("Sai tài khoản hoặc mật khẩu!");
         }
