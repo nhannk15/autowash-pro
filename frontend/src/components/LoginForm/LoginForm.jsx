@@ -31,7 +31,7 @@ export function LoginForm() {
             <h2 className="login-title">Login to Autowash Pro</h2>
             <Form
                 name="basic"
-                initialValues={{ remember: true }}
+                initialValues={{ remember: false }}
                 onFinish={onFinish}
                 onFinishFailed={onFinishFailed}
             >
@@ -51,7 +51,7 @@ export function LoginForm() {
                     <Input.Password size="large" placeholder="Enter your password" />
                 </Form.Item>
 
-                <Form.Item name="remember" valuePropName="unchecked">
+                <Form.Item name="remember" valuePropName="checked">
                     <Checkbox>Remember me</Checkbox>
                 </Form.Item>
 
@@ -63,15 +63,15 @@ export function LoginForm() {
 
                 <Form.Item>
                     <p>Don't have an account?</p>
-                    <Button className="register-btn" block type="default" size="large">
-                        Register
+                    <Button className="register-btn" block type="default" size="large" onClick={() => { navigate("/signup") }}>
+                        Sign Up
                     </Button>
                 </Form.Item>
 
                 <Form.Item>
                     <p>Forgot password?</p>
                     <Button className="forgot-password-btn" block type="default" size="large">
-                        Forgot password
+                        Forgot Password
                     </Button>
                 </Form.Item>
             </Form>
