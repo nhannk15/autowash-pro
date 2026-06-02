@@ -6,7 +6,7 @@ services:
     container_name: autowash-db
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass123
+      MYSQL_ROOT_PASSWORD: 123456
       MYSQL_DATABASE: autowash
       MYSQL_USER: autowash
       MYSQL_PASSWORD: autowash123
