@@ -22,7 +22,7 @@
     text-decoration: none;
     display: flex;
     align-items: baseline;
-    gap: 0;
+    gap: 2px;
     flex-shrink: 0;
 }
 
@@ -32,7 +32,6 @@
     font-weight: 800;
     color: #0d1b4b;
     letter-spacing: 0.04em;
-    text-transform: uppercase;
 }
 
 .navbar__logo--accent {
@@ -105,13 +104,20 @@
     white-space: nowrap;
 }
 
-.navbar__btn--login {
+.navbar__btn--login,
+.navbar__btn--logout {
     color: #0d1b4b;
+    border: 1px solid #0d1b4b;
     background: transparent;
 }
 
-.navbar__btn--login:hover {
+.navbar__btn--login:hover,
+.navbar__btn--logout:hover {
     background-color: #f0f2f8;
+}
+
+.navbar__btn--logout:hover {
+    cursor: pointer;
 }
 
 .navbar__btn--signup {

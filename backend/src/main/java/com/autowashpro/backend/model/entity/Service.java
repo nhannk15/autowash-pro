@@ -1,6 +1,7 @@
 package com.autowashpro.backend.model.entity;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.autowashpro.backend.model.enums.ServiceCategory;
@@ -13,8 +14,18 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
 @Entity
 @Table(name = "services")
 public class Service {
@@ -23,14 +34,11 @@ public class Service {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "service_name", nullable = false)
+    @Column(name = "service_name", nullable = false, columnDefinition = "NVARCHAR(150)")
     private String serviceName;
 
-    @Column(name = "description", nullable = true)
+    @Column(name = "description", nullable = true, columnDefinition = "NVARCHAR(150)")
     private String description;
-
-    @Column(name = "base_price", nullable = false, precision = 10, scale = 2)
-    private BigDecimal basePrice;
 
     @Column(name = "duration_minutes", nullable = false)
     private int durationMinutes;
@@ -43,8 +51,31 @@ public class Service {
     private ServiceCategory category;
 
     @Column(name = "is_active", nullable = false)
-    private boolean isActive;
+    private boolean isActive = true;
 
     @OneToMany(mappedBy = "service")
-    private List<Booking> bookings;
+    private List<ServicePrice> servicePrices;
+
+    @OneToMany(mappedBy = "service")
+    private List<Reward> rewards;
+
+    @OneToMany(mappedBy = "service")
+    private List<Promotion> promotions;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 }

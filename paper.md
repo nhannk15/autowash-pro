@@ -2,18 +2,18 @@
 
 ---
 
-## Entities (16)
+## Entities (17)
 
 | # | Entity | Nhóm | Vai trò |
 |---|--------|------|---------|
-|` 1 | User | Auth | Tài khoản đăng nhập — Google OAuth / email+password |
+| 1 | User | Auth | Tài khoản đăng nhập — Google OAuth / email+password |
 | 2 | Customer | Khách hàng | Hồ sơ khách hàng + trạng thái loyalty |
 | 3 | Staff | Nhân sự | Nhân viên / quản lý |
 | 4 | Vehicle | Khách hàng | Phương tiện — biển số nhận diện LPR |
 | 5 | MembershipTier | Loyalty | Cấu hình hạng thành viên |
 | 6 | TierRule | Loyalty | Điều kiện nâng/hạ hạng — tách riêng khỏi MembershipTier |
 | 7 | Service | Dịch vụ | Danh mục dịch vụ rửa xe |
-| 8 | Booking |` Đặt lịch | Lịch hẹn đặt trước |
+| 8 | Booking | Đặt lịch | Lịch hẹn đặt trước |
 | 9 | WashSession | Rửa xe | Phiên rửa xe thực tế — trung tâm nghiệp vụ |
 | 10 | Billing | Thanh toán | Hóa đơn thanh toán |
 | 11 | Reward | Đổi thưởng | Danh mục phần thưởng đổi điểm |
@@ -22,6 +22,7 @@
 | 14 | PromotionUsage | Khuyến mãi | Nhật ký từng lượt dùng promotion |
 | 15 | PointTransaction | Loyalty | Sổ cái điểm — append-only |
 | 16 | Notification | Thông báo | Kênh giao tiếp chủ động với khách |
+| 17 | WashBay | Rửa xe | Khoang rửa xe vật lý tại cửa hàng |
 
 ---
 
@@ -68,21 +69,28 @@
 ### Sơ đồ 3 — Luồng nghiệp vụ
 
 ```
-                                                  Staff
-                                                    │
-                                                   1:N
-                                                    ▼
-  Customer ─┐
-  Vehicle  ─┤──1:N───►┌───────────┐  0..1:1  ┌─────────────┐  1:1  ┌─────────────┐
-  Service  ─┘         │  Booking  ├─────────►│ WashSession ├──────►│   Billing   │
-                      └───────────┘          └──────┬──────┘       └──┬───────┬──┘
-                                                    │                 │       │1:N
-                                                   1:N           0..1:1       │
-                                                    │                 │  ┌────┴───────────┐
-                                                    ▼                 ▼  │ PromotionUsage │
-                                         ┌──────────────────┐  ┌───────┐└────────────────┘
-                                         │  PointTransaction│  │Voucher│
-                                         └──────────────────┘  └───────┘
+  ┌──────────┐ 1:N (nullable)
+  │ WashBay  ├────────────────────────────────────────┐
+  └────┬─────┘                                        │
+       │ 1:N (not null)                               ▼
+       │                        Staff         ┌───────────┐
+       │                          │           │  Booking  │
+       │                         1:N          └─────┬─────┘
+       │                          ▼           0..1:1│
+       │         Customer ─┐                        │
+       │         Vehicle  ─┤──1:N                   │
+       │         Service  ─┘    │                   │
+       │                        ▼                   ▼
+       └───────────────────►┌─────────────┐  1:1  ┌─────────────┐
+                            │ WashSession ├───────►│   Billing   │
+                            └──────┬──────┘        └──┬───────┬──┘
+                                   │                  │       │1:N
+                                  1:N             0..1:1       │
+                                   │                  │  ┌────┴───────────┐
+                                   ▼                  ▼  │ PromotionUsage │
+                        ┌──────────────────┐  ┌───────┐  └────────────────┘
+                        │  PointTransaction│  │Voucher│
+                        └──────────────────┘  └───────┘
 ```
 
 ### Sơ đồ 4 — Membership & Tier
@@ -111,7 +119,7 @@
 
 ---
 
-## Các mối quan hệ (29)
+## Các mối quan hệ (31)
 
 | # | Từ | Tới | Kiểu | FK | Mô tả |
 |---|----|----|------|-----|-------|
@@ -144,6 +152,8 @@
 | 27 | Voucher | PointTransaction | 1:0..1 | PointTransaction.voucher_id | Redeem điểm tạo voucher — 0 nếu staff cấp thủ công |
 | 28 | Billing | PromotionUsage | 1:N | PromotionUsage.billing_id | 1 hóa đơn áp nhiều promotion |
 | 29 | Promotion | PromotionUsage | 1:N | PromotionUsage.promotion_id | 1 promo dùng nhiều lần |
+| 30 | WashBay | WashSession | 1:N | WashSession.bay_id | Mỗi phiên rửa xe được thực hiện tại một khoang |
+| 31 | WashBay | Booking | 1:N | Booking.bay_id (nullable) | Đặt lịch trước gán cứng khoang — NULL với khách vãng lai (walk-in) |
 
 ---
 
@@ -152,7 +162,7 @@
 ### 1. User
 | Thuộc tính | Kiểu | Ràng buộc | Mô tả |
 |---|---|---|---|
-| user_id | Long | PK, AUTO_INCREMENT | |
+| user_id | INT | PK, AUTO_INCREMENT | |
 | email | VARCHAR(100) | UNIQUE, NOT NULL | Email đăng nhập |
 | google_id | VARCHAR(100) | UNIQUE, NULL | Google OAuth ID |
 | password_hash | VARCHAR(255) | NULL | NULL nếu dùng Google OAuth |
@@ -162,7 +172,7 @@
 | avatar_url | VARCHAR(255) | NULL | Ảnh đại diện |
 | is_active | BOOLEAN | DEFAULT TRUE | Trạng thái tài khoản |
 | created_at | DATETIME | DEFAULT NOW() | Ngày tạo |
-| updated_at | DATETIME | DEFAULT NOW() | Lần cập nhật gần nhất |
+
 ---
 
 ### 2. Customer
@@ -170,15 +180,11 @@
 |---|---|---|---|
 | customer_id | INT | PK, AUTO_INCREMENT | |
 | user_id | INT | FK → User, UNIQUE, NULL | NULL = vãng lai (walk-in) |
-| full_name | VARCHAR(100) | NOT NULL | Họ tên |
-| phone_number | VARCHAR(15) | UNIQUE, NOT NULL | SĐT — định danh chính |
-| email | VARCHAR(100) | UNIQUE, NULL | Email tùy chọn |
 | date_of_birth | DATE | NULL | Ngày sinh |
 | tier_id | INT | FK → MembershipTier, NOT NULL | Hạng hiện tại |
 | current_points | INT | DEFAULT 0 | Điểm khả dụng hiện tại (cache) |
 | lifetime_points | INT | DEFAULT 0 | Tổng điểm tích lũy toàn thời gian |
 | tier_start_date | DATE | NOT NULL | Ngày đạt hạng hiện tại |
-| tier_end_date | DATE | NOT NULL | Ngày hết hạn |
 | last_review_date | DATE | NULL | Ngày review gần nhất |
 | next_review_date | DATE | NOT NULL | Ngày review tiếp theo |
 | is_active | BOOLEAN | DEFAULT TRUE | Trạng thái khách hàng |
@@ -200,7 +206,7 @@
 | is_active | BOOLEAN | DEFAULT TRUE | Còn làm việc |
 | hired_date | DATE | NOT NULL | Ngày vào làm |
 | created_at | DATETIME | DEFAULT NOW() | Ngày tạo hồ sơ |
-| updated_at | DATETIME | DEFAULT NOW() | Lần cập nhật gần nhất | //new
+
 ---
 
 ### 4. Vehicle
@@ -212,10 +218,8 @@
 | brand | VARCHAR(50) | NULL | Hãng xe |
 | model | VARCHAR(50) | NULL | Mẫu xe |
 | color | VARCHAR(30) | NULL | Màu xe |
-| type | VARCHAR(50) | NULL | Loại xe: sedan, SUV, truck, motorbike |
 | is_active | BOOLEAN | DEFAULT TRUE | Còn sử dụng |
 | created_at | DATETIME | DEFAULT NOW() | Ngày thêm xe |
-| updated_at | DATETIME | DEFAULT NOW() | Lần cập nhật gần nhất | // new
 
 ---
 
@@ -228,7 +232,7 @@
 | booking_window_days | TINYINT | NOT NULL | Số ngày được đặt lịch trước |
 | priority_queue_order | TINYINT | NOT NULL | Thứ tự ưu tiên hàng đợi |
 | point_earn_rate | DECIMAL(5,2) | DEFAULT 1.0 | Hệ số nhân điểm khi rửa |
-| min_points_to_maintain | INT | NOT NULL | Điểm tối thiểu để duy trì hạng này |
+| min_points_to_reach | INT | NOT NULL | Điểm tối thiểu để đạt hạng này |
 | perks_description | TEXT | NULL | Mô tả quyền lợi hạng |
 
 ---
@@ -238,8 +242,8 @@
 |---|---|---|---|
 | rule_id | INT | PK, AUTO_INCREMENT | |
 | tier_id | INT | FK → MembershipTier, UNIQUE, NOT NULL | Rule áp dụng cho hạng nào |
-| min_visits_required | INT | NOT NULL | Lần rửa tối thiểu trong kỳ để giữ hạng |
-| min_spend_required | DECIMAL(12,2) | NOT NULL | Chi tiêu tối thiểu trong kỳ (VND) |
+| min_visits_per_period | INT | NOT NULL | Lần rửa tối thiểu trong kỳ để giữ hạng |
+| min_spend_per_period | DECIMAL(12,2) | NOT NULL | Chi tiêu tối thiểu trong kỳ (VND) |
 | review_period_months | TINYINT | DEFAULT 1 | Chu kỳ review (tháng) |
 | downgrade_to_tier_id | INT | FK → MembershipTier, NULL | Hạ xuống hạng nào nếu không đạt |
 
@@ -255,7 +259,6 @@
 | description | TEXT | NULL | Mô tả chi tiết |
 | base_price | DECIMAL(10,2) | NOT NULL | Giá cơ bản (VND) |
 | duration_minutes | INT | NOT NULL | Thời gian thực hiện (phút) |
-| point_multiplier | DECIMAL(4,2) | DEFAULT 1.0 | Hệ số nhân điểm riêng của dịch vụ |
 | category | ENUM | NOT NULL | `basic` / `premium` / `addon` |
 | is_active | BOOLEAN | DEFAULT TRUE | Còn cung cấp |
 
@@ -270,12 +273,15 @@
 | customer_id | INT | FK → Customer, NOT NULL | Khách đặt lịch |
 | vehicle_id | INT | FK → Vehicle, NOT NULL | Xe đặt dịch vụ |
 | service_id | INT | FK → Service, NOT NULL | Dịch vụ đặt |
+| bay_id | INT | FK → WashBay, NULL | Khoang được gán cứng khi đặt lịch — NULL nếu walk-in |
 | scheduled_datetime | DATETIME | NOT NULL | Thời gian hẹn |
 | status | ENUM | DEFAULT 'confirmed' | `confirmed` / `cancelled` / `no_show` / `completed` |
 | notes | TEXT | NULL | Ghi chú của khách |
 | created_at | DATETIME | DEFAULT NOW() | Ngày tạo |
 | cancelled_at | DATETIME | NULL | Thời điểm hủy |
 | cancel_reason | VARCHAR(255) | NULL | Lý do hủy |
+
+> **Phương án 2 — Gán cứng khoang:** Khi khách đặt lịch trước dịch vụ yêu cầu trang thiết bị đặc biệt (vd: Rửa + Nano chỉ thực hiện được tại Khoang 3), hệ thống gán `bay_id` ngay tại thời điểm booking. Walk-in để `bay_id = NULL`, khoang sẽ được gán khi tạo `WashSession`.
 
 ---
 
@@ -288,6 +294,7 @@
 | vehicle_id | INT | FK → Vehicle, NOT NULL | Xe được rửa |
 | service_id | INT | FK → Service, NOT NULL | Dịch vụ thực hiện |
 | staff_id | INT | FK → Staff, NOT NULL | Nhân viên rửa xe |
+| bay_id | INT | FK → WashBay, NOT NULL | Khoang thực hiện rửa xe |
 | start_time | DATETIME | NOT NULL | Giờ bắt đầu |
 | end_time | DATETIME | NULL | Giờ kết thúc |
 | status | ENUM | DEFAULT 'in_progress' | `in_progress` / `completed` / `cancelled` |
@@ -306,6 +313,7 @@
 | payment_method | ENUM | NOT NULL | `cash` / `bank_transfer` / `momo` / `zalopay` |
 | payment_status | ENUM | DEFAULT 'pending' | `pending` / `paid` / `cancelled` |
 | paid_at | DATETIME | NULL | Thời điểm thanh toán (NULL khi chưa PAID) |
+| point_multiplier | DECIMAL(4,2) | DEFAULT 1.0 | Hệ số nhân điểm riêng của dịch vụ |
 | created_at | DATETIME | DEFAULT NOW() | Ngày tạo hóa đơn |
 
 > **Cách tính discount_amount** (backend tính 1 lần khi thanh toán, lưu snapshot):
@@ -418,13 +426,23 @@
 
 ---
 
+### 17. WashBay
+| Thuộc tính | Kiểu | Ràng buộc | Mô tả |
+|---|---|---|---|
+| bay_id | INT | PK, AUTO_INCREMENT | |
+| bay_name | VARCHAR(50) | UNIQUE, NOT NULL | Tên khoang (vd: "Khoang 01", "Khoang Premium Nano") |
+| status | ENUM | NOT NULL, DEFAULT 'active' | Trạng thái: `active` (đang chạy), `inactive` (tạm dừng), `maintenance` (bảo trì) |
+| created_at | DATETIME | DEFAULT NOW() | Ngày tạo khoang |
+
+---
+
 ## Tổng kết
 
 | Hạng mục | Số lượng |
 |----------|----------|
-| Tổng Entity | 16 |
-| Tổng Relationships | 29 |
+| Tổng Entity | 17 |
+| Tổng Relationships | 31 |
 | Quan hệ 1:1 | 4 |
-| Quan hệ 1:N | 24 |
+| Quan hệ 1:N | 26 |
 | Quan hệ self-referencing | 1 |
-| Tổng thuộc tính | ~146 |
+| Tổng thuộc tính | ~155 |
