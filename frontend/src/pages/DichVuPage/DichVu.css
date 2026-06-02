@@ -761,3 +761,83 @@
         transform: translateY(0);
     }
 }
+
+/* ── API LOADING & ERROR STATES ──────────────────── */
+.dichvu-loading, .dichvu-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    text-align: center;
+    padding: 40px 24px;
+    background-color: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(13, 27, 75, 0.03);
+    border: 1px solid #e5e7eb;
+    margin: 40px auto;
+    max-width: 500px;
+    animation: fadeInUp 0.4s ease-out;
+}
+
+.dichvu-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px dashed #0d1b4b;
+    border-top: 4px solid #f5a623;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+.dichvu-loading-text {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #0d1b4b;
+    margin: 0;
+}
+
+.dichvu-error-icon {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+}
+
+.dichvu-error-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #ef4444;
+    margin: 0 0 8px 0;
+}
+
+.dichvu-error-desc {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin: 0 0 20px 0;
+    max-width: 360px;
+    line-height: 1.5;
+}
+
+.dichvu-retry-btn {
+    padding: 10px 24px;
+    background-color: #0d1b4b;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(13, 27, 75, 0.15);
+}
+
+.dichvu-retry-btn:hover {
+    background-color: #f5a623;
+    color: #0d1b4b;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(245, 166, 35, 0.25);
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './DichVu.css'
 import exteriorImg from '../../assets/Service/RuaXeNgoaiThat.jpg';
 import interiorImg from '../../assets/Service/VeSinhNoiThat.jpg';
@@ -9,16 +9,9 @@ import tintingImg from '../../assets/Service/DanPhimCachNhiet.png';
 import baoDuong from '../../assets/Service/baoDuong.jpg';
 import cachNhiet from '../../assets/Service/cachNhiet.jpg';
 
-const services = [
-    {
-        id: 1,
-        name: 'Rửa xe ngoại thất cao cấp',
-        type: 'basic',
-        shortDesc: 'Sạch sâu từng khe kẽ, bảo vệ và dưỡng bóng bề mặt sơn xe bằng công nghệ rửa xe 3 bước tiên tiến.',
+const serviceStaticDetails = {
+    'Rửa xe ngoại thất cao cấp': {
         image: exteriorImg,
-        duration: '30 - 45 phút',
-        priceSedan: '150.000đ',
-        priceSuv: '200.000đ',
         highlights: [
             'Rửa xe 3 bước tiêu chuẩn chuyên sâu loại bỏ bụi bẩn tối đa.',
             'Sử dụng hóa chất rửa xe pH trung tính an toàn cho sơn và lớp phủ.',
@@ -33,15 +26,8 @@ const services = [
             'Kiểm tra lại chất lượng toàn bộ xe và bàn giao cho khách hàng.'
         ]
     },
-    {
-        id: 2,
-        name: 'Vệ sinh nội thất chuyên sâu',
-        type: 'basic',
-        shortDesc: 'Khử sạch mùi ẩm mốc, hút bụi cabin và giặt ướt/hơi nước nóng ghế da, nỉ, phục hồi chi tiết nhựa toàn diện.',
+    'Vệ sinh nội thất chuyên sâu': {
         image: interiorImg,
-        duration: '3 - 4 giờ',
-        priceSedan: '800.000đ',
-        priceSuv: '1.000.000đ',
         highlights: [
             'Hút bụi và dọn dẹp chi tiết từ trần xe đến sàn xe và cốp sau.',
             'Giặt hơi nước nóng diệt khuẩn bề mặt ghế ngồi và thảm nỉ.',
@@ -56,15 +42,8 @@ const services = [
             'Lau sạch sàn xe, cốp xe, sấy khô hoàn toàn cabin và xịt dưỡng bóng da, nhựa.'
         ]
     },
-    {
-        id: 3,
-        name: 'Phủ Ceramic bảo vệ sơn',
-        type: 'premium',
-        shortDesc: 'Tạo lớp màng thủy tinh bảo vệ sơn xe chống tia UV, mưa axit, giảm xước dăm và tạo hiệu ứng lá sen bóng bẩy vượt trội.',
+    'Phủ Ceramic bảo vệ sơn': {
         image: ceramicImg,
-        duration: '1 - 2 ngày',
-        priceSedan: '5.000.000đ',
-        priceSuv: '7.000.000đ',
         highlights: [
             'Đánh bóng hiệu chỉnh bề mặt sơn giúp xóa mờ các vết xước quầng, xước dăm.',
             'Phủ 2 lớp Ceramic 9H độ cứng cao bảo vệ sơn bền vững trước môi trường.',
@@ -79,15 +58,8 @@ const services = [
             'Phủ lớp Ceramic thứ hai tăng cường độ dày và dưỡng bóng bề mặt hoàn thiện.'
         ]
     },
-    {
-        id: 4,
-        name: 'Vệ sinh khoang máy chuyên sâu',
-        type: 'basic',
-        shortDesc: 'Làm sạch bụi bẩn, dầu mỡ lâu ngày tích tụ trong khoang động cơ, bảo dưỡng chi tiết cao su/nhựa và chống chuột hiệu quả.',
+    'Vệ sinh khoang máy chuyên sâu': {
         image: engineImg,
-        duration: '90 - 120 phút',
-        priceSedan: '450.000đ',
-        priceSuv: '550.000đ',
         highlights: [
             'Làm sạch dầu mỡ cứng đầu bám lâu ngày an toàn cho các cảm biến.',
             'Sử dụng hóa chất vệ sinh khoang máy chuyên dụng không gây ăn mòn kim loại.',
@@ -102,15 +74,8 @@ const services = [
             'Tháo bọc bảo vệ, xịt dung dịch dưỡng bóng nhựa/cao su và dung dịch chống chuột.'
         ]
     },
-    {
-        id: 5,
-        name: 'Khử mùi và diệt khuẩn cabin',
-        type: 'basic',
-        shortDesc: 'Loại bỏ hoàn toàn mùi ẩm mốc, mùi thức ăn, thú cưng bằng công nghệ xông khói diệt khuẩn thông minh sinh học.',
+    'Khử mùi và diệt khuẩn cabin': {
         image: odorImg,
-        duration: '30 - 45 phút',
-        priceSedan: '200.000đ',
-        priceSuv: '250.000đ',
         highlights: [
             'Khử mùi ẩm mốc máy lạnh, mùi thuốc lá, mùi da mới hiệu quả triệt để.',
             'Diệt 99.9% vi khuẩn, nấm mốc ẩn sâu trong đường ống điều hòa.',
@@ -125,15 +90,8 @@ const services = [
             'Mở toàn bộ cửa xe thông gió trong 10 phút, kiểm tra chất lượng mùi hương và bàn giao.'
         ]
     },
-    {
-        id: 6,
-        name: 'Bảo dưỡng nhanh tổng quát',
-        type: 'basic',
-        shortDesc: 'Kiểm tra và bảo dưỡng các bộ phận thiết yếu như Bugi, lọc gió, phanh, nước làm mát để xe luôn vận hành tin cậy.',
+    'Bảo dưỡng nhanh tổng quát': {
         image: baoDuong,
-        duration: '60 - 90 phút',
-        priceSedan: '350.000đ',
-        priceSuv: '450.000đ',
         highlights: [
             'Kiểm tra nhanh 12 hạng mục an toàn quan trọng của xe.',
             'Hỗ trợ thay nhớt động cơ, lọc nhớt và bảo dưỡng nhanh hệ thống phanh.',
@@ -148,15 +106,8 @@ const services = [
             'Lập biên bản ghi nhận kết quả bảo dưỡng, bàn giao phiếu check-list cho chủ xe.'
         ]
     },
-    {
-        id: 7,
-        name: 'Dán phim cách nhiệt chống nóng cao cấp',
-        type: 'premium',
-        shortDesc: 'Bảo vệ sức khỏe và nội thất xe bằng dòng phim cách nhiệt quang học cao cấp, cản 99% tia UV và giảm nhiệt lượng cabin vượt trội.',
+    'Dán phim cách nhiệt chống nóng cao cấp': {
         image: cachNhiet,
-        duration: '1 ngày',
-        priceSedan: '7.500.000đ',
-        priceSuv: '9.500.000đ',
         highlights: [
             'Sử dụng dòng phim cách nhiệt đa lớp gốc gốm (Ceramic) hoặc phản xạ dòng điện cao cấp.',
             'Cản tới 99% tia cực tím (UV) độc hại và hơn 90% tia hồng ngoại (IR) gây nóng.',
@@ -170,20 +121,83 @@ const services = [
             'Tiến hành dán phim vào mặt trong kính bằng dung dịch bôi trơn chuyên dụng và gạt sạch bọt khí.',
             'Sấy khô cố định các mép góc kính, kiểm tra lại độ trong suốt từ bên trong cabin và bàn giao.'
         ]
-    },
-];
+    }
+};
 
 export default function DichVu() {
+    const [services, setServices] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [selectedService, setSelectedService] = useState(null);
     const [activeTab, setActiveTab] = useState('all');
 
+    const fetchServices = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await fetch("https://6a1e833ab79eec0d6cef6155.mockapi.io/services");
+            if (!response.ok) {
+                throw new Error("Không thể tải danh sách dịch vụ từ Mock API.");
+            }
+            const result = await response.json();
+            
+            if (Array.isArray(result)) {
+                const apiServices = result.map(item => {
+                    const priceSedanItem = item.servicePrices?.find(sp => sp.vehicleType?.typeName === 'SEDAN');
+                    const priceSuvItem = item.servicePrices?.find(sp => sp.vehicleType?.typeName === 'SUV');
+
+                    const staticInfo = serviceStaticDetails[item.serviceName] || {
+                        image: null,
+                        highlights: [],
+                        steps: []
+                    };
+
+                    const durationText = item.durationMinutes >= 60
+                        ? `${Math.floor(item.durationMinutes / 60)} - ${Math.ceil(item.durationMinutes / 60)} giờ`
+                        : `${item.durationMinutes} phút`;
+
+                    return {
+                        id: item.id,
+                        name: item.serviceName,
+                        type: item.category ? item.category.toLowerCase() : 'basic',
+                        shortDesc: item.description || '',
+                        image: staticInfo.image,
+                        duration: durationText,
+                        priceSedan: priceSedanItem 
+                            ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(priceSedanItem.price) 
+                            : 'Liên hệ',
+                        priceSuv: priceSuvItem 
+                            ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(priceSuvItem.price) 
+                            : 'Liên hệ',
+                        highlights: staticInfo.highlights,
+                        steps: staticInfo.steps
+                    };
+                });
+                setServices(apiServices);
+            } else {
+                throw new Error("Dữ liệu Mock API không đúng định dạng mảng.");
+            }
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchServices();
+    }, []);
+
     const filteredServices = services.filter(service => {
         if (activeTab === 'all') return true;
+        if (activeTab === 'basic') {
+            return service.type === 'basic' || service.type === 'addon';
+        }
         return service.type === activeTab;
     });
 
     const premiumCount = services.filter(s => s.type === 'premium').length;
-    const basicCount = services.filter(s => s.type === 'basic').length;
+    const basicCount = services.filter(s => s.type === 'basic' || s.type === 'addon').length;
 
     return (
         <section className="dichvu-page">
@@ -227,8 +241,23 @@ export default function DichVu() {
 
             {/* LIST DỊCH VỤ CHƯNG BÀY */}
             <div className="dichvu-container">
-                <div className="dichvu-list">
-                    {filteredServices.map((service, index) => (
+                {loading ? (
+                    <div className="dichvu-loading">
+                        <div className="dichvu-spinner" />
+                        <p className="dichvu-loading-text">Đang tải danh sách dịch vụ...</p>
+                    </div>
+                ) : error ? (
+                    <div className="dichvu-error">
+                        <div className="dichvu-error-icon">⚠️</div>
+                        <h3 className="dichvu-error-title">Không thể tải dữ liệu</h3>
+                        <p className="dichvu-error-desc">{error}</p>
+                        <button className="dichvu-retry-btn" onClick={fetchServices}>
+                            Tải lại
+                        </button>
+                    </div>
+                ) : (
+                    <div className="dichvu-list">
+                        {filteredServices.map((service, index) => (
                         <div
                             key={service.id}
                             className={`dichvu-row dichvu-row--${service.type} ${index % 2 !== 0 ? 'dichvu-row--reverse' : ''}`}
@@ -281,6 +310,7 @@ export default function DichVu() {
                         </div>
                     ))}
                 </div>
+                )}
             </div>
 
             {/* POPUP MODAL */}
