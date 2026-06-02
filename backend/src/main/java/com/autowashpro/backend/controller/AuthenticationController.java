@@ -73,7 +73,7 @@ public class AuthenticationController {
         cookie.setHttpOnly(true);
         cookie.setSecure(false);
         cookie.setPath("/");
-        cookie.setMaxAge(0); // Xóa cookie
+        cookie.setMaxAge(0);
         response.addCookie(cookie);
         return ResponseEntity.ok().build();
     }
