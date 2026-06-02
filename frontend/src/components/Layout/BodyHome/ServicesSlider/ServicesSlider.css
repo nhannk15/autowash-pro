@@ -1,0 +1,173 @@
+/* =========================================
+   SERVICES SECTION
+   ========================================= */
+.services-section {
+    background-color: #ffffff;
+    padding: 56px 24px 48px;
+}
+
+.services__container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* ---- Tiêu đề ---- */
+.services__title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #111;
+    margin-bottom: 12px;
+}
+
+.services__divider {
+    border: none;
+    border-top: 2px solid #e0e0e0;
+    margin-bottom: 28px;
+}
+
+/* ---- Slider wrapper ---- */
+.services-slider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Vùng overflow ẩn — chỉ cho thấy 4 card */
+.services-wrapper {
+    overflow: hidden;
+    flex: 1;
+}
+
+/* Track chứa tất cả card, trượt ngang */
+.services-track {
+    display: flex;
+    gap: 16px;
+    transition: transform 0.5s ease;
+}
+
+/* ---- Mỗi card dịch vụ ---- */
+.service-card {
+    flex: 0 0 276px;         /* cố định chiều rộng */
+    height: 220px;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.service-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+}
+
+/* Vùng trên — màu nền tạm (sẽ thay bằng ảnh sau) */
+.service-card__visual {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-size: cover;
+    background-position: center;
+}
+
+.service-card__icon {
+    font-size: 3rem;
+    opacity: 0.9;
+}
+
+/* Nhãn tên dịch vụ — nền tối, chữ vàng */
+.service-card__label {
+    background-color: rgba(0, 0, 0, 0.75);
+    padding: 12px 14px;
+}
+
+.service-card__name {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #f5a623;
+    margin: 0;
+    text-align: center;
+}
+
+/* ---- Nút mũi tên ---- */
+.services-arrow {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid #ddd;
+    background: #fff;
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+    color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.services-arrow:hover:not(:disabled) {
+    background-color: #0d1b4b;
+    border-color: #0d1b4b;
+    color: #ffffff;
+}
+
+.services-arrow:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* ---- Dots ---- */
+.services-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.services-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #ccc;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: all 0.3s ease;
+}
+
+.services-dot--active {
+    background-color: #f5a623;
+    width: 28px;
+    border-radius: 5px;
+}
+
+/* ---- Nút Xem Thêm ---- */
+.services__footer {
+    display: flex;
+    justify-content: center;
+    margin-top: 28px;
+}
+
+.services__view-more {
+    padding: 12px 36px;
+    background-color: #f5a623;
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    letter-spacing: 0.03em;
+}
+
+.services__view-more:hover {
+    background-color: #e09318;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(245, 166, 35, 0.4);
+}
