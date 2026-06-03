@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/Layout/Header/Navbar.jsx'
 import Footer from './components/Layout/Footer/Footer.jsx'
 import Home from './pages/HomePage/Home.jsx'
-import DichVu from './pages/DichVuPage/DichVu.jsx'
+import Service from './pages/ServicePage/Service.jsx'
 import Blog from './pages/BlogPage/Blog.jsx'
 import BlogDetail from './pages/BlogPage/BlogDetail.jsx'
 import BlogDetail2 from './pages/BlogPage/BlogDetail2.jsx'
@@ -36,7 +36,7 @@ function App() {
         <MainLayout><Home /></MainLayout>
       } />
       <Route path="/dich-vu" element={
-        <MainLayout><DichVu /></MainLayout>
+        <MainLayout><Service /></MainLayout>
       } />
       <Route path="/blog" element={
         <MainLayout><Blog /></MainLayout>

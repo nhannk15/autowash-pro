@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import './HeroSlider.css'
 import heroImage from '../../../../assets/HeroSlider/HeroSlider.png'
+import heroImage1 from '../../../../assets/HeroSlider/HeroSlider1.jpg'
+import heroImage2 from '../../../../assets/HeroSlider/HeroSlider2.jpg'
 
 const slides = [
     {
         id: 1,
-        bgImage: heroImage,
+        bgImage: heroImage1,
         tag: '🚗 Dịch Vụ Rửa Xe Chuyên Nghiệp',
         title: 'Đặt Lịch Rửa Xe\nNgay Hôm Nay',
         desc: 'Nhanh chóng - Tận tâm - Chuyên nghiệp. Xe sạch bóng trong 30 phút!',
@@ -14,7 +16,7 @@ const slides = [
     },
     {
         id: 2,
-        bgImage: heroImage,
+        bgImage: heroImage2,
         tag: '🎉 Ưu Đãi Đặc Biệt Tháng 5',
         title: 'Giảm 30% Tất Cả\nGói Dịch Vụ',
         desc: 'Áp dụng từ 18/05 - 31/05. Đừng bỏ lỡ cơ hội tiết kiệm chi phí!',
