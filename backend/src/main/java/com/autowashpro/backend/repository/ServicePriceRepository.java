@@ -22,5 +22,14 @@ public interface ServicePriceRepository extends JpaRepository<ServicePrice, Long
             @Param("ids") List<Long> ids,
             @Param("vehicleTypeId") Long vehicleTypeId);
 
-    
+
+    @Query("""
+                SELECT 
+                    sp 
+                FROM ServicePrice sp 
+                JOIN FETCH sp.service 
+                JOIN FETCH sp.vehicleType
+            """)
+    List<ServicePrice> findAllWithServiceAndVehicleType();
+
 }
