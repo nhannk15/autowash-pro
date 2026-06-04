@@ -24,9 +24,9 @@ public class StaffSeeder {
             return;
 
         staffRepository.save(
-                build("nhannk15@gmail.com", "Admin Nhân Khắc", "0945692584", LocalDate.of(2022, 1, 10), Role.ADMIN));
+                build("nhannk15@gmail.com", "Admin Nhân Khắc", "0363636363", LocalDate.of(2022, 1, 10), Role.ADMIN));
         staffRepository.save(
-                build("nhannk2101@gmail.com", "Staff Khắc Bửu", "0942575234", LocalDate.of(2022, 6, 1), Role.STAFF));
+                build("khacbuu@gmail.com", "Staff Khắc Bửu", "0942575234", LocalDate.of(2022, 6, 1), Role.STAFF));
     }
 
     private Staff build(String email, String fullName, String phoneNumber,

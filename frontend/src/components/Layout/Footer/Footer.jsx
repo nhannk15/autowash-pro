@@ -1,6 +1,33 @@
+import { useState, useEffect } from 'react'
 import './Footer.css'
 
 export default function Footer() {
+    const [isOpen, setIsOpen] = useState(false);
+
+    useEffect(() => {
+        const checkOpenStatus = () => {
+            const now = new Date();
+            const day = now.getDay(); // 0: Sunday, 1: Monday, ..., 6: Saturday
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const currentMinutes = hours * 60 + minutes;
+
+            const openMinutes = 7 * 60; // 07:00
+            let closeMinutes = 21 * 60; // 21:00 (Thứ 2 - Thứ 6)
+
+            if (day === 0 || day === 6) { // Thứ 7 (6) hoặc Chủ Nhật (0)
+                closeMinutes = 22 * 60; // 22:00
+            }
+
+            setIsOpen(currentMinutes >= openMinutes && currentMinutes < closeMinutes);
+        };
+
+        checkOpenStatus();
+        // Cập nhật lại mỗi phút
+        const interval = setInterval(checkOpenStatus, 60000);
+        return () => clearInterval(interval);
+    }, []);
+
     return (
         <footer className="footer">
             {/* Decorative top gradient divider */}
@@ -64,10 +91,17 @@ export default function Footer() {
                                 <span className="footer__hours-day">Thứ 7 – Chủ Nhật</span>
                                 <span className="footer__hours-time">07:00 – 22:00</span>
                             </div>
-                            <div className="footer__hours-badge">
-                                <span className="footer__badge-dot" />
-                                Đang mở cửa
-                            </div>
+                            {isOpen ? (
+                                <div className="footer__hours-badge footer__hours-badge--open">
+                                    <span className="footer__badge-dot footer__badge-dot--open" />
+                                    Đang mở cửa
+                                </div>
+                            ) : (
+                                <div className="footer__hours-badge footer__hours-badge--closed">
+                                    <span className="footer__badge-dot footer__badge-dot--closed" />
+                                    Đã đóng cửa
+                                </div>
+                            )}
                         </div>
                     </div>
 

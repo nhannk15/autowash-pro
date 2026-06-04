@@ -1,4 +1,4 @@
-version: '3.8'
+
 
 services:
   mysql:
@@ -6,10 +6,10 @@ services:
     container_name: autowash-db
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass123
-      MYSQL_DATABASE: autowash
-      MYSQL_USER: autowash
-      MYSQL_PASSWORD: autowash123
+      MARIADB_ROOT_PASSWORD: 123456
+      MARIADB_DATABASE: autowash
+      MARIADB_USER: autowash
+      MARIADB_PASSWORD: autowash123
     ports:
       - "3306:3306"
     volumes:
