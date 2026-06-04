@@ -10,6 +10,22 @@ export async function getMe() {
     return response.data;
 }
 
+export async function signupApi(email, password, confirmPassword, fullName, dob, phone) {
+    const response = await axios.post(
+        `${API}/auth/register`,
+        {
+            email,
+            password,
+            confirmPassword,
+            fullName,
+            dateOfBirth: dob,
+            phoneNumber: phone,
+        },
+        { withCredentials: true }
+    );
+    return response.data;
+}
+
 export async function loginEmail(email, password) {
     await axios.post(
         `${API}/auth/login`,
