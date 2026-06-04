@@ -16,6 +16,7 @@ import MyCars from './pages/CustomerPage/components/MyCars.jsx'
 import BookingList from './pages/CustomerPage/components/BookingList.jsx'
 import Payment from './pages/CustomerPage/components/Payment.jsx'
 import PersonalProfile from './pages/CustomerPage/components/PersonalProfile.jsx'
+import RegisterPage from './pages/RegisterPage/RegisterPage.jsx'
 
 // Layout chung: Navbar + nội dung + Footer
 function MainLayout({ children }) {
@@ -56,11 +57,14 @@ function App() {
       <Route path="/blog/cach-cham-soc-noi-that-o-to-tai-nha" element={
         <MainLayout><BlogDetail5 /></MainLayout>
       } />
-      <Route path="/dang-nhap" element={
+      <Route path="/login" element={
         <>
-        <LoginPage />
-        <Footer />
+          <LoginPage />
+          <Footer />
         </>
+      } />
+      <Route path="/signup" element={
+        <RegisterPage />
       } />
       {/* Trang Cá nhân (Customer Dashboard) */}
       <Route path="/ca-nhan" element={

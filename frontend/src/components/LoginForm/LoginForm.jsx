@@ -16,9 +16,9 @@ export function LoginForm() {
             message.success("Đăng nhập thành công!");
             setTimeout(() => {
                 navigate("/");
-            }, 500);
+            }, 1000);
         } catch (e) {
-            message.error("Sai tài khoản hoặc mật khẩu!");
+            message.error("Đăng nhập thất bại!");
         }
     };
 
@@ -28,50 +28,51 @@ export function LoginForm() {
 
     return (
         <div className="login-container">
-            <h2 className="login-title">Login to Autowash Pro</h2>
+            <h2 className="login-title">Đăng nhập Autowash Pro</h2>
             <Form
                 name="basic"
-                initialValues={{ remember: true }}
+                initialValues={{ remember: false }}
                 onFinish={onFinish}
                 onFinishFailed={onFinishFailed}
+                size="large"
             >
                 <Form.Item
                     label="Email"
                     name="email"
-                    rules={[{ required: true, message: "Please enter your email", type: "email" }]}
+                    rules={[{ required: true, message: "Vui lòng nhập email", type: "email" }]}
                 >
-                    <Input size="large" placeholder="Enter your email" />
+                    <Input size="large" placeholder="Vui lòng nhập email" />
                 </Form.Item>
 
                 <Form.Item
-                    label="Password"
+                    label="Mật khẩu"
                     name="password"
-                    rules={[{ required: true, message: "Please enter your password" }]}
+                    rules={[{ required: true, message: "Vui lòng nhập mật khẩu" }]}
                 >
-                    <Input.Password size="large" placeholder="Enter your password" />
+                    <Input.Password size="large" placeholder="Vui lòng nhập mật khẩu" />
                 </Form.Item>
 
-                <Form.Item name="remember" valuePropName="unchecked">
-                    <Checkbox>Remember me</Checkbox>
+                <Form.Item name="remember" valuePropName="checked">
+                    <Checkbox>Ghi nhớ thông tin đăng nhập</Checkbox>
                 </Form.Item>
 
                 <Form.Item>
                     <Button block type="primary" htmlType="submit" size="large">
-                        Login
+                        Đăng nhập
                     </Button>
                 </Form.Item>
 
                 <Form.Item>
-                    <p>Don't have an account?</p>
-                    <Button className="register-btn" block type="default" size="large">
-                        Register
+                    <p>Chưa có tài khoản?</p>
+                    <Button className="register-btn" block type="default" size="large" onClick={() => { navigate("/signup") }}>
+                        Đăng ký
                     </Button>
                 </Form.Item>
 
                 <Form.Item>
-                    <p>Forgot password?</p>
+                    <p>Quên mật khẩu?</p>
                     <Button className="forgot-password-btn" block type="default" size="large">
-                        Forgot password
+                        Quên mật khẩu
                     </Button>
                 </Form.Item>
             </Form>
@@ -84,7 +85,7 @@ export function LoginForm() {
                     onClick={loginGoogle}
                     size="large"
                 >
-                    Login with Google
+                    Đăng nhập với Google
                 </Button>
             </Form.Item>
         </div>
