@@ -17,6 +17,10 @@
     color: #0d1b4b;
 }
 
+.login-container p {
+    text-align: center;
+}
+
 .login-container .ant-form-item-label {
     width: 90px;
     min-width: 90px;

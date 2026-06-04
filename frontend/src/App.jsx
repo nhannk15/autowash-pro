@@ -16,7 +16,7 @@ import MyCars from './pages/CustomerPage/components/MyCars.jsx'
 import BookingList from './pages/CustomerPage/components/BookingList.jsx'
 import Payment from './pages/CustomerPage/components/Payment.jsx'
 import PersonalProfile from './pages/CustomerPage/components/PersonalProfile.jsx'
-import SignUpForm from './components/RegisterForm/SignUpForm.jsx'
+import RegisterPage from './pages/RegisterPage/RegisterPage.jsx'
 
 // Layout chung: Navbar + nội dung + Footer
 function MainLayout({ children }) {
@@ -64,7 +64,7 @@ function App() {
         </>
       } />
       <Route path="/signup" element={
-        <SignUpForm />
+        <RegisterPage />
       } />
       {/* Trang Cá nhân (Customer Dashboard) */}
       <Route path="/ca-nhan" element={

@@ -16,7 +16,8 @@ export default function SignUpForm() {
                 navigate("/login");
             }, 1000);
         } catch (e) {
-            message.error("Đăng kí thất bại!");
+            const errorMsg = e.response?.data?.message || e.message || "Đăng ký thất bại. Vui lòng thử lại!";
+            message.error(errorMsg);
         }
     };
 
@@ -98,7 +99,7 @@ export default function SignUpForm() {
 
                 <Form.Item>
                     <Button block type="primary" htmlType="submit" size="large">
-                        Đăng kí
+                        Đăng ký
                     </Button>
                 </Form.Item>
 

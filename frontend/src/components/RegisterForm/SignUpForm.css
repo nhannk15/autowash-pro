@@ -17,6 +17,10 @@
     color: #0d1b4b;
 }
 
+.signup-container p {
+    text-align: center;
+}
+
 .signup-container .ant-picker {
     width: 100%;
 }
