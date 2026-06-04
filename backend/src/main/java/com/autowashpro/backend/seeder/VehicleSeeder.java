@@ -29,16 +29,28 @@ public class VehicleSeeder {
         Customer customer = customerRepository.findByEmail("lethuyavhs@gmail.com").orElseThrow();
         VehicleType sedan = vehicleTypeRepository.findByTypeName("SEDAN").orElseThrow();
 
-        Vehicle v = new Vehicle();
-        v.setCustomer(customer);
-        v.setVehicleType(sedan);
-        v.setLicensePlate("74A-18536");
-        v.setBrand("Huyndai");
-        v.setModel("CRETA");
-        v.setColor("Đen");
-        v.setActive(true);
+        Vehicle v1 = new Vehicle();
+        v1.setCustomer(customer);
+        v1.setVehicleType(sedan);
+        v1.setLicensePlate("74A-18536");
+        v1.setBrand("Huyndai");
+        v1.setModel("CRETA");
+        v1.setColor("Đen");
+        v1.setImage("https://imgd.aeplcdn.com/664x374/n/cw/ec/106815/creta-exterior-right-front-three-quarter-6.png?isig=0&q=80");
+        v1.setActive(true);
+        vehicleRepository.save(v1);
 
-        vehicleRepository.save(v);
+        Vehicle v2 = new Vehicle();
+        v2.setCustomer(customer);
+        v2.setVehicleType(sedan);
+        v2.setLicensePlate("74A-88888");
+        v2.setBrand("Honda");
+        v2.setModel("Civic");
+        v2.setColor("Trắng");
+        v2.setImage("https://cdn.jdpower.com/JDPA_2020-Honda-Civic-Sport-Touring-Hatchback-White-Front-Quarter.jpg");
+        v2.setActive(true);
+
+        vehicleRepository.save(v2);
     }
 
 }

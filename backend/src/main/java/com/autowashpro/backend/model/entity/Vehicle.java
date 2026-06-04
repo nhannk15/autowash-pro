@@ -52,6 +52,9 @@ public class Vehicle {
     @Column(name = "color", nullable = true)
     private String color;
 
+    @Column(name = "image", nullable = true)
+    private String image;
+
     @Column(name = "is_active")
     private boolean isActive;
 
