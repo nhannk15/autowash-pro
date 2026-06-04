@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
@@ -20,4 +20,5 @@ jobs:
           script: |
             cd /home/ubuntu/autowash-pro
             git pull origin develop
+            docker compose down
             docker compose up -d --build
