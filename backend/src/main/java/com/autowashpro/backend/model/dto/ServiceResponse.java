@@ -24,5 +24,8 @@ public class ServiceResponse {
     private ServiceCategory category;
     private boolean isActive;
     private List<ServicePriceItemResponse> servicePrices;
+    private List<StepResponse> steps;
+    private List<HighlightResponse> highlights;
+    private String image;
 
 }

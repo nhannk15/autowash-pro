@@ -49,7 +49,7 @@ public class SecurityConfiguration {
         security.securityMatcher("/api/**", "/auth/**");
         security.authorizeHttpRequests(
                 (authorize) -> authorize
-                        .requestMatchers("/auth/login", "/auth/logout", "/auth/register")
+                        .requestMatchers("/auth/login", "/auth/logout", "/auth/register", "/api/services")
                         .permitAll()
                         .anyRequest()
                         .authenticated());

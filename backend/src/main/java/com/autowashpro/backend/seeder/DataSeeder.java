@@ -41,11 +41,15 @@ public class DataSeeder implements CommandLineRunner {
     @Autowired
     private RewardSeeder rewardSeeder;
 
+    @Autowired
+    private StepAndHighlightSeeder stepAndHighlightSeeder;
+
     @Override
     public void run(String... args) throws Exception {
         vehicleTypeSeeder.seed();
         serviceSeeder.seed();
         servicePriceSeeder.seed();
+        stepAndHighlightSeeder.seed();
         membershipTierSeeder.seed();
         tierRuleSeeder.seed();
         staffSeeder.seed();
