@@ -135,14 +135,15 @@ export default function Service() {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch("https://6a1e833ab79eec0d6cef6155.mockapi.io/services");
+            const response = await fetch("/api/services");
             if (!response.ok) {
-                throw new Error("Không thể tải danh sách dịch vụ từ Mock API.");
+                throw new Error("Không thể tải danh sách dịch vụ từ hệ thống.");
             }
             const result = await response.json();
+            const serviceList = result && result.data ? result.data : result;
             
-            if (Array.isArray(result)) {
-                const apiServices = result.map(item => {
+            if (Array.isArray(serviceList)) {
+                const apiServices = serviceList.map(item => {
                     const priceSedanItem = item.servicePrices?.find(sp => sp.vehicleType?.typeName === 'SEDAN');
                     const priceSuvItem = item.servicePrices?.find(sp => sp.vehicleType?.typeName === 'SUV');
 
@@ -152,12 +153,13 @@ export default function Service() {
                         steps: []
                     };
 
-                    const durationText = item.durationMinutes >= 60
-                        ? `${Math.floor(item.durationMinutes / 60)} - ${Math.ceil(item.durationMinutes / 60)} giờ`
-                        : `${item.durationMinutes} phút`;
+                    const durationMinutes = item.duration || 0;
+                    const durationText = durationMinutes >= 60
+                        ? `${Math.floor(durationMinutes / 60)} - ${Math.ceil(durationMinutes / 60)} giờ`
+                        : `${durationMinutes} phút`;
 
                     return {
-                        id: item.id,
+                        id: item.serviceId,
                         name: item.serviceName,
                         type: item.category ? item.category.toLowerCase() : 'basic',
                         shortDesc: item.description || '',
@@ -175,7 +177,7 @@ export default function Service() {
                 });
                 setServices(apiServices);
             } else {
-                throw new Error("Dữ liệu Mock API không đúng định dạng mảng.");
+                throw new Error("Dữ liệu dịch vụ không đúng định dạng.");
             }
         } catch (err) {
             setError(err.message);

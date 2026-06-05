@@ -105,8 +105,8 @@ export default function NavBar() {
                         </div>
                     ) : (
                         <div className="navbar__auth">
-                            <NavLink to="/dang-nhap" className="navbar__btn navbar__btn--login">Login</NavLink>
-                            <a href="#" className="navbar__btn navbar__btn--signup">Sign Up</a>
+                            <NavLink to="/login" className="navbar__btn navbar__btn--login">Login</NavLink>
+                            <NavLink to="/signup" className="navbar__btn navbar__btn--signup">Sign Up</NavLink>
                         </div>
                     )}
                 </div>
