@@ -46,6 +46,21 @@ public class CustomerService {
             throw new IllegalArgumentException("Mật khẩu không khớp!");
         }
 
+        // Validate date of birth is not in the future and age >= 18
+        if (request.getDateOfBirth() != null) {
+            if (request.getDateOfBirth().isAfter(LocalDate.now())) {
+                throw new IllegalArgumentException("Ngày sinh không hợp lệ!");
+            }
+            if (request.getDateOfBirth().plusYears(18).isAfter(LocalDate.now())) {
+                throw new IllegalArgumentException("Bạn phải đủ 18 tuổi để đăng ký!");
+            }
+        }
+
+        // Check if phone number already exists
+        if (request.getPhoneNumber() != null && repository.existsByPhoneNumber(request.getPhoneNumber())) {
+            throw new IllegalArgumentException("Số điện thoại đã được sử dụng!");
+        }
+
         // Check if user already exists
         Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
 
@@ -55,7 +70,7 @@ public class CustomerService {
             // If user already has a password → email/password account already exists
             if (user.getPassword() != null) {
                 throw new AccountExistedException(
-                        "Email " + request.getEmail() + " đã tồn tại");
+                        "Email đã tồn tại");
             }
 
             // If user exists via OAuth2 only (has googleId but no password) → link credentials
