@@ -22,8 +22,6 @@ export function AuthProvider({ children }) {
 
     async function signup(email, password, confirmPassword, fullName, dob, phone) {
         await signupApi(email, password, confirmPassword, fullName, dob, phone);
-        const data = await getMe();
-        setUser(data);
     }
 
     async function logout() {
