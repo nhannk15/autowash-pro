@@ -43,3 +43,30 @@ export async function logout() {
         withCredentials: true,
     });
 }
+
+export async function forgotPasswordApi(email) {
+    const response = await axios.post(
+        `${API}/auth/forgot-password`,
+        { email },
+        { withCredentials: true }
+    );
+    return response.data;
+}
+
+export async function verifyOtpApi(email, otp) {
+    const response = await axios.post(
+        `${API}/auth/verify-otp`,
+        { email, otp },
+        { withCredentials: true }
+    );
+    return response.data;
+}
+
+export async function resetPasswordApi(email, otp, newPassword, confirmPassword) {
+    const response = await axios.post(
+        `${API}/auth/reset-password`,
+        { email, otp, newPassword, confirmPassword },
+        { withCredentials: true }
+    );
+    return response.data;
+}

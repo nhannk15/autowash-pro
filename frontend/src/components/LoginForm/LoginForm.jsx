@@ -83,7 +83,7 @@ export function LoginForm() {
 
                 <Form.Item>
                     <p>Quên mật khẩu?</p>
-                    <Button className="forgot-password-btn" block type="default" size="large">
+                    <Button className="forgot-password-btn" block type="default" size="large" onClick={() => { navigate("/forgotpass") }}>
                         Quên mật khẩu
                     </Button>
                 </Form.Item>
