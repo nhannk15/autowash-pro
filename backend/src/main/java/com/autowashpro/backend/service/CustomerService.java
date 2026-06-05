@@ -43,7 +43,7 @@ public class CustomerService {
     public Customer register(RegistrationRequest request) {
         // Validate password match
         if (!request.getPassword().equals(request.getConfirmPassword())) {
-            throw new IllegalArgumentException("Password and Confirm Password do not match");
+            throw new IllegalArgumentException("Mật khẩu không khớp!");
         }
 
         // Check if user already exists
@@ -55,7 +55,7 @@ public class CustomerService {
             // If user already has a password → email/password account already exists
             if (user.getPassword() != null) {
                 throw new AccountExistedException(
-                        "An account with email " + request.getEmail() + " is already registered");
+                        "Email " + request.getEmail() + " đã tồn tại");
             }
 
             // If user exists via OAuth2 only (has googleId but no password) → link credentials
