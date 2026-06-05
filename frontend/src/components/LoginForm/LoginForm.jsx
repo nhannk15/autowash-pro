@@ -18,7 +18,8 @@ export function LoginForm() {
                 navigate("/");
             }, 1000);
         } catch (e) {
-            message.error("Đăng nhập thất bại!");
+            const errorMsg = e.response?.data?.message || e.message || "Đăng nhập thất bại. Vui lòng thử lại!";
+            message.error(errorMsg);
         }
     };
 
@@ -39,7 +40,18 @@ export function LoginForm() {
                 <Form.Item
                     label="Email"
                     name="email"
-                    rules={[{ required: true, message: "Vui lòng nhập email", type: "email" }]}
+                    rules={[{
+                        required: true, message: "Vui lòng nhập email"
+                    }, {
+                        validator(_, value) {
+                            if (!value) return Promise.resolve();
+                            const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail|yahoo|outlook|icloud|hotmail)\.com$/;
+                            if (!emailRegex.test(value)) {
+                                return Promise.reject(new Error("Email không đúng định dạng"));
+                            }
+                            return Promise.resolve();
+                        }
+                    }]}
                 >
                     <Input size="large" placeholder="Vui lòng nhập email" />
                 </Form.Item>

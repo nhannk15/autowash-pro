@@ -37,7 +37,18 @@ export default function SignUpForm() {
                 <Form.Item
                     label="Email"
                     name="email"
-                    rules={[{ required: true, message: "Vui lòng nhập email", type: "email" }]}
+                    rules={[{
+                        required: true, message: "Vui lòng nhập email"
+                    }, {
+                        validator(_, value) {
+                            if (!value) return Promise.resolve();
+                            const emailRegex = /^[a-zA-Z0-9._%+-]+@(gmail|yahoo|outlook|icloud|hotmail)\.com$/;
+                            if (!emailRegex.test(value)) {
+                                return Promise.reject(new Error("Email không đúng định dạng"));
+                            }
+                            return Promise.resolve();
+                        }
+                    }]}
                 >
                     <Input size="large" placeholder="Vui lòng nhập email" />
                 </Form.Item>
@@ -45,7 +56,11 @@ export default function SignUpForm() {
                 <Form.Item
                     label="Mật khẩu"
                     name="password"
-                    rules={[{ required: true, message: "Vui lòng nhập mật khẩu" }]}
+                    rules={[{
+                        required: true, message: "Vui lòng nhập mật khẩu"
+                    }, {
+                        min: 8, message: "Mật khẩu ít nhất 8 ký tự"
+                    }]}
                 >
                     <Input.Password size="large" placeholder="Vui lòng nhập mật khẩu" />
                 </Form.Item>
@@ -71,7 +86,23 @@ export default function SignUpForm() {
                 <Form.Item
                     label="Họ và tên"
                     name="fullName"
-                    rules={[{ required: true, message: "Vui lòng nhập họ và tên" }]}
+                    rules={[{
+                        required: true, message: "Vui lòng nhập họ và tên"
+                    }, {
+                        validator(_, value) {
+                            if (!value) return Promise.resolve();
+                            if (/^\s|\s$/.test(value)) {
+                                return Promise.reject(new Error("Họ tên không được bắt đầu hoặc kết thúc bằng khoảng trắng"));
+                            }
+                            if (/\s{2,}/.test(value)) {
+                                return Promise.reject(new Error("Họ tên không được chứa nhiều khoảng trắng liên tiếp"));
+                            }
+                            if (!/^[A-Za-zÀ-Ỹà-ỹ\s]+$/.test(value)) {
+                                return Promise.reject(new Error("Họ tên không được chứa ký tự đặc biệt hoặc số"));
+                            }
+                            return Promise.resolve();
+                        }
+                    }]}
                 >
                     <Input size="large" placeholder="Vui lòng nhập họ và tên" />
                 </Form.Item>
@@ -90,7 +121,7 @@ export default function SignUpForm() {
                     rules={[{
                         required: true, message: "Vui lòng nhập số điện thoại"
                     }, {
-                        pattern: /(0[3|5|7|8|9])+([0-9]{8})\b/,
+                        pattern: /^(0[35789])+([0-9]{8})$/,
                         message: "Số điện thoại không hợp lệ!"
                     }]}
                 >
