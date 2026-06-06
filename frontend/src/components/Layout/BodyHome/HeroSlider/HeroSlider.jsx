@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../../../context/AuthContext'
 import './HeroSlider.css'
-import heroImage from '../../../../assets/HeroSlider/HeroSlider.png'
 import heroImage1 from '../../../../assets/HeroSlider/HeroSlider1.jpg'
 import heroImage2 from '../../../../assets/HeroSlider/HeroSlider2.jpg'
 
@@ -9,7 +10,7 @@ const slides = [
         id: 1,
         bgImage: heroImage1,
         tag: '🚗 Dịch Vụ Rửa Xe Chuyên Nghiệp',
-        title: 'Đặt Lịch Rửa Xe\nNgay Hôm Nay',
+        title: 'Đặt Lịch Rửa Xe\nNgay Hôm Hôm Nay',
         desc: 'Nhanh chóng - Tận tâm - Chuyên nghiệp. Xe sạch bóng trong 30 phút!',
         btn1: 'Đặt Lịch Ngay',
         btn2: 'Gọi Ngay: 0909 123 456',
@@ -27,6 +28,8 @@ const slides = [
 
 export default function HeroSlider() {
     const [currentIndex, setCurrentIndex] = useState(0)
+    const { user } = useAuth()
+    const navigate = useNavigate()
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -39,6 +42,18 @@ export default function HeroSlider() {
     }, [])
 
     const goToSlide = (index) => setCurrentIndex(index)
+
+    const handleButtonClick = (btnText) => {
+        if (btnText === 'Đặt Lịch Ngay') {
+            if (user) {
+                navigate('/ca-nhan/dat-lich')
+            } else {
+                navigate('/signup')
+            }
+        } else if (btnText === 'Xem Ưu Đãi' || btnText === 'Tìm Hiểu Thêm') {
+            navigate('/dich-vu')
+        }
+    }
 
     return (
         <div className="hero-slider">
@@ -53,8 +68,18 @@ export default function HeroSlider() {
                         <h1 className="hero-slide__title">{slide.title}</h1>
                         <p className="hero-slide__desc">{slide.desc}</p>
                         <div className="hero-slide__buttons">
-                            <button className="hero-btn hero-btn--primary">{slide.btn1}</button>
-                            <button className="hero-btn hero-btn--outline">{slide.btn2}</button>
+                            <button 
+                                className="hero-btn hero-btn--primary"
+                                onClick={() => handleButtonClick(slide.btn1)}
+                            >
+                                {slide.btn1}
+                            </button>
+                            <button 
+                                className="hero-btn hero-btn--outline"
+                                onClick={() => handleButtonClick(slide.btn2)}
+                            >
+                                {slide.btn2}
+                            </button>
                         </div>
                     </div>
                 </div>
