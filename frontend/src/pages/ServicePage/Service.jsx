@@ -1,6 +1,27 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import './Service.css'
-import fallbackImg from '../../assets/Service/RuaXeNgoaiThat.jpg';
+import { useAuth } from '../../context/AuthContext';
+
+// Import các hình ảnh cục bộ từ assets
+import exteriorImg from '../../assets/Service/RuaXeNgoaiThat.jpg';
+import interiorImg from '../../assets/Service/VeSinhNoiThat.jpg';
+import ceramicImg from '../../assets/Service/PhuCeramic.png';
+import engineImg from '../../assets/Service/VeSinhKhoangMay.png';
+import odorImg from '../../assets/Service/KhuMui.png';
+import baoDuong from '../../assets/Service/baoDuong.jpg';
+import cachNhiet from '../../assets/Service/cachNhiet.jpg';
+
+// Bản đồ mapping tên dịch vụ -> hình ảnh cục bộ tương ứng
+const localImages = {
+    'Rửa xe ngoại thất cao cấp': exteriorImg,
+    'Vệ sinh nội thất chuyên sâu': interiorImg,
+    'Phủ Ceramic bảo vệ sơn': ceramicImg,
+    'Vệ sinh khoang máy chuyên sâu': engineImg,
+    'Khử mùi và diệt khuẩn cabin': odorImg,
+    'Bảo dưỡng nhanh tổng quát': baoDuong,
+    'Dán phim cách nhiệt chống nóng cao cấp': cachNhiet
+};
 
 export default function Service() {
     const [services, setServices] = useState([]);
@@ -19,14 +40,14 @@ export default function Service() {
             }
             const result = await response.json();
             const serviceList = result && result.data ? result.data : result;
-            
+
             if (Array.isArray(serviceList)) {
                 const apiServices = serviceList.map(item => {
                     const priceSedanItem = item.servicePrices?.find(sp => sp.vehicleType?.typeName === 'SEDAN');
                     const priceSuvItem = item.servicePrices?.find(sp => sp.vehicleType?.typeName === 'SUV');
 
-                    // Lấy ảnh từ API hoặc dùng ảnh fallback cục bộ
-                    const serviceImage = item.image || fallbackImg;
+                    // Lấy ảnh từ mapping cục bộ hoặc link API hoặc dùng ảnh rửa xe làm mặc định
+                    const serviceImage = localImages[item.serviceName] || item.image || exteriorImg;
 
                     // Lấy danh sách ưu thế nổi bật từ API
                     const highlights = item.highlights
@@ -39,9 +60,11 @@ export default function Service() {
                         : [];
 
                     const durationMinutes = item.duration || 0;
-                    const durationText = durationMinutes >= 60
-                        ? `${Math.floor(durationMinutes / 60)} - ${Math.ceil(durationMinutes / 60)} giờ`
-                        : `${durationMinutes} phút`;
+                    const durationText = durationMinutes < 60
+                        ? `${durationMinutes} phút`
+                        : (durationMinutes % 60 === 0 
+                            ? `${durationMinutes / 60} giờ` 
+                            : `${Math.floor(durationMinutes / 60)} giờ ${durationMinutes % 60} phút`);
 
                     return {
                         id: item.serviceId,
@@ -50,11 +73,11 @@ export default function Service() {
                         shortDesc: item.description || '',
                         image: serviceImage,
                         duration: durationText,
-                        priceSedan: priceSedanItem 
-                            ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(priceSedanItem.price) 
+                        priceSedan: priceSedanItem
+                            ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(priceSedanItem.price)
                             : 'Liên hệ',
-                        priceSuv: priceSuvItem 
-                            ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(priceSuvItem.price) 
+                        priceSuv: priceSuvItem
+                            ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(priceSuvItem.price)
                             : 'Liên hệ',
                         highlights: highlights,
                         steps: steps
@@ -148,58 +171,58 @@ export default function Service() {
                 ) : (
                     <div className="dichvu-list">
                         {filteredServices.map((service, index) => (
-                        <div
-                            key={service.id}
-                            className={`dichvu-row dichvu-row--${service.type} ${index % 2 !== 0 ? 'dichvu-row--reverse' : ''}`}
-                        >
-                            {/* Ảnh dịch vụ */}
-                            <div className="dichvu-row__image-wrapper">
-                                <img
-                                    src={service.image}
-                                    alt={service.name}
-                                    className="dichvu-row__image"
-                                    loading="lazy"
-                                />
-                            </div>
-
-                            {/* Nội dung giới thiệu */}
-                            <div className="dichvu-row__content">
-                                <div className="dichvu-row__badges">
-                                    <span className="dichvu-row__badge-id">Dịch vụ #0{service.id}</span>
-                                    {service.type === 'premium' ? (
-                                        <span className="dichvu-row__badge-tag dichvu-row__badge-tag--premium">
-                                            ✨ Dịch Vụ Cao Cấp
-                                        </span>
-                                    ) : (
-                                        <span className="dichvu-row__badge-tag dichvu-row__badge-tag--basic">
-                                            Dịch Vụ Cơ Bản
-                                        </span>
-                                    )}
-                                </div>
-                                <h2 className="dichvu-row__title">{service.name}</h2>
-                                <p className="dichvu-row__desc">{service.shortDesc}</p>
-
-                                <div className="dichvu-row__meta">
-                                    <div className="dichvu-row__meta-item">
-                                        <span className="icon">⏱</span>
-                                        <span className="text">Thời gian: <strong>{service.duration}</strong></span>
-                                    </div>
-                                    <div className="dichvu-row__meta-item">
-                                        <span className="icon">💵</span>
-                                        <span className="text">Giá chỉ từ: <strong>{service.priceSedan}</strong></span>
-                                    </div>
+                            <div
+                                key={service.id}
+                                className={`dichvu-row dichvu-row--${service.type} ${index % 2 !== 0 ? 'dichvu-row--reverse' : ''}`}
+                            >
+                                {/* Ảnh dịch vụ */}
+                                <div className="dichvu-row__image-wrapper">
+                                    <img
+                                        src={service.image}
+                                        alt={service.name}
+                                        className="dichvu-row__image"
+                                        loading="lazy"
+                                    />
                                 </div>
 
-                                <button
-                                    className="dichvu-row__btn"
-                                    onClick={() => setSelectedService(service)}
-                                >
-                                    Tìm hiểu chi tiết <span className="arrow">▶</span>
-                                </button>
+                                {/* Nội dung giới thiệu */}
+                                <div className="dichvu-row__content">
+                                    <div className="dichvu-row__badges">
+                                        <span className="dichvu-row__badge-id">Dịch vụ #0{service.id}</span>
+                                        {service.type === 'premium' ? (
+                                            <span className="dichvu-row__badge-tag dichvu-row__badge-tag--premium">
+                                                ✨ Dịch Vụ Cao Cấp
+                                            </span>
+                                        ) : (
+                                            <span className="dichvu-row__badge-tag dichvu-row__badge-tag--basic">
+                                                Dịch Vụ Cơ Bản
+                                            </span>
+                                        )}
+                                    </div>
+                                    <h2 className="dichvu-row__title">{service.name}</h2>
+                                    <p className="dichvu-row__desc">{service.shortDesc}</p>
+
+                                    <div className="dichvu-row__meta">
+                                        <div className="dichvu-row__meta-item">
+                                            <span className="icon">⏱</span>
+                                            <span className="text">Thời gian: <strong>{service.duration}</strong></span>
+                                        </div>
+                                        <div className="dichvu-row__meta-item">
+                                            <span className="icon">💵</span>
+                                            <span className="text">Giá chỉ từ: <strong>{service.priceSedan}</strong></span>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        className="dichvu-row__btn"
+                                        onClick={() => setSelectedService(service)}
+                                    >
+                                        Tìm hiểu chi tiết <span className="arrow">▶</span>
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
                 )}
             </div>
 
@@ -216,9 +239,21 @@ export default function Service() {
 
 /* COMPONENT MODAL CHI TIẾT DỊCH VỤ */
 function ServiceModal({ service, onClose }) {
+    const { user } = useAuth();
+    const navigate = useNavigate();
+
     const handleOverlayClick = (e) => {
         if (e.target.classList.contains('service-modal-overlay')) {
             onClose();
+        }
+    };
+
+    const handleBookingClick = () => {
+        onClose();
+        if (user) {
+            navigate('/ca-nhan/dat-lich');
+        } else {
+            navigate('/signup');
         }
     };
 
@@ -315,12 +350,9 @@ function ServiceModal({ service, onClose }) {
                 <div className="service-modal__footer">
                     <button
                         className="service-modal__booking-btn"
-                        onClick={() => {
-                            onClose();
-                            alert(`Cảm ơn bạn đã quan tâm dịch vụ ${service.name}. Vui lòng cuộn xuống phần Đặt Lịch (Booking) ở Trang Chủ hoặc liên hệ trực tiếp hotline để được phục vụ tốt nhất!`);
-                        }}
+                        onClick={handleBookingClick}
                     >
-                        ĐĂNG KÝ ĐẶT LỊCH NGAY
+                        {user ? "ĐẶT LỊCH NGAY" : "ĐĂNG KÝ ĐẶT LỊCH NGAY"}
                     </button>
                 </div>
             </div>
