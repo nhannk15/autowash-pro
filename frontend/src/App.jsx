@@ -65,10 +65,16 @@ function App() {
         </>
       } />
       <Route path="/signup" element={
-        <RegisterPage />
+        <>
+          <RegisterPage />
+          <Footer />
+        </>
       } />
       <Route path="/forgotpass" element={
-        <ForgotPassPage />
+        <>
+          <ForgotPassPage />
+          <Footer />
+        </>
       } />
       {/* Trang Cá nhân (Customer Dashboard) */}
       <Route path="/ca-nhan" element={
