@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // const API = "http://3.36.70.151";
-const API = "http://localhost:8080";
+const API = ""; //để rỗng để cả local và VM docker đều chạy được
 
 export async function getMe() {
     const response = await axios.get(`${API}/api/users/me`, {
