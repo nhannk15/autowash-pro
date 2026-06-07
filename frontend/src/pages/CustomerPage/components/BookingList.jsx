@@ -18,6 +18,27 @@ export default function BookingList() {
     const [selectedTime, setSelectedTime] = useState('');
     const [activeTab, setActiveTab] = useState('all');
 
+    // Mock danh sách xe của khách hàng (thuộc tính tương tự backend)
+    const [userVehicles, setUserVehicles] = useState([
+        {
+            id: 1,
+            brand: 'Toyota',
+            model: 'Camry',
+            licensePlate: '30A-123.45',
+            color: 'Đen',
+            vehicleType: { typeName: 'SEDAN' }
+        },
+        {
+            id: 2,
+            brand: 'Hyundai',
+            model: 'SantaFe',
+            licensePlate: '30F-678.90',
+            color: 'Trắng',
+            vehicleType: { typeName: 'SUV' }
+        }
+    ]);
+    const [selectedVehicle, setSelectedVehicle] = useState(null);
+
     // Trạng thái tải API dịch vụ
     const [loadingServices, setLoadingServices] = useState(false);
     const [errorServices, setErrorServices] = useState(null);
@@ -177,6 +198,7 @@ export default function BookingList() {
 
     // Reset lại toàn bộ wizard để đặt lịch mới
     const handleResetBooking = () => {
+        setSelectedVehicle(null);
         setSelectedVehicleType(null);
         setSelectedServices([]);
         setSelectedTime('');
@@ -211,8 +233,12 @@ export default function BookingList() {
                             <strong>{contactInfo.phone}</strong>
                         </div>
                         <div className="success-detail-item">
-                            <span>Loại xe:</span>
-                            <strong>{selectedVehicleType === 'SEDAN' ? 'Xe Sedan (4-5 chỗ)' : 'Xe SUV / Bán tải (5-7 chỗ)'}</strong>
+                            <span>Xe chăm sóc:</span>
+                            <strong>{selectedVehicle ? `${selectedVehicle.brand} ${selectedVehicle.model} (${selectedVehicle.licensePlate})` : (selectedVehicleType === 'SEDAN' ? 'Xe Sedan (4-5 chỗ)' : 'Xe SUV / Bán tải (5-7 chỗ)')}</strong>
+                        </div>
+                        <div className="success-detail-item">
+                            <span>Phân khúc:</span>
+                            <strong>{selectedVehicleType === 'SEDAN' ? 'Sedan (4-5 chỗ)' : 'SUV / Bán tải (5-7 chỗ)'}</strong>
                         </div>
                         <div className="success-detail-item">
                             <span>Thời gian:</span>
@@ -264,31 +290,36 @@ export default function BookingList() {
                     <p className="booking-step-subtitle">Vui lòng chọn phân khúc xe để áp dụng bảng giá tương ứng tốt nhất</p>
 
                     <div className="vehicle-selection-grid">
-                        <div
-                            className={`vehicle-card ${selectedVehicleType === 'SEDAN' ? 'active' : ''}`}
-                            onClick={() => {
-                                setSelectedVehicleType('SEDAN');
-                                setMaxUnlockedStep(Math.max(maxUnlockedStep, 2));
-                            }}
-                        >
-                            <div className="vehicle-card__icon">🚗</div>
-                            <h3 className="vehicle-card__title">Xe Sedan (4 - 5 chỗ)</h3>
-                            <p className="vehicle-card__desc">Toyota Vios, Camry, Mazda 3, Honda Civic, Hyundai Elantra, Kia K3, Tesla Model 3...</p>
-                            {selectedVehicleType === 'SEDAN' && <span className="vehicle-card__badge">✓ Đã chọn</span>}
-                        </div>
-
-                        <div
-                            className={`vehicle-card ${selectedVehicleType === 'SUV' ? 'active' : ''}`}
-                            onClick={() => {
-                                setSelectedVehicleType('SUV');
-                                setMaxUnlockedStep(Math.max(maxUnlockedStep, 2));
-                            }}
-                        >
-                            <div className="vehicle-card__icon">🚙</div>
-                            <h3 className="vehicle-card__title">Xe SUV / Bán tải (5 - 7 chỗ)</h3>
-                            <p className="vehicle-card__desc">Hyundai SantaFe, Tucson, Toyota Fortuner, Mazda CX-5, Ford Ranger, Mitsubishi Triton...</p>
-                            {selectedVehicleType === 'SUV' && <span className="vehicle-card__badge">✓ Đã chọn</span>}
-                        </div>
+                        {userVehicles.map((vehicle) => {
+                            const isSelected = selectedVehicle?.id === vehicle.id;
+                            const isSedan = vehicle.vehicleType.typeName === 'SEDAN';
+                            return (
+                                <div
+                                    key={vehicle.id}
+                                    className={`vehicle-card ${isSelected ? 'active' : ''}`}
+                                    onClick={() => {
+                                        setSelectedVehicle(vehicle);
+                                        setSelectedVehicleType(vehicle.vehicleType.typeName);
+                                        setMaxUnlockedStep(Math.max(maxUnlockedStep, 2));
+                                    }}
+                                >
+                                    <div className="vehicle-card__icon">{isSedan ? '🚗' : '🚙'}</div>
+                                    <span className="vehicle-card__type-tag">{isSedan ? 'SEDAN (4-5 chỗ)' : 'SUV (5-7 chỗ)'}</span>
+                                    <h3 className="vehicle-card__title">{vehicle.brand} {vehicle.model}</h3>
+                                    <div className="vehicle-card__details">
+                                        <div className="vehicle-detail-field">
+                                            <span className="detail-label">Biển số:</span>
+                                            <span className="detail-value license-plate">{vehicle.licensePlate}</span>
+                                        </div>
+                                        <div className="vehicle-detail-field">
+                                            <span className="detail-label">Màu sắc:</span>
+                                            <span className="detail-value">{vehicle.color}</span>
+                                        </div>
+                                    </div>
+                                    {isSelected && <span className="vehicle-card__badge">✓ Đã chọn</span>}
+                                </div>
+                            );
+                        })}
                     </div>
 
                     <div className="step-1-footer">
@@ -495,8 +526,14 @@ export default function BookingList() {
                         <h3 className="sidebar-summary-title">Tạm tính</h3>
 
                         <div className="sidebar-car-info">
-                            <span>🚗 Loại xe:</span>
-                            <strong>{selectedVehicleType === 'SEDAN' ? 'Sedan (4-5 chỗ)' : 'SUV (5-7 chỗ)'}</strong>
+                            <span>🚗 Xe chăm sóc:</span>
+                            {selectedVehicle ? (
+                                <strong>
+                                    {selectedVehicle.brand} {selectedVehicle.model} ({selectedVehicle.licensePlate})
+                                </strong>
+                            ) : (
+                                <strong>{selectedVehicleType === 'SEDAN' ? 'Sedan (4-5 chỗ)' : 'SUV (5-7 chỗ)'}</strong>
+                            )}
                         </div>
 
                         <div className="sidebar-service-list">
@@ -625,7 +662,14 @@ export default function BookingList() {
                             <div className="confirm-summary-section">
                                 <h4 className="confirm-section-title">🚗 Xe chăm sóc</h4>
                                 <div className="confirm-val-text">
-                                    {selectedVehicleType === 'SEDAN' ? 'Xe Sedan (4-5 chỗ)' : 'Xe SUV / Bán tải (5-7 chỗ)'}
+                                    {selectedVehicle ? (
+                                        `${selectedVehicle.brand} ${selectedVehicle.model} (${selectedVehicle.licensePlate})`
+                                    ) : (
+                                        selectedVehicleType === 'SEDAN' ? 'Xe Sedan (4-5 chỗ)' : 'Xe SUV / Bán tải (5-7 chỗ)'
+                                    )}
+                                </div>
+                                <div style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: '500', marginTop: '2px' }}>
+                                    Phân khúc: {selectedVehicleType === 'SEDAN' ? 'Sedan (4-5 chỗ)' : 'SUV / Bán tải (5-7 chỗ)'}
                                 </div>
                             </div>
 
