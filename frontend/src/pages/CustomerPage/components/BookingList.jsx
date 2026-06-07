@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import './Booking.css';
 
 export default function BookingList() {
     const { user } = useAuth();
-    const navigate = useNavigate();
 
     // Các trạng thái của Wizard
     const [currentStep, setCurrentStep] = useState(1);
@@ -152,8 +150,18 @@ export default function BookingList() {
     const premiumCount = services.filter(s => s.type === 'premium').length;
     const basicCount = services.filter(s => s.type === 'basic' || s.type === 'addon').length;
 
-    // Danh sách các khung giờ mẫu
-    const timeSlots = ['08:00', '09:30', '11:00', '13:30', '15:00', '16:30', '18:00'];
+    // Hàm kiểm tra ngày cuối tuần
+    const isWeekend = (dateString) => {
+        if (!dateString) return false;
+        const date = new Date(dateString);
+        const day = date.getDay(); // 0: Chủ Nhật, 6: Thứ Bảy
+        return day === 0 || day === 6;
+    };
+
+    // Hàm lấy khung giờ tối động dựa trên ngày trong tuần
+    const getEveningSlots = (dateString) => {
+        return isWeekend(dateString) ? ['18:00', '19:30', '20:30'] : ['18:00', '19:30'];
+    };
 
     // Cập nhật thông tin Form ghi chú/liên hệ
     const handleInputChange = (e) => {
@@ -355,7 +363,7 @@ export default function BookingList() {
                                                             onClick={() => {
                                                                 handleToggleService(service);
                                                                 // Mở khóa Bước 3 nếu có ít nhất 1 dịch vụ được chọn
-                                                                const newSelection = isSelected 
+                                                                const newSelection = isSelected
                                                                     ? selectedServices.filter(s => s.id !== service.id)
                                                                     : [...selectedServices, service];
                                                                 if (newSelection.length > 0) {
@@ -365,7 +373,7 @@ export default function BookingList() {
                                                                 }
                                                             }}
                                                         >
-                                                            {isSelected ? '✓ Đã thêm vào lịch' : 'Thêm vào lịch'}
+                                                            {isSelected ? 'ĐÃ CHỌN' : 'THÊM'}
                                                         </button>
                                                     </div>
                                                 );
@@ -384,39 +392,98 @@ export default function BookingList() {
                                     <p className="booking-step-subtitle">Chọn ngày và khung giờ bạn muốn đưa xe đến trung tâm chăm sóc</p>
                                 </div>
 
-                                <div className="booking-input-group">
-                                    <label className="booking-input-label">CHỌN NGÀY HẸN</label>
-                                    <input
-                                        type="date"
-                                        className="booking-date-picker"
-                                        value={selectedDate}
-                                        onChange={(e) => {
-                                            setSelectedDate(e.target.value);
-                                            if (e.target.value && selectedTime) {
-                                                setMaxUnlockedStep(Math.max(maxUnlockedStep, 4));
-                                            }
-                                        }}
-                                        min={new Date().toISOString().split('T')[0]}
-                                    />
-                                </div>
-
-                                <div className="booking-input-group">
-                                    <label className="booking-input-label">CHỌN KHUNG GIỜ</label>
-                                    <div className="booking-time-grid">
-                                        {timeSlots.map(slot => (
-                                            <div
-                                                key={slot}
-                                                className={`booking-time-slot ${selectedTime === slot ? 'active' : ''}`}
-                                                onClick={() => {
-                                                    setSelectedTime(slot);
-                                                    if (selectedDate) {
+                                <div className="booking-datetime-grid-layout">
+                                    {/* CỘT TRÁI: CHỌN NGÀY */}
+                                    <div className="datetime-left-col">
+                                        <div className="booking-input-group">
+                                            <label className="booking-input-label">CHỌN NGÀY HẸN</label>
+                                            <input
+                                                type="date"
+                                                className="booking-date-picker"
+                                                value={selectedDate}
+                                                onChange={(e) => {
+                                                    const newDate = e.target.value;
+                                                    setSelectedDate(newDate);
+                                                    // Reset slot 20:30 nếu ngày mới chọn là ngày thường (chỉ mở đến 21:00)
+                                                    if (selectedTime === '20:30' && !isWeekend(newDate)) {
+                                                        setSelectedTime('');
+                                                        setMaxUnlockedStep(3); // khóa lại bước 4
+                                                    } else if (newDate && selectedTime) {
                                                         setMaxUnlockedStep(Math.max(maxUnlockedStep, 4));
                                                     }
                                                 }}
-                                            >
-                                                {slot}
+                                                min={new Date().toISOString().split('T')[0]}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* CỘT PHẢI: CHỌN KHUNG GIỜ */}
+                                    <div className="datetime-right-col">
+                                        <div className="booking-input-group">
+                                            <label className="booking-input-label">CHỌN KHUNG GIỜ</label>
+
+                                            <div className="time-period-group">
+                                                <h4 className="time-period-title">BUỔI SÁNG (07:00 - 12:00)</h4>
+                                                <div className="booking-time-grid">
+                                                    {['07:30', '09:00', '10:30'].map(slot => (
+                                                        <div
+                                                            key={slot}
+                                                            className={`booking-time-slot ${selectedTime === slot ? 'active' : ''}`}
+                                                            onClick={() => {
+                                                                setSelectedTime(slot);
+                                                                if (selectedDate) {
+                                                                    setMaxUnlockedStep(Math.max(maxUnlockedStep, 4));
+                                                                }
+                                                            }}
+                                                        >
+                                                            {slot}
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
-                                        ))}
+
+                                            <div className="time-period-group" style={{ marginTop: '16px' }}>
+                                                <h4 className="time-period-title">BUỔI CHIỀU (12:00 - 17:00)</h4>
+                                                <div className="booking-time-grid">
+                                                    {['13:30', '15:00', '16:30'].map(slot => (
+                                                        <div
+                                                            key={slot}
+                                                            className={`booking-time-slot ${selectedTime === slot ? 'active' : ''}`}
+                                                            onClick={() => {
+                                                                setSelectedTime(slot);
+                                                                if (selectedDate) {
+                                                                    setMaxUnlockedStep(Math.max(maxUnlockedStep, 4));
+                                                                }
+                                                            }}
+                                                        >
+                                                            {slot}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div className="time-period-group" style={{ marginTop: '16px' }}>
+                                                <h4 className="time-period-title">
+                                                    BUỔI TỐI (17:00 - {isWeekend(selectedDate) ? '22:00' : '21:00'})
+                                                </h4>
+                                                <div className="booking-time-grid">
+                                                    {getEveningSlots(selectedDate).map(slot => (
+                                                        <div
+                                                            key={slot}
+                                                            className={`booking-time-slot ${selectedTime === slot ? 'active' : ''}`}
+                                                            onClick={() => {
+                                                                setSelectedTime(slot);
+                                                                if (selectedDate) {
+                                                                    setMaxUnlockedStep(Math.max(maxUnlockedStep, 4));
+                                                                }
+                                                            }}
+                                                        >
+                                                            {slot}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -426,7 +493,7 @@ export default function BookingList() {
                     {/* CỘT TÓM TẮT BÊN PHẢI (SIDEBAR) */}
                     <div className="booking-sidebar">
                         <h3 className="sidebar-summary-title">Tạm tính</h3>
-                        
+
                         <div className="sidebar-car-info">
                             <span>🚗 Loại xe:</span>
                             <strong>{selectedVehicleType === 'SEDAN' ? 'Sedan (4-5 chỗ)' : 'SUV (5-7 chỗ)'}</strong>
@@ -497,7 +564,7 @@ export default function BookingList() {
                     <form className="booking-confirm-form-panel" onSubmit={handleSubmitBooking}>
                         <h2 className="booking-step-title">Thông tin khách hàng</h2>
                         <p className="booking-step-subtitle">Vui lòng kiểm tra và hoàn thiện thông tin liên hệ đặt lịch</p>
-                        
+
                         <div className="booking-confirm-form">
                             <div className="form-row">
                                 <div className="form-group">
@@ -553,7 +620,7 @@ export default function BookingList() {
                     {/* CỘT PHẢI: BIÊN NHẬN TÓM TẮT & NÚT SUBMIT */}
                     <div className="booking-confirm-sidebar">
                         <h3 className="sidebar-summary-title">Tóm tắt đặt lịch</h3>
-                        
+
                         <div className="confirm-summary-card">
                             <div className="confirm-summary-section">
                                 <h4 className="confirm-section-title">🚗 Xe chăm sóc</h4>
