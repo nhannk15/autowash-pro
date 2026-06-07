@@ -17,6 +17,7 @@ import BookingList from './pages/CustomerPage/components/BookingList.jsx'
 import Payment from './pages/CustomerPage/components/Payment.jsx'
 import PersonalProfile from './pages/CustomerPage/components/PersonalProfile.jsx'
 import RegisterPage from './pages/RegisterPage/RegisterPage.jsx'
+import ForgotPassPage from './pages/ForgotPassPage/ForgotPassPage.jsx'
 
 // Layout chung: Navbar + nội dung + Footer
 function MainLayout({ children }) {
@@ -65,6 +66,9 @@ function App() {
       } />
       <Route path="/signup" element={
         <RegisterPage />
+      } />
+      <Route path="/forgotpass" element={
+        <ForgotPassPage />
       } />
       {/* Trang Cá nhân (Customer Dashboard) */}
       <Route path="/ca-nhan" element={
