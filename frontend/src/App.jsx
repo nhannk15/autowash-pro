@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/Layout/Header/Navbar.jsx'
 import Footer from './components/Layout/Footer/Footer.jsx'
 import Home from './pages/HomePage/Home.jsx'
-import DichVu from './pages/DichVuPage/DichVu.jsx'
+import Service from './pages/ServicePage/Service.jsx'
 import Blog from './pages/BlogPage/Blog.jsx'
 import BlogDetail from './pages/BlogPage/BlogDetail.jsx'
 import BlogDetail2 from './pages/BlogPage/BlogDetail2.jsx'
@@ -16,6 +16,8 @@ import MyCars from './pages/CustomerPage/components/MyCars.jsx'
 import BookingList from './pages/CustomerPage/components/BookingList.jsx'
 import Payment from './pages/CustomerPage/components/Payment.jsx'
 import PersonalProfile from './pages/CustomerPage/components/PersonalProfile.jsx'
+import RegisterPage from './pages/RegisterPage/RegisterPage.jsx'
+import ForgotPassPage from './pages/ForgotPassPage/ForgotPassPage.jsx'
 
 // Layout chung: Navbar + nội dung + Footer
 function MainLayout({ children }) {
@@ -36,7 +38,7 @@ function App() {
         <MainLayout><Home /></MainLayout>
       } />
       <Route path="/dich-vu" element={
-        <MainLayout><DichVu /></MainLayout>
+        <MainLayout><Service /></MainLayout>
       } />
       <Route path="/blog" element={
         <MainLayout><Blog /></MainLayout>
@@ -56,10 +58,22 @@ function App() {
       <Route path="/blog/cach-cham-soc-noi-that-o-to-tai-nha" element={
         <MainLayout><BlogDetail5 /></MainLayout>
       } />
-      <Route path="/dang-nhap" element={
+      <Route path="/login" element={
         <>
-        <LoginPage />
-        <Footer />
+          <LoginPage />
+          <Footer />
+        </>
+      } />
+      <Route path="/signup" element={
+        <>
+          <RegisterPage />
+          <Footer />
+        </>
+      } />
+      <Route path="/forgotpass" element={
+        <>
+          <ForgotPassPage />
+          <Footer />
         </>
       } />
       {/* Trang Cá nhân (Customer Dashboard) */}

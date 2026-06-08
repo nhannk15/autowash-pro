@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.autowashpro.backend.model.enums.ServiceCategory;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -67,6 +68,15 @@ public class Service {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "service", cascade = CascadeType.ALL)
+    private List<Step> steps;
+    
+    @OneToMany(mappedBy = "service", cascade = CascadeType.ALL)
+    private List<Highlight> highlights;
+
+    @Column(name = "image", nullable = true)
+    private String image;
 
     @PrePersist
     protected void onCreate() {

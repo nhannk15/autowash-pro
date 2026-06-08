@@ -73,6 +73,13 @@ public class Booking {
     @JoinColumn(name = "bay_id")
     private WashBay bay;
 
+    @Column(name = "estimated_end_time")
+    private LocalDateTime estimatedEndTime;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "promotion_id")
+    private Promotion promotion;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

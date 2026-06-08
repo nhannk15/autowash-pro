@@ -2,22 +2,31 @@ package com.autowashpro.backend.service;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.autowashpro.backend.exception.UserNotFoundException;
+import com.autowashpro.backend.mapper.VehicleMapper;
+import com.autowashpro.backend.model.dto.VehicleResponse;
 import com.autowashpro.backend.model.entity.Vehicle;
+import com.autowashpro.backend.repository.UserRepository;
 import com.autowashpro.backend.repository.VehicleRepository;
 
 @Service
 public class VehicleService {
     
+    @Autowired
     private VehicleRepository repository;
 
-    public VehicleService() {
-    }
+    @Autowired
+    private UserRepository userRepository;
 
-    @org.springframework.beans.factory.annotation.Autowired
-    public VehicleService(VehicleRepository repository) {
-        this.repository = repository;
+    @Autowired
+    private VehicleMapper vehicleMapper;
+
+    public List<VehicleResponse> findByCustomerId(Long id) {
+        userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("Người dùng không tồn tại."));
+        return vehicleMapper.toVehicleResponseList(repository.findByCustomerId(id));
     }
 
     public Vehicle createNew(Vehicle vehicle) {

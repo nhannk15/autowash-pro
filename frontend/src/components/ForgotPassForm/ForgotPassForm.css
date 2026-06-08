@@ -1,0 +1,146 @@
+.forgotpass-container {
+    max-width: 450px;
+    width: 100%;
+    padding: 40px;
+    border-radius: 12px;
+    border: 1px solid #0d1b4b;
+    box-shadow: 0 4px 24px rgba(44, 57, 65, 0.12);
+    background: white;
+    margin: 60px auto;
+}
+
+.forgotpass-title {
+    font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+    text-align: center;
+    margin-bottom: 8px;
+    font-size: 24px;
+    font-weight: 600;
+    color: #0d1b4b;
+}
+
+.forgotpass-desc {
+    text-align: center;
+    color: #555;
+    margin-bottom: 24px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.forgotpass-desc strong {
+    color: #0d1b4b;
+}
+
+#forgotpass-email .ant-form-item-label {
+    width: 80px;
+    min-width: 80px;
+    text-align: left;
+}
+
+#forgotpass-otp .ant-otp {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+#forgotpass-otp .ant-otp .ant-input {
+    width: 50px;
+    height: 50px;
+    text-align: center;
+    font-size: 20px;
+    font-weight: 600;
+    border-color: #0d1b4b;
+}
+
+#forgotpass-otp .ant-otp .ant-input:focus {
+    border-color: #0d1b4b !important;
+    box-shadow: 0 0 0 2px rgba(13, 27, 75, 0.15);
+}
+
+.forgotpass-container .ant-btn-primary {
+    background: #0d1b4b;
+    border-color: #0d1b4b;
+    transition: all 0.3s ease;
+}
+
+.forgotpass-container .ant-btn-primary:hover {
+    background: #1a2d6b !important;
+    border-color: #1a2d6b !important;
+}
+
+.forgotpass-container .ant-input:focus,
+.forgotpass-container .ant-input-focused,
+.forgotpass-container .ant-input:hover,
+.forgotpass-container .ant-input-password:hover .ant-input,
+.forgotpass-container .ant-input-affix-wrapper:hover {
+    border-color: #0d1b4b !important;
+}
+
+.forgotpass-container .ant-form-item-label>label {
+    color: #0d1b4b;
+    font-weight: 500;
+}
+
+.forgotpass-back-btn {
+    background: white;
+    border: 1px solid #0d1b4b;
+    color: #0d1b4b;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.forgotpass-back-btn:hover {
+    background: #f0f2f8 !important;
+    color: #0d1b4b !important;
+    border-color: #0d1b4b !important;
+}
+
+.forgotpass-resend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: #555;
+    font-size: 14px;
+}
+
+.forgotpass-resend .ant-btn-default {
+    background: white;
+    border: 1px solid #0d1b4b;
+    color: #0d1b4b;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.forgotpass-resend .ant-btn-default:hover {
+    background: #f0f2f8 !important;
+    color: #0d1b4b !important;
+    border-color: #0d1b4b !important;
+}
+
+/* Tablet */
+@media (max-width: 768px) {
+    .forgotpass-container {
+        max-width: 380px;
+        padding: 32px 28px;
+        margin: 40px auto;
+    }
+
+    .forgotpass-title {
+        font-size: 22px;
+    }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+    .forgotpass-container {
+        max-width: 100%;
+        padding: 24px 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 12px rgba(44, 57, 65, 0.08);
+        margin: 20px 16px;
+    }
+
+    .forgotpass-title {
+        font-size: 20px;
+    }
+}
