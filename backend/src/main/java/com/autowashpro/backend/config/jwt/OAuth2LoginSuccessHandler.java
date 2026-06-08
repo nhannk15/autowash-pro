@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -25,6 +26,9 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
+
+    @Value("${frontend.base-url}")
+    private String FRONTEND_BASE_URL;
 
     @Autowired
     private UserRepository userRepository;
@@ -88,8 +92,8 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         cookie.setPath("/");
         cookie.setMaxAge(60 * 60);
         response.addCookie(cookie);
-        response.sendRedirect("http://3.36.70.151/");
-        // response.sendRedirect("http://localhost:5173");
+        response.sendRedirect(FRONTEND_BASE_URL);
+        // response.sendRedirect("http://localhost:3000");
 
     }
 
