@@ -31,7 +31,7 @@ public class AvailableSlotScheduler {
     private static final int MAX_SLOT_PER_DAY = 14;
     private static final int MAX_NUMBER_OF_BAY = 5;
 
-    @Scheduled(cron = "*/5 * * * * *")
+    @Scheduled(cron = "0 0 0 * * *")
     public void generateNextSlotsForThatNextDay() {
 
         LocalDate thatNextDay = LocalDate.now().plusDays(MAX_WINDOW_DAY);
@@ -46,7 +46,7 @@ public class AvailableSlotScheduler {
 
         for (TimeSlot timeSlot : slotsOfDay) {
             for (WashBay washBay : washBays) {
-                AvailableSlot availableSlot = new AvailableSlot(null, thatNextDay, false, timeSlot, washBay);
+                AvailableSlot availableSlot = new AvailableSlot(null, thatNextDay, null, timeSlot, washBay);
                 availableSlotRepository.save(availableSlot);
             }
         }

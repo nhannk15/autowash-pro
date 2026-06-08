@@ -18,6 +18,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -47,8 +48,8 @@ public class Booking {
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
     private List<BookingDetail> bookingDetails;
 
-    @Column(name = "scheduled_date_time", nullable = false)
-    private LocalDateTime scheduledDateTime;
+    // @Column(name = "scheduled_date_time", nullable = false)
+    // private LocalDateTime scheduledDateTime;
 
     @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
@@ -69,20 +70,31 @@ public class Booking {
     @OneToMany(mappedBy = "booking")
     private List<WashSession> washSessions;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "bay_id")
-    private WashBay bay;
+    // @ManyToOne(fetch = FetchType.LAZY)
+    // @JoinColumn(name = "bay_id")
+    // private WashBay bay;
 
-    @Column(name = "estimated_end_time")
-    private LocalDateTime estimatedEndTime;
+    // @Column(name = "estimated_end_time")
+    // private LocalDateTime estimatedEndTime;
+
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
+    private List<AvailableSlot> availableSlots;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "promotion_id")
     private Promotion promotion;
 
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 
 }
