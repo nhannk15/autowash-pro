@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import './Blog.css'
+import heroImageBlog from '../../assets/Service/HeroImageBlog.jpg'
 
 // Import service images for blog thumbnails
 import imgRuaXe from '../../assets/Service/RuaXeNgoaiThat.jpg'
@@ -68,6 +69,7 @@ export default function Blog() {
         <div className="blog-page">
             {/* Header Section */}
             <div className="blog-header">
+                <img src={heroImageBlog} className="img-background" alt="Header Background" />
                 <div className="blog-header__container">
                     <h1 className="blog-header__title">Blog & Kinh Nghiệm Chăm Sóc Xe</h1>
                     <p className="blog-header__subtitle">

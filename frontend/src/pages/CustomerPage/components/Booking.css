@@ -1,0 +1,950 @@
+/* ── LAYOUT CHUNG ───────────────────────────────── */
+.booking-wizard {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: #333333;
+    padding: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: #ffffff;
+    min-height: 80vh;
+}
+
+/* ── STEPPER BAR ────────────────────────────────── */
+.booking-stepper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    max-width: 800px;
+    margin: 0 auto 40px auto;
+    padding: 0 40px;
+}
+
+.booking-stepper::before {
+    content: '';
+    position: absolute;
+    top: 24px;
+    left: 80px;
+    right: 80px;
+    height: 2px;
+    background-color: #e5e7eb;
+    z-index: 1;
+}
+
+.booking-step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+    background-color: #ffffff;
+    padding: 0 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    outline: none;
+}
+
+.booking-step-item.disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.booking-step-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    border: 2px solid #cbd5e1;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.booking-step-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
+    transition: color 0.3s ease;
+}
+
+/* Các trạng thái Stepper */
+.booking-step-item.active .booking-step-circle {
+    border-color: #0d1b4b;
+    background-color: #ffffff;
+    color: #0d1b4b;
+    box-shadow: 0 0 0 4px rgba(13, 27, 75, 0.1);
+    transform: scale(1.05);
+}
+
+.booking-step-item.active .booking-step-label {
+    color: #0d1b4b;
+    font-weight: 700;
+}
+
+.booking-step-item.completed .booking-step-circle {
+    border-color: #10b981;
+    background-color: #10b981;
+    color: #ffffff;
+}
+
+.booking-step-item.completed .booking-step-label {
+    color: #10b981;
+}
+
+/* ── LAYOUT BƯỚC 2 CỘT ────────────────────────────── */
+.booking-content-layout {
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+    position: relative;
+}
+
+.booking-main-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.booking-sidebar {
+    flex: 1;
+    position: sticky;
+    top: 80px;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 8px 24px rgba(13, 27, 75, 0.03);
+}
+
+/* ── CỘT PHẢI: TẠM TÍNH ─────────────────────────────── */
+.sidebar-summary-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #0d1b4b;
+    margin: 0 0 16px 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.sidebar-car-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #f8fafc;
+    padding: 10px 14px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #4b5563;
+}
+
+.sidebar-service-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 280px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    padding-right: 4px;
+}
+
+.sidebar-service-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    font-size: 0.88rem;
+    line-height: 1.4;
+}
+
+.sidebar-service-item .service-name {
+    color: #4b5563;
+    font-weight: 500;
+}
+
+.sidebar-service-item .service-price {
+    color: #0d1b4b;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.sidebar-empty-state {
+    color: #9ca3af;
+    font-size: 0.88rem;
+    font-style: italic;
+    margin: 20px 0;
+    text-align: center;
+}
+
+.sidebar-divider {
+    border: 0;
+    height: 1px;
+    background-color: #f1f5f9;
+    margin: 16px 0;
+}
+
+.sidebar-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.sidebar-total-label {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #4b5563;
+}
+
+.sidebar-total-value {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #0d1b4b;
+}
+
+.sidebar-btn-next {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    background-color: #0d1b4b;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(13, 27, 75, 0.15);
+}
+
+.sidebar-btn-next:hover:not(:disabled) {
+    background-color: #f5a623;
+    color: #0d1b4b;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(245, 166, 35, 0.3);
+}
+
+.sidebar-btn-next:disabled {
+    background-color: #cbd5e1;
+    color: #94a3b8;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.sidebar-btn-back {
+    display: block;
+    text-align: center;
+    background: none;
+    border: none;
+    color: #64748b;
+    font-size: 0.88rem;
+    font-weight: 600;
+    margin: 14px auto 0 auto;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.sidebar-btn-back:hover {
+    color: #0d1b4b;
+    text-decoration: underline;
+}
+
+/* ── BƯỚC 1: CHỌN XE ────────────────────────────────── */
+.booking-step-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #0d1b4b;
+    margin: 0 0 8px 0;
+}
+
+.booking-step-subtitle {
+    font-size: 0.95rem;
+    color: #64748b;
+    margin: 0 0 32px 0;
+}
+
+.vehicle-selection-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.vehicle-card {
+    background-color: #ffffff;
+    border: 2px solid #e5e7eb;
+    border-radius: 18px;
+    padding: 32px 24px;
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+    box-shadow: 0 4px 14px rgba(13, 27, 75, 0.05);
+}
+
+.vehicle-card:hover {
+    border-color: rgba(13, 27, 75, 0.2);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(13, 27, 75, 0.06);
+}
+
+.vehicle-card.active {
+    border-color: #0d1b4b;
+    background-color: #fffdf9;
+    box-shadow: 0 12px 28px rgba(13, 27, 75, 0.08);
+}
+
+.vehicle-card__icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    transition: transform 0.3s ease;
+}
+
+.vehicle-card:hover .vehicle-card__icon {
+    transform: scale(1.1);
+}
+
+.vehicle-card__title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #0d1b4b;
+    margin: 0 0 10px 0;
+}
+
+.vehicle-card__desc {
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: #64748b;
+    margin: 0;
+}
+
+.vehicle-card__badge {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background-color: #0d1b4b;
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 30px;
+}
+
+.vehicle-card__type-tag {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #0d1b4b;
+    background-color: rgba(13, 27, 75, 0.06);
+    padding: 4px 12px;
+    border-radius: 30px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.vehicle-card.active .vehicle-card__type-tag {
+    background-color: rgba(13, 27, 75, 0.12);
+}
+
+.vehicle-card__details {
+    width: 100%;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px dashed #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+}
+
+.vehicle-detail-field {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.88rem;
+}
+
+.detail-label {
+    color: #64748b;
+    font-weight: 500;
+}
+
+.detail-value {
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.detail-value.license-plate {
+    background-color: #f1f5f9;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.9rem;
+    border: 1px solid #e2e8f0;
+    letter-spacing: 0.05em;
+}
+
+.vehicle-card.active .detail-value.license-plate {
+    background-color: #fef3c7;
+    border-color: #fde68a;
+    color: #b45309;
+}
+
+.step-1-footer {
+    display: flex;
+    justify-content: center;
+    margin-top: 40px;
+}
+
+.btn-continue-step1 {
+    padding: 14px 40px;
+    border: none;
+    border-radius: 10px;
+    background-color: #0d1b4b;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(13, 27, 75, 0.2);
+    transition: all 0.2s ease;
+}
+
+.btn-continue-step1:hover:not(:disabled) {
+    background-color: #f5a623;
+    color: #0d1b4b;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(245, 166, 35, 0.3);
+}
+
+.btn-continue-step1:disabled {
+    background-color: #cbd5e1;
+    color: #94a3b8;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+
+/* ── BƯỚC 2: CHỌN DỊCH VỤ ───────────────────────────── */
+.booking-filter-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.booking-filter-btn {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    color: #4b5563;
+    padding: 8px 18px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 30px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.booking-filter-btn:hover {
+    color: #0d1b4b;
+    background-color: #f8fafc;
+}
+
+.booking-filter-btn.active {
+    color: #ffffff;
+    background-color: #0d1b4b;
+    border-color: #0d1b4b;
+    box-shadow: 0 2px 6px rgba(13, 27, 75, 0.15);
+}
+
+.booking-filter-btn .tab-count {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 10px;
+    background-color: rgba(13, 27, 75, 0.06);
+    color: #4b5563;
+}
+
+.booking-filter-btn.active .tab-count {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+/* Khung chứa dịch vụ cố định độ cao có scroll */
+.booking-services-wrapper {
+    max-height: 480px;
+    min-height: 420px;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+/* Custom Scrollbar cho khung dịch vụ */
+.booking-services-wrapper::-webkit-scrollbar {
+    width: 6px;
+}
+.booking-services-wrapper::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+}
+.booking-services-wrapper::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+.booking-services-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Grid danh sách dịch vụ */
+.booking-services-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.booking-service-card {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 14px;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(13, 27, 75, 0.04);
+}
+
+.booking-service-card:hover {
+    border-color: rgba(13, 27, 75, 0.15);
+    box-shadow: 0 6px 14px rgba(13, 27, 75, 0.05);
+}
+
+.booking-service-card--premium {
+    border-top: 3px solid #f5a623;
+    background: linear-gradient(to bottom, #fffdfb, #ffffff);
+}
+
+.booking-service-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.booking-service-card__title {
+    font-size: 1.05rem;
+    font-weight: 750;
+    color: #0d1b4b;
+    margin: 0;
+    line-height: 1.3;
+}
+
+.booking-service-card__price {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #0d1b4b;
+    white-space: nowrap;
+}
+
+.booking-service-card__desc {
+    font-size: 0.82rem;
+    line-height: 1.4;
+    color: #64748b;
+    margin: 0;
+}
+
+.booking-service-card__btn {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.booking-service-card__btn--add {
+    background-color: transparent;
+    border: 1.5px solid #0d1b4b;
+    color: #0d1b4b;
+}
+
+.booking-service-card__btn--add:hover {
+    background-color: #f0f2f8;
+}
+
+.booking-service-card__btn--selected {
+    background-color: #0d1b4b;
+    border: 1.5px solid #0d1b4b;
+    color: #ffffff;
+}
+
+.booking-service-card__btn--selected:hover {
+    background-color: #d93838;
+    border-color: #d93838;
+}
+
+/* ── BƯỚC 3: CHỌN THỜI GIAN ─────────────────────────── */
+.booking-datetime-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.booking-datetime-grid-layout {
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+}
+
+.datetime-left-col {
+    flex: 0 0 260px;
+}
+
+.datetime-right-col {
+    flex: 1;
+}
+
+.booking-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.booking-input-label {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #0d1b4b;
+}
+
+.booking-date-picker {
+    width: 100%;
+    max-width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    outline: none;
+    color: #333;
+    transition: border-color 0.2s ease;
+}
+
+.booking-date-picker:focus {
+    border-color: #0d1b4b;
+}
+
+.time-period-title {
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: #64748b;
+    letter-spacing: 0.05em;
+    margin: 16px 0 10px 0;
+}
+
+.booking-time-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.booking-time-slot {
+    background-color: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #4b5563;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.booking-time-slot:hover {
+    border-color: #0d1b4b;
+    color: #0d1b4b;
+    background-color: #f0f2f8;
+}
+
+.booking-time-slot.active {
+    background-color: #0d1b4b;
+    border-color: #0d1b4b;
+    color: #ffffff;
+    box-shadow: 0 4px 10px rgba(13, 27, 75, 0.2);
+}
+
+/* ── BƯỚC 4: XÁC NHẬN ──────────────────────────────── */
+.booking-confirm-layout {
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+}
+
+.booking-confirm-form-panel {
+    flex: 1.4;
+    display: flex;
+    flex-direction: column;
+}
+
+.booking-confirm-sidebar {
+    flex: 1;
+    position: sticky;
+    top: 80px;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 8px 24px rgba(13, 27, 75, 0.03);
+}
+
+.confirm-summary-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.confirm-summary-section {
+    margin-bottom: 20px;
+}
+
+.confirm-summary-section:last-child {
+    margin-bottom: 0;
+}
+
+.confirm-section-title {
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: #64748b;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin: 0 0 6px 0;
+}
+
+.confirm-val-text {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #0d1b4b;
+    margin-top: 4px;
+}
+
+.confirm-services-mini-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.confirm-mini-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.88rem;
+    color: #4b5563;
+}
+
+.confirm-mini-item .price {
+    font-weight: 700;
+    color: #0d1b4b;
+}
+
+/* Form điền thông tin */
+.booking-confirm-form {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: 0 8px 24px rgba(13, 27, 75, 0.02);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #0d1b4b;
+}
+
+.form-input {
+    padding: 12px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.form-input:focus {
+    border-color: #0d1b4b;
+}
+
+.form-input:disabled {
+    background-color: #f1f5f9;
+    color: #64748b;
+    cursor: not-allowed;
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+
+
+/* ── MÀN HÌNH THÀNH CÔNG ─────────────────────────────── */
+.booking-success-screen {
+    max-width: 500px;
+    margin: 40px auto;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 24px;
+    padding: 48px 32px;
+    text-align: center;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: scaleInModal 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.success-icon-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: #ecfdf5;
+    color: #10b981;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    margin-bottom: 24px;
+}
+
+.success-title {
+    font-size: 1.7rem;
+    font-weight: 800;
+    color: #0d1b4b;
+    margin: 0 0 12px 0;
+}
+
+.success-message {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #64748b;
+    margin: 0 0 24px 0;
+}
+
+.success-details {
+    width: 100%;
+    background-color: #f8fafc;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 32px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.success-detail-item {
+    font-size: 0.88rem;
+    color: #4b5563;
+    display: flex;
+    justify-content: space-between;
+}
+
+.success-detail-item strong {
+    color: #0d1b4b;
+}
+
+.btn-success-home {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    background-color: #0d1b4b;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-success-home:hover {
+    background-color: #f5a623;
+    color: #0d1b4b;
+}
+
+
+/* ── RESPONSIVE ──────────────────────────────────── */
+@media (max-width: 992px) {
+    .booking-content-layout {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .booking-sidebar {
+        position: static;
+        top: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .booking-datetime-grid-layout {
+        flex-direction: column;
+        gap: 20px;
+    }
+    .datetime-left-col {
+        flex: none;
+        width: 100%;
+    }
+    .vehicle-selection-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .booking-services-grid {
+        grid-template-columns: 1fr;
+    }
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .booking-stepper {
+        padding: 0;
+    }
+    .booking-stepper::before {
+        left: 40px;
+        right: 40px;
+    }
+    .booking-step-circle {
+        width: 38px;
+        height: 38px;
+        font-size: 0.95rem;
+    }
+    .booking-step-label {
+        font-size: 0.72rem;
+    }
+}
