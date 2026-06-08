@@ -1,10 +1,11 @@
-package com.autowashpro.backend.seeder;
+package com.autowashpro.backend.schedule;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.autowashpro.backend.model.entity.AvailableSlot;
@@ -15,7 +16,7 @@ import com.autowashpro.backend.repository.TimeSlotRepository;
 import com.autowashpro.backend.repository.WashBayRepository;
 
 @Component
-public class AvailableSlotSeeder {
+public class AvailableSlotScheduler {
 
     @Autowired
     private AvailableSlotRepository availableSlotRepository;
@@ -30,23 +31,26 @@ public class AvailableSlotSeeder {
     private static final int MAX_SLOT_PER_DAY = 14;
     private static final int MAX_NUMBER_OF_BAY = 5;
 
-    public void seed() {
+    @Scheduled(cron = "0 0 0 * * *")
+    public void generateNextSlotsForThatNextDay() {
+
+        LocalDate thatNextDay = LocalDate.now().plusDays(MAX_WINDOW_DAY);
+
+        if (availableSlotRepository.existsBySlotDate(thatNextDay))
+            return;
 
         List<TimeSlot> timeSlots = timeSlotRepository.findAll();
         List<WashBay> washBays = washBayRepository.findAll();
-        LocalDate today = LocalDate.now();
 
-        for (int day = 0; day < MAX_WINDOW_DAY; day++) {
-            LocalDate date = today.plusDays(day);
-            List<TimeSlot> slotsOfDay = getSlotsAccordingToDate(date, timeSlots);
+        List<TimeSlot> slotsOfDay = getSlotsAccordingToDate(thatNextDay, timeSlots);
 
-            for (TimeSlot timeSlot: slotsOfDay) {
-                for(WashBay washBay: washBays) {
-                    AvailableSlot availableSlot = new AvailableSlot(null, date, null, timeSlot, washBay);
-                    availableSlotRepository.save(availableSlot);
-                }
+        for (TimeSlot timeSlot : slotsOfDay) {
+            for (WashBay washBay : washBays) {
+                AvailableSlot availableSlot = new AvailableSlot(null, thatNextDay, null, timeSlot, washBay);
+                availableSlotRepository.save(availableSlot);
             }
         }
+
     }
 
     private List<TimeSlot> getSlotsAccordingToDate(LocalDate date, List<TimeSlot> allSlots) {
@@ -57,8 +61,9 @@ public class AvailableSlotSeeder {
             return allSlots;
         } else {
             return allSlots.stream()
-                .filter(currentDate -> currentDate.getEndTime().getHour() <= 17)
-                .toList();
+                    .filter(currentDate -> currentDate.getEndTime().getHour() <= 17)
+                    .toList();
         }
     }
+
 }

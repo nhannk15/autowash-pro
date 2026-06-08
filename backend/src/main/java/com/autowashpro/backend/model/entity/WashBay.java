@@ -47,10 +47,10 @@ public class WashBay {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "bay")
-    private List<Booking> bookings;
-
-    @OneToMany(mappedBy = "bay")
     private List<WashSession> washSessions;
+
+    @OneToMany(mappedBy = "washBay")
+    private List<AvailableSlot> availableSlots;
 
     @PreUpdate
     protected void onUpdate() {

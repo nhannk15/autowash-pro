@@ -31,8 +31,9 @@ public class AvailableSlot {
     @Column(name = "date")
     private LocalDate slotDate;
 
-    @Column(name = "is_booked")
-    private boolean isBooked;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "booking_id")
+    private Booking booking;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "time_slot_id", nullable = false)
