@@ -1,8 +1,7 @@
 package com.autowashpro.backend.model.dto;
 
+import java.time.LocalDate;
 import java.util.List;
-
-import com.autowashpro.backend.model.entity.TimeSlot;
 
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -22,7 +21,9 @@ public class CreateBookingRequest {
 
     private Long vehicleId;
 
-    private TimeSlot timeSlotId;
+    private Long timeSlotId;
+
+    private LocalDate bookingDate;
 
     @Size(min = 1)
     private List<Long> servicePriceIds;

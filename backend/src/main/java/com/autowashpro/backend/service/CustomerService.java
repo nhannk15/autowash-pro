@@ -84,7 +84,8 @@ public class CustomerService {
                         "Email đã tồn tại");
             }
 
-            // If user exists via OAuth2 only (has googleId but no password) → link credentials
+            // If user exists via OAuth2 only (has googleId but no password) → link
+            // credentials
             if (user.getGoogleId() != null && user.getPassword() == null) {
                 user.setPassword(passwordEncoder.encode(request.getPassword()));
                 user.setFullName(request.getFullName());

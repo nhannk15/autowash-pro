@@ -71,17 +71,10 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleUserNotFound(UserNotFoundException ex, WebRequest request) {
-        ErrorResponse error = createErrorResponse(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage(), request);
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
-    }
-
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ErrorResponse> handleRuntimeException(RuntimeException ex, WebRequest request) {
-        ErrorResponse error = createErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error",
-                ex.getMessage(), request);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    @ExceptionHandler(ExceedBookingWindowException.class)
+    public ResponseEntity<ErrorResponse> handleExceedBookingWindowException(ExceedBookingWindowException ex, WebRequest request) {
+        ErrorResponse error = createErrorResponse(HttpStatus.BAD_REQUEST, "BOOKING ERROR", ex.getMessage(), request);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
 }
