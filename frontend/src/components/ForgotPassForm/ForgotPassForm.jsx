@@ -15,9 +15,10 @@ export default function ForgotPassForm() {
     const handleSendOtp = async (values) => {
         setLoading(true);
         try {
-            await forgotPasswordApi(values.email);
+            // Tạm thời comment API call để test UI
+            // await forgotPasswordApi(values.email);
             setEmail(values.email);
-            message.success("Mã OTP đã được gửi đến email của bạn!");
+            message.success("Mã OTP đã được gửi đến email của bạn! (OTP Test: 123456)");
             setStep(2);
         } catch (e) {
             const errorMsg = e.response?.data?.message || e.message || "Gửi OTP thất bại. Vui lòng thử lại!";
@@ -30,7 +31,11 @@ export default function ForgotPassForm() {
     const handleVerifyOtp = async (values) => {
         setLoading(true);
         try {
-            await verifyOtpApi(email, values.otp);
+            // Tạm thời comment API call và hardcode check OTP
+            // await verifyOtpApi(email, values.otp);
+            if (values.otp !== "123456") {
+                throw new Error("Mã OTP không hợp lệ! (Sử dụng 123456 để test)");
+            }
             setOtp(values.otp);
             message.success("Xác minh OTP thành công!");
             setStep(3);
@@ -45,8 +50,9 @@ export default function ForgotPassForm() {
     const handleResendOtp = async () => {
         setLoading(true);
         try {
-            await forgotPasswordApi(email);
-            message.success("Mã OTP mới đã được gửi!");
+            // Tạm thời comment API call
+            // await forgotPasswordApi(email);
+            message.success("Mã OTP mới đã được gửi! (OTP Test: 123456)");
         } catch (e) {
             const errorMsg = e.response?.data?.message || e.message || "Gửi lại OTP thất bại!";
             message.error(errorMsg);
@@ -58,8 +64,9 @@ export default function ForgotPassForm() {
     const handleResetPassword = async (values) => {
         setLoading(true);
         try {
-            await resetPasswordApi(email, otp, values.newPassword, values.confirmPassword);
-            message.success("Thiết lập mật khẩu mới thành công!");
+            // Tạm thời comment API call
+            // await resetPasswordApi(email, otp, values.newPassword, values.confirmPassword);
+            message.success("Thiết lập mật khẩu mới thành công! (Test mode)");
             setTimeout(() => {
                 navigate("/login");
             }, 1000);
@@ -122,7 +129,7 @@ export default function ForgotPassForm() {
                 <>
                     <h2 className="forgotpass-title">Xác minh mã OTP</h2>
                     <p className="forgotpass-desc">
-                        Mã OTP đã được gửi đến<strong>{email}</strong>. Mã sẽ có hiệu lực trong 3 phút.
+                        Mã OTP đã được gửi đến <strong>{email}</strong>. Mã sẽ có hiệu lực trong 3 phút.
                     </p>
                     <Form
                         onFinish={handleVerifyOtp}
