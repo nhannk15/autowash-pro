@@ -10,6 +10,7 @@ import com.autowashpro.backend.exception.UserNotFoundException;
 import com.autowashpro.backend.mapper.HighlightMapper;
 import com.autowashpro.backend.mapper.ServicePriceMapper;
 import com.autowashpro.backend.mapper.StepMapper;
+import com.autowashpro.backend.model.dto.ServiceAdminResponse;
 import com.autowashpro.backend.model.dto.ServicePriceItemResponse;
 import com.autowashpro.backend.model.dto.ServiceResponse;
 import com.autowashpro.backend.model.entity.Highlight;
@@ -135,6 +136,20 @@ public class ServiceService {
         Service service = findById(id);
         service.setActive(!service.isActive());
         return serviceRepository.save(service);
+    }
+
+    public ServiceAdminResponse toServiceAdminResponse(Service service) {
+        return new ServiceAdminResponse(
+                service.getId(),
+                service.getServiceName(),
+                service.getDescription(),
+                service.getDurationMinutes(),
+                service.getPointMultiplier(),
+                service.getCategory(),
+                service.isActive(),
+                service.getImage(),
+                service.getCreatedAt(),
+                service.getUpdatedAt());
     }
 
 }

@@ -122,6 +122,7 @@ public class CustomerService {
         customer.setTierEndDate(LocalDate.now().plusYears(1));
         customer.setNextReviewDate(LocalDate.now().plusMonths(6));
 
+        applyCustomerDefaults(customer);
         return repository.save(customer);
     }
 
@@ -130,6 +131,7 @@ public class CustomerService {
         if (customer.getPhoneNumber() != null && repository.existsByPhoneNumber(customer.getPhoneNumber())) {
             throw new IllegalArgumentException("Số điện thoại đã được sử dụng!");
         }
+        applyCustomerDefaults(customer);
         return repository.save(customer);
     }
 
@@ -225,6 +227,10 @@ public class CustomerService {
                 .orElseThrow(() -> new UserNotFoundException("Không tìm thấy khách hàng với số điện thoại này!"));
     }
 
+    public CustomerAdminResponse findStaffCustomerByPhoneNumber(String phoneNumber) {
+        return toCustomerAdminResponse(findByPhoneNumber(phoneNumber));
+    }
+
     public Customer update(Customer customer) {
         Customer existing = findById(customer.getId());
 
@@ -241,6 +247,33 @@ public class CustomerService {
     public void delete(Long id) {
         Customer customer = findById(id);
         repository.delete(customer);
+    }
+
+    private void applyCustomerDefaults(Customer customer) {
+        if (customer.getRole() == null) {
+            customer.setRole(Role.CUSTOMER);
+        }
+        customer.setActive(true);
+        if (customer.getTier() == null) {
+            MembershipTier bronzeTier = membershipTierRepository.findByTierName("Bronze")
+                    .orElseThrow(() -> new RuntimeException("Default membership tier 'Bronze' not found"));
+            customer.setTier(bronzeTier);
+        }
+        if (customer.getCurrentPoints() == null) {
+            customer.setCurrentPoints(0L);
+        }
+        if (customer.getLifetimePoints() == null) {
+            customer.setLifetimePoints(0L);
+        }
+        if (customer.getTierStartDate() == null) {
+            customer.setTierStartDate(LocalDate.now());
+        }
+        if (customer.getTierEndDate() == null) {
+            customer.setTierEndDate(LocalDate.now().plusYears(1));
+        }
+        if (customer.getNextReviewDate() == null) {
+            customer.setNextReviewDate(LocalDate.now().plusMonths(6));
+        }
     }
 
 }

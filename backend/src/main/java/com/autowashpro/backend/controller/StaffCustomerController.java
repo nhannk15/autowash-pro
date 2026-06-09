@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.autowashpro.backend.model.dto.ApiResponse;
+import com.autowashpro.backend.model.dto.CustomerAdminResponse;
 import com.autowashpro.backend.model.dto.QuickCreateRequest;
 import com.autowashpro.backend.model.dto.QuickCreateResponse;
 import com.autowashpro.backend.model.entity.Customer;
@@ -37,8 +38,8 @@ public class StaffCustomerController {
     private VehicleTypeRepository vehicleTypeRepository;
 
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<Customer>> searchByPhone(@RequestParam String phone) {
-        return ResponseEntity.ok(ApiResponse.success(customerService.findByPhoneNumber(phone)));
+    public ResponseEntity<ApiResponse<CustomerAdminResponse>> searchByPhone(@RequestParam String phone) {
+        return ResponseEntity.ok(ApiResponse.success(customerService.findStaffCustomerByPhoneNumber(phone)));
     }
 
     @PostMapping("/quick-create")
