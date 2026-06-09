@@ -33,8 +33,11 @@ public class CustomerController {
     private CustomerMapper mapper;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Customer>>> findAll() {
-        return ResponseEntity.ok(ApiResponse.success(service.findAll()));
+    public ResponseEntity<ApiResponse<List<CustomerAdminResponse>>> findAll() {
+        List<CustomerAdminResponse> responses = service.findAll().stream()
+                .map(service::toCustomerAdminResponse)
+                .toList();
+        return ResponseEntity.ok(ApiResponse.success(responses));
     }
 
     @GetMapping("/admin")
@@ -46,20 +49,20 @@ public class CustomerController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Customer>> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.success(service.findById(id)));
+    public ResponseEntity<ApiResponse<CustomerAdminResponse>> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success(service.toCustomerAdminResponse(service.findById(id))));
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Customer>> create(@RequestBody Customer customer) {
-        return ResponseEntity.ok(ApiResponse.created(service.createNew(customer)));
+    public ResponseEntity<ApiResponse<CustomerAdminResponse>> create(@RequestBody Customer customer) {
+        return ResponseEntity.ok(ApiResponse.created(service.toCustomerAdminResponse(service.createNew(customer))));
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<ApiResponse<Customer>> update(@RequestBody Customer customer, @PathVariable Long id) {
+    public ResponseEntity<ApiResponse<CustomerAdminResponse>> update(@RequestBody Customer customer, @PathVariable Long id) {
         Customer target = service.findById(id);
         mapper.updateCustomerFromRequest(customer, target);
-        return ResponseEntity.ok(ApiResponse.success(service.update(target)));
+        return ResponseEntity.ok(ApiResponse.success(service.toCustomerAdminResponse(service.update(target))));
     }
 
     @DeleteMapping("/{id}")

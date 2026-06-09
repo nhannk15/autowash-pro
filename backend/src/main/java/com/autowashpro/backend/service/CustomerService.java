@@ -153,7 +153,7 @@ public class CustomerService {
                 .map(this::toCustomerAdminResponse);
     }
 
-    private CustomerAdminResponse toCustomerAdminResponse(Customer customer) {
+    public CustomerAdminResponse toCustomerAdminResponse(Customer customer) {
         return new CustomerAdminResponse(
                 customer.getId(),
                 customer.getEmail(),
