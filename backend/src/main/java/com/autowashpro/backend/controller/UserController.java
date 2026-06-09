@@ -38,16 +38,17 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success(users));
     }
 
-      @GetMapping("/me")
+    @GetMapping("/me")
     public ResponseEntity<UserResponse> getMe(Authentication authentication) {
         String email = (String) authentication.getPrincipal(); // lấy email từ JWT token
         // Dùng UserService thay vì gọi trực tiếp Repository
         User user = service.findByEmail(email);
-        
+
         if (user == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
         }
         return ResponseEntity.ok(new UserResponse(
+                user.getId(),
                 user.getEmail(),
                 user.getFullName(),
                 user.getAvatarUrl(),

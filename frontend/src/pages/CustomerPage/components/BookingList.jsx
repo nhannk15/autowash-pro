@@ -525,7 +525,7 @@ export default function BookingList() {
                                                                 {getSlotsForPeriod('morning').map(slot => {
                                                                     const timeStr = slot.startTime.substring(0, 5);
                                                                     const isSelected = selectedTime === timeStr;
-                                                                    const isDisabled = slot.availableBayCount === 0 || !slot.isAvailable;
+                                                                    const isDisabled = slot.availableBayCount === 0 || !(slot.isAvailable ?? slot.available);
                                                                     return (
                                                                         <button
                                                                             key={slot.timeSlotId}
@@ -556,7 +556,7 @@ export default function BookingList() {
                                                                 {getSlotsForPeriod('afternoon').map(slot => {
                                                                     const timeStr = slot.startTime.substring(0, 5);
                                                                     const isSelected = selectedTime === timeStr;
-                                                                    const isDisabled = slot.availableBayCount === 0 || !slot.isAvailable;
+                                                                    const isDisabled = slot.availableBayCount === 0 || !(slot.isAvailable ?? slot.available);
                                                                     return (
                                                                         <button
                                                                             key={slot.timeSlotId}
@@ -587,7 +587,7 @@ export default function BookingList() {
                                                                 {getSlotsForPeriod('evening').map(slot => {
                                                                     const timeStr = slot.startTime.substring(0, 5);
                                                                     const isSelected = selectedTime === timeStr;
-                                                                    const isDisabled = slot.availableBayCount === 0 || !slot.isAvailable;
+                                                                    const isDisabled = slot.availableBayCount === 0 || !(slot.isAvailable ?? slot.available);
                                                                     return (
                                                                         <button
                                                                             key={slot.timeSlotId}

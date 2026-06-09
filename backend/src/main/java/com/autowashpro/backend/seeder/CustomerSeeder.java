@@ -43,7 +43,6 @@ public class CustomerSeeder {
         c.setTierStartDate(LocalDate.now());
         c.setTierEndDate(LocalDate.now().plusYears(1));
         c.setNextReviewDate(LocalDate.now().plusMonths(6));
-
         customerRepository.save(c);
     }
 }
