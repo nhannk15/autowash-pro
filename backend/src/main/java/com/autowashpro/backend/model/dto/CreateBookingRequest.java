@@ -1,28 +1,29 @@
 package com.autowashpro.backend.model.dto;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
-import jakarta.validation.constraints.NotNull;
+import com.autowashpro.backend.model.entity.TimeSlot;
+
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 public class CreateBookingRequest {
 
-    @NotNull
+    private Long customerId;
+
     private Long vehicleId;
 
-    @NotNull
-    private LocalDateTime scheduledDateTime;
+    private TimeSlot timeSlotId;
 
-    @NotNull
     @Size(min = 1)
     private List<Long> servicePriceIds;
 
