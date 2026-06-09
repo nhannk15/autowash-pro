@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.autowashpro.backend.mapper.VehicleMapper;
 import com.autowashpro.backend.model.dto.ApiResponse;
+import com.autowashpro.backend.model.dto.VehicleResponse;
 import com.autowashpro.backend.model.entity.Vehicle;
 import com.autowashpro.backend.service.VehicleService;
 
@@ -58,6 +59,12 @@ public class VehicleController {
     public ResponseEntity<ApiResponse<Void>> deleteVehicle(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.ok(ApiResponse.noContent());
+    }
+
+    @GetMapping("/user/{customerId}")
+    public ResponseEntity<ApiResponse<?>> findVehicleByUserId(@PathVariable Long customerId) {
+        List<VehicleResponse> vehicles = service.findByCustomerId(customerId);
+        return ResponseEntity.ok(ApiResponse.success(vehicles));
     }
 
 }

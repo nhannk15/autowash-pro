@@ -1,19 +1,22 @@
-version: '3.8'
-
 services:
   mysql:
     image: mariadb:10.11
     container_name: autowash-db
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass123
-      MYSQL_DATABASE: autowash
-      MYSQL_USER: autowash
-      MYSQL_PASSWORD: autowash123
+      MARIADB_ROOT_PASSWORD: 123456
+      MARIADB_DATABASE: autowash
+      MARIADB_USER: autowash
+      MARIADB_PASSWORD: autowash123
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 30s
+      interval: 10s
+      retries: 5
     networks:
       - autowash-net
 
@@ -27,11 +30,12 @@ services:
       SPRING_DATASOURCE_USERNAME: autowash
       SPRING_DATASOURCE_PASSWORD: autowash123
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      JWT_SECRET_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+      
     ports:
       - "8080:8080"
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     networks:
       - autowash-net
 

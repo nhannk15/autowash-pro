@@ -7,5 +7,5 @@ import com.autowashpro.backend.model.entity.WashBay;
 
 @Repository
 public interface WashBayRepository extends JpaRepository<WashBay, Long> {
-    
+
 }

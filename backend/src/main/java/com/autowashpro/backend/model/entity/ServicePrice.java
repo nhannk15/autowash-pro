@@ -21,11 +21,13 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
+@ToString
 @Entity
 @Table(name = "service_prices", uniqueConstraints = @UniqueConstraint(columnNames = { "service_id", "vehicle_type_id" }))
 public class ServicePrice {
