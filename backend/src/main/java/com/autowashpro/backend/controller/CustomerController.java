@@ -3,6 +3,8 @@ package com.autowashpro.backend.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.autowashpro.backend.mapper.CustomerMapper;
@@ -31,6 +34,14 @@ public class CustomerController {
     @GetMapping
     public ResponseEntity<ApiResponse<List<Customer>>> findAll() {
         return ResponseEntity.ok(ApiResponse.success(service.findAll()));
+    }
+
+    @GetMapping("/admin")
+    public ResponseEntity<ApiResponse<Page<Customer>>> findCustomersAdmin(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Long tierId,
+            Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.success(service.searchCustomers(search, tierId, pageable)));
     }
 
     @GetMapping("/{id}")
