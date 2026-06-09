@@ -5,10 +5,14 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.autowashpro.backend.exception.AccountExistedException;
+import com.autowashpro.backend.exception.UserNotFoundException;
 import com.autowashpro.backend.model.dto.RegistrationRequest;
 import com.autowashpro.backend.model.entity.Customer;
 import com.autowashpro.backend.model.entity.MembershipTier;
@@ -19,6 +23,7 @@ import com.autowashpro.backend.repository.MembershipTierRepository;
 import com.autowashpro.backend.repository.UserRepository;
 
 @Service
+@Transactional
 public class CustomerService {
 
     private CustomerRepository repository;
@@ -115,18 +120,41 @@ public class CustomerService {
     }
 
     public Customer createNew(Customer customer) {
+        // Validate unique phone number
+        if (customer.getPhoneNumber() != null && repository.existsByPhoneNumber(customer.getPhoneNumber())) {
+            throw new IllegalArgumentException("Số điện thoại đã được sử dụng!");
+        }
         return repository.save(customer);
     }
 
     public Customer findById(Long id) {
-        return repository.findById(id).get();
+        return repository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("Khách hàng không tồn tại!"));
     }
 
     public List<Customer> findAll() {
         return repository.findAll();
     }
 
+    public Page<Customer> searchCustomers(String search, Long tierId, Pageable pageable) {
+        return repository.searchCustomers(search, tierId, pageable);
+    }
+
+    public Customer findByPhoneNumber(String phoneNumber) {
+        return repository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new UserNotFoundException("Không tìm thấy khách hàng với số điện thoại này!"));
+    }
+
     public Customer update(Customer customer) {
+        Customer existing = findById(customer.getId());
+
+        // Check phone unique if changed
+        if (customer.getPhoneNumber() != null
+                && !customer.getPhoneNumber().equals(existing.getPhoneNumber())
+                && repository.existsByPhoneNumber(customer.getPhoneNumber())) {
+            throw new IllegalArgumentException("Số điện thoại đã được sử dụng!");
+        }
+
         return repository.save(customer);
     }
 
