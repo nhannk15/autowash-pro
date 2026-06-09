@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.autowashpro.backend.mapper.CustomerMapper;
 import com.autowashpro.backend.model.dto.ApiResponse;
+import com.autowashpro.backend.model.dto.CustomerAdminResponse;
 import com.autowashpro.backend.model.entity.Customer;
 import com.autowashpro.backend.service.CustomerService;
 
@@ -37,11 +38,11 @@ public class CustomerController {
     }
 
     @GetMapping("/admin")
-    public ResponseEntity<ApiResponse<Page<Customer>>> findCustomersAdmin(
+    public ResponseEntity<ApiResponse<Page<CustomerAdminResponse>>> findCustomersAdmin(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Long tierId,
             Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.success(service.searchCustomers(search, tierId, pageable)));
+        return ResponseEntity.ok(ApiResponse.success(service.searchCustomersAdmin(search, tierId, pageable)));
     }
 
     @GetMapping("/{id}")

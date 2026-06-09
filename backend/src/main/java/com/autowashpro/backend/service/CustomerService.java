@@ -13,10 +13,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.autowashpro.backend.exception.AccountExistedException;
 import com.autowashpro.backend.exception.UserNotFoundException;
+import com.autowashpro.backend.model.dto.CustomerAdminResponse;
+import com.autowashpro.backend.model.dto.MembershipTierSummaryResponse;
 import com.autowashpro.backend.model.dto.RegistrationRequest;
+import com.autowashpro.backend.model.dto.VehicleAdminResponse;
+import com.autowashpro.backend.model.dto.VehicleTypeItemResponse;
 import com.autowashpro.backend.model.entity.Customer;
 import com.autowashpro.backend.model.entity.MembershipTier;
 import com.autowashpro.backend.model.entity.User;
+import com.autowashpro.backend.model.entity.Vehicle;
+import com.autowashpro.backend.model.entity.VehicleType;
 import com.autowashpro.backend.model.enums.Role;
 import com.autowashpro.backend.repository.CustomerRepository;
 import com.autowashpro.backend.repository.MembershipTierRepository;
@@ -138,6 +144,80 @@ public class CustomerService {
 
     public Page<Customer> searchCustomers(String search, Long tierId, Pageable pageable) {
         return repository.searchCustomers(search, tierId, pageable);
+    }
+
+    public Page<CustomerAdminResponse> searchCustomersAdmin(String search, Long tierId, Pageable pageable) {
+        return repository.searchCustomers(search, tierId, pageable)
+                .map(this::toCustomerAdminResponse);
+    }
+
+    private CustomerAdminResponse toCustomerAdminResponse(Customer customer) {
+        return new CustomerAdminResponse(
+                customer.getId(),
+                customer.getEmail(),
+                customer.getGoogleId(),
+                customer.getFullName(),
+                customer.getPhoneNumber(),
+                customer.getAvatarUrl(),
+                customer.getRole(),
+                customer.isActive(),
+                customer.getCreatedAt(),
+                customer.getUpdatedAt(),
+                customer.getDateOfBirth(),
+                toMembershipTierSummaryResponse(customer.getTier()),
+                customer.getCurrentPoints(),
+                customer.getLifetimePoints(),
+                customer.getTierStartDate(),
+                customer.getTierEndDate(),
+                customer.getLastReviewDate(),
+                customer.getNextReviewDate(),
+                customer.getVehicles() == null
+                        ? List.of()
+                        : customer.getVehicles().stream()
+                                .map(this::toVehicleAdminResponse)
+                                .toList());
+    }
+
+    private MembershipTierSummaryResponse toMembershipTierSummaryResponse(MembershipTier tier) {
+        if (tier == null) {
+            return null;
+        }
+
+        return new MembershipTierSummaryResponse(
+                tier.getId(),
+                tier.getTierName(),
+                tier.getTierLevel(),
+                tier.getBookingWindowDays(),
+                tier.getPriorityQueueOrder(),
+                tier.getPointEarnRate(),
+                tier.getMinPointsToMaintain(),
+                tier.getPerksDescription());
+    }
+
+    private VehicleAdminResponse toVehicleAdminResponse(Vehicle vehicle) {
+        return new VehicleAdminResponse(
+                vehicle.getId(),
+                toVehicleTypeItemResponse(vehicle.getVehicleType()),
+                vehicle.getLicensePlate(),
+                vehicle.getBrand(),
+                vehicle.getModel(),
+                vehicle.getColor(),
+                vehicle.getImage(),
+                vehicle.isActive(),
+                vehicle.getCreatedAt(),
+                vehicle.getUpdatedAt());
+    }
+
+    private VehicleTypeItemResponse toVehicleTypeItemResponse(VehicleType vehicleType) {
+        if (vehicleType == null) {
+            return null;
+        }
+
+        return new VehicleTypeItemResponse(
+                vehicleType.getId(),
+                vehicleType.getTypeName(),
+                vehicleType.getDescription(),
+                vehicleType.isActive());
     }
 
     public Customer findByPhoneNumber(String phoneNumber) {
