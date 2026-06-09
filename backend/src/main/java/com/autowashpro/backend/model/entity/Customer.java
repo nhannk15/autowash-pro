@@ -3,6 +3,7 @@ package com.autowashpro.backend.model.entity;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -49,12 +50,15 @@ public class Customer extends User {
     private LocalDate nextReviewDate;
 
     @OneToMany(mappedBy = "customer")
+    @JsonIgnoreProperties("customer")
     private List<Vehicle> vehicles;
 
     @OneToMany(mappedBy = "customer")
+    @JsonIgnoreProperties("customer")
     private List<Booking> bookings;
 
     @OneToMany(mappedBy = "customer")
+    @JsonIgnoreProperties("customer")
     private List<WashSession> washSessions;
 
 }

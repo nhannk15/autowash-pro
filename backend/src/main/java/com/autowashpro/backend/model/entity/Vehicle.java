@@ -3,6 +3,7 @@ package com.autowashpro.backend.model.entity;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -65,9 +66,11 @@ public class Vehicle {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "vehicle")
+    @JsonIgnoreProperties("vehicle")
     private List<Booking> bookings;
 
     @OneToMany(mappedBy = "vehicle")
+    @JsonIgnoreProperties("vehicle")
     private List<WashSession> washSessions;
 
     @PrePersist
