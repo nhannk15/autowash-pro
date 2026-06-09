@@ -17,8 +17,6 @@ public class CreateBookingResponse {
     private String customerName;
     private String vehicleLicensePlate;
     private String vehicleTypeName; 
-    private LocalDateTime scheduledDateTime;
-    private LocalDateTime estimatedEndTime;
     private String bayName;
     private BookingStatus status;
     private String notes;
