@@ -3,6 +3,7 @@ package com.autowashpro.backend.model.entity;
 import java.math.BigDecimal;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -32,6 +33,7 @@ public class TierRule {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tier_id", nullable = false, unique = true)
+    @JsonIgnoreProperties("tierRule")
     private MembershipTier tier;
 
     @Column(name = "min_visits_required", nullable = false)
@@ -45,5 +47,6 @@ public class TierRule {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "downgrade_to_tier_id", nullable = true)
+    @JsonIgnoreProperties({"tierRule", "customers"})
     private MembershipTier downgradeTier;
 }
