@@ -1,0 +1,189 @@
+.staff-dashboard {
+    padding: 12px;
+}
+
+/* ===== Thống kê (Stats) ===== */
+.dashboard__stats-row {
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    border: none;
+    height: 100%; /* Đảm bảo các card bằng chiều cao */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.stat-card .ant-card-body {
+    padding: 20px;
+}
+
+.stat-card .ant-statistic-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: #8c8c8c;
+}
+
+.stat-card .ant-statistic-content {
+    font-weight: 700;
+    font-size: 22px; /* Chỉnh nhỏ lại một xíu để số dài không bị tràn */
+    color: #262626;
+}
+
+.stat-icon {
+    margin-right: 12px;
+}
+
+.text-blue { color: #1890ff; }
+.text-orange { color: #fa8c16; }
+.text-green { color: #52c41a; }
+.text-gold { color: #faad14; }
+
+/* ===== Tình trạng khoang (Bays) ===== */
+.dashboard__bays-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    border: none;
+    margin-bottom: 24px;
+}
+
+.bay-card {
+    border: 1px solid #f0f0f0;
+    border-radius: 12px;
+    padding: 16px;
+    height: 220px; /* Thống nhất chiều cao cho TẤT CẢ các card khoang */
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+}
+
+.bay-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.bay-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed rgba(0,0,0,0.06);
+}
+
+.bay-card__name {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.bay-card__content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Kiểu cho khoang trống */
+.bay-card__empty-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #bfbfbf;
+    font-style: italic;
+    text-align: center;
+}
+
+/* Kiểu cho khoang có xe */
+.bay-card__occupied-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Dàn đều các thành phần ra các góc */
+}
+
+.bay-card__plate {
+    font-size: 18px;
+    font-weight: bold;
+    color: #121E4B;
+    text-align: center;
+    background: #f0f2f5;
+    border-radius: 6px;
+    padding: 2px;
+    margin-bottom: 8px;
+    border: 1px solid #d9d9d9;
+    letter-spacing: 1px;
+}
+
+.bay-card__details {
+    text-align: center;
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.bay-card__service-tag {
+    text-align: center;
+    margin-bottom: 12px;
+}
+
+.bay-card__progress {
+    height: 8px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: auto; /* Ép thanh tiến độ xuống sát đáy */
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #1890ff, #52c41a);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+/* Trạng thái nền (Đã được yêu cầu đồng nhất 1 màu) */
+.bay-card--available,
+.bay-card--occupied,
+.bay-card--maintenance {
+    background-color: #f7f7f7;
+    border-color: #c7c7c7;
+}
+
+/* ===== Timeline & Actions ===== */
+.dashboard__timeline-card,
+.dashboard__actions-card,
+.dashboard__notifications-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    border: none;
+    margin-bottom: 24px;
+}
+
+.timeline-item-content {
+    padding-bottom: 8px;
+}
+
+/* Nút bấm mới gọn gàng hơn */
+.action-btn {
+    font-weight: 600;
+    border-radius: 6px;
+}
+
+.action-btn--checkin {
+    background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+    border: none;
+}
+
+.action-btn--checkin:hover {
+    background: linear-gradient(135deg, #73d13d 0%, #52c41a 100%) !important;
+}
+
+.action-btn--walkin {
+    border-color: #1890ff;
+    color: #1890ff;
+}
+
+.action-btn--walkin:hover {
+    background: #e6f7ff !important;
+}
