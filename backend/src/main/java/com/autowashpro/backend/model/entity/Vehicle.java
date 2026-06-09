@@ -35,10 +35,12 @@ public class Vehicle {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
+    @JsonIgnoreProperties({"vehicles", "bookings", "washSessions"})
     private Customer customer;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vehicle_type_id", nullable = false)
+    @JsonIgnoreProperties("vehicles")
     private VehicleType vehicleType;
 
     @Column(name = "license_plate", nullable = false, unique = true)

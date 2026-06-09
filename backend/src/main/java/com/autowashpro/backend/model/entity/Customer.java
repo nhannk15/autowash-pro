@@ -29,6 +29,7 @@ public class Customer extends User {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tier_id", nullable = false)
+    @JsonIgnoreProperties("customers")
     private MembershipTier tier;
 
     @Column(name = "current_points", nullable = false)
