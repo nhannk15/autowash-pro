@@ -113,7 +113,7 @@ export default function Queue() {
         <div>
             <Row gutter={[24, 24]} className="dashboard__stats-row">
                 <Col xs={24} sm={8}>
-                    <Card className="stat-card" bordered={false} style={{ borderRadius: '16px' }}>
+                    <Card className="stat-card" style={{ borderRadius: '16px' }}>
                         <Flex align="center" gap="large">
                             <div style={{ backgroundColor: '#fff7e6', padding: '16px', borderRadius: '16px', display: 'flex' }}>
                                 <CalendarOutlined style={{ fontSize: '28px', color: '#fa8c16' }} />
@@ -126,7 +126,7 @@ export default function Queue() {
                     </Card>
                 </Col>
                 <Col xs={24} sm={8}>
-                    <Card className="stat-card" bordered={false} style={{ borderRadius: '16px' }}>
+                    <Card className="stat-card" style={{ borderRadius: '16px' }}>
                         <Flex align="center" gap="large">
                             <div style={{ backgroundColor: '#e6f7ff', padding: '16px', borderRadius: '16px', display: 'flex' }}>
                                 <CarOutlined style={{ fontSize: '28px', color: '#1890ff' }} />
@@ -139,7 +139,7 @@ export default function Queue() {
                     </Card>
                 </Col>
                 <Col xs={24} sm={8}>
-                    <Card className="stat-card" bordered={false} style={{ borderRadius: '16px' }}>
+                    <Card className="stat-card" style={{ borderRadius: '16px' }}>
                         <Flex align="center" gap="large">
                             <div style={{ backgroundColor: '#f6ffed', padding: '16px', borderRadius: '16px', display: 'flex' }}>
                                 <CheckCircleOutlined style={{ fontSize: '28px', color: '#52c41a' }} />
@@ -153,7 +153,7 @@ export default function Queue() {
                 </Col>
             </Row>
 
-            <Card className="queue-card" bordered={false} style={{ marginTop: '24px' }}>
+            <Card className="queue-card" style={{ marginTop: '24px' }}>
                 <Flex justify="space-between" align="center" style={{ marginBottom: '20px' }}>
                     <Title level={4} style={{ margin: 0 }}>Danh sách hàng đợi</Title>
                     <Space>
