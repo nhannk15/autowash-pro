@@ -30,29 +30,29 @@ public class VehicleController {
     private VehicleMapper vehicleMapper;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Vehicle>>> findAllVehicles() {
+    public ResponseEntity<ApiResponse<List<VehicleResponse>>> findAllVehicles() {
         List<Vehicle> vehicles = service.findAll();
-        return ResponseEntity.ok(ApiResponse.success(vehicles));
+        return ResponseEntity.ok(ApiResponse.success(vehicleMapper.toVehicleResponseList(vehicles)));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Vehicle>> findVehicleById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<VehicleResponse>> findVehicleById(@PathVariable Long id) {
         Vehicle vehicle = service.findById(id);
-        return ResponseEntity.ok(ApiResponse.success(vehicle));
+        return ResponseEntity.ok(ApiResponse.success(vehicleMapper.toVehicleResponse(vehicle)));
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Vehicle>> addNewVehicle(@RequestBody Vehicle newVehicle) {
+    public ResponseEntity<ApiResponse<VehicleResponse>> addNewVehicle(@RequestBody Vehicle newVehicle) {
         Vehicle created = service.createNew(newVehicle);
-        return ResponseEntity.ok(ApiResponse.created(created));
+        return ResponseEntity.ok(ApiResponse.created(vehicleMapper.toVehicleResponse(created)));
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<ApiResponse<Vehicle>> updateVehicle(@RequestBody Vehicle vehicle, @PathVariable Long id) {
+    public ResponseEntity<ApiResponse<VehicleResponse>> updateVehicle(@RequestBody Vehicle vehicle, @PathVariable Long id) {
         Vehicle target = service.findById(id);
         vehicleMapper.updateVehicleFromRequest(vehicle, target);
         Vehicle updated = service.update(target);
-        return ResponseEntity.ok(ApiResponse.success(updated));
+        return ResponseEntity.ok(ApiResponse.success(vehicleMapper.toVehicleResponse(updated)));
     }
 
     @DeleteMapping("/{id}")

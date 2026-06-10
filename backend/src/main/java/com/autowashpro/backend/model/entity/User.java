@@ -20,6 +20,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import com.autowashpro.backend.model.enums.Role;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -41,6 +42,7 @@ public class User {
     private String googleId;
 
     @Column(name = "password_hash", nullable = true)
+    @JsonIgnore
     private String password;
 
     @Column(name = "full_name", nullable = false, columnDefinition = "NVARCHAR(150)")
