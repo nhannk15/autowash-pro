@@ -31,11 +31,37 @@ public interface AvailableSlotRepository extends JpaRepository<AvailableSlot, Lo
             """)
     List<Object[]> findTimeSlotAvailability(@Param("date") LocalDate date);
 
+    // @Query(value = """
+    // SELECT a.* FROM available_slot a
+    // WHERE a.date >= :date
+    // AND a.time_slot_id >= :startTimeSlotId
+    // AND a.booking_id IS NULL
+    // AND a.wash_bay_id = (
+    // SELECT a2.wash_bay_id FROM available_slot a2
+    // WHERE a2.date = :date
+    // AND a2.time_slot_id = :startTimeSlotId
+    // AND a2.booking_id IS NULL
+    // AND (
+    // SELECT COUNT(a3.id) FROM available_slot a3
+    // WHERE a3.wash_bay_id = a2.wash_bay_id
+    // AND a3.date >= :date
+    // AND a3.time_slot_id >= :startTimeSlotId
+    // AND a3.booking_id IS NULL
+    // ) >= :slotsNeeded
+    // ORDER BY a2.wash_bay_id ASC
+    // LIMIT 1
+    // )
+    // ORDER BY a.date ASC, a.time_slot_id ASC
+    // """, nativeQuery = true)
+    // List<AvailableSlot> findConsecutiveSlotsFromDate(
+    // @Param("date") LocalDate date,
+    // @Param("startTimeSlotId") Long startTimeSlotId,
+    // @Param("slotsNeeded") int slotsNeeded,
+    // Pageable pageable);
+
     @Query(value = """
             SELECT a.* FROM available_slot a
-            WHERE a.date >= :date
-            AND a.time_slot_id >= :startTimeSlotId
-            AND a.booking_id IS NULL
+            WHERE a.date = :date
             AND a.wash_bay_id = (
                 SELECT a2.wash_bay_id FROM available_slot a2
                 WHERE a2.date = :date
@@ -44,14 +70,18 @@ public interface AvailableSlotRepository extends JpaRepository<AvailableSlot, Lo
                 AND (
                     SELECT COUNT(a3.id) FROM available_slot a3
                     WHERE a3.wash_bay_id = a2.wash_bay_id
-                    AND a3.date >= :date
-                    AND a3.time_slot_id >= :startTimeSlotId
+                    AND a3.date = :date
                     AND a3.booking_id IS NULL
+                    AND a3.time_slot_id >= :startTimeSlotId
+                    AND a3.time_slot_id < :startTimeSlotId + :slotsNeeded
                 ) >= :slotsNeeded
                 ORDER BY a2.wash_bay_id ASC
                 LIMIT 1
             )
-            ORDER BY a.date ASC, a.time_slot_id ASC
+            AND a.booking_id IS NULL
+            AND a.time_slot_id >= :startTimeSlotId
+            AND a.time_slot_id < :startTimeSlotId + :slotsNeeded
+            ORDER BY a.time_slot_id ASC
             """, nativeQuery = true)
     List<AvailableSlot> findConsecutiveSlotsFromDate(
             @Param("date") LocalDate date,
