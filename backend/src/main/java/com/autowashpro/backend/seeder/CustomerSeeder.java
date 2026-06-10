@@ -44,5 +44,21 @@ public class CustomerSeeder {
         c.setTierEndDate(LocalDate.now().plusYears(1));
         c.setNextReviewDate(LocalDate.now().plusMonths(6));
         customerRepository.save(c);
+
+        Customer d = new Customer();
+        d.setEmail("nhannk2101@gmail.com");
+        d.setFullName("Nguyễn Khắc Lê Nhân");
+        d.setPhoneNumber("0912176662");
+        d.setPassword(passwordEncoder.encode("12345678"));
+        d.setRole(Role.CUSTOMER);
+        d.setActive(true);
+        d.setDateOfBirth(LocalDate.of(2006, 1, 21));
+        d.setTier(bronze);
+        d.setCurrentPoints(0L);
+        d.setLifetimePoints(0L);
+        d.setTierStartDate(LocalDate.now());
+        d.setTierEndDate(LocalDate.now().plusYears(1));
+        d.setNextReviewDate(LocalDate.now().plusMonths(6));
+        customerRepository.save(d);
     }
 }
