@@ -31,23 +31,28 @@ public interface AvailableSlotRepository extends JpaRepository<AvailableSlot, Lo
             """)
     List<Object[]> findTimeSlotAvailability(@Param("date") LocalDate date);
 
-    @Query("""
-            SELECT a FROM AvailableSlot a
-            WHERE a.slotDate >= :date
-            AND a.timeSlot.id >= :startTimeSlotId
-            AND a.booking IS NULL
-            AND a.washBay.id = (
-                SELECT a2.washBay.id FROM AvailableSlot a2
-                WHERE a2.slotDate >= :date
-                AND a2.timeSlot.id >= :startTimeSlotId
-                AND a2.booking IS NULL
-                GROUP BY a2.washBay.id
-                HAVING COUNT(a2.id) >= :slotsNeeded
-                ORDER BY a2.washBay.id ASC
+    @Query(value = """
+            SELECT a.* FROM available_slot a
+            WHERE a.date >= :date
+            AND a.time_slot_id >= :startTimeSlotId
+            AND a.booking_id IS NULL
+            AND a.wash_bay_id = (
+                SELECT a2.wash_bay_id FROM available_slot a2
+                WHERE a2.date = :date
+                AND a2.time_slot_id = :startTimeSlotId
+                AND a2.booking_id IS NULL
+                AND (
+                    SELECT COUNT(a3.id) FROM available_slot a3
+                    WHERE a3.wash_bay_id = a2.wash_bay_id
+                    AND a3.date >= :date
+                    AND a3.time_slot_id >= :startTimeSlotId
+                    AND a3.booking_id IS NULL
+                ) >= :slotsNeeded
+                ORDER BY a2.wash_bay_id ASC
                 LIMIT 1
             )
-            ORDER BY a.slotDate ASC, a.timeSlot.id ASC
-            """)
+            ORDER BY a.date ASC, a.time_slot_id ASC
+            """, nativeQuery = true)
     List<AvailableSlot> findConsecutiveSlotsFromDate(
             @Param("date") LocalDate date,
             @Param("startTimeSlotId") Long startTimeSlotId,
