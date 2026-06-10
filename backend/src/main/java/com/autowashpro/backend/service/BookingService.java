@@ -241,6 +241,8 @@ public class BookingService {
                                 : null)
                         .build())
                 .toList();
+        LocalDateTime startDateTime = bookingDay.atTime(startTimeSlot.getStartTime());
+        LocalDateTime endDateTime = startDateTime.plusMinutes(totalDuration);
 
         return CreateBookingResponse.builder()
                 .id(savedBooking.getId())
@@ -252,7 +254,9 @@ public class BookingService {
                 .notes(savedBooking.getNotes())
                 .bookingDate(bookingDay)
                 .startTime(startTimeSlot.getStartTime())
-                .endTime(consecutiveSlots.get(consecutiveSlots.size() - 1).getTimeSlot().getEndTime())
+                .endDate(endDateTime.toLocalDate())
+                .endTime(startTimeSlot.getStartTime().plusMinutes(totalDuration))
+                .totalDurationMinutes(totalDuration)
                 .slotsOccupied(slotsNeeded)
                 .promotionName(promotion != null ? promotion.getPromotionName() : null)
                 .totalOriginalPrice(totalOriginalPrice)

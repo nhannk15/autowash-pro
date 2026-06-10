@@ -51,6 +51,22 @@ public class VehicleSeeder {
         v2.setActive(true);
 
         vehicleRepository.save(v2);
+
+
+        Customer khacnhan = customerRepository.findByEmail("nhannk2101@gmail.com").orElseThrow();
+        VehicleType suv = vehicleTypeRepository.findByTypeName("SUV").orElseThrow();
+
+        Vehicle v3 = new Vehicle();
+        v3.setCustomer(khacnhan);
+        v3.setVehicleType(suv);
+        v3.setLicensePlate("74A-66666");
+        v3.setBrand("Honda");
+        v3.setModel("Civic");
+        v3.setColor("Trắng");
+        v3.setImage("https://cdn.jdpower.com/JDPA_2020-Honda-Civic-Sport-Touring-Hatchback-White-Front-Quarter.jpg");
+        v3.setActive(true);
+
+        vehicleRepository.save(v3);
     }
 
 }

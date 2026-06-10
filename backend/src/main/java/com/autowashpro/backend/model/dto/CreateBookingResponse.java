@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
 
 import com.autowashpro.backend.model.enums.BookingStatus;
@@ -24,10 +23,11 @@ public class CreateBookingResponse {
     private BookingStatus status;
     private String notes;
 
-    // Thông tin slot
     private LocalDate bookingDate;
     private LocalTime startTime;
+    private LocalDate endDate;      
     private LocalTime endTime;
+    private int totalDurationMinutes;
     private int slotsOccupied;
 
     private String promotionName;
