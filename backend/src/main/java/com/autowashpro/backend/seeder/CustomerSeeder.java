@@ -27,7 +27,7 @@ public class CustomerSeeder {
         if (customerRepository.count() > 0)
             return;
 
-        MembershipTier bronze = membershipTierRepository.findByTierName("Bronze").orElseThrow();
+        MembershipTier bronze = membershipTierRepository.findByTierName("Member").orElseThrow();
 
         Customer c = new Customer();
         c.setEmail("lethuyavhs@gmail.com");

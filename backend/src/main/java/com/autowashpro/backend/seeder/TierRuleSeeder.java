@@ -23,7 +23,7 @@ public class TierRuleSeeder {
         if (tierRuleRepository.count() > 0)
             return;
 
-        MembershipTier bronze = membershipTierRepository.findByTierName("Bronze").orElseThrow();
+        MembershipTier bronze = membershipTierRepository.findByTierName("Member").orElseThrow();
         MembershipTier silver = membershipTierRepository.findByTierName("Silver").orElseThrow();
         MembershipTier gold = membershipTierRepository.findByTierName("Gold").orElseThrow();
         MembershipTier platinum = membershipTierRepository.findByTierName("Platinum").orElseThrow();
