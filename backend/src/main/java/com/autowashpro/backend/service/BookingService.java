@@ -2,6 +2,7 @@ package com.autowashpro.backend.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -240,6 +241,8 @@ public class BookingService {
                                 : null)
                         .build())
                 .toList();
+        LocalDateTime startDateTime = bookingDay.atTime(startTimeSlot.getStartTime());
+        LocalDateTime endDateTime = startDateTime.plusMinutes(totalDuration);
 
         return CreateBookingResponse.builder()
                 .id(savedBooking.getId())
@@ -251,6 +254,7 @@ public class BookingService {
                 .notes(savedBooking.getNotes())
                 .bookingDate(bookingDay)
                 .startTime(startTimeSlot.getStartTime())
+                .endDate(endDateTime.toLocalDate())
                 .endTime(consecutiveSlots.get(consecutiveSlots.size() - 1).getTimeSlot().getEndTime())
                 .slotsOccupied(slotsNeeded)
                 .promotionName(promotion != null ? promotion.getPromotionName() : null)
