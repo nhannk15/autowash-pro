@@ -23,10 +23,11 @@ public class CreateBookingResponse {
     private BookingStatus status;
     private String notes;
 
-    // Thông tin slot
     private LocalDate bookingDate;
     private LocalTime startTime;
+    private LocalDate endDate;      
     private LocalTime endTime;
+    private int totalDurationMinutes;
     private int slotsOccupied;
 
     private String promotionName;
