@@ -13,6 +13,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import com.autowashpro.backend.exception.ExceedBookingWindowException;
+import com.autowashpro.backend.exception.SlotInavailabilityException;
 import com.autowashpro.backend.exception.UserNotFoundException;
 import com.autowashpro.backend.model.dto.BookingDetailResponse;
 import com.autowashpro.backend.model.dto.CreateBookingRequest;
@@ -125,7 +126,7 @@ public class BookingService {
          * Step 3. Get all the succcessive slots start from the selected slot.
          */
         TimeSlot startTimeSlot = timeSlotRepository.findById(createBookingRequest.getTimeSlotId())
-                .orElseThrow(() -> new RuntimeException("Time slot not found"));
+                .orElseThrow(() -> new SlotInavailabilityException("Không tìm thất slot còn trống!"));
 
         List<AvailableSlot> consecutiveSlots = availableSlotRepository.findConsecutiveSlotsFromDate(
                 bookingDay,
@@ -133,7 +134,7 @@ public class BookingService {
                 slotsNeeded,
                 PageRequest.of(0, slotsNeeded));
         if (consecutiveSlots.size() < slotsNeeded) {
-            throw new RuntimeException("Not enough consecutive slots avalable");
+            throw new SlotInavailabilityException("Không đủ slot để thực hiện các dịch vụ!");
         }
 
         /**
@@ -143,7 +144,7 @@ public class BookingService {
                 .stream()
                 .anyMatch(slot -> slot.getBooking() != null);
         if (anyBooked) {
-            throw new RuntimeException("One or more executive slots have been booked");
+            throw new SlotInavailabilityException("Các slot trước đó đã được đặt.");
         }
 
         /**

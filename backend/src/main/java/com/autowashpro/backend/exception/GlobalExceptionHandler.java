@@ -34,6 +34,12 @@ public class GlobalExceptionHandler {
                 getRequestPath(request));
     }
 
+    /**
+     * Validation Exceptions
+     * @param ex
+     * @param request
+     * @return
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(
             MethodArgumentNotValidException ex, WebRequest request) {
@@ -65,6 +71,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    /**
+     * Booking Exceptions
+     * @param ex
+     * @param request
+     * @return
+     */
     @ExceptionHandler(CreateBookingException.class)
     public ResponseEntity<ErrorResponse> handleScheduleError(CreateBookingException ex, WebRequest request) {
         ErrorResponse error = createErrorResponse(HttpStatus.BAD_REQUEST, "BOOKING ERROR", ex.getMessage(), request);
@@ -76,5 +88,27 @@ public class GlobalExceptionHandler {
         ErrorResponse error = createErrorResponse(HttpStatus.BAD_REQUEST, "BOOKING ERROR", ex.getMessage(), request);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
+
+    @ExceptionHandler(SlotInavailabilityException.class)
+    public ResponseEntity<ErrorResponse> handleSlotInavailabilityException(SlotInavailabilityException ex, WebRequest request) {
+        ErrorResponse error = createErrorResponse(HttpStatus.BAD_REQUEST, "BOOKING ERROR", ex.getMessage(), request);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+
+
+    /**
+     * Vehicle Exceptions
+     * @param ex
+     * @param request
+     * @return
+     */
+    @ExceptionHandler(VehicleNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleExceedBookingWindowException(VehicleNotFoundException ex, WebRequest request) {
+        ErrorResponse error = createErrorResponse(HttpStatus.BAD_REQUEST, "VEHICLE ERROR", ex.getMessage(), request);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+
 
 }
