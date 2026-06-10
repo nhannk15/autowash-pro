@@ -2,6 +2,7 @@ package com.autowashpro.backend.model.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
@@ -14,20 +15,19 @@ import lombok.Data;
 @Data
 @Builder
 public class CreateBookingResponse {
-    
+
     private Long id;
     private String customerName;
     private String vehicleLicensePlate;
-    private String vehicleTypeName; 
+    private String vehicleTypeName;
     private String bayName;
     private BookingStatus status;
     private String notes;
 
+    // Thông tin slot
     private LocalDate bookingDate;
     private LocalTime startTime;
-    private LocalDate endDate;
     private LocalTime endTime;
-    private int totalDurationMinutes;
     private int slotsOccupied;
 
     private String promotionName;
@@ -36,5 +36,4 @@ public class CreateBookingResponse {
     private BigDecimal totalFinalPrice;
     private List<BookingDetailResponse> bookingDetails;
     private LocalDateTime createdAt;
-
 }

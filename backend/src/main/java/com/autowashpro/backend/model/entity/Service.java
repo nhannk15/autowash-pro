@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.autowashpro.backend.model.enums.ServiceCategory;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -55,12 +56,15 @@ public class Service {
     private boolean isActive = true;
 
     @OneToMany(mappedBy = "service")
+    @JsonIgnoreProperties("service")
     private List<ServicePrice> servicePrices;
 
     @OneToMany(mappedBy = "service")
+    @JsonIgnoreProperties("service")
     private List<Reward> rewards;
 
     @OneToMany(mappedBy = "service")
+    @JsonIgnoreProperties("service")
     private List<Promotion> promotions;
 
     @Column(name = "created_at", nullable = false, updatable = false)

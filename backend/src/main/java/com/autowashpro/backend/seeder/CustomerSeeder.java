@@ -27,7 +27,7 @@ public class CustomerSeeder {
         if (customerRepository.count() > 0)
             return;
 
-        MembershipTier bronze = membershipTierRepository.findByTierName("Member").orElseThrow();
+        MembershipTier bronze = membershipTierRepository.findByTierName("Bronze").orElseThrow();
 
         Customer c = new Customer();
         c.setEmail("lethuyavhs@gmail.com");
@@ -43,7 +43,6 @@ public class CustomerSeeder {
         c.setTierStartDate(LocalDate.now());
         c.setTierEndDate(LocalDate.now().plusYears(1));
         c.setNextReviewDate(LocalDate.now().plusMonths(6));
-
         customerRepository.save(c);
     }
 }

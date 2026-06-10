@@ -1,5 +1,6 @@
 package com.autowashpro.backend.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,16 @@ public class VehicleService {
     }
 
     public Vehicle createNew(Vehicle vehicle) {
+        // Validate unique license plate
+        if (vehicle.getLicensePlate() != null && repository.existsByLicensePlate(vehicle.getLicensePlate())) {
+            throw new IllegalArgumentException("Biển số xe đã tồn tại!");
+        }
+
+        // Set defaults
+        vehicle.setActive(true);
+        vehicle.setCreatedAt(LocalDateTime.now());
+        vehicle.setUpdatedAt(LocalDateTime.now());
+
         return repository.save(vehicle);
     }
 
@@ -42,6 +53,16 @@ public class VehicleService {
     }
 
     public Vehicle update(Vehicle vehicle) {
+        Vehicle existing = findById(vehicle.getId());
+
+        // Check license plate unique if changed
+        if (vehicle.getLicensePlate() != null
+                && !vehicle.getLicensePlate().equals(existing.getLicensePlate())
+                && repository.existsByLicensePlate(vehicle.getLicensePlate())) {
+            throw new IllegalArgumentException("Biển số xe đã tồn tại!");
+        }
+
+        vehicle.setUpdatedAt(LocalDateTime.now());
         return repository.save(vehicle);
     }
 
