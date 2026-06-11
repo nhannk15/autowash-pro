@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import com.autowashpro.backend.model.enums.RewardType;
 import com.autowashpro.backend.model.enums.VoucherStatus;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -39,6 +40,7 @@ public class Voucher {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reward_id")
+    @JsonIgnoreProperties({"service"})
     private Reward reward;
 
     @Column(name = "discount_type", nullable = false)
@@ -50,6 +52,7 @@ public class Voucher {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id")
+    @JsonIgnoreProperties({"bookings", "vehicles", "washSessions"})
     private Customer customer;
 
     @Column(name = "status", nullable = false)

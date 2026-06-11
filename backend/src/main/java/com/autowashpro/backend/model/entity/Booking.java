@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.autowashpro.backend.model.enums.BookingStatus;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -41,13 +42,16 @@ public class Booking {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
+    @JsonIgnoreProperties({"bookings", "washSessions"})
     private Customer customer;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vehicle_id", nullable = false)
+    @JsonIgnoreProperties({"bookings", "washSessions"})
     private Vehicle vehicle;
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties("booking")
     private List<BookingDetail> bookingDetails;
 
     // @Column(name = "scheduled_date_time", nullable = false)
@@ -70,6 +74,7 @@ public class Booking {
     private String cancelReason;
 
     @OneToMany(mappedBy = "booking")
+    @JsonIgnoreProperties("booking")
     private List<WashSession> washSessions;
 
     // @ManyToOne(fetch = FetchType.LAZY)
@@ -80,10 +85,12 @@ public class Booking {
     // private LocalDateTime estimatedEndTime;
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties("booking")
     private List<AvailableSlot> availableSlots;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "promotion_id")
+    @JsonIgnoreProperties("promotions")
     private Promotion promotion;
 
     @Column(name = "updated_at")

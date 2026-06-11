@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 
 import com.autowashpro.backend.model.enums.RewardType;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -52,6 +53,7 @@ public class Reward {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "service_id")
+    @JsonIgnoreProperties({"servicePrices", "rewards", "promotions", "steps", "highlights"})
     private Service service;
 
     @Column(name = "description", nullable = true)

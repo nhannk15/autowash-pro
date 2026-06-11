@@ -74,9 +74,11 @@ public class Service {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "service", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties("service")
     private List<Step> steps;
     
     @OneToMany(mappedBy = "service", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties("service")
     private List<Highlight> highlights;
 
     @Column(name = "image", nullable = true)

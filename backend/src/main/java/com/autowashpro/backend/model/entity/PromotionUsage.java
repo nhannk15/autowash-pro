@@ -3,6 +3,7 @@ package com.autowashpro.backend.model.entity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -32,10 +33,12 @@ public class PromotionUsage {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "promotion_id", nullable = false)
+    @JsonIgnoreProperties("promotions")
     private Promotion promotion;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "billing_id", nullable = false)
+    @JsonIgnoreProperties("session")
     private Billing billing;
 
     @Column(name = "discount_amount", nullable = false)
