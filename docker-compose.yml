@@ -4,10 +4,10 @@ services:
     container_name: autowash-db
     restart: unless-stopped
     environment:
-      MARIADB_ROOT_PASSWORD: 123456
+      MARIADB_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MARIADB_DATABASE: autowash
-      MARIADB_USER: autowash
-      MARIADB_PASSWORD: autowash123
+      MARIADB_USER: ${MYSQL_USER}
+      MARIADB_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "3306:3306"
     volumes:
@@ -26,11 +26,10 @@ services:
     container_name: autowash-backend
     restart: unless-stopped
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/autowash?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: autowash
-      SPRING_DATASOURCE_PASSWORD: autowash123
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
     ports:
       - "8080:8080"
     depends_on:
