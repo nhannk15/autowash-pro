@@ -16,14 +16,18 @@ export default function MyCars() {
     const [submitting, setSubmitting] = useState(false);
     const [form] = Form.useForm();
 
-    const customerId = 3; // Sử dụng ID khách hàng là 3 theo yêu cầu (không sửa backend)
+    const customerId = user?.id; // Sử dụng ID của tài khoản đang đăng nhập
 
     // Tải danh sách xe của khách hàng
     const fetchVehicles = async () => {
+        if (!user) {
+            setLoading(false);
+            return;
+        }
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`/api/vehicles/user/${customerId}`);
+            const response = await fetch(`/api/vehicles/user/${user.id}`);
             if (!response.ok) {
                 throw new Error("Không thể tải danh sách xe của bạn.");
             }
@@ -57,6 +61,7 @@ export default function MyCars() {
 
     // Xử lý Thêm xe mới
     const handleAddVehicle = async (values) => {
+        if (!user) return;
         setSubmitting(true);
         try {
             const response = await fetch('/api/vehicles', {
@@ -73,7 +78,7 @@ export default function MyCars() {
                         id: values.vehicleTypeId
                     },
                     customer: {
-                        id: customerId
+                        id: user.id
                     },
                     isActive: true
                 }),
@@ -165,10 +170,21 @@ export default function MyCars() {
                                         </Popconfirm>
                                     </div>
 
-                                    {/* Icon phân khúc xe */}
-                                    <div className="mycar-card__icon-wrapper">
-                                        {isSedan ? <CarOutlined /> : <span style={{ fontSize: '24px' }}>🚙</span>}
+                                    {/* Hình ảnh xe hoặc Icon phân khúc xe */}
+                                    <div className="mycar-card__image-wrapper">
+                                        {vehicle.image ? (
+                                            <img 
+                                                src={vehicle.image} 
+                                                alt={`${vehicle.brand} ${vehicle.model}`} 
+                                                className="mycar-card__image" 
+                                            />
+                                        ) : (
+                                            <div className="mycar-card__icon-wrapper">
+                                                {isSedan ? <CarOutlined /> : <span style={{ fontSize: '24px' }}>🚙</span>}
+                                            </div>
+                                        )}
                                     </div>
+
 
                                     {/* Tên hãng & model */}
                                     <h3 className="mycar-card__name">{vehicle.brand} {vehicle.model}</h3>
