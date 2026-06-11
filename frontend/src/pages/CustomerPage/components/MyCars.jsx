@@ -4,6 +4,24 @@ import { Spin, Alert, Empty, Card, Button, Modal, Form, Input, Select, message, 
 import { PlusOutlined, CarOutlined, DeleteOutlined } from '@ant-design/icons';
 import './MyCars.css';
 
+function VehicleImage({ src, alt, fallbackIcon }) {
+    const [hasError, setHasError] = useState(false);
+    
+    if (!src || hasError) {
+        return fallbackIcon;
+    }
+    
+    return (
+        <img 
+            src={src} 
+            alt={alt} 
+            className="mycar-card__image" 
+            referrerPolicy="no-referrer"
+            onError={() => setHasError(true)}
+        />
+    );
+}
+
 export default function MyCars() {
     const { user } = useAuth();
     const [vehicles, setVehicles] = useState([]);
@@ -172,18 +190,17 @@ export default function MyCars() {
 
                                     {/* Hình ảnh xe hoặc Icon phân khúc xe */}
                                     <div className="mycar-card__image-wrapper">
-                                        {vehicle.image ? (
-                                            <img 
-                                                src={vehicle.image} 
-                                                alt={`${vehicle.brand} ${vehicle.model}`} 
-                                                className="mycar-card__image" 
-                                            />
-                                        ) : (
-                                            <div className="mycar-card__icon-wrapper">
-                                                {isSedan ? <CarOutlined /> : <span style={{ fontSize: '24px' }}>🚙</span>}
-                                            </div>
-                                        )}
+                                        <VehicleImage 
+                                            src={vehicle.image} 
+                                            alt={`${vehicle.brand} ${vehicle.model}`} 
+                                            fallbackIcon={
+                                                <div className="mycar-card__icon-wrapper">
+                                                    {isSedan ? <CarOutlined /> : <span style={{ fontSize: '24px' }}>🚙</span>}
+                                                </div>
+                                            }
+                                        />
                                     </div>
+
 
 
                                     {/* Tên hãng & model */}

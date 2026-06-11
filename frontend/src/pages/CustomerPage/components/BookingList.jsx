@@ -1,6 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
+import { CarOutlined } from '@ant-design/icons';
 import './Booking.css';
+
+function VehicleImage({ src, alt, fallbackIcon }) {
+    const [hasError, setHasError] = useState(false);
+    
+    if (!src || hasError) {
+        return fallbackIcon;
+    }
+    
+    return (
+        <img 
+            src={src} 
+            alt={alt} 
+            className="vehicle-card__image" 
+            referrerPolicy="no-referrer"
+            onError={() => setHasError(true)}
+        />
+    );
+}
 
 export default function BookingList() {
     const { user } = useAuth();
@@ -412,12 +431,9 @@ export default function BookingList() {
                     {loadingVehicles ? (
                         <p style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>Đang tải danh sách xe của bạn...</p>
                     ) : errorVehicles ? (
-                        <p style={{ color: '#ef4444', textAlign: 'center', padding: '40px' }}>Lỗi: {errorVehicles}</p>
+                        <p style={{ textAlign: 'center', padding: '40px', color: '#ef4444' }}>Lỗi: {errorVehicles}</p>
                     ) : userVehicles.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
-                            <p>Bạn chưa đăng ký xe nào trên hệ thống.</p>
-                            <p style={{ fontSize: '0.88rem', marginTop: '8px' }}>Vui lòng thêm xe mới ở phần "Xe của tôi".</p>
-                        </div>
+                        <p style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>Bạn chưa có xe nào. Hãy vào trang "Xe của tôi" để thêm xe.</p>
                     ) : (
                         <div className="vehicle-selection-grid">
                             {userVehicles.map((vehicle) => {
@@ -433,30 +449,39 @@ export default function BookingList() {
                                             setMaxUnlockedStep(Math.max(maxUnlockedStep, 2));
                                         }}
                                     >
-                                        {vehicle.image ? (
-                                            <div className="vehicle-card__image-container">
-                                                <img 
-                                                    src={vehicle.image} 
-                                                    alt={`${vehicle.brand} ${vehicle.model}`} 
-                                                    className="vehicle-card__image" 
-                                                />
-                                            </div>
-                                        ) : (
-                                            <div className="vehicle-card__icon">{isSedan ? '🚗' : '🚙'}</div>
-                                        )}
+                                        {/* Hình ảnh xe hoặc Icon phân khúc xe */}
+                                        <div className="vehicle-card__image-container">
+                                            <VehicleImage 
+                                                src={vehicle.image} 
+                                                alt={`${vehicle.brand} ${vehicle.model}`} 
+                                                fallbackIcon={
+                                                    <div className="vehicle-card__icon-wrapper">
+                                                        {isSedan ? <CarOutlined /> : <span style={{ fontSize: '24px' }}>🚙</span>}
+                                                    </div>
+                                                }
+                                            />
+                                        </div>
 
-                                        <span className="vehicle-card__type-tag">{isSedan ? 'SEDAN (4-5 chỗ)' : 'SUV (5-7 chỗ)'}</span>
+                                        {/* Tên hãng & dòng xe */}
                                         <h3 className="vehicle-card__title">{vehicle.brand} {vehicle.model}</h3>
+
+                                        {/* Phân khúc xe */}
+                                        <span className="vehicle-card__type-tag">
+                                            {isSedan ? 'Sedan (4-5 chỗ)' : 'SUV (5-7 chỗ)'}
+                                        </span>
+
+                                        {/* Chi tiết biển số & màu sắc */}
                                         <div className="vehicle-card__details">
-                                            <div className="vehicle-detail-field">
-                                                <span className="detail-label">Biển số:</span>
-                                                <span className="detail-value license-plate">{vehicle.licensePlate}</span>
+                                            <div className="vehicle-detail-row">
+                                                <span className="vehicle-detail-label">Biển số:</span>
+                                                <span className="vehicle-detail-value license-plate">{vehicle.licensePlate}</span>
                                             </div>
-                                            <div className="vehicle-detail-field">
-                                                <span className="detail-label">Màu sắc:</span>
-                                                <span className="detail-value">{vehicle.color}</span>
+                                            <div className="vehicle-detail-row">
+                                                <span className="vehicle-detail-label">Màu sắc:</span>
+                                                <span className="vehicle-detail-value">{vehicle.color || 'Chưa cập nhật'}</span>
                                             </div>
                                         </div>
+
                                         {isSelected && <span className="vehicle-card__badge">✓ Đã chọn</span>}
                                     </div>
                                 );
