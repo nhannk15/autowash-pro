@@ -62,5 +62,6 @@ public class MembershipTier {
     private List<TierRule> downgradedRules;
 
     @OneToMany(mappedBy = "membershipTier")
+    @JsonIgnoreProperties({"membershipTier", "service", "staff"})
     private List<Promotion> promotions;
 }
