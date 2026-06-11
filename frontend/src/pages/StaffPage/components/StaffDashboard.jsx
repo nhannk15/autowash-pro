@@ -5,7 +5,7 @@ import {
     Timeline, Tag, Typography, Badge
 } from 'antd';
 import {
-    CarOutlined, DollarCircleOutlined, CheckCircleOutlined, CarryOutOutlined,
+    CarOutlined, DollarCircleOutlined, CheckCircleOutlined, ScanOutlined,
     CalendarOutlined, UserAddOutlined, ArrowRightOutlined, BellOutlined, UserOutlined
 } from '@ant-design/icons';
 import './StaffDashboard.css';
@@ -155,7 +155,7 @@ export default function StaffDashboard() {
                             <Col span={12}>
                                 <Button
                                     type="primary"
-                                    icon={<CarryOutOutlined />}
+                                    icon={<ScanOutlined />}
                                     className="action-btn action-btn--checkin"
                                     onClick={() => navigate('/staff/checkin')}
                                     block

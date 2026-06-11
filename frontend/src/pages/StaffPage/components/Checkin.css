@@ -1,0 +1,253 @@
+.checkin-container {
+    padding: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.checkin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.checkin-title {
+    margin: 0 !important;
+}
+
+.checkin-steps {
+    margin-bottom: 40px;
+    padding: 0 40px;
+}
+
+.checkin-card {
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+    border: none;
+}
+
+.camera-card .ant-card-header {
+    background-color: #fafafa;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.camera-card .ant-card-body {
+    padding: 0;
+}
+
+.camera-view {
+    height: 450px;
+    background: linear-gradient(135deg, #1d2b64 0%, #f8cdda 100%);
+    background: linear-gradient(to right, #141e30, #243b55);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    color: white;
+}
+
+.camera-frame {
+    border: 3px dashed rgba(255, 255, 255, 0.8);
+    border-radius: 8px;
+    width: 320px; 
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    background-color: rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+.camera-frame-text {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-size: 16px;
+    letter-spacing: 1px;
+}
+
+.camera-status-text {
+    color: #fff !important;
+    margin: 0 !important;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.camera-sub-text {
+    color: rgba(255, 255, 255, 0.7) !important;
+    margin-bottom: 24px;
+}
+
+.camera-scan-btn {
+    height: 50px;
+    padding: 0 32px;
+    font-size: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+    border: none;
+    background-color: #1890ff;
+}
+.camera-scan-btn:hover {
+    background-color: #40a9ff !important;
+}
+
+.search-input-group {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    align-items: stretch;
+}
+
+.search-input {
+    flex: 1;
+    font-size: 16px;
+    border-radius: 8px;
+    height: 48px;
+}
+
+.search-btn {
+    border-radius: 8px;
+    padding: 0 32px;
+    font-size: 16px;
+    font-weight: 500;
+    height: 48px;
+}
+
+.search-table {
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #f0f0f0;
+}
+
+/* Stage 2 */
+.customer-info-card .ant-card-header {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.customer-info-card .ant-descriptions-item-label {
+    width: 220px;
+    font-weight: 600;
+    background-color: #fafafa;
+}
+
+.customer-info-card .ant-descriptions-item-content {
+    background-color: #fff;
+    font-size: 16px;
+}
+
+.vehicle-info-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.vehicle-plate {
+    font-size: 18px;
+    display: inline-block;
+    width: fit-content;
+}
+
+.vehicle-model {
+    font-size: 14px;
+    color: #8c8c8c;
+}
+
+.service-list {
+    margin: 0;
+    padding-left: 20px;
+    list-style-type: disc;
+}
+
+.service-list-item {
+    margin-bottom: 8px;
+}
+
+.promo-tag {
+    font-size: 14px;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.invoice-card {
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+    position: sticky;
+    top: 24px;
+    border: none;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.invoice-card .ant-card-header {
+    background: linear-gradient(135deg, #1890ff 0%, #0050b3 100%);
+    border-bottom: none;
+    padding: 20px 24px;
+}
+
+.invoice-card .ant-card-head-title {
+    color: black !important;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.invoice-card .ant-card-body {
+    padding: 24px;
+    background-image: radial-gradient(#f0f0f0 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+
+.invoice-section-title {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #8c8c8c;
+    font-weight: 700;
+}
+
+.invoice-row {
+    margin-top: 16px;
+    font-size: 15px;
+}
+
+.invoice-divider {
+    border-top: 2px dashed #d9d9d9;
+    margin: 24px 0;
+}
+
+.invoice-total-box {
+    background: linear-gradient(135deg, #f6ffed 0%, #e6f7ff 100%);
+    border: 1px solid #b5f5ec;
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 24px;
+    box-shadow: inset 0 2px 8px rgba(255,255,255,0.5);
+}
+
+.invoice-total-label {
+    font-size: 16px;
+    color: #595959;
+    font-weight: 600;
+}
+
+.invoice-total-amount {
+    font-size: 28px !important;
+    color: black !important;
+    font-weight: 500 !important;
+    margin: 0 !important;
+}
+
+.confirm-btn {
+    margin-top: 24px;
+    height: 56px;
+    font-size: 18px;
+    font-weight: bold;
+    box-shadow: 0 8px 20px rgba(24, 144, 255, 0.25);
+    border-radius: 12px;
+    background: rgb(0, 144, 254);
+    border: none;
+    color: white;
+}
+.confirm-btn:hover, .confirm-btn:focus {
+    box-shadow: 0 12px 28px rgba(24, 144, 255, 0.35);
+    background: linear-gradient(135deg, #40a9ff 0%, #1890ff 100%);
+    color: white;
+}

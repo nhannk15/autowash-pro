@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
     ProductOutlined,
     TableOutlined,
-    CarryOutOutlined,
+    ScanOutlined,
     HistoryOutlined,
     UserOutlined,
     LogoutOutlined,
@@ -27,7 +27,7 @@ function getItem(label, key, icon, children, className) {
 const items = [
     getItem('Dashboard', '/staff/dashboard', <ProductOutlined />),
     getItem('Hàng chờ', '/staff/queue', <TableOutlined />),
-    getItem('Checkin', '/staff/checkin', <CarryOutOutlined />),
+    getItem('Check-in', '/staff/checkin', <ScanOutlined />),
     getItem('Lịch sử', '/staff/history', <HistoryOutlined />),
     getItem('Hồ sơ', '/staff/profile', <UserOutlined />),
     getItem('Đăng xuất', 'logout', <LogoutOutlined />, null, 'sidebar__menu-item--logout'),
