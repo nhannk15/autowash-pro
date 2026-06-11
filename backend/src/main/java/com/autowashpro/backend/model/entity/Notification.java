@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.autowashpro.backend.model.enums.NotificationType;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -35,6 +36,7 @@ public class Notification {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
+    @JsonIgnoreProperties({"bookings", "vehicles", "washSessions"})
     private Customer customer;
 
     @Column(name = "notification_type", nullable = false)

@@ -3,6 +3,7 @@ package com.autowashpro.backend.model.entity;
 import java.time.LocalTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -38,6 +39,7 @@ public class TimeSlot {
     private boolean isActive;
 
     @OneToMany(mappedBy = "timeSlot", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties("timeSlot")
     private List<AvailableSlot> availableSlots;
 
     public TimeSlot(Long id, LocalTime startTime, LocalTime endTime, boolean isActive) {

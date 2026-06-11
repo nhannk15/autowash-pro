@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 
 import com.autowashpro.backend.model.enums.PromotionDiscountType;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -54,10 +55,12 @@ public class Promotion {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "service_id")
+    @JsonIgnoreProperties({"promotions", "servicePrices", "rewards", "steps", "highlights"})
     private Service service;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "min_tier_id")
+    @JsonIgnoreProperties({"promotions", "customers", "tierRule", "downgradedRules"})
     private MembershipTier membershipTier;
 
     @Column(name = "max_uses_total", nullable = false)
@@ -74,6 +77,7 @@ public class Promotion {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_staff_id")
+    @JsonIgnoreProperties({"washSessions", "promotions", "pointTransactions"})
     private Staff staff;
 
     @Column(name = "created_at", nullable = false, updatable = false)

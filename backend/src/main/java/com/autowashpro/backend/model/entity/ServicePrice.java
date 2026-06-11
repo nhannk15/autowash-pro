@@ -60,6 +60,7 @@ public class ServicePrice {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "servicePrice")
+    @JsonIgnoreProperties("servicePrice")
     private List<BookingDetail> bookingDetails;
 
     @PrePersist

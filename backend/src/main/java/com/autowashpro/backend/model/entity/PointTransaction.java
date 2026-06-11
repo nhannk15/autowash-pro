@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.autowashpro.backend.model.enums.TransactionType;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -35,10 +36,12 @@ public class PointTransaction {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
+    @JsonIgnoreProperties({"bookings", "vehicles", "washSessions"})
     private Customer customer;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "session_id", nullable = false)
+    @JsonIgnoreProperties({"booking", "customer", "vehicle", "servicePrice", "staff", "bay"})
     private WashSession washSession;
 
     @Column(name = "transaction_type", nullable = false)
@@ -59,6 +62,7 @@ public class PointTransaction {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_staff_id")
+    @JsonIgnoreProperties({"washSessions", "promotions", "pointTransactions"})
     private Staff staff;
 
     @Column(name = "created_at", nullable = false, updatable = false)

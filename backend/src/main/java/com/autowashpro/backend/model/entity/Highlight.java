@@ -1,5 +1,6 @@
 package com.autowashpro.backend.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -31,6 +32,7 @@ public class Highlight {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "service_id", nullable = false)
+    @JsonIgnoreProperties({"servicePrices", "rewards", "promotions", "steps", "highlights"})
     private Service service;
 
 }
