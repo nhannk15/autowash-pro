@@ -19,6 +19,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -29,6 +30,7 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "promotions")
+@Builder
 public class Promotion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -86,5 +88,6 @@ public class Promotion {
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        active = true;
     }
 }
