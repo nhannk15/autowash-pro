@@ -22,6 +22,7 @@ import StaffPage from './pages/StaffPage/StaffPage.jsx'
 import StaffDashboard from './pages/StaffPage/components/StaffDashboard.jsx'
 import Queue from './pages/StaffPage/components/Queue.jsx'
 import Checkin from './pages/StaffPage/components/Checkin.jsx'
+import StaffPayment from './pages/StaffPage/components/Payment.jsx'
 import History from './pages/StaffPage/components/History.jsx'
 import Profile from './pages/StaffPage/components/Profile.jsx'
 
@@ -103,6 +104,7 @@ function App() {
         <Route path="dashboard" element={<StaffDashboard />} />
         <Route path="queue" element={<Queue />} />
         <Route path="checkin" element={<Checkin />} />
+        <Route path="payment" element={<StaffPayment />} />
         <Route path="history" element={<History />} />
         <Route path="profile" element={<Profile />} />
       </Route>

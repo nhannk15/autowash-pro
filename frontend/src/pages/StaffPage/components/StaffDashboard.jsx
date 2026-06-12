@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Row, Col, Card, Statistic, Button,
-    Timeline, Tag, Typography, Badge
+    Timeline, Tag, Typography, Badge, message
 } from 'antd';
 import {
     CarOutlined, DollarCircleOutlined, CheckCircleOutlined, ScanOutlined,
-    CalendarOutlined, UserAddOutlined, ArrowRightOutlined, BellOutlined, UserOutlined
+    CalendarOutlined, UserAddOutlined, ArrowRightOutlined, BellOutlined, UserOutlined,
+    CreditCardOutlined
 } from '@ant-design/icons';
 import './StaffDashboard.css';
 
@@ -14,24 +15,94 @@ const { Title, Text } = Typography;
 
 export default function StaffDashboard() {
     const navigate = useNavigate();
+    const location = useLocation();
 
     // Mock data
-    const [stats] = useState({
+    const [stats, setStats] = useState({
         activeCars: 3,
         todayAppointments: 12,
         completed: 8,
         revenue: 2500000
     });
 
-    // Mock data Bays - Đã thêm tên xe, tên chủ xe
-    const [bays] = useState([
-        { id: 1, name: 'Khoang 1', status: 'OCCUPIED', carPlate: '51G-123.45', carName: 'Mazda CX-5', ownerName: 'Nguyễn Văn A', service: 'Rửa VIP', progress: 33 }, // 15/45 phút
-        { id: 2, name: 'Khoang 2', status: 'AVAILABLE', carPlate: null, carName: null, ownerName: null, service: null, progress: 0 },
-        { id: 3, name: 'Khoang 3', status: 'OCCUPIED', carPlate: '30A-999.99', carName: 'Toyota Camry', ownerName: 'Trần Thị B', service: 'Dọn nội thất', progress: 75 },
-        { id: 4, name: 'Khoang 4', status: 'AVAILABLE', carPlate: null, carName: null, ownerName: null, service: null, progress: 0 },
-        { id: 5, name: 'Khoang 5', status: 'OCCUPIED', carPlate: '51H-111.22', carName: 'Honda CR-V', ownerName: 'Lê Văn C', service: 'Rửa bọt tuyết', progress: 10 },
-        { id: 6, name: 'Khoang 6', status: 'MAINTENANCE', carPlate: null, carName: null, ownerName: null, service: null, progress: 0 }
+    // Mock data Bays - Thêm serviceStatus và billData
+    const [bays, setBays] = useState([
+        {
+            id: 1, name: 'Khoang 1', status: 'OCCUPIED', serviceStatus: 'IN_PROGRESS',
+            carPlate: '51G-123.45', carName: 'Mazda CX-5', ownerName: 'Nguyễn Văn A',
+            service: 'Rửa VIP',
+            billData: {
+                id: 'INV-2026-0612-001',
+                customer: { name: 'Nguyễn Văn A', phone: '0901234567', email: 'nguyenvana@gmail.com', licensePlate: '51G-123.45', vehicleModel: 'Mazda CX-5' },
+                services: [{ id: 's1', name: 'Rửa VIP', price: 150000 }],
+                promotions: [],
+                bay: 'Khoang 1',
+                checkinTime: '13:00 - 12/06/2026',
+                staffNote: ''
+            }
+        },
+        {
+            id: 2, name: 'Khoang 2', status: 'AVAILABLE', serviceStatus: null,
+            carPlate: null, carName: null, ownerName: null, service: null, billData: null
+        },
+        {
+            id: 3, name: 'Khoang 3', status: 'OCCUPIED', serviceStatus: 'COMPLETED',
+            carPlate: '30A-999.99', carName: 'Toyota Camry', ownerName: 'Trần Thị B',
+            service: 'Dọn nội thất',
+            billData: {
+                id: 'INV-2026-0612-002',
+                customer: { name: 'Trần Thị B', phone: '0919999999', email: 'tranthib@gmail.com', licensePlate: '30A-999.99', vehicleModel: 'Toyota Camry' },
+                services: [{ id: 's2', name: 'Dọn nội thất', price: 350000 }],
+                promotions: [{ id: 'p1', name: 'Khách hàng thân thiết', discount: 35000 }],
+                bay: 'Khoang 3',
+                checkinTime: '11:30 - 12/06/2026',
+                staffNote: 'Khách yêu cầu lau kỹ taplo'
+            }
+        },
+        {
+            id: 4, name: 'Khoang 4', status: 'AVAILABLE', serviceStatus: null,
+            carPlate: null, carName: null, ownerName: null, service: null, billData: null
+        },
+        {
+            id: 5, name: 'Khoang 5', status: 'OCCUPIED', serviceStatus: 'IN_PROGRESS',
+            carPlate: '51H-111.22', carName: 'Honda CR-V', ownerName: 'Lê Văn C',
+            service: 'Rửa bọt tuyết',
+            billData: {
+                id: 'INV-2026-0612-003',
+                customer: { name: 'Lê Văn C', phone: '0931112233', email: 'levanc@gmail.com', licensePlate: '51H-111.22', vehicleModel: 'Honda CR-V' },
+                services: [{ id: 's3', name: 'Rửa bọt tuyết', price: 80000 }, { id: 's4', name: 'Hút bụi nội thất', price: 50000 }],
+                promotions: [],
+                bay: 'Khoang 5',
+                checkinTime: '12:45 - 12/06/2026',
+                staffNote: ''
+            }
+        },
+        {
+            id: 6, name: 'Khoang 6', status: 'MAINTENANCE', serviceStatus: null,
+            carPlate: null, carName: null, ownerName: null, service: null, billData: null
+        }
     ]);
+
+    // Xử lý khi quay lại từ Payment (bay đã thanh toán xong)
+    const processedRef = useRef(false);
+    useEffect(() => {
+        if (location.state?.paidBayId && !processedRef.current) {
+            processedRef.current = true;
+            setBays(prev => prev.map(bay =>
+                bay.id === location.state.paidBayId
+                    ? { ...bay, status: 'AVAILABLE', serviceStatus: null, carPlate: null, carName: null, ownerName: null, service: null, billData: null }
+                    : bay
+            ));
+            setStats(prev => ({
+                ...prev,
+                activeCars: prev.activeCars - 1,
+                completed: prev.completed + 1
+            }));
+            message.success('Khoang đã được giải phóng và sẵn sàng phục vụ!');
+            // Xóa state để tránh re-trigger khi refresh
+            window.history.replaceState({}, document.title);
+        }
+    }, [location.state]);
 
     const [upcoming] = useState([
         { id: 1, time: '14:30', name: 'Anh Tuấn', service: 'Rửa bọt tuyết', plate: '51F-555.55' },
@@ -49,13 +120,42 @@ export default function StaffDashboard() {
         return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
     };
 
-    const getBayStatusColor = (status) => {
+    const getBayStatusColor = (status, serviceStatus) => {
+        if (status === 'OCCUPIED' && serviceStatus === 'COMPLETED') return 'success';
         switch (status) {
             case 'AVAILABLE': return 'success';
             case 'OCCUPIED': return 'processing';
             case 'MAINTENANCE': return 'error';
             default: return 'default';
         }
+    };
+
+    const getBayStatusText = (status, serviceStatus) => {
+        if (status === 'OCCUPIED' && serviceStatus === 'COMPLETED') return 'Hoàn thành';
+        switch (status) {
+            case 'AVAILABLE': return 'Trống';
+            case 'OCCUPIED': return 'Đang phục vụ';
+            case 'MAINTENANCE': return 'Bảo trì';
+            default: return '';
+        }
+    };
+
+    // Hoàn thành dịch vụ
+    const handleCompleteService = (bayId) => {
+        setBays(prev => prev.map(bay =>
+            bay.id === bayId ? { ...bay, serviceStatus: 'COMPLETED' } : bay
+        ));
+        message.success('Đã đánh dấu hoàn thành dịch vụ!');
+    };
+
+    // Chuyển sang trang thanh toán
+    const handleGoToPayment = (bay) => {
+        navigate('/staff/payment', {
+            state: {
+                bayId: bay.id,
+                billData: bay.billData
+            }
+        });
     };
 
     return (
@@ -109,15 +209,15 @@ export default function StaffDashboard() {
                         <Row gutter={[16, 16]}>
                             {bays.map(bay => (
                                 <Col xs={24} sm={12} md={8} key={bay.id}>
-                                    <div className={`bay-card bay-card--${bay.status.toLowerCase()}`}>
+                                    <div className={`bay-card bay-card--${bay.status.toLowerCase()} ${bay.serviceStatus === 'COMPLETED' ? 'bay-card--completed' : ''}`}>
                                         <div className="bay-card__header">
                                             <span className="bay-card__name">{bay.name}</span>
-                                            <Badge status={getBayStatusColor(bay.status)} text={
-                                                bay.status === 'AVAILABLE' ? 'Trống' :
-                                                    bay.status === 'OCCUPIED' ? 'Đang phục vụ' : 'Bảo trì'
-                                            } />
+                                            <Badge
+                                                status={getBayStatusColor(bay.status, bay.serviceStatus)}
+                                                text={getBayStatusText(bay.status, bay.serviceStatus)}
+                                            />
                                         </div>
-                                        {/* Card Content luôn có độ cao cố định */}
+                                        {/* Card Content */}
                                         <div className="bay-card__content">
                                             {bay.status === 'OCCUPIED' ? (
                                                 <div className="bay-card__occupied-info">
@@ -130,8 +230,29 @@ export default function StaffDashboard() {
                                                     <div className="bay-card__service-tag">
                                                         <Tag color="blue">{bay.service}</Tag>
                                                     </div>
-                                                    <div className="bay-card__progress">
-                                                        <div className="progress-bar" style={{ width: `${bay.progress}%` }}></div>
+                                                    {/* Nút hành động thay cho progress bar */}
+                                                    <div className="bay-card__actions">
+                                                        {bay.serviceStatus === 'IN_PROGRESS' ? (
+                                                            <Button
+                                                                type="primary"
+                                                                block
+                                                                size="small"
+                                                                className="bay-card__complete-btn"
+                                                                onClick={() => handleCompleteService(bay.id)}
+                                                            >
+                                                                <CheckCircleOutlined /> Hoàn thành dịch vụ
+                                                            </Button>
+                                                        ) : (
+                                                            <Button
+                                                                type="primary"
+                                                                block
+                                                                size="small"
+                                                                className="bay-card__payment-btn"
+                                                                onClick={() => handleGoToPayment(bay)}
+                                                            >
+                                                                <CreditCardOutlined /> Thanh toán
+                                                            </Button>
+                                                        )}
                                                     </div>
                                                 </div>
                                             ) : (
@@ -149,7 +270,7 @@ export default function StaffDashboard() {
 
                 {/* CỘT PHẢI (30%) */}
                 <Col xs={24} lg={7}>
-                    {/* THAO TÁC NHANH (Không có Card bao quanh) */}
+                    {/* THAO TÁC NHANH */}
                     <div style={{ marginBottom: 24 }}>
                         <Row gutter={12}>
                             <Col span={12}>

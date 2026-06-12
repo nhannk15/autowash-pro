@@ -1,137 +1,216 @@
+/* ===== Checkin ===== */
+
+/* --- Container & Layout --- */
 .checkin-container {
-    padding: 24px;
+    padding: 12px;
     max-width: 1400px;
     margin: 0 auto;
+    font-family: system-ui, -apple-system, sans-serif;
 }
 
+/* --- Header --- */
 .checkin-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 32px;
+    margin-bottom: 24px;
 }
 
 .checkin-title {
     margin: 0 !important;
+    font-family: system-ui, -apple-system, sans-serif !important;
+    font-weight: 700 !important;
+    color: #1a1a2e !important;
 }
 
+/* --- Steps --- */
 .checkin-steps {
-    margin-bottom: 40px;
+    margin-bottom: 28px;
     padding: 0 40px;
 }
 
+.checkin-steps .ant-steps-item-title {
+    font-family: system-ui, -apple-system, sans-serif;
+    font-weight: 600 !important;
+    font-size: 14px;
+}
+
+/* --- Card Base --- */
 .checkin-card {
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
     overflow: hidden;
-    border: none;
+    border: 1px solid #e8e8e8;
+    transition: all 0.2s ease;
 }
 
-.camera-card .ant-card-header {
-    background-color: #fafafa;
-    border-bottom: 1px solid #f0f0f0;
+.checkin-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.camera-card .ant-card-body {
+/* ===== GIAI ĐOẠN 1 - QR SCAN ===== */
+
+.qr-scan-card .ant-card-head {
+    background: #fafafa;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.qr-scan-card .ant-card-head-title {
+    font-family: system-ui, -apple-system, sans-serif;
+    font-weight: 600;
+}
+
+.qr-scan-card .ant-card-body {
     padding: 0;
 }
 
-.camera-view {
-    height: 450px;
-    background: linear-gradient(135deg, #1d2b64 0%, #f8cdda 100%);
-    background: linear-gradient(to right, #141e30, #243b55);
+.qr-scan-area {
+    padding: 48px 40px;
+    background: #121E4B;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    position: relative;
     color: white;
+    min-height: 300px;
 }
 
-.camera-frame {
-    border: 3px dashed rgba(255, 255, 255, 0.8);
-    border-radius: 8px;
-    width: 320px; 
-    height: 120px;
+.qr-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 2px solid rgba(255, 255, 255, 0.12);
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 24px;
-    background-color: rgba(255, 255, 255, 0.1);
-    box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.2);
+    margin-bottom: 20px;
 }
 
-.camera-frame-text {
-    color: rgba(255, 255, 255, 0.9) !important;
-    font-size: 16px;
-    letter-spacing: 1px;
+.qr-icon-wrapper .anticon {
+    font-size: 36px;
+    color: rgba(255, 255, 255, 0.85);
 }
 
-.camera-status-text {
+.qr-status-text {
+    font-family: system-ui, -apple-system, sans-serif !important;
     color: #fff !important;
-    margin: 0 !important;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    margin: 0 0 6px 0 !important;
+    font-weight: 600 !important;
 }
 
-.camera-sub-text {
-    color: rgba(255, 255, 255, 0.7) !important;
+.qr-sub-text {
+    font-family: system-ui, -apple-system, sans-serif !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+    font-size: 14px;
     margin-bottom: 24px;
 }
 
-.camera-scan-btn {
-    height: 50px;
-    padding: 0 32px;
-    font-size: 16px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
-    border: none;
-    background-color: #1890ff;
-}
-.camera-scan-btn:hover {
-    background-color: #40a9ff !important;
+.qr-input-wrapper {
+    width: 100%;
+    max-width: 480px;
 }
 
-.search-input-group {
+.qr-input {
+    height: 48px !important;
+    font-size: 16px !important;
+    border-radius: 8px !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.18) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    color: #fff !important;
+    font-family: system-ui, -apple-system, sans-serif;
+    transition: all 0.2s ease;
+}
+
+.qr-input:focus,
+.qr-input:hover {
+    border-color: rgba(255, 255, 255, 0.35) !important;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.06) !important;
+}
+
+.qr-input .ant-input {
+    background: transparent !important;
+    color: #fff !important;
+    font-size: 16px;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.qr-input .ant-input::placeholder {
+    color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.qr-input .ant-input-prefix {
+    color: rgba(255, 255, 255, 0.4);
+    margin-right: 8px;
+}
+
+.qr-input .ant-input-clear-icon {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.qr-scan-hint {
+    margin-top: 16px;
     display: flex;
-    gap: 16px;
-    margin-bottom: 24px;
-    align-items: stretch;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
 }
 
-.search-input {
-    flex: 1;
-    font-size: 16px;
-    border-radius: 8px;
-    height: 48px;
+.qr-scan-hint .anticon {
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 14px;
 }
 
-.search-btn {
-    border-radius: 8px;
-    padding: 0 32px;
-    font-size: 16px;
-    font-weight: 500;
-    height: 48px;
+.qr-scan-hint span {
+    color: rgba(255, 255, 255, 0.35) !important;
+    font-size: 13px;
+    font-family: system-ui, -apple-system, sans-serif;
 }
 
+/* --- Bảng kết quả --- */
 .search-table {
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
-    border: 1px solid #f0f0f0;
+    border: 1px solid #e8e8e8;
 }
 
-/* Stage 2 */
-.customer-info-card .ant-card-header {
-    border-bottom: 1px solid #f0f0f0;
+.search-table .ant-table-thead > tr > th {
+    background: #fafafa !important;
+    color: #8c8c8c !important;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #e8e8e8 !important;
+}
+
+.search-table .ant-table-tbody > tr:hover > td {
+    background: #fafafa !important;
+}
+
+/* ===== GIAI ĐOẠN 2 ===== */
+
+.customer-info-card .ant-card-head {
+    border-bottom: 1px solid #e8e8e8;
 }
 
 .customer-info-card .ant-descriptions-item-label {
     width: 220px;
     font-weight: 600;
     background-color: #fafafa;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    color: #595959;
 }
 
 .customer-info-card .ant-descriptions-item-content {
     background-color: #fff;
-    font-size: 16px;
+    font-size: 15px;
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #1a1a2e;
 }
 
 .vehicle-info-col {
@@ -144,6 +223,8 @@
     font-size: 18px;
     display: inline-block;
     width: fit-content;
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #1a1a2e;
 }
 
 .vehicle-model {
@@ -167,40 +248,57 @@
     border-radius: 4px;
 }
 
+/* --- Staff Notes --- */
+.staff-notes-card {
+    margin-top: 16px;
+}
+
+.staff-notes-card .ant-card-head {
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.staff-notes-textarea {
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    font-family: system-ui, -apple-system, sans-serif;
+    transition: all 0.2s ease;
+    resize: vertical;
+}
+
+/* --- Invoice Card --- */
 .invoice-card {
-    border-radius: 16px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
     position: sticky;
     top: 24px;
-    border: none;
+    border: 1px solid #e8e8e8;
     background: #ffffff;
     overflow: hidden;
 }
 
-.invoice-card .ant-card-header {
-    background: linear-gradient(135deg, #1890ff 0%, #0050b3 100%);
+.invoice-card .ant-card-head {
+    background: #121E4B;
     border-bottom: none;
-    padding: 20px 24px;
+    padding: 16px 24px;
 }
 
 .invoice-card .ant-card-head-title {
-    color: black !important;
-    font-size: 20px;
+    color: #fff !important;
+    font-family: system-ui, -apple-system, sans-serif;
     font-weight: 600;
 }
 
 .invoice-card .ant-card-body {
     padding: 24px;
-    background-image: radial-gradient(#f0f0f0 1px, transparent 1px);
-    background-size: 20px 20px;
 }
 
 .invoice-section-title {
-    font-size: 13px;
+    font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 1.5px;
     color: #8c8c8c;
     font-weight: 700;
+    font-family: system-ui, -apple-system, sans-serif;
 }
 
 .invoice-row {
@@ -209,45 +307,72 @@
 }
 
 .invoice-divider {
-    border-top: 2px dashed #d9d9d9;
+    border-top: 2px dashed #e8e8e8;
     margin: 24px 0;
 }
 
 .invoice-total-box {
-    background: linear-gradient(135deg, #f6ffed 0%, #e6f7ff 100%);
-    border: 1px solid #b5f5ec;
+    background-color: #f0f5ff;
+    border: 1px solid #adc6ff;
     padding: 20px;
-    border-radius: 12px;
+    border-radius: 8px;
     margin-top: 24px;
-    box-shadow: inset 0 2px 8px rgba(255,255,255,0.5);
 }
 
 .invoice-total-label {
     font-size: 16px;
     color: #595959;
     font-weight: 600;
+    font-family: system-ui, -apple-system, sans-serif;
 }
 
 .invoice-total-amount {
     font-size: 28px !important;
-    color: black !important;
-    font-weight: 500 !important;
+    color: #2f54eb !important;
+    font-weight: 700 !important;
     margin: 0 !important;
+    font-family: system-ui, -apple-system, sans-serif !important;
 }
 
 .confirm-btn {
     margin-top: 24px;
-    height: 56px;
-    font-size: 18px;
-    font-weight: bold;
-    box-shadow: 0 8px 20px rgba(24, 144, 255, 0.25);
-    border-radius: 12px;
-    background: rgb(0, 144, 254);
+    height: 48px;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: system-ui, -apple-system, sans-serif;
+    border-radius: 8px;
+    background: #2f54eb;
     border: none;
     color: white;
+    transition: all 0.2s ease;
 }
-.confirm-btn:hover, .confirm-btn:focus {
-    box-shadow: 0 12px 28px rgba(24, 144, 255, 0.35);
-    background: linear-gradient(135deg, #40a9ff 0%, #1890ff 100%);
-    color: white;
+
+.confirm-btn:hover,
+.confirm-btn:focus {
+    background: #597ef7 !important;
+    color: white !important;
+}
+
+/* --- Back Button --- */
+.back-btn {
+    font-weight: 500;
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #2f54eb;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .checkin-container {
+        padding: 12px;
+    }
+    .checkin-steps {
+        padding: 0 16px;
+    }
+    .qr-scan-area {
+        padding: 32px 20px;
+        min-height: 260px;
+    }
+    .qr-input-wrapper {
+        max-width: 100%;
+    }
 }
