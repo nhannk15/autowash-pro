@@ -20,6 +20,7 @@ export function AuthProvider({ children }) {
         await loginEmail(email, password);
         const data = await getMe();
         setUser(data);
+        return data;
     }
 
     async function signup(email, password, confirmPassword, fullName, dob, phone) {
