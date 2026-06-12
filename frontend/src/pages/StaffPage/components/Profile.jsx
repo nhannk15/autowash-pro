@@ -87,9 +87,6 @@ export default function Profile() {
                             <Descriptions.Item label={<><MailOutlined style={{ marginRight: 6 }} />Email</>}>
                                 {email}
                             </Descriptions.Item>
-                            <Descriptions.Item label={<><ClockCircleOutlined style={{ marginRight: 6 }} />Ca làm việc</>}>
-                                {shift}
-                            </Descriptions.Item>
                             <Descriptions.Item label={<><CalendarOutlined style={{ marginRight: 6 }} />Ngày vào làm</>}>
                                 {joinDate}
                             </Descriptions.Item>
