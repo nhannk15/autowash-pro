@@ -135,7 +135,17 @@ export default function BookingList() {
             const endDate = new Date(p.endDate);
             if (bookingDateTime < startDate || bookingDateTime > endDate) return false;
 
-            if (p.membershipTier && p.membershipTier.id > tierId) return false;
+            const TIER_LEVELS = {
+                'Bronze': 1,
+                'Silver': 2,
+                'Gold': 3,
+                'Platinum': 4
+            };
+            if (p.minTierName) {
+                const requiredLevel = TIER_LEVELS[p.minTierName] || 0;
+                const currentLevel = customer.tier.tierLevel || 0;
+                if (currentLevel < requiredLevel) return false;
+            }
 
             return true;
         });
