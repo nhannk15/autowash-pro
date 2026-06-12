@@ -67,6 +67,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFound(UserNotFoundException ex, WebRequest request) {
+        ErrorResponse error = createErrorResponse(HttpStatus.NOT_FOUND, "USER NOT FOUND", ex.getMessage(), request);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
     /**
      * Bean Validation Exceptions
      * @param ex

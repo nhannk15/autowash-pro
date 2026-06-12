@@ -10,12 +10,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.autowashpro.backend.config.jwt.JwtService;
 import com.autowashpro.backend.model.dto.ApiResponse;
+import com.autowashpro.backend.model.dto.ForgotPasswordRequest;
 import com.autowashpro.backend.model.dto.LoginRequest;
 import com.autowashpro.backend.model.dto.LoginResponse;
 import com.autowashpro.backend.model.dto.RegistrationRequest;
+import com.autowashpro.backend.model.dto.ResetPasswordRequest;
+import com.autowashpro.backend.model.dto.VerifyOtpRequest;
 import com.autowashpro.backend.model.entity.User;
 import com.autowashpro.backend.repository.UserRepository;
 import com.autowashpro.backend.service.CustomerService;
+import com.autowashpro.backend.service.OtpService;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.oauth2.sdk.ParseException;
@@ -37,6 +41,9 @@ public class AuthenticationController {
 
     @Autowired
     private CustomerService customerService;
+
+    @Autowired
+    private OtpService otpService;
 
     @PostMapping("/auth/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response)
@@ -76,5 +83,23 @@ public class AuthenticationController {
         cookie.setMaxAge(0);
         response.addCookie(cookie);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/auth/forgot-password")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        otpService.forgotPassword(request);
+        return ResponseEntity.ok(new ApiResponse<>(200, "Mã OTP đã được gửi đến email của bạn!"));
+    }
+
+    @PostMapping("/auth/verify-otp")
+    public ResponseEntity<ApiResponse<Void>> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
+        otpService.verifyOtp(request);
+        return ResponseEntity.ok(new ApiResponse<>(200, "Mã OTP hợp lệ!"));
+    }
+
+    @PostMapping("/auth/reset-password")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        otpService.resetPassword(request);
+        return ResponseEntity.ok(new ApiResponse<>(200, "Đặt lại mật khẩu thành công!"));
     }
 }
