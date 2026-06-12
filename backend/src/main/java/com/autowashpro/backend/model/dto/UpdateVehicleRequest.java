@@ -7,10 +7,10 @@ import lombok.Setter;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@Setter
 @Getter
-public class CreateVehicleRequest {
-    
+@Setter
+public class UpdateVehicleRequest {
+
     private Long vehicleTypeId;
     private String licensePlate;
     private String brand;

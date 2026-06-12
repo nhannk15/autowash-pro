@@ -61,12 +61,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(AccountExistedException.class)
-    public ResponseEntity<ErrorResponse> handleAccountExisted(AccountExistedException ex, WebRequest request) {
-        ErrorResponse error = createErrorResponse(HttpStatus.CONFLICT, "ACCOUNT EXISTED", ex.getMessage(), request);
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
-    }
-
     /**
      * Bean Validation Exceptions
      * @param ex
@@ -109,8 +103,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-
-
     /**
      * Vehicle Exceptions
      * @param ex
@@ -147,5 +139,28 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    /**
+     * User, Customer, Staff Exceptions.
+     * @param ex
+     * @param request
+     * @return
+     */
+    @ExceptionHandler(AccountExistedException.class)
+    public ResponseEntity<ErrorResponse> handleAccountExisted(AccountExistedException ex, WebRequest request) {
+        ErrorResponse error = createErrorResponse(HttpStatus.CONFLICT, "ACCOUNT EXISTED", ex.getMessage(), request);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException ex, WebRequest request) {
+        ErrorResponse error = createErrorResponse(HttpStatus.CONFLICT, ex.getClass().toString(), ex.getMessage(), request);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(WrongPasswordException.class)
+    public ResponseEntity<ErrorResponse> handleWrongPasswordException(WrongPasswordException ex, WebRequest request) {
+        ErrorResponse error = createErrorResponse(HttpStatus.CONFLICT, ex.getClass().toString(), ex.getMessage(), request);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
 
 }

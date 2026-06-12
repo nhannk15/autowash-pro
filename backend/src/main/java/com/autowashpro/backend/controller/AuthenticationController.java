@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.autowashpro.backend.config.jwt.JwtService;
+import com.autowashpro.backend.exception.UserNotFoundException;
+import com.autowashpro.backend.exception.WrongPasswordException;
 import com.autowashpro.backend.model.dto.ApiResponse;
 import com.autowashpro.backend.model.dto.LoginRequest;
 import com.autowashpro.backend.model.dto.LoginResponse;
@@ -42,12 +44,12 @@ public class AuthenticationController {
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response)
             throws KeyLengthException, JOSEException, ParseException {
         User user = repository.findByEmail(loginRequest.getEmail())
-                .orElseThrow(() -> new RuntimeException("Email not found"));
+                .orElseThrow(() -> new UserNotFoundException("Email not found"));
 
         boolean matched = passwordEncoder.matches(loginRequest.getPassword(), user.getPassword());
 
         if (!matched) {
-            throw new RuntimeException("Wrong password");
+            throw new WrongPasswordException("Wrong password");
         }
         String token = jwtService.generateToken(user);
 
