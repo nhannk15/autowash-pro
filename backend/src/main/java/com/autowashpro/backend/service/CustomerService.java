@@ -11,6 +11,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.autowashpro.backend.model.dto.CustomerRequest;
+
 import com.autowashpro.backend.exception.AccountExistedException;
 import com.autowashpro.backend.exception.UserNotFoundException;
 import com.autowashpro.backend.model.dto.CustomerAdminResponse;
@@ -247,8 +249,92 @@ public class CustomerService {
 
     public void delete(Long id) {
         Customer customer = findById(id);
-        repository.delete(customer);
+        customer.setActive(false);
+        repository.save(customer);
     }
+
+    // ==================== Admin-specific methods ====================
+
+    public Customer createByAdmin(CustomerRequest request) {
+        // Validate unique email
+        Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
+        if (existingUser.isPresent()) {
+            throw new AccountExistedException("Email đã tồn tại!");
+        }
+
+        // Validate unique phone number
+        if (request.getPhoneNumber() != null && repository.existsByPhoneNumber(request.getPhoneNumber())) {
+            throw new IllegalArgumentException("Số điện thoại đã được sử dụng!");
+        }
+
+        Customer customer = new Customer();
+        customer.setEmail(request.getEmail());
+        customer.setFullName(request.getFullName());
+        customer.setPhoneNumber(request.getPhoneNumber());
+        customer.setAvatarUrl(request.getAvatarUrl());
+        customer.setDateOfBirth(request.getDateOfBirth());
+
+        // Encode password if provided
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            customer.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+
+        // Set tier if specified, otherwise apply defaults
+        if (request.getTierId() != null) {
+            MembershipTier tier = membershipTierRepository.findById(request.getTierId())
+                    .orElseThrow(() -> new IllegalArgumentException("Hạng thành viên không tồn tại!"));
+            customer.setTier(tier);
+        }
+
+        applyCustomerDefaults(customer);
+        return repository.save(customer);
+    }
+
+    public Customer updateByAdmin(Long id, CustomerRequest request) {
+        Customer customer = findById(id);
+
+        // Validate unique phone number if changed
+        if (request.getPhoneNumber() != null
+                && !request.getPhoneNumber().equals(customer.getPhoneNumber())
+                && repository.existsByPhoneNumber(request.getPhoneNumber())) {
+            throw new IllegalArgumentException("Số điện thoại đã được sử dụng!");
+        }
+
+        // Update only non-null fields
+        if (request.getEmail() != null) {
+            customer.setEmail(request.getEmail());
+        }
+        if (request.getFullName() != null) {
+            customer.setFullName(request.getFullName());
+        }
+        if (request.getPhoneNumber() != null) {
+            customer.setPhoneNumber(request.getPhoneNumber());
+        }
+        if (request.getAvatarUrl() != null) {
+            customer.setAvatarUrl(request.getAvatarUrl());
+        }
+        if (request.getDateOfBirth() != null) {
+            customer.setDateOfBirth(request.getDateOfBirth());
+        }
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            customer.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+        if (request.getTierId() != null) {
+            MembershipTier tier = membershipTierRepository.findById(request.getTierId())
+                    .orElseThrow(() -> new IllegalArgumentException("Hạng thành viên không tồn tại!"));
+            customer.setTier(tier);
+        }
+
+        return repository.save(customer);
+    }
+
+    public void deactivate(Long id) {
+        Customer customer = findById(id);
+        customer.setActive(false);
+        repository.save(customer);
+    }
+
+    // ==================== Helper methods ====================
 
     private void applyCustomerDefaults(Customer customer) {
         if (customer.getRole() == null) {

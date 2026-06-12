@@ -24,6 +24,7 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
                    OR LOWER(c.fullName) LIKE LOWER(CONCAT('%', :search, '%'))
                    OR c.phoneNumber LIKE CONCAT('%', :search, '%'))
             AND (:tierId IS NULL OR c.tier.id = :tierId)
+            AND c.isActive = true
             """)
     Page<Customer> searchCustomers(@Param("search") String search,
                                    @Param("tierId") Long tierId,
