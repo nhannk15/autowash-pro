@@ -1,20 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { CarOutlined } from '@ant-design/icons';
 import './Booking.css';
-
+import axios from 'axios';
 function VehicleImage({ src, alt, fallbackIcon }) {
     const [hasError, setHasError] = useState(false);
-    
+
     if (!src || hasError) {
         return fallbackIcon;
     }
-    
+
     return (
-        <img 
-            src={src} 
-            alt={alt} 
-            className="vehicle-card__image" 
+        <img
+            src={src}
+            alt={alt}
+            className="vehicle-card__image"
             referrerPolicy="no-referrer"
             onError={() => setHasError(true)}
         />
@@ -70,7 +70,7 @@ export default function BookingList() {
                 const result = await response.json();
                 const vehicleList = result && result.data ? result.data : [];
                 setUserVehicles(vehicleList);
-                
+
                 // Tự động chọn xe đầu tiên nếu có danh sách xe
                 if (vehicleList.length > 0) {
                     setSelectedVehicle(vehicleList[0]);
@@ -350,7 +350,7 @@ export default function BookingList() {
         setBookingError(null);
 
         try {
-            const servicePriceIds = selectedServices.map(service => 
+            const servicePriceIds = selectedServices.map(service =>
                 selectedVehicleType === 'SEDAN' ? service.priceSedanId : service.priceSuvId
             );
 
@@ -461,9 +461,9 @@ export default function BookingList() {
                                     >
                                         {/* Hình ảnh xe hoặc Icon phân khúc xe */}
                                         <div className="vehicle-card__image-container">
-                                            <VehicleImage 
-                                                src={vehicle.image} 
-                                                alt={`${vehicle.brand} ${vehicle.model}`} 
+                                            <VehicleImage
+                                                src={vehicle.image}
+                                                alt={`${vehicle.brand} ${vehicle.model}`}
                                                 fallbackIcon={
                                                     <div className="vehicle-card__icon-wrapper">
                                                         {isSedan ? <CarOutlined /> : <span style={{ fontSize: '24px' }}>🚙</span>}
@@ -564,9 +564,9 @@ export default function BookingList() {
                                                             <h3 className="booking-service-card__title">{service.name}</h3>
                                                             <span className="booking-service-card__price">{formatCurrency(priceVal)}</span>
                                                         </div>
-                                                         <div style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '500' }}>
-                                                             ⏱ <span>Thời gian: {service.duration} phút</span>
-                                                         </div>
+                                                        <div style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '500' }}>
+                                                            ⏱ <span>Thời gian: {service.duration} phút</span>
+                                                        </div>
                                                         <p className="booking-service-card__desc">{service.shortDesc}</p>
                                                         <button
                                                             type="button"
@@ -821,7 +821,7 @@ export default function BookingList() {
                     <div className="booking-main-panel">
                         <div style={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '16px', padding: '24px', boxShadow: '0 8px 24px rgba(13, 27, 75, 0.02)' }}>
                             <h2 className="booking-step-title" style={{ fontSize: '1.4rem', marginBottom: '20px' }}>Chi tiết lịch hẹn</h2>
-                            
+
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '24px' }}>
                                 <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                                     <h4 style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0', fontWeight: 'bold' }}>🚗 Xe chăm sóc</h4>
@@ -866,14 +866,14 @@ export default function BookingList() {
                                 <textarea
                                     name="notes"
                                     className="form-input form-textarea"
-                                    style={{ 
-                                        width: '100%', 
-                                        height: '80px', 
-                                        marginTop: '8px', 
-                                        fontSize: '0.88rem', 
-                                        padding: '10px 12px', 
-                                        borderRadius: '8px', 
-                                        border: '1px solid #cbd5e1', 
+                                    style={{
+                                        width: '100%',
+                                        height: '80px',
+                                        marginTop: '8px',
+                                        fontSize: '0.88rem',
+                                        padding: '10px 12px',
+                                        borderRadius: '8px',
+                                        border: '1px solid #cbd5e1',
                                         resize: 'none',
                                         fontFamily: 'inherit'
                                     }}
@@ -935,15 +935,15 @@ export default function BookingList() {
                             })()}
 
                             {bookingError && (
-                                <div style={{ 
-                                    color: '#ef4444', 
-                                    backgroundColor: '#fef2f2', 
-                                    padding: '10px', 
-                                    borderRadius: '8px', 
-                                    border: '1px solid #fecaca', 
-                                    margin: '0 0 12px 0', 
-                                    fontSize: '0.85rem', 
-                                    fontWeight: '500' 
+                                <div style={{
+                                    color: '#ef4444',
+                                    backgroundColor: '#fef2f2',
+                                    padding: '10px',
+                                    borderRadius: '8px',
+                                    border: '1px solid #fecaca',
+                                    margin: '0 0 12px 0',
+                                    fontSize: '0.85rem',
+                                    fontWeight: '500'
                                 }}>
                                     ⚠️ {bookingError}
                                 </div>
@@ -974,9 +974,9 @@ export default function BookingList() {
             {isSuccess && (
                 <div className="booking-success-modal-backdrop">
                     <div className="booking-success-modal-content">
-                        <button 
-                            type="button" 
-                            className="modal-close-btn" 
+                        <button
+                            type="button"
+                            className="modal-close-btn"
                             onClick={handleResetBooking}
                             aria-label="Close"
                         >
@@ -987,7 +987,7 @@ export default function BookingList() {
                         <p className="success-message">
                             Cảm ơn bạn đã lựa chọn Autowash PRO. Đơn đặt lịch của bạn đã được ghi nhận thành công, chúng tôi sẽ liên hệ sớm nhất để xác nhận.
                         </p>
-                        
+
                         <div className="success-details">
                             <div className="success-detail-item">
                                 <span>Khách hàng:</span>
@@ -1009,7 +1009,7 @@ export default function BookingList() {
                                 <span>Thời gian:</span>
                                 <strong>{selectedTime} - {selectedDate.split('-').reverse().join('/')}</strong>
                             </div>
-                            
+
                             {(() => {
                                 const appPromo = getApplicablePromotion();
                                 const originalTotal = calculateTotal();
@@ -1051,7 +1051,7 @@ export default function BookingList() {
                                 }
                             })()}
                         </div>
-                        
+
                         <button className="btn-success-home" onClick={handleResetBooking}>
                             ĐÓNG
                         </button>

@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './Service.css'
 import { useAuth } from '../../context/AuthContext';
-
+import axios from 'axios';
 // Import các hình ảnh cục bộ từ assets
 import exteriorImg from '../../assets/Service/RuaXeNgoaiThat.jpg';
 import interiorImg from '../../assets/Service/VeSinhNoiThat.jpg';
@@ -34,12 +34,10 @@ export default function Service() {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch("/api/services");
-            if (!response.ok) {
-                throw new Error("Không thể tải danh sách dịch vụ từ hệ thống.");
-            }
-            const result = await response.json();
-            const serviceList = result && result.data ? result.data : result;
+            const response = await axios.get("/api/services");
+
+            const result = response.data
+            const serviceList = result?.data || [];
 
             if (Array.isArray(serviceList)) {
                 const apiServices = serviceList.map(item => {
@@ -62,8 +60,8 @@ export default function Service() {
                     const durationMinutes = item.duration || 0;
                     const durationText = durationMinutes < 60
                         ? `${durationMinutes} phút`
-                        : (durationMinutes % 60 === 0 
-                            ? `${durationMinutes / 60} giờ` 
+                        : (durationMinutes % 60 === 0
+                            ? `${durationMinutes / 60} giờ`
                             : `${Math.floor(durationMinutes / 60)} giờ ${durationMinutes % 60} phút`);
 
                     return {
@@ -88,7 +86,7 @@ export default function Service() {
                 throw new Error("Dữ liệu dịch vụ không đúng định dạng.");
             }
         } catch (err) {
-            setError(err.message);
+            setError(err.response?.data.message || err.message || 'không thể tải danh sách dịch vụ')
         } finally {
             setLoading(false);
         }

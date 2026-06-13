@@ -3,19 +3,20 @@ import { useAuth } from '../../../context/AuthContext';
 import { Spin, Alert, Empty, Card, Button, Modal, Form, Input, Select, message, Popconfirm } from 'antd';
 import { PlusOutlined, CarOutlined, DeleteOutlined } from '@ant-design/icons';
 import './MyCars.css';
+import axios from 'axios';
 
 function VehicleImage({ src, alt, fallbackIcon }) {
     const [hasError, setHasError] = useState(false);
-    
+
     if (!src || hasError) {
         return fallbackIcon;
     }
-    
+
     return (
-        <img 
-            src={src} 
-            alt={alt} 
-            className="mycar-card__image" 
+        <img
+            src={src}
+            alt={alt}
+            className="mycar-card__image"
             referrerPolicy="no-referrer"
             onError={() => setHasError(true)}
         />
@@ -27,14 +28,13 @@ export default function MyCars() {
     const [vehicles, setVehicles] = useState([]);
     const [vehicleTypes, setVehicleTypes] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [typesLoading, setTypesLoading] = useState(false)
     const [error, setError] = useState(null);
 
     // Modal state
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [form] = Form.useForm();
-
-    const customerId = user?.id; // Sử dụng ID của tài khoản đang đăng nhập
 
     // Tải danh sách xe của khách hàng
     const fetchVehicles = async () => {
@@ -45,15 +45,48 @@ export default function MyCars() {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`/api/vehicles/user/${user.id}`);
-            if (!response.ok) {
-                throw new Error("Không thể tải danh sách xe của bạn.");
-            }
-            const result = await response.json();
-            const vehicleList = result && result.data ? result.data : [];
+            const response = await axios.get(`/api/vehicles/user`);
+            // nếu không có await nó sẽ chạy tiếp code bên dưới và biến respone không chứa dữ liệu thực mà chỉ chứa đối tượng Promise. khi đó các dòng code đọc dữ liệu phía sau sẽ báo lỗi vì dữ liệu chưa kịp tải về
+            // Khi bạn gọi await axios.get(...), Axios trả về một đối tượng chứa toàn bộ thông tin của phản hồi HTTP (gọi là Axios Response). Đối tượng response này có các thuộc tính cố định do Axios quy định:
+
+            // response = {
+            //   data: {...},        // Phần thân (Body) của phản hồi chứa JSON từ server
+            //   status: 200,        // Mã trạng thái HTTP (200, 404, 500...)
+            //   statusText: "OK",   // Trạng thái HTTP dạng chữ
+            //   headers: {...},     // HTTP Headers nhận về từ server
+            //   config: {...}       // Cấu hình request gửi đi
+            // }
+            const result = response.data
+            //             cấu trúc của response.data được định nghĩa bởi lớp
+            //             ApiResponse.java
+            //  ở Backend, bao gồm 3 thuộc tính chính:
+            //             json
+            //             {
+            //                 "statusCode": 200,       Mã trạng thái HTTP (ở đây là 200 - Thành công)
+            //                     "message": "Success", Thông báo đi kèm từ Backend (thường là "Success")
+            //                         "data": [...]      Dữ liệu thực tế (chứa mảng danh sách xe)
+            //             }
+            const vehicleList = result?.data || [];
+            // Nếu result có dữ liệu thì lấy result.data, nếu không có thì trả về undefined (không bị crash app). || []: Nếu vế trước là undefined hoặc null thì lập tức lấy mảng rỗng[].
             setVehicles(vehicleList);
-        } catch (err) {
-            setError(err.message);
+
+        }
+        catch (err) {
+            setError(err.response?.data.message || err.message || 'không thể tải danh sách xe của bạn')
+            // axios bắt lỗi và tạo đối tượng err có dạng: err = {
+            //   message: "Request failed with status code 400", // Lỗi chung của Axios
+            //   response: {
+            //     status: 400,
+            //     data: {
+            //       statusCode: 400,
+            //       message: "Bạn không thể xóa xe của người khác", // Tin nhắn cụ thể từ Backend
+            //       data: null
+            //     }
+            //   }
+            // }
+            // err.response là đối tượng phản hồi lỗi từ server (400, 404,..) được axios tự động đính kèm
+            // err.respose.data: backend trả về phản hồi lỗi dưới dạng json gồm statusCode, message, và data. err.response.data.message: Chính là thông báo lỗi cụ thể do Backend gửi về (ví dụ: "Người dùng không tồn tại.", "Biển số xe đã tồn tại!").
+            // err.message): Nếu server sập hoặc lỗi mạng (không có ưu tiên 1), hệ thống sẽ lấy lỗi mặc định của Axios/Trình duyệt (ví dụ: "Network Error").
         } finally {
             setLoading(false);
         }
@@ -61,14 +94,16 @@ export default function MyCars() {
 
     // Tải danh sách phân khúc xe (Sedan, SUV...) để điền vào Form thêm xe
     const fetchVehicleTypes = async () => {
+        setTypesLoading(true)
         try {
-            const response = await fetch('/api/vehicle-types');
-            if (response.ok) {
-                const result = await response.json();
-                setVehicleTypes(result && result.data ? result.data : []);
-            }
+            const response = await axios.get('/api/vehicle-types');
+
+            const result = response.data
+            setVehicleTypes(result?.data || []);
         } catch (err) {
-            console.error("Lỗi tải danh sách phân khúc xe:", err);
+            setError(err.response?.data.message || err.message || 'không thể tải danh sách các loại xe')
+        } finally {
+            setTypesLoading(false)
         }
     };
 
@@ -82,36 +117,22 @@ export default function MyCars() {
         if (!user) return;
         setSubmitting(true);
         try {
-            const response = await fetch('/api/vehicles', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    brand: values.brand,
-                    model: values.model,
-                    licensePlate: values.licensePlate,
-                    color: values.color,
-                    vehicleType: {
-                        id: values.vehicleTypeId
-                    },
-                    customer: {
-                        id: user.id
-                    },
-                    isActive: true
-                }),
+            // const response = await fetch('/api/vehicles', {
+            //     method: 'POST',
+            await axios.post('/api/vehicles', {
+                brand: values.brand,
+                model: values.model,
+                licensePlate: values.licensePlate,
+                color: values.color,
+                vehicleTypeId: values.vehicleTypeId,
+                image: values.image || null
             });
-
-            if (!response.ok) {
-                throw new Error("Không thể thêm xe mới. Biển số xe có thể đã tồn tại!");
-            }
-
             message.success("Thêm xe mới thành công!");
             setIsModalOpen(false);
             form.resetFields();
             fetchVehicles(); // Tải lại danh sách xe
         } catch (err) {
-            message.error(err.message);
+            message.error(err.response?.data?.message || err.message || "Không thể thêm xe mới");
         } finally {
             setSubmitting(false);
         }
@@ -120,17 +141,30 @@ export default function MyCars() {
     // Xử lý Xóa xe
     const handleDeleteVehicle = async (vehicleId) => {
         try {
-            const response = await fetch(`/api/vehicles/${vehicleId}`, {
-                method: 'DELETE',
-            });
-            if (!response.ok) {
-                throw new Error("Không thể xóa xe.");
-            }
+            await axios.delete(`/api/vehicles/${vehicleId}`);
             message.success("Xóa xe thành công!");
             fetchVehicles(); // Tải lại danh sách xe
         } catch (err) {
-            message.error(err.message);
+            message.error(err.response?.data?.message || err.message || "Không thể xóa xe");
         }
+    };
+
+    // Hiển thị thông tin liên hệ để khôi phục xe
+    const handleShowRestoreInfo = (vehicle) => {
+        Modal.info({
+            title: 'Khôi phục phương tiện',
+            content: (
+                <div>
+                    <p>Để khôi phục xe <strong>{vehicle.brand} {vehicle.model}</strong> (Biển số: <strong>{vehicle.licensePlate}</strong>), vui lòng liên hệ với ban quản trị hệ thống qua:</p>
+                    <ul style={{ marginTop: '12px', paddingLeft: '20px', listStyleType: 'disc' }}>
+                        <li style={{ marginBottom: '6px' }}><strong>Hotline:</strong> 1900 XXXX</li>
+                        <li><strong>Email:</strong> support@autowashpro.com</li>
+                    </ul>
+                </div>
+            ),
+            okText: 'Đóng',
+            maskClosable: true,
+        });
     };
 
     return (
@@ -141,9 +175,9 @@ export default function MyCars() {
                     <h1 className="mycars-title">XE CỦA TÔI</h1>
                     <p className="mycars-subtitle">Quản lý danh sách phương tiện của bạn đăng ký trong hệ thống.</p>
                 </div>
-                <Button 
-                    type="primary" 
-                    icon={<PlusOutlined />} 
+                <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
                     className="mycars-add-btn"
                     onClick={() => setIsModalOpen(true)}
                     size="large"
@@ -157,12 +191,16 @@ export default function MyCars() {
                 <div style={{ textAlign: 'center', padding: '80px 0' }}>
                     <Spin size="large" tip="Đang tải danh sách xe..." />
                 </div>
+            ) : typesLoading ? (
+                <div style={{ textAlign: 'center', padding: '80px 0' }}>
+                    <Spin size="large" tip="Đang tải danh sách loại xe" />
+                </div>
             ) : error ? (
                 <Alert message="Có lỗi xảy ra" description={error} type="error" showIcon style={{ marginBottom: '24px' }} />
             ) : vehicles.length === 0 ? (
-                <Empty 
-                    image={Empty.PRESENTED_IMAGE_SIMPLE} 
-                    description="Bạn chưa đăng ký phương tiện nào." 
+                <Empty
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    description="Bạn chưa đăng ký phương tiện nào."
                     style={{ padding: '60px 0' }}
                 >
                     <Button type="primary" onClick={() => setIsModalOpen(true)}>Đăng ký xe ngay</Button>
@@ -171,28 +209,35 @@ export default function MyCars() {
                 <div className="mycars-grid">
                     {vehicles.map((vehicle) => {
                         const isSedan = vehicle.typeName === 'SEDAN';
+                        const isCarActive = vehicle.active !== false && vehicle.isActive !== false;
                         return (
-                            <Card key={vehicle.vehicleId} className="mycar-card" bordered={false}>
+                            <Card
+                                key={vehicle.vehicleId}
+                                className={`mycar-card ${!isCarActive ? 'mycar-card--inactive' : ''}`}
+                                bordered={false}
+                            >
                                 <div className="mycar-card__content">
-                                    {/* Nút xóa xe */}
-                                    <div className="mycar-card__badge-active">
-                                        <Popconfirm
-                                            title="Xóa phương tiện"
-                                            description="Bạn có chắc chắn muốn xóa xe này ra khỏi danh sách?"
-                                            onConfirm={() => handleDeleteVehicle(vehicle.vehicleId)}
-                                            okText="Xóa"
-                                            cancelText="Hủy"
-                                            okButtonProps={{ danger: true }}
-                                        >
-                                            <Button type="text" danger icon={<DeleteOutlined />} size="small" />
-                                        </Popconfirm>
-                                    </div>
+                                    {/* Nút xóa xe - Chỉ hiện cho xe đang hoạt động */}
+                                    {isCarActive && (
+                                        <div className="mycar-card__badge-active">
+                                            <Popconfirm
+                                                title="Xóa phương tiện"
+                                                description="Bạn có chắc chắn muốn xóa xe này ra khỏi danh sách?"
+                                                onConfirm={() => handleDeleteVehicle(vehicle.vehicleId)}
+                                                okText="Xóa"
+                                                cancelText="Hủy"
+                                                okButtonProps={{ danger: true }}
+                                            >
+                                                <Button type="text" danger icon={<DeleteOutlined />} size="small" />
+                                            </Popconfirm>
+                                        </div>
+                                    )}
 
                                     {/* Hình ảnh xe hoặc Icon phân khúc xe */}
                                     <div className="mycar-card__image-wrapper">
-                                        <VehicleImage 
-                                            src={vehicle.image} 
-                                            alt={`${vehicle.brand} ${vehicle.model}`} 
+                                        <VehicleImage
+                                            src={vehicle.image}
+                                            alt={`${vehicle.brand} ${vehicle.model}`}
                                             fallbackIcon={
                                                 <div className="mycar-card__icon-wrapper">
                                                     {isSedan ? <CarOutlined /> : <span style={{ fontSize: '24px' }}>🚙</span>}
@@ -201,11 +246,9 @@ export default function MyCars() {
                                         />
                                     </div>
 
-
-
                                     {/* Tên hãng & model */}
                                     <h3 className="mycar-card__name">{vehicle.brand} {vehicle.model}</h3>
-                                    
+
                                     {/* Phân khúc xe */}
                                     <span className="mycar-card__type">
                                         {isSedan ? 'Sedan (4-5 chỗ)' : 'SUV (5-7 chỗ)'}
@@ -222,6 +265,19 @@ export default function MyCars() {
                                             <span className="mycar-detail-value">{vehicle.color || 'Chưa cập nhật'}</span>
                                         </div>
                                     </div>
+
+                                    {/* Nút Liên hệ khôi phục - Chỉ hiện cho xe đã ẩn */}
+                                    {!isCarActive && (
+                                        <Button
+                                            type="primary"
+                                            ghost
+                                            size="middle"
+                                            style={{ marginTop: '16px', width: '100%', borderRadius: '8px', fontWeight: '600' }}
+                                            onClick={() => handleShowRestoreInfo(vehicle)}
+                                        >
+                                            Liên hệ khôi phục
+                                        </Button>
+                                    )}
                                 </div>
                             </Card>
                         );
@@ -295,11 +351,11 @@ export default function MyCars() {
                     </Form.Item>
 
                     <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
-                        <Button 
+                        <Button
                             onClick={() => {
                                 setIsModalOpen(false);
                                 form.resetFields();
-                            }} 
+                            }}
                             style={{ marginRight: '8px' }}
                         >
                             Hủy
