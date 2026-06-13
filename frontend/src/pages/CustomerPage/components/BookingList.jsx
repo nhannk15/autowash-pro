@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { CarOutlined } from '@ant-design/icons';
 import './Booking.css';
 import axios from 'axios';
+import { message } from 'antd';
 function VehicleImage({ src, alt, fallbackIcon }) {
     const [hasError, setHasError] = useState(false);
 
@@ -59,16 +60,12 @@ export default function BookingList() {
     useEffect(() => {
         const fetchVehicles = async () => {
             if (!user) return;
-            const customerId = user.id; // Sử dụng ID của tài khoản đang đăng nhập
             setLoadingVehicles(true);
             setErrorVehicles(null);
             try {
-                const response = await fetch(`/api/vehicles/user/${customerId}`);
-                if (!response.ok) {
-                    throw new Error("Không thể tải danh sách xe của khách hàng.");
-                }
-                const result = await response.json();
-                const vehicleList = result && result.data ? result.data : [];
+                const response = await axios.get(`/api/vehicles/user`);
+                const result = response.data
+                const vehicleList = result?.data || [];
                 setUserVehicles(vehicleList);
 
                 // Tự động chọn xe đầu tiên nếu có danh sách xe
@@ -78,7 +75,7 @@ export default function BookingList() {
                     setMaxUnlockedStep(prev => Math.max(prev, 2));
                 }
             } catch (err) {
-                setErrorVehicles(err.message);
+                setErrorVehicles(err.response?.data.message || err.message || 'không thể tải danh sách xe của bạn');
                 setUserVehicles([]);
             } finally {
                 setLoadingVehicles(false);
@@ -87,35 +84,43 @@ export default function BookingList() {
 
         fetchVehicles();
     }, [user]);
+    // Mảng phụ thuộc báo cho React biết: "Hãy chạy lại hàm bên trong useEffect mỗi khi giá trị của biến user thay đổi".
+    // Đề phòng trường hợp Token hết hạn ngầm (Session Expired)
+    // Nếu người dùng treo máy ở trang này quá lâu, Token/Cookie đăng nhập bị hết hạn:
+
+    // Hệ thống Auth ngầm sẽ tự động cập nhật user thành null.
+    // Nhờ có [user], giao diện sẽ tự động phản ứng: khóa chức năng đặt lịch và xóa danh sách xe ngay lập tức, thay vì để người dùng tiếp tục bấm đặt lịch bằng dữ liệu cũ và nhận lỗi crash hệ thống từ Backend.
+
 
     // Lấy thông tin chi tiết khách hàng theo tài khoản đang đăng nhập để tính hạng thành viên và áp khuyến mãi
-    useEffect(() => {
-        if (!user) return;
-        const fetchCustomerInfo = async () => {
-            try {
-                const response = await fetch(`/api/customers/${user.id}`);
-                if (response.ok) {
-                    const result = await response.json();
-                    setCustomer(result.data || result);
-                }
-            } catch (err) {
-                console.error("Failed to fetch customer info:", err);
-            }
-        };
-        fetchCustomerInfo();
-    }, [user]);
+    // useEffect(() => {
+    //     if (!user) return;
+    //     const fetchCustomerInfo = async () => {
+    //         try {
+    //             const response = await fetch(`/api/customers/${user.id}`);
+    //             if (response.ok) {
+    //                 const result = await response.json();
+    //                 setCustomer(result.data || result);
+    //             }
+    //         } catch (err) {
+    //             console.error("Failed to fetch customer info:", err);
+    //         }
+    //     };
+    //     fetchCustomerInfo();
+    // }, [user]);
 
     // Lấy danh sách chương trình khuyến mãi
     useEffect(() => {
         const fetchPromotions = async () => {
             try {
-                const response = await fetch('/api/promotions');
-                if (response.ok) {
-                    const result = await response.json();
-                    setPromotions(result.data || result);
-                }
+                const response = await axios.get('/api/promotions');
+
+                const result = response.data;
+                setPromotions(result?.data || []);
+
             } catch (err) {
                 console.error("Failed to fetch promotions:", err);
+                message.warning(err.response?.data.message || err.message || "không thể tải danh sách chương trình khuyến mãi")
             }
         };
         fetchPromotions();
@@ -186,12 +191,9 @@ export default function BookingList() {
             setLoadingServices(true);
             setErrorServices(null);
             try {
-                const response = await fetch("/api/services");
-                if (!response.ok) {
-                    throw new Error("Không thể tải danh sách dịch vụ.");
-                }
-                const result = await response.json();
-                const serviceList = result && result.data ? result.data : result;
+                const response = await axios.get("/api/services");
+                const result = response.data;
+                const serviceList = result?.data || [];
                 if (Array.isArray(serviceList)) {
                     // Chuẩn hóa cấu trúc dịch vụ tương tự trang Dịch Vụ chính
                     const formatted = serviceList.map(item => {
@@ -214,7 +216,7 @@ export default function BookingList() {
                     throw new Error("Định dạng dữ liệu API không đúng.");
                 }
             } catch (err) {
-                setErrorServices(err.message);
+                setErrorServices(err.response?.data.message || err.message || "Không thể tải danh sách dịch vụ");
             } finally {
                 setLoadingServices(false);
             }
@@ -229,16 +231,13 @@ export default function BookingList() {
             setLoadingSlots(true);
             setErrorSlots(null);
             try {
-                const response = await fetch(`/api/bookings/available-slots?date=${selectedDate}`);
+                const response = await axios.get(`/api/bookings/available-slots?date=${selectedDate}`);
 
-                if (!response.ok) {
-                    throw new Error("Không thể tải danh sách khung giờ trống.");
-                }
-                const result = await response.json();
-                const slotList = result && result.timeSlotAvailabilityResponses ? result.timeSlotAvailabilityResponses : [];
+                const result = response.data
+                const slotList = result?.timeSlotAvailabilityResponses || [];
                 setTimeSlots(slotList);
             } catch (err) {
-                setErrorSlots(err.message);
+                setErrorSlots(err.response?.data.message || err.message);
                 setTimeSlots([]);
             } finally {
                 setLoadingSlots(false);
@@ -363,22 +362,11 @@ export default function BookingList() {
                 notes: contactInfo.notes
             };
 
-            const response = await fetch("/api/bookings", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const result = await response.json();
-            if (!response.ok) {
-                throw new Error(result.message || "Đã xảy ra lỗi khi tạo lịch đặt.");
-            }
+            await axios.post("/api/bookings", payload);
 
             setIsSuccess(true);
         } catch (err) {
-            setBookingError(err.message);
+            setBookingError(err.response?.data?.message || err.message || "Đã xảy ra lỗi khi tạo lịch đặt.")
         } finally {
             setSubmitting(false);
         }

@@ -56,7 +56,9 @@ export default function MyCars() {
             //   headers: {...},     // HTTP Headers nhận về từ server
             //   config: {...}       // Cấu hình request gửi đi
             // }
-            const result = response.data
+
+            // Sau khi dòng này chạy xong, toàn bộ dữ liệu phản hồi (bao gồm trạng thái, header, và phần thân JSON) đã được tải về máy của bạn thành công và lưu vào biến response dưới dạng một đối tượng JavaScript thông thường.
+            // const result = response.data
             //             cấu trúc của response.data được định nghĩa bởi lớp
             //             ApiResponse.java
             //  ở Backend, bao gồm 3 thuộc tính chính:
@@ -66,6 +68,7 @@ export default function MyCars() {
             //                     "message": "Success", Thông báo đi kèm từ Backend (thường là "Success")
             //                         "data": [...]      Dữ liệu thực tế (chứa mảng danh sách xe)
             //             }
+            const result = response.data
             const vehicleList = result?.data || [];
             // Nếu result có dữ liệu thì lấy result.data, nếu không có thì trả về undefined (không bị crash app). || []: Nếu vế trước là undefined hoặc null thì lập tức lấy mảng rỗng[].
             setVehicles(vehicleList);
