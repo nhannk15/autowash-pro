@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Steps, Card, Input, Button, Typography,
-    Row, Col, Descriptions, Space, message, Result, Tag, Empty
+    Row, Col, Descriptions, Space, message, Result, Tag, Empty, Spin
 } from 'antd';
 import {
     CreditCardOutlined, CheckCircleOutlined, ArrowLeftOutlined,
@@ -9,31 +9,57 @@ import {
     UserOutlined, CarOutlined, TagOutlined
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { getBillByBookingId, validateVoucher } from '../../../service/staffService';
 import './Payment.css';
 
 const { Title, Text } = Typography;
-
-// Mock vouchers
-const mockVouchers = {
-    'SUMMER2026': { name: 'Ưu đãi hè 2026', discountPercent: 15, maxDiscount: 100000 },
-    'VIP50K': { name: 'Giảm 50K cho VIP', discountFixed: 50000 },
-    'NEWCUST': { name: 'Khách hàng mới', discountPercent: 10, maxDiscount: 200000 },
-};
 
 export default function StaffPayment() {
     const [currentStep, setCurrentStep] = useState(0);
     const [voucherCode, setVoucherCode] = useState('');
     const [appliedVoucher, setAppliedVoucher] = useState(null);
     const [isPaymentReceived, setIsPaymentReceived] = useState(false);
+    const [billData, setBillData] = useState(null);
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
 
     // Nhận data từ Dashboard
     const bayId = location.state?.bayId || null;
-    const bill = location.state?.billData || null;
+    const bookingId = location.state?.bookingId || null;
+    const sessionId = location.state?.sessionId || null;
+
+    useEffect(() => {
+        async function getBill() {
+            // Cần bookingId hoặc sessionId để fetch bill
+            const id = bookingId || sessionId;
+            if (!id) return;
+            setLoading(true);
+            try {
+                const response = await getBillByBookingId(id);
+                const data = response?.data || response;
+                setBillData(data);
+            } catch (error) {
+                console.error("Failed to fetch bill", error);
+                message.error('Không thể tải thông tin hóa đơn!');
+            } finally {
+                setLoading(false);
+            }
+        }
+        getBill();
+    }, [bookingId, sessionId]);
+
+    // Nếu đang loading
+    if (loading) {
+        return (
+            <div className="payment-container" style={{ textAlign: 'center', padding: '100px 0' }}>
+                <Spin size="large" tip="Đang tải hóa đơn..." />
+            </div>
+        );
+    }
 
     // Nếu không có data (truy cập trực tiếp từ sidebar) → hiển empty state
-    if (!bill) {
+    if (!billData) {
         return (
             <div className="payment-container">
                 <div className="payment-header">
@@ -67,42 +93,90 @@ export default function StaffPayment() {
         );
     }
 
-    // Tính tổng tiền dịch vụ
-    const subtotal = bill.services.reduce((acc, s) => acc + s.price, 0);
+    // === Trích xuất dữ liệu từ billData (mapping từ API response) ===
+    // Thông tin khách hàng (Customer extends User nên truy cập trực tiếp)
+    const customer = billData.session?.customer || billData.customer || {};
+    const customerName = customer.fullName || 'N/A';
+    const customerPhone = customer.phoneNumber || 'N/A';
+    const customerEmail = customer.email || '';
 
-    // Tính giảm giá từ promotions (đã áp dụng từ check-in)
-    const promotionDiscount = bill.promotions.reduce((acc, p) => acc + p.discount, 0);
+    // Thông tin xe
+    const vehicle = billData.session?.vehicle || billData.vehicle || {};
+    const licensePlate = vehicle.licensePlate || 'N/A';
+    const vehicleModel = `${vehicle.brand || ''} ${vehicle.model || ''}`.trim() || 'N/A';
 
-    // Tính giảm giá từ voucher
-    const calculateVoucherDiscount = () => {
-        if (!appliedVoucher) return 0;
-        const afterPromo = subtotal - promotionDiscount;
-        if (appliedVoucher.discountFixed) {
-            return Math.min(appliedVoucher.discountFixed, afterPromo);
-        }
-        if (appliedVoucher.discountPercent) {
-            const discount = Math.floor(afterPromo * appliedVoucher.discountPercent / 100);
-            return appliedVoucher.maxDiscount ? Math.min(discount, appliedVoucher.maxDiscount) : discount;
-        }
-        return 0;
-    };
+    // Thông tin khoang
+    const bayName = billData.session?.bay?.name || billData.bay || 'N/A';
 
-    const voucherDiscount = calculateVoucherDiscount();
-    const finalTotal = subtotal - promotionDiscount - voucherDiscount;
+    // Thông tin dịch vụ - từ session.servicePrice hoặc billData.services
+    const services = [];
+    if (billData.session?.servicePrice) {
+        services.push({
+            id: billData.session.servicePrice.id || 1,
+            name: billData.session.servicePrice.service?.name || 'Dịch vụ',
+            price: Number(billData.session.servicePrice.price) || 0,
+        });
+    } else if (billData.services) {
+        billData.services.forEach(s => {
+            services.push({
+                id: s.id,
+                name: s.name || s.service?.name || 'Dịch vụ',
+                price: Number(s.price) || 0,
+            });
+        });
+    }
+
+    // Thời gian check-in
+    const checkinTime = billData.session?.startTime
+        ? new Date(billData.session.startTime).toLocaleString('vi-VN')
+        : (billData.checkinTime || 'N/A');
+
+    // Mã hóa đơn
+    const billId = billData.id || 'N/A';
+
+    // Ghi chú nhân viên
+    const staffNote = billData.session?.note || billData.staffNote || '';
+
+    // Khuyến mãi đã áp dụng từ check-in
+    const promotions = billData.promotionUsages || billData.promotions || [];
+
+    // === Tính tiền ===
+    const subtotal = billData.originalAmount
+        ? Number(billData.originalAmount)
+        : services.reduce((acc, s) => acc + s.price, 0);
+
+    const promotionDiscount = billData.discountAmount
+        ? Number(billData.discountAmount)
+        : promotions.reduce((acc, p) => acc + (Number(p.discountAmount) || Number(p.discount) || 0), 0);
+
+    // Voucher discount từ API response (đã được backend tính sẵn)
+    const voucherDiscount = appliedVoucher?.discountAmount ? Number(appliedVoucher.discountAmount) : 0;
+
+    const finalTotal = billData.finalAmount
+        ? Number(billData.finalAmount) - voucherDiscount
+        : subtotal - promotionDiscount - voucherDiscount;
 
     // Áp dụng voucher
-    const handleApplyVoucher = () => {
+    const handleApplyVoucher = async () => {
         if (!voucherCode.trim()) {
             message.warning('Vui lòng nhập mã voucher!');
             return;
         }
 
-        const voucher = mockVouchers[voucherCode.trim().toUpperCase()];
-        if (voucher) {
-            setAppliedVoucher(voucher);
-            message.success(`Áp dụng thành công: ${voucher.name}`);
-        } else {
-            message.error('Mã voucher không hợp lệ hoặc đã hết hạn!');
+        try {
+            const response = await validateVoucher(voucherCode.trim(), subtotal - promotionDiscount);
+            const voucherData = response?.data || response;
+
+            if (voucherData) {
+                setAppliedVoucher(voucherData);
+                message.success(`Áp dụng thành công: ${voucherData.name || voucherData.voucherCode || voucherCode}`);
+            } else {
+                message.error('Mã voucher không hợp lệ hoặc đã hết hạn!');
+            }
+        } catch (error) {
+            console.error('Failed to validate voucher', error);
+            const errorMsg = error.response?.data?.message || 'Mã voucher không hợp lệ hoặc đã hết hạn!';
+            message.error(errorMsg);
         }
     };
 
@@ -171,21 +245,21 @@ export default function StaffPayment() {
                                 </Text>
                                 <Descriptions bordered column={1} size="small" className="payment-descriptions">
                                     <Descriptions.Item label="Họ và tên">
-                                        <Text strong>{bill.customer.name}</Text>
+                                        <Text strong>{customerName}</Text>
                                     </Descriptions.Item>
                                     <Descriptions.Item label="Số điện thoại">
-                                        <Text>{bill.customer.phone}</Text>
+                                        <Text>{customerPhone}</Text>
                                     </Descriptions.Item>
                                     <Descriptions.Item label="Phương tiện">
-                                        <Text strong>{bill.customer.licensePlate}</Text>
+                                        <Text strong>{licensePlate}</Text>
                                         <br />
-                                        <Text type="secondary">{bill.customer.vehicleModel}</Text>
+                                        <Text type="secondary">{vehicleModel}</Text>
                                     </Descriptions.Item>
                                     <Descriptions.Item label="Khoang">
-                                        <Text>{bill.bay}</Text>
+                                        <Text>{bayName}</Text>
                                     </Descriptions.Item>
                                     <Descriptions.Item label="Thời gian check-in">
-                                        <Text>{bill.checkinTime}</Text>
+                                        <Text>{checkinTime}</Text>
                                     </Descriptions.Item>
                                 </Descriptions>
                             </div>
@@ -196,7 +270,7 @@ export default function StaffPayment() {
                                     <CarOutlined style={{ marginRight: 6 }} /> Chi tiết dịch vụ
                                 </Text>
                                 <div className="payment-service-list">
-                                    {bill.services.map(s => (
+                                    {services.map(s => (
                                         <Row justify="space-between" key={s.id} className="payment-service-row">
                                             <Col><Text>{s.name}</Text></Col>
                                             <Col><Text strong>{s.price.toLocaleString('vi-VN')} đ</Text></Col>
@@ -212,15 +286,15 @@ export default function StaffPayment() {
                             </div>
 
                             {/* Khuyến mãi đã áp dụng từ check-in */}
-                            {bill.promotions.length > 0 && (
+                            {promotions.length > 0 && (
                                 <div className="payment-section">
                                     <Text className="payment-section-label">
                                         <TagOutlined style={{ marginRight: 6 }} /> Khuyến mãi đã áp dụng
                                     </Text>
-                                    {bill.promotions.map(p => (
-                                        <Row justify="space-between" key={p.id} className="payment-promo-row">
-                                            <Col><Text style={{ color: '#52c41a' }}>{p.name}</Text></Col>
-                                            <Col><Text strong style={{ color: '#52c41a' }}>-{p.discount.toLocaleString('vi-VN')} đ</Text></Col>
+                                    {promotions.map((p, idx) => (
+                                        <Row justify="space-between" key={p.id || idx} className="payment-promo-row">
+                                            <Col><Text style={{ color: '#52c41a' }}>{p.name || p.promotionName || 'Khuyến mãi'}</Text></Col>
+                                            <Col><Text strong style={{ color: '#52c41a' }}>-{(Number(p.discountAmount) || Number(p.discount) || 0).toLocaleString('vi-VN')} đ</Text></Col>
                                         </Row>
                                     ))}
                                 </div>
@@ -235,7 +309,7 @@ export default function StaffPayment() {
                                     <Row justify="space-between" className="payment-voucher-applied-row">
                                         <Col>
                                             <Tag color="blue">{voucherCode.toUpperCase()}</Tag>
-                                            <Text style={{ color: '#1890ff' }}>{appliedVoucher.name}</Text>
+                                            <Text style={{ color: '#1890ff' }}>{appliedVoucher.name || appliedVoucher.voucherCode}</Text>
                                         </Col>
                                         <Col><Text strong style={{ color: '#1890ff' }}>-{voucherDiscount.toLocaleString('vi-VN')} đ</Text></Col>
                                     </Row>
@@ -248,17 +322,17 @@ export default function StaffPayment() {
                                     <Col><Text className="payment-total-label">Tổng thanh toán</Text></Col>
                                     <Col>
                                         <Title level={2} className="payment-total-amount">
-                                            {finalTotal.toLocaleString('vi-VN')} đ
+                                            {Math.max(0, finalTotal).toLocaleString('vi-VN')} đ
                                         </Title>
                                     </Col>
                                 </Row>
                             </div>
 
                             {/* Staff note */}
-                            {bill.staffNote && (
+                            {staffNote && (
                                 <div className="payment-note">
                                     <Text type="secondary">
-                                        <strong>Ghi chú:</strong> {bill.staffNote}
+                                        <strong>Ghi chú:</strong> {staffNote}
                                     </Text>
                                 </div>
                             )}
@@ -315,17 +389,10 @@ export default function StaffPayment() {
                                 <div className="voucher-applied-info">
                                     <CheckCircleOutlined style={{ color: '#52c41a', marginRight: 8 }} />
                                     <Text strong style={{ color: '#52c41a' }}>
-                                        Đã áp dụng: {appliedVoucher.name}
+                                        Đã áp dụng: {appliedVoucher.name || appliedVoucher.voucherCode}
                                     </Text>
                                 </div>
                             )}
-
-                            <div className="voucher-demo-hint">
-                                <Text type="secondary" style={{ fontSize: 12 }}>
-                                    Thử: <Tag color="blue" style={{ cursor: 'pointer' }} onClick={() => setVoucherCode('SUMMER2026')}>SUMMER2026</Tag>
-                                    <Tag color="blue" style={{ cursor: 'pointer' }} onClick={() => setVoucherCode('VIP50K')}>VIP50K</Tag>
-                                </Text>
-                            </div>
                         </Card>
 
                         {/* Nút thanh toán */}
@@ -335,7 +402,7 @@ export default function StaffPayment() {
                                     <Col><Text strong style={{ fontSize: 16 }}>Cần thanh toán</Text></Col>
                                     <Col>
                                         <Title level={3} style={{ margin: 0, color: '#1890ff' }}>
-                                            {finalTotal.toLocaleString('vi-VN')} đ
+                                            {Math.max(0, finalTotal).toLocaleString('vi-VN')} đ
                                         </Title>
                                     </Col>
                                 </Row>
@@ -374,24 +441,24 @@ export default function StaffPayment() {
                             }
                         >
                             <div className="final-bill-header">
-                                <Text type="secondary">Mã hóa đơn: <Text strong>{bill.id}</Text></Text>
+                                <Text type="secondary">Mã hóa đơn: <Text strong>{billId}</Text></Text>
                             </div>
 
                             {/* Khách hàng */}
                             <Descriptions bordered column={1} size="small" className="payment-descriptions" style={{ marginBottom: 24 }}>
                                 <Descriptions.Item label="Khách hàng">
-                                    <Text strong>{bill.customer.name}</Text> — {bill.customer.phone}
+                                    <Text strong>{customerName}</Text> — {customerPhone}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Phương tiện">
-                                    <Text strong>{bill.customer.licensePlate}</Text>
-                                    <Text type="secondary" style={{ marginLeft: 8 }}>{bill.customer.vehicleModel}</Text>
+                                    <Text strong>{licensePlate}</Text>
+                                    <Text type="secondary" style={{ marginLeft: 8 }}>{vehicleModel}</Text>
                                 </Descriptions.Item>
                             </Descriptions>
 
                             {/* Chi tiết */}
                             <div className="payment-service-list">
                                 <Text className="payment-section-label" style={{ marginBottom: 12, display: 'block' }}>Chi tiết dịch vụ</Text>
-                                {bill.services.map(s => (
+                                {services.map(s => (
                                     <Row justify="space-between" key={s.id} className="payment-service-row">
                                         <Col><Text>{s.name}</Text></Col>
                                         <Col><Text strong>{s.price.toLocaleString('vi-VN')} đ</Text></Col>
@@ -400,20 +467,20 @@ export default function StaffPayment() {
                             </div>
 
                             {/* Giảm giá */}
-                            {(bill.promotions.length > 0 || appliedVoucher) && (
+                            {(promotions.length > 0 || appliedVoucher) && (
                                 <div className="payment-discount-section">
                                     <Text className="payment-section-label" style={{ marginBottom: 12, display: 'block' }}>Giảm giá</Text>
-                                    {bill.promotions.map(p => (
-                                        <Row justify="space-between" key={p.id} className="payment-promo-row">
-                                            <Col><Text style={{ color: '#52c41a' }}>{p.name}</Text></Col>
-                                            <Col><Text strong style={{ color: '#52c41a' }}>-{p.discount.toLocaleString('vi-VN')} đ</Text></Col>
+                                    {promotions.map((p, idx) => (
+                                        <Row justify="space-between" key={p.id || idx} className="payment-promo-row">
+                                            <Col><Text style={{ color: '#52c41a' }}>{p.name || p.promotionName || 'Khuyến mãi'}</Text></Col>
+                                            <Col><Text strong style={{ color: '#52c41a' }}>-{(Number(p.discountAmount) || Number(p.discount) || 0).toLocaleString('vi-VN')} đ</Text></Col>
                                         </Row>
                                     ))}
                                     {appliedVoucher && (
                                         <Row justify="space-between" className="payment-promo-row">
                                             <Col>
                                                 <Tag color="blue" style={{ marginRight: 4 }}>{voucherCode.toUpperCase()}</Tag>
-                                                <Text style={{ color: '#1890ff' }}>{appliedVoucher.name}</Text>
+                                                <Text style={{ color: '#1890ff' }}>{appliedVoucher.name || appliedVoucher.voucherCode}</Text>
                                             </Col>
                                             <Col><Text strong style={{ color: '#1890ff' }}>-{voucherDiscount.toLocaleString('vi-VN')} đ</Text></Col>
                                         </Row>
@@ -427,7 +494,7 @@ export default function StaffPayment() {
                                     <Col><Text className="payment-final-total-label">TỔNG THANH TOÁN</Text></Col>
                                     <Col>
                                         <Title level={2} className="payment-final-total-amount">
-                                            {finalTotal.toLocaleString('vi-VN')} đ
+                                            {Math.max(0, finalTotal).toLocaleString('vi-VN')} đ
                                         </Title>
                                     </Col>
                                 </Row>
@@ -455,7 +522,7 @@ export default function StaffPayment() {
                                     <div className="qr-amount-display">
                                         <Text type="secondary">Số tiền cần thanh toán</Text>
                                         <Title level={3} style={{ margin: '4px 0 0', color: '#1890ff' }}>
-                                            {finalTotal.toLocaleString('vi-VN')} đ
+                                            {Math.max(0, finalTotal).toLocaleString('vi-VN')} đ
                                         </Title>
                                     </div>
 
@@ -477,7 +544,7 @@ export default function StaffPayment() {
                                 <Result
                                     status="success"
                                     title="Thanh toán thành công!"
-                                    subTitle={`Hóa đơn ${bill.id} — ${finalTotal.toLocaleString('vi-VN')} đ`}
+                                    subTitle={`Hóa đơn ${billId} — ${Math.max(0, finalTotal).toLocaleString('vi-VN')} đ`}
                                     extra={
                                         <Text type="secondary">
                                             {bayId ? 'Đang chuyển đến Dashboard...' : 'Đang chuyển đến lịch sử...'}
