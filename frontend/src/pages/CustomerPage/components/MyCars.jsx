@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { Spin, Alert, Empty, Card, Button, Modal, Form, Input, Select, message, Popconfirm, Upload } from 'antd';
-import { PlusOutlined, CarOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons';
+import { PlusOutlined, CarOutlined, DeleteOutlined, UploadOutlined, EditOutlined } from '@ant-design/icons';
 import './MyCars.css';
 import axios from 'axios';
 
@@ -36,6 +36,10 @@ export default function MyCars() {
     const [submitting, setSubmitting] = useState(false);
     const [form] = Form.useForm();
     const [fileList, setFileList] = useState([])
+    const [editingVehicle, setEditingVehicle] = useState(null); // Thông tin xe đang sửa
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Trạng thái Modal sửa
+    const [formEdit] = Form.useForm(); // Form sửa xe độc lập
+    const [editFileList, setEditFileList] = useState([]); // File ảnh của xe đang sửa
     // Tải danh sách xe của khách hàng
     const fetchVehicles = async () => {
         if (!user) {
@@ -152,6 +156,66 @@ export default function MyCars() {
         }
     };
 
+    // Mở Modal và điền thông tin cũ vào Form sửa
+    const handleEditClick = (vehicle) => {
+        setEditingVehicle(vehicle);
+        formEdit.setFieldsValue({
+            licensePlate: vehicle.licensePlate,
+            color: vehicle.color,
+        });
+
+        if (vehicle.image) {
+            setEditFileList([
+                {
+                    uid: '-1',
+                    name: 'Current Image',
+                    status: 'done',
+                    url: vehicle.image,
+                }
+            ]);
+        } else {
+            setEditFileList([]);
+        }
+        setIsEditModalOpen(true);
+    };
+
+    // Gọi API PUT gửi lên Backend để cập nhật xe
+    const handleUpdateVehicle = async (values) => {
+        if (!user || !editingVehicle) return;
+        setSubmitting(true);
+        try {
+            let uploadedImageUrl = editingVehicle.image;
+
+            if (editFileList.length > 0 && editFileList[0].originFileObj) {
+                const file = editFileList[0].originFileObj;
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("upload_preset", "autowash_vehicle");
+
+                const uploadRes = await axios.post("https://api.cloudinary.com/v1_1/dyws8cvor/image/upload", formData);
+                uploadedImageUrl = uploadRes.data.secure_url;
+            } else if (editFileList.length === 0) {
+                uploadedImageUrl = null;
+            }
+
+            await axios.put(`/api/vehicles/${editingVehicle.vehicleId}`, {
+                licensePlate: values.licensePlate,
+                color: values.color,
+                image: uploadedImageUrl
+            });
+
+            message.success("Cập nhật thông tin xe thành công!");
+            setIsEditModalOpen(false);
+            setEditingVehicle(null);
+            setEditFileList([]);
+            fetchVehicles(); // Tải lại danh sách xe
+        } catch (err) {
+            message.error(err.response?.data?.message || err.message || "Không thể cập nhật xe");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     // Xử lý Xóa xe
     const handleDeleteVehicle = async (vehicleId) => {
         try {
@@ -231,9 +295,16 @@ export default function MyCars() {
                                 bordered={false}
                             >
                                 <div className="mycar-card__content">
-                                    {/* Nút xóa xe - Chỉ hiện cho xe đang hoạt động */}
+                                    {/* Nút hành động Sửa & Xóa xe - Chỉ hiện cho xe đang hoạt động */}
                                     {isCarActive && (
-                                        <div className="mycar-card__badge-active">
+                                        <div className="mycar-card__actions">
+                                            <Button 
+                                                type="text" 
+                                                icon={<EditOutlined />} 
+                                                size="small" 
+                                                onClick={() => handleEditClick(vehicle)}
+                                                style={{ marginRight: '4px', color: '#002b7f' }}
+                                            />
                                             <Popconfirm
                                                 title="Xóa phương tiện"
                                                 description="Bạn có chắc chắn muốn xóa xe này ra khỏi danh sách?"
@@ -395,6 +466,86 @@ export default function MyCars() {
                         </Button>
                     </Form.Item>
                 </Form>
+            </Modal>
+
+            {/* Modal Chỉnh sửa xe */}
+            <Modal
+                title={<span style={{ fontSize: '18px', fontWeight: 'bold', color: '#002b7f' }}>CẬP NHẬT PHƯƠNG TIỆN</span>}
+                open={isEditModalOpen}
+                onCancel={() => {
+                    setIsEditModalOpen(false);
+                    setEditingVehicle(null);
+                    setEditFileList([]);
+                }}
+                footer={null}
+                destroyOnClose
+            >
+                {editingVehicle && (
+                    <Form
+                        form={formEdit}
+                        layout="vertical"
+                        onFinish={handleUpdateVehicle}
+                        style={{ marginTop: '16px' }}
+                    >
+                        <div style={{ background: '#f8fafc', padding: '12px 16px', borderRadius: '8px', marginBottom: '16px', border: '1px solid #e2e8f0' }}>
+                            <p style={{ margin: '0 0 6px 0', fontSize: '13px', color: '#64748b' }}>
+                                Hãng & Dòng xe: <strong style={{ color: '#1e293b' }}>{editingVehicle.brand} {editingVehicle.model}</strong>
+                            </p>
+                            <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
+                                Phân khúc: <strong style={{ color: '#1e293b' }}>{editingVehicle.typeName === 'SEDAN' ? 'SEDAN (Xe 4 - 5 chỗ)' : 'SUV (Xe 5 - 7 chỗ / Bán tải)'}</strong>
+                            </p>
+                        </div>
+
+                        <Form.Item
+                            label="BIỂN SỐ XE"
+                            name="licensePlate"
+                            rules={[
+                                { required: true, message: 'Vui lòng nhập biển số xe!' }
+                            ]}
+                        >
+                            <Input placeholder="Ví dụ: 30A-123.45" />
+                        </Form.Item>
+
+                        <Form.Item
+                            label="MÀU SẮC"
+                            name="color"
+                        >
+                            <Input placeholder="Đen, Trắng, Đỏ..." />
+                        </Form.Item>
+
+                        <Form.Item
+                            label="HÌNH ẢNH XE"
+                        >
+                            <Upload
+                                beforeUpload={() => false}
+                                fileList={editFileList}
+                                onChange={({ fileList: newFileList }) => setEditFileList(newFileList.slice(-1))}
+                                accept="image/*"
+                                listType="picture"
+                            >
+                                {editFileList.length < 1 && (
+                                    <Button icon={<UploadOutlined />}>Chọn ảnh mới từ thiết bị</Button>
+                                )}
+                            </Upload>
+                        </Form.Item>
+
+                        <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
+                            <Button
+                                onClick={() => {
+                                    setIsEditModalOpen(false);
+                                    setEditingVehicle(null);
+                                    setEditFileList([]);
+                                }}
+                                style={{ marginRight: '8px' }}
+                            >
+                                Hủy
+                            </Button>
+                            <Button type="primary" htmlType="submit" loading={submitting} className="mycars-add-btn">
+                                LƯU THAY ĐỔI
+                            </Button>
+                        </Form.Item>
+                    </Form>
+                )}
             </Modal>
         </div>
     );
