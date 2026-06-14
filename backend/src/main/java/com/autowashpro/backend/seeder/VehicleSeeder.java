@@ -1,6 +1,7 @@
 package com.autowashpro.backend.seeder;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import com.autowashpro.backend.model.entity.Customer;
@@ -11,28 +12,35 @@ import com.autowashpro.backend.repository.VehicleRepository;
 import com.autowashpro.backend.repository.VehicleTypeRepository;
 
 @Component
-public class VehicleSeeder {
+@Order(10)
+public class VehicleSeeder implements Seeder {
+
+    private final VehicleRepository vehicleRepository;
+    private final CustomerRepository customerRepository;
+    private final VehicleTypeRepository vehicleTypeRepository;
 
     @Autowired
-    private VehicleRepository vehicleRepository;
+    public VehicleSeeder(VehicleRepository vehicleRepository, CustomerRepository customerRepository,
+            VehicleTypeRepository vehicleTypeRepository) {
+        this.vehicleRepository = vehicleRepository;
+        this.customerRepository = customerRepository;
+        this.vehicleTypeRepository = vehicleTypeRepository;
+    }
 
-    @Autowired
-    private CustomerRepository customerRepository;
-
-    @Autowired
-    private VehicleTypeRepository vehicleTypeRepository;
-
+    @Override
     public void seed() {
         if (vehicleRepository.count() > 0)
             return;
 
         Customer leThiThuy = customerRepository.findByEmail("lethuyavhs@gmail.com").orElseThrow();
         Customer nguyenKhacLeNhan = customerRepository.findByEmail("nhannk2101@gmail.com").orElseThrow();
-        Customer tranPhuongTrinh = customerRepository.findByEmail("tranphuongtrinhussh@gmail.com").orElseThrow();
+        Customer tranPhuongTrinh = customerRepository.findByEmail("tranphuongtrinhussh@gmail.com")
+                .orElseThrow();
         Customer dangNhatThienBao = customerRepository.findByEmail("baothi762@gmail.com").orElseThrow();
         Customer hoDuongNhatQuang = customerRepository.findByEmail("nhatquanghoduong@gmail.com").orElseThrow();
         Customer tranVuongQuan = customerRepository.findByEmail("tranvuongquan2707@gmail.com").orElseThrow();
-        Customer phanNguyenAnhThu = customerRepository.findByEmail("anhthu.phannguyen010806@gmail.com").orElseThrow();
+        Customer phanNguyenAnhThu = customerRepository.findByEmail("anhthu.phannguyen010806@gmail.com")
+                .orElseThrow();
         Customer phanNgocQuyet = customerRepository.findByEmail("phanngocquyet06@gmail.com").orElseThrow();
 
         VehicleType sedan = vehicleTypeRepository.findByTypeName("SEDAN").orElseThrow();

@@ -3,6 +3,7 @@ package com.autowashpro.backend.seeder;
 import java.time.LocalDate;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -13,16 +14,22 @@ import com.autowashpro.backend.repository.CustomerRepository;
 import com.autowashpro.backend.repository.MembershipTierRepository;
 
 @Component
-public class CustomerSeeder {
-    @Autowired
-    private CustomerRepository customerRepository;
+@Order(8)
+public class CustomerSeeder implements Seeder {
+
+    private final CustomerRepository customerRepository;
+    private final MembershipTierRepository membershipTierRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    private MembershipTierRepository membershipTierRepository;
+    public CustomerSeeder(CustomerRepository customerRepository, MembershipTierRepository membershipTierRepository,
+            PasswordEncoder passwordEncoder) {
+        this.customerRepository = customerRepository;
+        this.membershipTierRepository = membershipTierRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
+    @Override
     public void seed() {
         if (customerRepository.count() > 0)
             return;
@@ -60,7 +67,6 @@ public class CustomerSeeder {
         nguyenKhacLeNhan.setTierEndDate(LocalDate.now().plusYears(1));
         nguyenKhacLeNhan.setNextReviewDate(LocalDate.now().plusMonths(6));
         customerRepository.save(nguyenKhacLeNhan);
-
 
         Customer tranPhuongTrinh = new Customer();
         tranPhuongTrinh.setEmail("tranphuongtrinhussh@gmail.com");

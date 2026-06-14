@@ -3,6 +3,7 @@ package com.autowashpro.backend.seeder;
 import java.time.LocalDate;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -11,14 +12,19 @@ import com.autowashpro.backend.model.enums.Role;
 import com.autowashpro.backend.repository.StaffRepository;
 
 @Component
-public class StaffSeeder {
+@Order(7)
+public class StaffSeeder implements Seeder {
+
+    private final StaffRepository staffRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    private StaffRepository staffRepository;
+    public StaffSeeder(StaffRepository staffRepository, PasswordEncoder passwordEncoder) {
+        this.staffRepository = staffRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
+    @Override
     public void seed() {
         if (staffRepository.count() > 0)
             return;
