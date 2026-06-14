@@ -6,41 +6,68 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
+import com.autowashpro.backend.mapper.VehicleTypeMapper;
+import com.autowashpro.backend.model.dto.VehicleTypeRequest;
+import com.autowashpro.backend.model.dto.VehicleTypeResponse;
 import com.autowashpro.backend.model.entity.VehicleType;
 import com.autowashpro.backend.repository.VehicleTypeRepository;
 
 @Service
 public class VehicleTypeService {
 
-    private VehicleTypeRepository repository;
-
-    public VehicleTypeService() {
-    }
+    private final VehicleTypeRepository repository;
+    private final VehicleTypeMapper vehicleTypeMapper;
 
     @Autowired
-    public VehicleTypeService(VehicleTypeRepository repository) {
+    public VehicleTypeService(VehicleTypeRepository repository, VehicleTypeMapper vehicleTypeMapper) {
         this.repository = repository;
+        this.vehicleTypeMapper = vehicleTypeMapper;
     }
 
-    public VehicleType createNew(@NonNull VehicleType vehicleType) {
-        return repository.save(vehicleType);
+    public VehicleTypeResponse createNew(VehicleTypeRequest request) {
+        VehicleType newVehicleType = VehicleType
+                .builder()
+                .typeName(request.getTypeName())
+                .description(request.getDescription())
+                .build();
+        VehicleType savedVehicleType = repository.save(newVehicleType);
+        return vehicleTypeMapper.toResponse(savedVehicleType);
     }
 
-    public VehicleType findById(@NonNull Long id) {
-        return repository.findById(id)
+    public VehicleTypeResponse findById(@NonNull Long id) {
+        VehicleType vehicleType = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("VehicleType not found with id: " + id));
+        return vehicleTypeMapper.toResponse(vehicleType);
     }
 
-    public List<VehicleType> findAll() {
-        return repository.findAll();
+    public List<VehicleTypeResponse> findAll() {
+        List<VehicleType> vehicleTypes = repository.findAll();
+        return vehicleTypeMapper.toListResponses(vehicleTypes);
     }
 
-    public VehicleType update(@NonNull VehicleType vehicleType) {
-        return repository.save(vehicleType);
+    public VehicleTypeResponse updateVehicle(Long id, VehicleTypeRequest request) {
+        VehicleType targetVehicle = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("VehicleType not found with id: " + id));
+
+        vehicleTypeMapper.updateVehicleTypeFromRequest(request, targetVehicle);
+        VehicleType savedVehicleType = repository.save(targetVehicle);
+        return vehicleTypeMapper.toResponse(savedVehicleType);
     }
 
-    public void delete(@NonNull Long id) {
-        VehicleType vehicleType = findById(id);
-        repository.delete(vehicleType);
+    public VehicleTypeResponse deleteById(Long id) {
+        VehicleType targetVehicle = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("VehicleType not found with id: " + id));
+        targetVehicle.setActive(false);
+        VehicleType savedVehicleType = repository.save(targetVehicle);
+        return vehicleTypeMapper.toResponse(savedVehicleType);
     }
+
+    public VehicleTypeResponse restoreById(Long id) {
+        VehicleType targetVehicle = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("VehicleType not found with id: " + id));
+        targetVehicle.setActive(true);
+        VehicleType savedVehicleType = repository.save(targetVehicle);
+        return vehicleTypeMapper.toResponse(savedVehicleType);
+    }
+
 }
