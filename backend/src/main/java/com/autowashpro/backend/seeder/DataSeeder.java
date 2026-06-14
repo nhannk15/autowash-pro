@@ -27,15 +27,15 @@ public class DataSeeder implements CommandLineRunner {
 
 /**
  * This is the order of the Seeder Bean:
- * 1. VehicleTypeSeeder.
- * 2. ServiceSeeder.
- * 3. ServicePriceSeeder.
- * 4. StepAndHighlightSeeder.
- * 5. MembershipTierSeeder.
- * 6. TierRuleSeeder.
- * 7. StaffSeeder.
- * 8. CustomerSeeder.
- * 9. WashBaySeeder.
+ * 1.  VehicleTypeSeeder.
+ * 2.  ServiceSeeder.
+ * 3.  ServicePriceSeeder.
+ * 4.  StepAndHighlightSeeder.
+ * 5.  MembershipTierSeeder.
+ * 6.  TierRuleSeeder.
+ * 7.  StaffSeeder.
+ * 8.  CustomerSeeder.
+ * 9.  WashBaySeeder.
  * 10. VehicleSeeder.
  * 11. PromotionSeeder.
  * 12. RewardSeeder.
