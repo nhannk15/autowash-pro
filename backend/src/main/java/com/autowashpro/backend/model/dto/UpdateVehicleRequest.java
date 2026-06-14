@@ -11,10 +11,7 @@ import lombok.Setter;
 @Setter
 public class UpdateVehicleRequest {
 
-    private Long vehicleTypeId;
     private String licensePlate;
-    private String brand;
-    private String model;
     private String color;
     private String image;
 
