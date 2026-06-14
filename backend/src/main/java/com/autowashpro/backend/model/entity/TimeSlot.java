@@ -1,12 +1,16 @@
 package com.autowashpro.backend.model.entity;
 
 import java.time.LocalTime;
+import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -33,5 +37,18 @@ public class TimeSlot {
 
     @Column(name = "is_active")
     private boolean isActive;
+
+    @OneToMany(mappedBy = "timeSlot", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties("timeSlot")
+    private List<AvailableSlot> availableSlots;
+
+    public TimeSlot(Long id, LocalTime startTime, LocalTime endTime, boolean isActive) {
+        this.id = id;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.isActive = isActive;
+    }
+
+    
 
 }

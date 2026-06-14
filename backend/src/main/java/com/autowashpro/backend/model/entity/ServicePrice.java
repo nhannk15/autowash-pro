@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -38,10 +39,12 @@ public class ServicePrice {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "service_id", nullable = false)
+    @JsonIgnoreProperties("servicePrices")
     private Service service;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vehicle_type_id", nullable = false)
+    @JsonIgnoreProperties({"vehicles", "servicePrices"})
     private VehicleType vehicleType;
 
     @Column(name = "price", nullable = false, precision = 10, scale = 2)
@@ -57,6 +60,7 @@ public class ServicePrice {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "servicePrice")
+    @JsonIgnoreProperties("servicePrice")
     private List<BookingDetail> bookingDetails;
 
     @PrePersist

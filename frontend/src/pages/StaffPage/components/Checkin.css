@@ -1,0 +1,378 @@
+/* ===== Checkin ===== */
+
+/* --- Container & Layout --- */
+.checkin-container {
+    padding: 12px;
+    max-width: 1400px;
+    margin: 0 auto;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* --- Header --- */
+.checkin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.checkin-title {
+    margin: 0 !important;
+    font-family: system-ui, -apple-system, sans-serif !important;
+    font-weight: 700 !important;
+    color: #1a1a2e !important;
+}
+
+/* --- Steps --- */
+.checkin-steps {
+    margin-bottom: 28px;
+    padding: 0 40px;
+}
+
+.checkin-steps .ant-steps-item-title {
+    font-family: system-ui, -apple-system, sans-serif;
+    font-weight: 600 !important;
+    font-size: 14px;
+}
+
+/* --- Card Base --- */
+.checkin-card {
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+    border: 1px solid #e8e8e8;
+    transition: all 0.2s ease;
+}
+
+.checkin-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* ===== GIAI ĐOẠN 1 - QR SCAN ===== */
+
+.qr-scan-card .ant-card-head {
+    background: #fafafa;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.qr-scan-card .ant-card-head-title {
+    font-family: system-ui, -apple-system, sans-serif;
+    font-weight: 600;
+}
+
+.qr-scan-card .ant-card-body {
+    padding: 0;
+}
+
+.qr-scan-area {
+    padding: 48px 40px;
+    background: #121E4B;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    min-height: 300px;
+}
+
+.qr-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.qr-icon-wrapper .anticon {
+    font-size: 36px;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.qr-status-text {
+    font-family: system-ui, -apple-system, sans-serif !important;
+    color: #fff !important;
+    margin: 0 0 6px 0 !important;
+    font-weight: 600 !important;
+}
+
+.qr-sub-text {
+    font-family: system-ui, -apple-system, sans-serif !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+    font-size: 14px;
+    margin-bottom: 24px;
+}
+
+.qr-input-wrapper {
+    width: 100%;
+    max-width: 480px;
+}
+
+.qr-input {
+    height: 48px !important;
+    font-size: 16px !important;
+    border-radius: 8px !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.18) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    color: #fff !important;
+    font-family: system-ui, -apple-system, sans-serif;
+    transition: all 0.2s ease;
+}
+
+.qr-input:focus,
+.qr-input:hover {
+    border-color: rgba(255, 255, 255, 0.35) !important;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.06) !important;
+}
+
+.qr-input .ant-input {
+    background: transparent !important;
+    color: #fff !important;
+    font-size: 16px;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.qr-input .ant-input::placeholder {
+    color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.qr-input .ant-input-prefix {
+    color: rgba(255, 255, 255, 0.4);
+    margin-right: 8px;
+}
+
+.qr-input .ant-input-clear-icon {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+.qr-scan-hint {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+}
+
+.qr-scan-hint .anticon {
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 14px;
+}
+
+.qr-scan-hint span {
+    color: rgba(255, 255, 255, 0.35) !important;
+    font-size: 13px;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* --- Bảng kết quả --- */
+.search-table {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e8e8e8;
+}
+
+.search-table .ant-table-thead > tr > th {
+    background: #fafafa !important;
+    color: #8c8c8c !important;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #e8e8e8 !important;
+}
+
+.search-table .ant-table-tbody > tr:hover > td {
+    background: #fafafa !important;
+}
+
+/* ===== GIAI ĐOẠN 2 ===== */
+
+.customer-info-card .ant-card-head {
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.customer-info-card .ant-descriptions-item-label {
+    width: 220px;
+    font-weight: 600;
+    background-color: #fafafa;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    color: #595959;
+}
+
+.customer-info-card .ant-descriptions-item-content {
+    background-color: #fff;
+    font-size: 15px;
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #1a1a2e;
+}
+
+.vehicle-info-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.vehicle-plate {
+    font-size: 18px;
+    display: inline-block;
+    width: fit-content;
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #1a1a2e;
+}
+
+.vehicle-model {
+    font-size: 14px;
+    color: #8c8c8c;
+}
+
+.service-list {
+    margin: 0;
+    padding-left: 20px;
+    list-style-type: disc;
+}
+
+.service-list-item {
+    margin-bottom: 8px;
+}
+
+.promo-tag {
+    font-size: 14px;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+/* --- Staff Notes --- */
+.staff-notes-card {
+    margin-top: 16px;
+}
+
+.staff-notes-card .ant-card-head {
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.staff-notes-textarea {
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    font-family: system-ui, -apple-system, sans-serif;
+    transition: all 0.2s ease;
+    resize: vertical;
+}
+
+/* --- Invoice Card --- */
+.invoice-card {
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    position: sticky;
+    top: 24px;
+    border: 1px solid #e8e8e8;
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.invoice-card .ant-card-head {
+    background: #121E4B;
+    border-bottom: none;
+    padding: 16px 24px;
+}
+
+.invoice-card .ant-card-head-title {
+    color: #fff !important;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-weight: 600;
+}
+
+.invoice-card .ant-card-body {
+    padding: 24px;
+}
+
+.invoice-section-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #8c8c8c;
+    font-weight: 700;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.invoice-row {
+    margin-top: 16px;
+    font-size: 15px;
+}
+
+.invoice-divider {
+    border-top: 2px dashed #e8e8e8;
+    margin: 24px 0;
+}
+
+.invoice-total-box {
+    background-color: #f0f5ff;
+    border: 1px solid #adc6ff;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 24px;
+}
+
+.invoice-total-label {
+    font-size: 16px;
+    color: #595959;
+    font-weight: 600;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.invoice-total-amount {
+    font-size: 28px !important;
+    color: #2f54eb !important;
+    font-weight: 700 !important;
+    margin: 0 !important;
+    font-family: system-ui, -apple-system, sans-serif !important;
+}
+
+.confirm-btn {
+    margin-top: 24px;
+    height: 48px;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: system-ui, -apple-system, sans-serif;
+    border-radius: 8px;
+    background: #2f54eb;
+    border: none;
+    color: white;
+    transition: all 0.2s ease;
+}
+
+.confirm-btn:hover,
+.confirm-btn:focus {
+    background: #597ef7 !important;
+    color: white !important;
+}
+
+/* --- Back Button --- */
+.back-btn {
+    font-weight: 500;
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #2f54eb;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .checkin-container {
+        padding: 12px;
+    }
+    .checkin-steps {
+        padding: 0 16px;
+    }
+    .qr-scan-area {
+        padding: 32px 20px;
+        min-height: 260px;
+    }
+    .qr-input-wrapper {
+        max-width: 100%;
+    }
+}

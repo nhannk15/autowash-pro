@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.autowashpro.backend.model.enums.BayStatus;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -47,10 +48,12 @@ public class WashBay {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "bay")
-    private List<Booking> bookings;
-
-    @OneToMany(mappedBy = "bay")
+    @JsonIgnoreProperties("bay")
     private List<WashSession> washSessions;
+
+    @OneToMany(mappedBy = "washBay")
+    @JsonIgnoreProperties("washBay")
+    private List<AvailableSlot> availableSlots;
 
     @PreUpdate
     protected void onUpdate() {

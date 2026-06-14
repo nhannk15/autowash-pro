@@ -56,6 +56,12 @@
     box-shadow: 0 0 0 2px rgba(13, 27, 75, 0.15);
 }
 
+#forgotpass-reset .ant-form-item-label {
+    width: 150px;
+    min-width: 150px;
+    text-align: left;
+}
+
 .forgotpass-container .ant-btn-primary {
     background: #0d1b4b;
     border-color: #0d1b4b;

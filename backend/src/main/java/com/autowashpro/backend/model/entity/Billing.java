@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import com.autowashpro.backend.model.enums.PaymentMethod;
 import com.autowashpro.backend.model.enums.PaymentStatus;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -37,10 +38,12 @@ public class Billing {
 
     @OneToOne
     @JoinColumn(name = "session_id")
+    @JsonIgnoreProperties({"booking", "customer", "vehicle", "servicePrice", "staff", "bay"})
     private WashSession session;
 
     @OneToOne(optional = true)
     @JoinColumn(name = "voucher_id", nullable = true)
+    @JsonIgnoreProperties({"reward", "customer"})
     private Voucher voucher;
 
     @Column(precision = 10, scale = 2)

@@ -46,6 +46,14 @@ public class JwtFilter extends OncePerRequestFilter {
             }
         }
 
+        // Nếu không có trong Cookie, đọc từ Authorization header (Bearer token)
+        if (token == null) {
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                token = authHeader.substring(7);
+            }
+        }
+
         // Không có token → bỏ qua
         if (token == null) {
             filterChain.doFilter(request, response);

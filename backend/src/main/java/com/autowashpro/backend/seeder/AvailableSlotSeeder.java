@@ -42,7 +42,7 @@ public class AvailableSlotSeeder {
 
             for (TimeSlot timeSlot: slotsOfDay) {
                 for(WashBay washBay: washBays) {
-                    AvailableSlot availableSlot = new AvailableSlot(null, date, false, timeSlot, washBay);
+                    AvailableSlot availableSlot = new AvailableSlot(null, date, null, timeSlot, washBay);
                     availableSlotRepository.save(availableSlot);
                 }
             }

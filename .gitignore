@@ -4,3 +4,8 @@ backend/src/main/resources/application.properties
 
 # Target Folder Configuration
 backend/target
+
+frontend/.env
+
+# Environment variables (contains secrets)
+.env

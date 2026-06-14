@@ -18,6 +18,13 @@ import Payment from './pages/CustomerPage/components/Payment.jsx'
 import PersonalProfile from './pages/CustomerPage/components/PersonalProfile.jsx'
 import RegisterPage from './pages/RegisterPage/RegisterPage.jsx'
 import ForgotPassPage from './pages/ForgotPassPage/ForgotPassPage.jsx'
+import StaffPage from './pages/StaffPage/StaffPage.jsx'
+import StaffDashboard from './pages/StaffPage/components/StaffDashboard.jsx'
+import Queue from './pages/StaffPage/components/Queue.jsx'
+import Checkin from './pages/StaffPage/components/Checkin.jsx'
+import StaffPayment from './pages/StaffPage/components/Payment.jsx'
+import History from './pages/StaffPage/components/History.jsx'
+import Profile from './pages/StaffPage/components/Profile.jsx'
 
 // Layout chung: Navbar + nội dung + Footer
 function MainLayout({ children }) {
@@ -86,6 +93,20 @@ function App() {
         <Route path="dat-lich" element={<BookingList />} />
         <Route path="thanh-toan" element={<Payment />} />
         <Route path="ho-so" element={<PersonalProfile />} />
+      </Route>
+      <Route path="/staff" element={
+        <>
+          <Navbar />
+          <StaffPage />
+        </>
+      }>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<StaffDashboard />} />
+        <Route path="queue" element={<Queue />} />
+        <Route path="checkin" element={<Checkin />} />
+        <Route path="payment" element={<StaffPayment />} />
+        <Route path="history" element={<History />} />
+        <Route path="profile" element={<Profile />} />
       </Route>
 
     </Routes>

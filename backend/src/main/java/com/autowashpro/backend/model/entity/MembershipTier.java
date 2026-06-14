@@ -3,6 +3,7 @@ package com.autowashpro.backend.model.entity;
 import java.math.BigDecimal;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -51,6 +52,7 @@ public class MembershipTier {
     private String perksDescription;
 
     @OneToMany(mappedBy = "tier")
+    @JsonIgnoreProperties("tier")
     private List<Customer> customers;
 
     @OneToOne(mappedBy = "tier")
@@ -60,5 +62,6 @@ public class MembershipTier {
     private List<TierRule> downgradedRules;
 
     @OneToMany(mappedBy = "membershipTier")
+    @JsonIgnoreProperties({"membershipTier", "service", "staff"})
     private List<Promotion> promotions;
 }

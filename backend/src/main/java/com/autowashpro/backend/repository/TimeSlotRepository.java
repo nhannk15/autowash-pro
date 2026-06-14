@@ -7,5 +7,5 @@ import com.autowashpro.backend.model.entity.TimeSlot;
 
 @Repository
 public interface TimeSlotRepository extends JpaRepository<TimeSlot, Long> {
-    
+
 }

@@ -20,6 +20,16 @@ export default function NavBar() {
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [])
 
+    const handleCLick = () => {
+        if (user?.role?.toUpperCase() === "STAFF") {
+            navigate('/staff')
+        } else if (user?.role?.toUpperCase() === "ADMIN") {
+            navigate('/admin')
+        } else {
+            navigate('/')
+        }
+    }
+
     const handleLogout = async () => {
         try {
             await logout()
@@ -44,12 +54,12 @@ export default function NavBar() {
     return (
         <nav className="navbar">
             <div className="navbar__container">
-                <div className="navbar__logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
+                <div className="navbar__logo" onClick={handleCLick} style={{ cursor: 'pointer' }}>
                     <span className="navbar__logo--bold">Autowash</span>
                     <span className="navbar__logo--accent">PRO</span>
                 </div>
 
-                <ul className="navbar__links">
+                {user?.role?.toUpperCase() !== "STAFF" && user?.role?.toUpperCase() !== "ADMIN" && <ul className="navbar__links">
                     {navLinks.map((item) => (
                         <li key={item.to}>
                             <NavLink
@@ -63,7 +73,7 @@ export default function NavBar() {
                             </NavLink>
                         </li>
                     ))}
-                </ul>
+                </ul>}
 
                 <div className="navbar__auth">
                     {user ? (
@@ -84,24 +94,33 @@ export default function NavBar() {
                                 </div>
                             </div>
 
-                            {isDropdownOpen && (
+                            {user?.role?.toUpperCase() === 'STAFF' || user?.role?.toUpperCase() === 'ADMIN' ? (isDropdownOpen && (
                                 <div className="navbar__dropdown">
-                                    <NavLink 
-                                        to="/ca-nhan/tong-quan" 
+                                    <button
+                                        className="navbar__dropdown-item navbar__dropdown-item--logout"
+                                        onClick={handleLogout}
+                                    >
+                                        Đăng xuất
+                                    </button>
+                                </div>
+                            )) : (isDropdownOpen && (
+                                <div className="navbar__dropdown">
+                                    <NavLink
+                                        to="/ca-nhan/tong-quan"
                                         className="navbar__dropdown-item"
                                         onClick={() => setIsDropdownOpen(false)}
                                     >
                                         Trang cá nhân
                                     </NavLink>
                                     <hr className="navbar__dropdown-divider" />
-                                    <button 
-                                        className="navbar__dropdown-item navbar__dropdown-item--logout" 
+                                    <button
+                                        className="navbar__dropdown-item navbar__dropdown-item--logout"
                                         onClick={handleLogout}
                                     >
                                         Đăng xuất
                                     </button>
                                 </div>
-                            )}
+                            ))}
                         </div>
                     ) : (
                         <div className="navbar__auth">

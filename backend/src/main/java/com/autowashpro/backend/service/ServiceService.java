@@ -6,9 +6,11 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.autowashpro.backend.exception.UserNotFoundException;
 import com.autowashpro.backend.mapper.HighlightMapper;
 import com.autowashpro.backend.mapper.ServicePriceMapper;
 import com.autowashpro.backend.mapper.StepMapper;
+import com.autowashpro.backend.model.dto.ServiceAdminResponse;
 import com.autowashpro.backend.model.dto.ServicePriceItemResponse;
 import com.autowashpro.backend.model.dto.ServiceResponse;
 import com.autowashpro.backend.model.entity.Highlight;
@@ -87,6 +89,67 @@ public class ServiceService {
 
         return result;
 
+    }
+
+    public Service findById(Long id) {
+        return serviceRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("Service không tồn tại!"));
+    }
+
+    public Service create(Service newService) {
+        // Validate unique service name
+        if (serviceRepository.findByServiceName(newService.getServiceName()).isPresent()) {
+            throw new IllegalArgumentException("Tên dịch vụ đã tồn tại!");
+        }
+
+        newService.setActive(true);
+        return serviceRepository.save(newService);
+    }
+
+    public Service update(Long id, Service updated) {
+        Service existing = findById(id);
+
+        // Check unique name if changed
+        if (updated.getServiceName() != null
+                && !updated.getServiceName().equals(existing.getServiceName())
+                && serviceRepository.findByServiceName(updated.getServiceName()).isPresent()) {
+            throw new IllegalArgumentException("Tên dịch vụ đã tồn tại!");
+        }
+
+        // Update fields if provided
+        if (updated.getServiceName() != null) existing.setServiceName(updated.getServiceName());
+        if (updated.getDescription() != null) existing.setDescription(updated.getDescription());
+        if (updated.getDurationMinutes() > 0) existing.setDurationMinutes(updated.getDurationMinutes());
+        if (updated.getPointMultiplier() != null) existing.setPointMultiplier(updated.getPointMultiplier());
+        if (updated.getCategory() != null) existing.setCategory(updated.getCategory());
+        if (updated.getImage() != null) existing.setImage(updated.getImage());
+
+        return serviceRepository.save(existing);
+    }
+
+    public void delete(Long id) {
+        Service service = findById(id);
+        serviceRepository.delete(service);
+    }
+
+    public Service toggleActive(Long id) {
+        Service service = findById(id);
+        service.setActive(!service.isActive());
+        return serviceRepository.save(service);
+    }
+
+    public ServiceAdminResponse toServiceAdminResponse(Service service) {
+        return new ServiceAdminResponse(
+                service.getId(),
+                service.getServiceName(),
+                service.getDescription(),
+                service.getDurationMinutes(),
+                service.getPointMultiplier(),
+                service.getCategory(),
+                service.isActive(),
+                service.getImage(),
+                service.getCreatedAt(),
+                service.getUpdatedAt());
     }
 
 }
