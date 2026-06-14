@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
-import { Spin, Alert, Empty, Card, Button, Modal, Form, Input, Select, message, Popconfirm } from 'antd';
-import { PlusOutlined, CarOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Spin, Alert, Empty, Card, Button, Modal, Form, Input, Select, message, Popconfirm, Upload } from 'antd';
+import { PlusOutlined, CarOutlined, DeleteOutlined, UploadOutlined } from '@ant-design/icons';
 import './MyCars.css';
 import axios from 'axios';
 
@@ -35,7 +35,7 @@ export default function MyCars() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [form] = Form.useForm();
-
+    const [fileList, setFileList] = useState([])
     // Tải danh sách xe của khách hàng
     const fetchVehicles = async () => {
         if (!user) {
@@ -102,7 +102,7 @@ export default function MyCars() {
             const response = await axios.get('/api/vehicle-types');
 
             const result = response.data
-            setVehicleTypes(result?.data || []);
+            setVehicleTypes(result || []);
         } catch (err) {
             setError(err.response?.data.message || err.message || 'không thể tải danh sách các loại xe')
         } finally {
@@ -120,19 +120,30 @@ export default function MyCars() {
         if (!user) return;
         setSubmitting(true);
         try {
-            // const response = await fetch('/api/vehicles', {
-            //     method: 'POST',
+            let uploadedImageUrl = null;
+
+            // 1. kiểm tra nếu người dùng có chọn ảnh
+            if (fileList.length > 0) {
+                const file = fileList[0].originFileObj
+                const formData = new FormData()
+                formData.append("file", file)
+                formData.append("upload_preset", "autowash_vehicle")
+
+                const uploadRes = await axios.post("https://api.cloudinary.com/v1_1/dyws8cvor/image/upload", formData)
+                uploadedImageUrl = uploadRes.data.secure_url
+            }
             await axios.post('/api/vehicles', {
                 brand: values.brand,
                 model: values.model,
                 licensePlate: values.licensePlate,
                 color: values.color,
                 vehicleTypeId: values.vehicleTypeId,
-                image: values.image || null
+                image: uploadedImageUrl
             });
             message.success("Thêm xe mới thành công!");
             setIsModalOpen(false);
             form.resetFields();
+            setFileList([]);
             fetchVehicles(); // Tải lại danh sách xe
         } catch (err) {
             message.error(err.response?.data?.message || err.message || "Không thể thêm xe mới");
@@ -295,6 +306,7 @@ export default function MyCars() {
                 onCancel={() => {
                     setIsModalOpen(false);
                     form.resetFields();
+                    setFileList([]);
                 }}
                 footer={null}
                 destroyOnClose
@@ -338,7 +350,21 @@ export default function MyCars() {
                     >
                         <Input placeholder="Đen, Trắng, Đỏ..." />
                     </Form.Item>
-
+                    <Form.Item
+                        label="HÌNH ẢNH XE"
+                    >
+                        <Upload
+                            beforeUpload={() => false} // Không tự động upload ngay khi chọn file
+                            fileList={fileList}
+                            onChange={({ fileList: newFileList }) => setFileList(newFileList.slice(-1))} // Chỉ cho phép chọn tối đa 1 ảnh
+                            accept="image/*" // Chỉ chấp nhận file ảnh
+                            listType="picture"
+                        >
+                            {fileList.length < 1 && (
+                                <Button icon={<UploadOutlined />}>Chọn ảnh từ thiết bị</Button>
+                            )}
+                        </Upload>
+                    </Form.Item>
                     <Form.Item
                         label="PHÂN KHÚC XE"
                         name="vehicleTypeId"
@@ -358,6 +384,7 @@ export default function MyCars() {
                             onClick={() => {
                                 setIsModalOpen(false);
                                 form.resetFields();
+                                setFileList([]);
                             }}
                             style={{ marginRight: '8px' }}
                         >

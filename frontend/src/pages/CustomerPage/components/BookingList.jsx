@@ -66,12 +66,15 @@ export default function BookingList() {
                 const response = await axios.get(`/api/vehicles/user`);
                 const result = response.data
                 const vehicleList = result?.data || [];
-                setUserVehicles(vehicleList);
+                
+                // Lọc bỏ những xe đã bị xóa mềm/vô hiệu hóa
+                const activeVehicles = vehicleList.filter(v => v.active !== false && v.isActive !== false);
+                setUserVehicles(activeVehicles);
 
-                // Tự động chọn xe đầu tiên nếu có danh sách xe
-                if (vehicleList.length > 0) {
-                    setSelectedVehicle(vehicleList[0]);
-                    setSelectedVehicleType(vehicleList[0].typeName);
+                // Tự động chọn xe hoạt động đầu tiên nếu có danh sách
+                if (activeVehicles.length > 0) {
+                    setSelectedVehicle(activeVehicles[0]);
+                    setSelectedVehicleType(activeVehicles[0].typeName);
                     setMaxUnlockedStep(prev => Math.max(prev, 2));
                 }
             } catch (err) {
