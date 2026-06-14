@@ -4,13 +4,15 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import com.autowashpro.backend.model.dto.CreateBookingRequest;
 import com.autowashpro.backend.service.BookingService;
 
 @Component
-public class BookingSeeder {
+@Order(15)
+public class BookingSeeder implements Seeder {
 
     private final BookingService bookingService;
 
@@ -19,6 +21,7 @@ public class BookingSeeder {
         this.bookingService = bookingService;
     }
 
+    @Override
     public void seed() {
 
         LocalDate tomorrow = LocalDate.now().plusDays(1L);
@@ -57,7 +60,7 @@ public class BookingSeeder {
                 .builder()
                 .customerId(4L)
                 .vehicleId(4L)
-                .timeSlotId(null)
+                .timeSlotId(4L)
                 .bookingDate(tomorrow)
                 .servicePriceIds(List.of(13L))
                 .notes("Booking của Nguyễn Khắc Lê Nhân: SEDAN Mazda 3")

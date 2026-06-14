@@ -3,17 +3,24 @@ package com.autowashpro.backend.seeder;
 import java.math.BigDecimal;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import com.autowashpro.backend.model.entity.MembershipTier;
 import com.autowashpro.backend.repository.MembershipTierRepository;
 
 @Component
-public class MembershipTierSeeder {
+@Order(5)
+public class MembershipTierSeeder implements Seeder {
+
+    private final MembershipTierRepository membershipTierRepository;
 
     @Autowired
-    private MembershipTierRepository membershipTierRepository;
+    public MembershipTierSeeder(MembershipTierRepository membershipTierRepository) {
+        this.membershipTierRepository = membershipTierRepository;
+    }
 
+    @Override
     public void seed() {
         if (membershipTierRepository.count() > 0)
             return;
