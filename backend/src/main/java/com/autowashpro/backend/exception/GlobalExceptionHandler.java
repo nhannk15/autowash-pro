@@ -163,4 +163,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleCommonException(Exception ex, WebRequest request) {
+        ErrorResponse error = createErrorResponse(HttpStatus.CONFLICT, ex.getClass().toString(), ex.getMessage(), request);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+
 }
