@@ -1,27 +1,41 @@
-import React from 'react';
-import { Card, Avatar, Typography, Divider, Button, Descriptions, Tag, Row, Col, Statistic } from "antd";
-import { EditOutlined, IdcardOutlined, CalendarOutlined, TeamOutlined, ClockCircleOutlined, UserOutlined, PhoneOutlined, MailOutlined } from '@ant-design/icons';
+import React, { useEffect, useState } from 'react';
+import { Card, Avatar, Typography, Divider, Button, Descriptions, Tag, Row, Col } from "antd";
+import { EditOutlined, IdcardOutlined, CalendarOutlined, TeamOutlined, PhoneOutlined, MailOutlined } from '@ant-design/icons';
 import { useAuth } from '../../../context/AuthContext';
+import { getStaffProfile, updateStaffProfile } from '../../../service/staffService';
 import './Profile.css';
 
 const { Title, Text } = Typography;
 
 export default function Profile() {
     const { user } = useAuth();
+    const [staffProfile, setStaffProfile] = useState({});
+    const [avatarError, setAvatarError] = useState(false);
 
-    const displayName = user?.fullname || 'Đặng Nhất Thiên Bảo';
-    const role = user?.role || 'STAFF';
-    const age = user?.age || 20;
-    const phone = user?.phone || '0123456789';
-    const email = user?.email || 'baodnt@example.com';
-    const avatarLetter = displayName.charAt(0).toUpperCase();
+    useEffect(() => {
+        async function fetchStaffProfile() {
+            if (!user?.id) return;
+            try {
+                const data = await getStaffProfile(user.id);
+                setStaffProfile(data);
+                setAvatarError(false);
+            } catch (error) {
+                console.error("Failed to fetch staff profile", error);
+            }
+        }
+        fetchStaffProfile();
+    }, [user?.id]);
 
-    // Các field chưa có trong context → dùng fallback mẫu
-    const staffId = user?.id || 'NV-00142';
-    const department = user?.department || 'Lễ tân';
-    const joinDate = user?.joinDate || '01/03/2024';
-    const shift = user?.shift || 'Chiều (12:00 - 18:00)';
-    const status = user?.status || 'active';
+    const displayName = staffProfile?.fullName;
+    const role = staffProfile?.role;
+    const phone = staffProfile?.phoneNumber;
+    const email = staffProfile?.email;
+    const avatarUrl = staffProfile?.avatarUrl;
+    const avatarLetter = displayName?.charAt(0).toUpperCase();
+    const staffId = user?.id;
+    const department = staffProfile?.team?.name;
+    const joinDate = staffProfile?.hiredDate;
+    const status = staffProfile?.active ? 'active' : 'inactive';
 
     const statusConfig = {
         active: { color: 'success', label: 'Đang làm việc' },
@@ -29,6 +43,17 @@ export default function Profile() {
     };
     const { color: statusColor, label: statusLabel } = statusConfig[status] ?? statusConfig.active;
 
+    const handleEditProfile = async (data) => {
+        try {
+            const data = await updateStaffProfile(user?.id, data);
+            setStaffProfile(data);
+            setAvatarError(false);
+            message.success("Cập nhật hồ sơ thành công!");
+        } catch (error) {
+            console.error("Failed to update staff profile", error);
+            message.error("Cập nhật hồ sơ thất bại!");
+        }
+    };
     return (
         <div className="profile-container">
             {/* ── Card chính ── */}
@@ -37,8 +62,8 @@ export default function Profile() {
                 {/* Header */}
                 <div className="profile-header">
                     <div className="profile-avatar-wrapper">
-                        {user?.avatar
-                            ? <Avatar size={100} src={user.avatar} className="profile-avatar" />
+                        {avatarUrl && !avatarError
+                            ? <Avatar size={100} src={avatarUrl} onError={() => { setAvatarError(true); return false; }} className="profile-avatar" />
                             : <Avatar size={100} className="profile-avatar profile-avatar-placeholder">{avatarLetter}</Avatar>
                         }
                     </div>
@@ -54,7 +79,7 @@ export default function Profile() {
                     </div>
 
                     <div className="profile-actions">
-                        <Button type="primary" size="large" icon={<EditOutlined />} style={{ borderRadius: '8px' }}>
+                        <Button type="primary" size="large" onClick={handleEditProfile} icon={<EditOutlined />} style={{ borderRadius: '8px' }}>
                             Chỉnh sửa hồ sơ
                         </Button>
                     </div>

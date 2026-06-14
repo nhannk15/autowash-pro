@@ -1,53 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
     Steps, Card, Input, Button, Table, Typography,
-    Row, Col, Descriptions, Tag, Divider, Space, message
+    Row, Col, Descriptions, Space, message
 } from 'antd';
 import {
-    QrcodeOutlined, SearchOutlined, CarOutlined,
-    UserOutlined, ToolOutlined, CheckCircleOutlined, ArrowLeftOutlined,
+    QrcodeOutlined,
+    UserOutlined, CheckCircleOutlined, ArrowLeftOutlined,
     IdcardOutlined, ScanOutlined, InfoCircleOutlined, EditOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
+import { searchBookingByQR, confirmBooking } from '../../../service/staffService';
 import './Checkin.css';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
-
-// Mock data for UI demonstration
-const mockCustomers = [
-    {
-        id: '1',
-        qrCode: 'BOOKING-2026-0001',
-        licensePlate: '30A-123.45',
-        name: 'Nguyễn Văn A',
-        phone: '0901234567',
-        email: 'nguyenvana@gmail.com',
-        vehicleModel: 'Toyota Vios 2022',
-        services: [
-            { id: 's1', name: 'Rửa xe bọt tuyết', price: 50000 },
-            { id: 's2', name: 'Thay dầu động cơ', price: 450000 }
-        ],
-        promotions: [
-            { id: 'p1', name: 'Giảm 10% rửa xe', discount: 5000 }
-        ],
-        bay: 'Khoang số 2'
-    },
-    {
-        id: '2',
-        qrCode: 'BOOKING-2026-0002',
-        licensePlate: '30A-999.99',
-        name: 'Trần Thị B',
-        phone: '0919999999',
-        email: 'tranthib@gmail.com',
-        vehicleModel: 'Honda CR-V 2023',
-        services: [
-            { id: 's3', name: 'Phủ Ceramic', price: 5000000 }
-        ],
-        promotions: [],
-        bay: 'Khoang số 1'
-    }
-];
 
 export default function Checkin() {
     const [currentStep, setCurrentStep] = useState(0);
@@ -57,6 +24,7 @@ export default function Checkin() {
     const [staffNote, setStaffNote] = useState('');
     const navigate = useNavigate();
     const qrInputRef = useRef(null);
+    const { user } = useAuth();
 
     // Auto-focus the QR input field when stage 1 is active
     useEffect(() => {
@@ -65,35 +33,90 @@ export default function Checkin() {
         }
     }, [currentStep]);
 
-    const handleSearch = () => {
+    const handleSearch = async () => {
         if (!qrCode) {
             message.warning('Vui lòng quét mã QR hoặc nhập mã đặt lịch!');
             return;
         }
 
-        // Tìm kiếm theo mã QR code
-        const results = mockCustomers.filter(c =>
-            c.qrCode.toLowerCase().includes(qrCode.toLowerCase())
-        );
-        setSearchResults(results);
+        try {
+            const response = await searchBookingByQR(qrCode);
+            // Xử lý ApiResponse wrapper
+            const data = Array.isArray(response) ? response
+                : Array.isArray(response?.data) ? response.data
+                : response ? [response] : [];
+            setSearchResults(data);
 
-        if (results.length === 0) {
-            message.info('Không tìm thấy thông tin đặt lịch cho mã QR này.');
+            if (data.length === 0) {
+                message.info('Không tìm thấy thông tin đặt lịch cho mã QR này.');
+            }
+        } catch (error) {
+            console.error('Failed to search booking by QR', error);
+            message.error('Lỗi khi tìm kiếm thông tin đặt lịch!');
         }
     };
 
-    const handleSelectCustomer = (customer) => {
-        setSelectedCustomer(customer);
+    const handleSelectCustomer = (record) => {
+        setSelectedCustomer(record);
         setStaffNote('');
         setCurrentStep(1);
     };
 
-    const handleConfirm = () => {
-        if (staffNote) {
-            console.log('Staff note:', staffNote);
+    const handleConfirm = async () => {
+        try {
+            const staffId = user?.id || null;
+            const bayId = selectedCustomer.availableSlots?.[0]?.washBay?.id || null;
+            await confirmBooking(selectedCustomer.id, staffId, bayId, staffNote);
+            message.success('Đã xác nhận check-in! Bắt đầu dịch vụ.');
+            navigate('/staff/dashboard');
+        } catch (error) {
+            console.error('Failed to confirm booking', error);
+            message.error('Lỗi khi xác nhận check-in!');
         }
-        message.success('Đã xác nhận check-in! Bắt đầu dịch vụ.');
-        navigate('/staff/dashboard');
+    };
+
+    // === Helper: Trích xuất dữ liệu từ booking record ===
+    const getCustomerName = (record) => record.customer?.fullName || 'N/A';
+    const getCustomerPhone = (record) => record.customer?.phoneNumber || 'N/A';
+    const getCustomerEmail = (record) => record.customer?.email || '';
+    const getLicensePlate = (record) => record.vehicle?.licensePlate || 'N/A';
+    const getVehicleModel = (record) => {
+        const v = record.vehicle;
+        return `${v?.brand || ''} ${v?.model || ''}`.trim() || 'N/A';
+    };
+    const getVehicleType = (record) => record.vehicle?.vehicleType?.name || '';
+    const getBayName = (record) => record.availableSlots?.[0]?.washBay?.name || 'Chưa phân khoang';
+
+    // Lấy danh sách dịch vụ từ bookingDetails
+    const getServices = (record) => {
+        return (record.bookingDetails || []).map((d, idx) => ({
+            id: d.id || idx,
+            name: d.servicePrice?.service?.name || 'Dịch vụ',
+            price: Number(d.priceAtBooking || d.servicePrice?.price || 0),
+        }));
+    };
+
+    // Lấy danh sách khuyến mãi từ bookingDetails
+    const getPromotions = (record) => {
+        const promos = [];
+        (record.bookingDetails || []).forEach(d => {
+            if (d.promotion) {
+                promos.push({
+                    id: d.promotion.id,
+                    name: d.promotion.name || 'Khuyến mãi',
+                    discount: Number(d.discountAmount || 0),
+                });
+            }
+        });
+        // Booking-level promotion
+        if (record.promotion) {
+            promos.push({
+                id: record.promotion.id,
+                name: record.promotion.name || 'Khuyến mãi',
+                discount: 0, // discount đã tính trong bookingDetails
+            });
+        }
+        return promos;
     };
 
     const columns = [
@@ -102,14 +125,26 @@ export default function Checkin() {
             key: 'vehicle',
             render: (_, record) => (
                 <div className="vehicle-info-col">
-                    <Text className="vehicle-plate">{record.licensePlate}</Text>
-                    <Text className="vehicle-model">{record.vehicleModel}</Text>
+                    <Text className="vehicle-plate">{getLicensePlate(record)}</Text>
+                    <Text className="vehicle-model">{getVehicleModel(record)}</Text>
                 </div>
             )
         },
-        { title: 'Tên khách hàng', dataIndex: 'name', key: 'name', render: (text) => <Text strong>{text}</Text> },
-        { title: 'Số điện thoại', dataIndex: 'phone', key: 'phone' },
-        { title: 'Email', dataIndex: 'email', key: 'email' },
+        {
+            title: 'Tên khách hàng',
+            key: 'name',
+            render: (_, record) => <Text strong>{getCustomerName(record)}</Text>
+        },
+        {
+            title: 'Số điện thoại',
+            key: 'phone',
+            render: (_, record) => <Text>{getCustomerPhone(record)}</Text>
+        },
+        {
+            title: 'Email',
+            key: 'email',
+            render: (_, record) => <Text>{getCustomerEmail(record)}</Text>
+        },
         {
             title: 'Thao tác',
             key: 'action',
@@ -123,8 +158,10 @@ export default function Checkin() {
 
     const calculateTotal = () => {
         if (!selectedCustomer) return 0;
-        const subtotal = selectedCustomer.services.reduce((acc, curr) => acc + curr.price, 0);
-        const discount = selectedCustomer.promotions.reduce((acc, curr) => acc + curr.discount, 0);
+        const services = getServices(selectedCustomer);
+        const promotions = getPromotions(selectedCustomer);
+        const subtotal = services.reduce((acc, curr) => acc + curr.price, 0);
+        const discount = promotions.reduce((acc, curr) => acc + curr.discount, 0);
         return subtotal - discount;
     };
 
@@ -194,129 +231,134 @@ export default function Checkin() {
             )}
 
             {/* GIAI ĐOẠN 2 */}
-            {currentStep === 1 && selectedCustomer && (
-                <Row gutter={[32, 24]}>
-                    <Col xs={24} lg={16}>
-                        <Card
-                            className="checkin-card customer-info-card"
-                            title={<span style={{ fontSize: 18, fontWeight: 600 }}><UserOutlined style={{ marginRight: 8 }} /> Hồ Sơ Dịch Vụ</span>}
-                            extra={
-                                <Button type="text" className="back-btn" onClick={() => setCurrentStep(0)}>
-                                    <ArrowLeftOutlined /> Quay lại
-                                </Button>
-                            }
-                        >
-                            <Descriptions bordered column={1}>
-                                <Descriptions.Item label="Họ và tên khách hàng">
-                                    <Text strong>{selectedCustomer.name}</Text>
-                                </Descriptions.Item>
-                                <Descriptions.Item label="Số điện thoại">
-                                    <Text strong>{selectedCustomer.phone}</Text>
-                                </Descriptions.Item>
-                                <Descriptions.Item label="Email">
-                                    <Text strong>{selectedCustomer.email}</Text>
-                                </Descriptions.Item>
-                                <Descriptions.Item label="Phương tiện">
-                                    <div className="vehicle-info-col">
-                                        <Text strong className="vehicle-plate">{selectedCustomer.licensePlate}</Text>
-                                        <Text className="vehicle-model">{selectedCustomer.vehicleModel}</Text>
-                                    </div>
-                                </Descriptions.Item>
-                                <Descriptions.Item label="Khoang thực hiện">
-                                    <Text strong>{selectedCustomer.bay}</Text>
-                                </Descriptions.Item>
-                                <Descriptions.Item label="Dịch vụ đã chọn">
-                                    <ul className="service-list">
-                                        {selectedCustomer.services.map(s => (
-                                            <li key={s.id} className="service-list-item">
-                                                <Text strong>{s.name}</Text>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </Descriptions.Item>
-                                <Descriptions.Item label="Khuyến mãi áp dụng">
-                                    {selectedCustomer.promotions.length > 0 ? (
-                                        <Space direction="vertical" size="small">
-                                            {selectedCustomer.promotions.map(p => (
-                                                <div key={p.id}>
-                                                    <Text strong>{p.name}</Text>
-                                                </div>
-                                            ))}
-                                        </Space>
-                                    ) : (
-                                        <Text type="secondary">Không có khuyến mãi nào được áp dụng</Text>
-                                    )}
-                                </Descriptions.Item>
-                            </Descriptions>
-                        </Card>
+            {currentStep === 1 && selectedCustomer && (() => {
+                const services = getServices(selectedCustomer);
+                const promotions = getPromotions(selectedCustomer);
 
-                        {/* Staff Notes */}
-                        <Card
-                            className="checkin-card staff-notes-card"
-                            title={<span><EditOutlined style={{ marginRight: 8 }} /> Ghi chú của nhân viên</span>}
-                        >
-                            <TextArea
-                                className="staff-notes-textarea"
-                                placeholder="Nhập ghi chú thêm cho lần check-in này (VD: Khách yêu cầu rửa kỹ gầm xe, xe có trầy xước sẵn ở cánh cửa trái...)"
-                                value={staffNote}
-                                onChange={(e) => setStaffNote(e.target.value)}
-                                rows={4}
-                                maxLength={500}
-                                showCount
-                            />
-                        </Card>
-                    </Col>
-
-                    {/* Hóa Đơn Tạm Tính */}
-                    <Col xs={24} lg={8}>
-                        <Card
-                            title={<span style={{ fontSize: 18, fontWeight: 600 }}>Hóa Đơn Tạm Tính</span>}
-                            className="invoice-card"
-                        >
-                            <div style={{ marginBottom: '24px' }}>
-                                <Text className="invoice-section-title">Chi phí dịch vụ</Text>
-                                {selectedCustomer.services.map(s => (
-                                    <Row justify="space-between" key={s.id} className="invoice-row">
-                                        <Col><Text strong style={{ color: '#262626' }}>{s.name}</Text></Col>
-                                        <Col><Text strong>{s.price.toLocaleString('vi-VN')} đ</Text></Col>
-                                    </Row>
-                                ))}
-                            </div>
-
-                            {selectedCustomer.promotions.length > 0 && (
-                                <>
-                                    <div className="invoice-divider" />
-                                    <div style={{ marginBottom: '24px' }}>
-                                        <Text className="invoice-section-title">Khuyến mãi</Text>
-                                        {selectedCustomer.promotions.map(p => (
-                                            <Row justify="space-between" key={p.id} className="invoice-row">
-                                                <Col><Text style={{ color: '#52c41a' }}>{p.name}</Text></Col>
-                                                <Col><Text strong style={{ color: '#52c41a' }}>-{p.discount.toLocaleString('vi-VN')} đ</Text></Col>
-                                            </Row>
-                                        ))}
-                                    </div>
-                                </>
-                            )}
-
-                            <div className="invoice-total-box">
-                                <Row justify="space-between" align="middle">
-                                    <Col><Text className="invoice-total-label">Tổng thanh toán</Text></Col>
-                                    <Col><Title level={2} className="invoice-total-amount">{calculateTotal().toLocaleString('vi-VN')} đ</Title></Col>
-                                </Row>
-                            </div>
-
-                            <Button
-                                type="primary"
-                                block
-                                className="confirm-btn"
-                                onClick={handleConfirm}
+                return (
+                    <Row gutter={[32, 24]}>
+                        <Col xs={24} lg={16}>
+                            <Card
+                                className="checkin-card customer-info-card"
+                                title={<span style={{ fontSize: 18, fontWeight: 600 }}><UserOutlined style={{ marginRight: 8 }} /> Hồ Sơ Dịch Vụ</span>}
+                                extra={
+                                    <Button type="text" className="back-btn" onClick={() => setCurrentStep(0)}>
+                                        <ArrowLeftOutlined /> Quay lại
+                                    </Button>
+                                }
                             >
-                                Xác nhận & Bắt đầu
-                            </Button>
-                        </Card>
-                    </Col>
-                </Row>
-            )}
+                                <Descriptions bordered column={1}>
+                                    <Descriptions.Item label="Họ và tên khách hàng">
+                                        <Text strong>{getCustomerName(selectedCustomer)}</Text>
+                                    </Descriptions.Item>
+                                    <Descriptions.Item label="Số điện thoại">
+                                        <Text strong>{getCustomerPhone(selectedCustomer)}</Text>
+                                    </Descriptions.Item>
+                                    <Descriptions.Item label="Email">
+                                        <Text strong>{getCustomerEmail(selectedCustomer)}</Text>
+                                    </Descriptions.Item>
+                                    <Descriptions.Item label="Phương tiện">
+                                        <div className="vehicle-info-col">
+                                            <Text strong className="vehicle-plate">{getLicensePlate(selectedCustomer)}</Text>
+                                            <Text className="vehicle-model">{getVehicleModel(selectedCustomer)}</Text>
+                                        </div>
+                                    </Descriptions.Item>
+                                    <Descriptions.Item label="Khoang thực hiện">
+                                        <Text strong>{getBayName(selectedCustomer)}</Text>
+                                    </Descriptions.Item>
+                                    <Descriptions.Item label="Dịch vụ đã chọn">
+                                        <ul className="service-list">
+                                            {services.map(s => (
+                                                <li key={s.id} className="service-list-item">
+                                                    <Text strong>{s.name}</Text>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </Descriptions.Item>
+                                    <Descriptions.Item label="Khuyến mãi áp dụng">
+                                        {promotions.length > 0 ? (
+                                            <Space direction="vertical" size="small">
+                                                {promotions.map(p => (
+                                                    <div key={p.id}>
+                                                        <Text strong>{p.name}</Text>
+                                                    </div>
+                                                ))}
+                                            </Space>
+                                        ) : (
+                                            <Text type="secondary">Không có khuyến mãi nào được áp dụng</Text>
+                                        )}
+                                    </Descriptions.Item>
+                                </Descriptions>
+                            </Card>
+
+                            {/* Staff Notes */}
+                            <Card
+                                className="checkin-card staff-notes-card"
+                                title={<span><EditOutlined style={{ marginRight: 8 }} /> Ghi chú của nhân viên</span>}
+                            >
+                                <TextArea
+                                    className="staff-notes-textarea"
+                                    placeholder="Nhập ghi chú thêm cho lần check-in này (VD: Khách yêu cầu rửa kỹ gầm xe, xe có trầy xước sẵn ở cánh cửa trái...)"
+                                    value={staffNote}
+                                    onChange={(e) => setStaffNote(e.target.value)}
+                                    rows={4}
+                                    maxLength={500}
+                                    showCount
+                                />
+                            </Card>
+                        </Col>
+
+                        {/* Hóa Đơn Tạm Tính */}
+                        <Col xs={24} lg={8}>
+                            <Card
+                                title={<span style={{ fontSize: 18, fontWeight: 600 }}>Hóa Đơn Tạm Tính</span>}
+                                className="invoice-card"
+                            >
+                                <div style={{ marginBottom: '24px' }}>
+                                    <Text className="invoice-section-title">Chi phí dịch vụ</Text>
+                                    {services.map(s => (
+                                        <Row justify="space-between" key={s.id} className="invoice-row">
+                                            <Col><Text strong style={{ color: '#262626' }}>{s.name}</Text></Col>
+                                            <Col><Text strong>{s.price.toLocaleString('vi-VN')} đ</Text></Col>
+                                        </Row>
+                                    ))}
+                                </div>
+
+                                {promotions.length > 0 && promotions.some(p => p.discount > 0) && (
+                                    <>
+                                        <div className="invoice-divider" />
+                                        <div style={{ marginBottom: '24px' }}>
+                                            <Text className="invoice-section-title">Khuyến mãi</Text>
+                                            {promotions.filter(p => p.discount > 0).map(p => (
+                                                <Row justify="space-between" key={p.id} className="invoice-row">
+                                                    <Col><Text style={{ color: '#52c41a' }}>{p.name}</Text></Col>
+                                                    <Col><Text strong style={{ color: '#52c41a' }}>-{p.discount.toLocaleString('vi-VN')} đ</Text></Col>
+                                                </Row>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+
+                                <div className="invoice-total-box">
+                                    <Row justify="space-between" align="middle">
+                                        <Col><Text className="invoice-total-label">Tổng thanh toán</Text></Col>
+                                        <Col><Title level={2} className="invoice-total-amount">{calculateTotal().toLocaleString('vi-VN')} đ</Title></Col>
+                                    </Row>
+                                </div>
+
+                                <Button
+                                    type="primary"
+                                    block
+                                    className="confirm-btn"
+                                    onClick={handleConfirm}
+                                >
+                                    Xác nhận & Bắt đầu
+                                </Button>
+                            </Card>
+                        </Col>
+                    </Row>
+                );
+            })()}
         </div>
     );
 }
