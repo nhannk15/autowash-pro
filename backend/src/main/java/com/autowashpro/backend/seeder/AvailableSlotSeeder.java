@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import com.autowashpro.backend.model.entity.AvailableSlot;
@@ -15,21 +16,27 @@ import com.autowashpro.backend.repository.TimeSlotRepository;
 import com.autowashpro.backend.repository.WashBayRepository;
 
 @Component
-public class AvailableSlotSeeder {
+@Order(14)
+public class AvailableSlotSeeder implements Seeder {
 
-    @Autowired
-    private AvailableSlotRepository availableSlotRepository;
+    private final AvailableSlotRepository availableSlotRepository;
 
-    @Autowired
-    private WashBayRepository washBayRepository;
+    private final WashBayRepository washBayRepository;
 
-    @Autowired
-    private TimeSlotRepository timeSlotRepository;
+    private final TimeSlotRepository timeSlotRepository;
 
     private static final int MAX_WINDOW_DAY = 14;
     private static final int MAX_SLOT_PER_DAY = 14;
     private static final int MAX_NUMBER_OF_BAY = 5;
 
+    @Autowired
+    public AvailableSlotSeeder(AvailableSlotRepository availableSlotRepository, WashBayRepository washBayRepository, TimeSlotRepository timeSlotRepository) {
+        this.availableSlotRepository = availableSlotRepository;
+        this.washBayRepository = washBayRepository;
+        this.timeSlotRepository = timeSlotRepository;
+    }
+
+    @Override
     public void seed() {
 
         List<TimeSlot> timeSlots = timeSlotRepository.findAll();
