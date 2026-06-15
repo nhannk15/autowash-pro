@@ -61,17 +61,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(AccountExistedException.class)
-    public ResponseEntity<ErrorResponse> handleAccountExisted(AccountExistedException ex, WebRequest request) {
-        ErrorResponse error = createErrorResponse(HttpStatus.CONFLICT, "ACCOUNT EXISTED", ex.getMessage(), request);
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
-    }
 
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleUserNotFound(UserNotFoundException ex, WebRequest request) {
-        ErrorResponse error = createErrorResponse(HttpStatus.NOT_FOUND, "USER NOT FOUND", ex.getMessage(), request);
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
-    }
 
     /**
      * Bean Validation Exceptions
@@ -171,8 +161,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException ex, WebRequest request) {
-        ErrorResponse error = createErrorResponse(HttpStatus.CONFLICT, ex.getClass().toString(), ex.getMessage(), request);
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+        ErrorResponse error = createErrorResponse(HttpStatus.NOT_FOUND, "USER NOT FOUND", ex.getMessage(), request);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
     @ExceptionHandler(WrongPasswordException.class)
