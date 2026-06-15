@@ -30,8 +30,10 @@ import com.autowashpro.backend.model.entity.ServicePrice;
 import com.autowashpro.backend.model.entity.TimeSlot;
 import com.autowashpro.backend.model.entity.Vehicle;
 import com.autowashpro.backend.model.entity.WashBay;
+import com.autowashpro.backend.model.entity.WashSession;
 import com.autowashpro.backend.model.enums.BookingStatus;
 import com.autowashpro.backend.model.enums.PromotionDiscountType;
+import com.autowashpro.backend.model.enums.WashSessionStatus;
 import com.autowashpro.backend.repository.AvailableSlotRepository;
 import com.autowashpro.backend.repository.BookingDetailRepository;
 import com.autowashpro.backend.repository.BookingRepository;
@@ -40,35 +42,40 @@ import com.autowashpro.backend.repository.PromotionRepository;
 import com.autowashpro.backend.repository.ServicePriceRepository;
 import com.autowashpro.backend.repository.TimeSlotRepository;
 import com.autowashpro.backend.repository.VehicleRepository;
+import com.autowashpro.backend.repository.WashSessionRepository;
 
 @Service
 public class BookingService {
 
     private static final int SLOT_DURATION = 60;
 
-    @Autowired
-    private CustomerRepository customerRepository;
+    private final CustomerRepository customerRepository;
+    private final ServicePriceRepository servicePriceRepository;
+    private final AvailableSlotRepository availableSlotRepository;
+    private final TimeSlotRepository timeSlotRepository;
+    private final VehicleRepository vehicleRepository;
+    private final PromotionRepository promotionRepository;
+    private final BookingRepository bookingRepository;
+    private final BookingDetailRepository bookingDetailRepository;
+    private final WashSessionRepository washSessionRepository;
 
+    
     @Autowired
-    private ServicePriceRepository servicePriceRepository;
-
-    @Autowired
-    private AvailableSlotRepository availableSlotRepository;
-
-    @Autowired
-    private TimeSlotRepository timeSlotRepository;
-
-    @Autowired
-    private VehicleRepository vehicleRepository;
-
-    @Autowired
-    private PromotionRepository promotionRepository;
-
-    @Autowired
-    private BookingRepository bookingRepository;
-
-    @Autowired
-    private BookingDetailRepository bookingDetailRepository;
+    public BookingService(CustomerRepository customerRepository, ServicePriceRepository servicePriceRepository,
+            AvailableSlotRepository availableSlotRepository, TimeSlotRepository timeSlotRepository,
+            VehicleRepository vehicleRepository, PromotionRepository promotionRepository,
+            BookingRepository bookingRepository, BookingDetailRepository bookingDetailRepository,
+            WashSessionRepository washSessionRepository) {
+        this.customerRepository = customerRepository;
+        this.servicePriceRepository = servicePriceRepository;
+        this.availableSlotRepository = availableSlotRepository;
+        this.timeSlotRepository = timeSlotRepository;
+        this.vehicleRepository = vehicleRepository;
+        this.promotionRepository = promotionRepository;
+        this.bookingRepository = bookingRepository;
+        this.bookingDetailRepository = bookingDetailRepository;
+        this.washSessionRepository = washSessionRepository;
+    }
 
     public SlotAvailabilityByDateResponse getAvailableTimeSlots(LocalDate date) {
         List<TimeSlotAvailabilityResponse> timeSlots = getAvailableTimeSlot(date);
@@ -214,7 +221,26 @@ public class BookingService {
         }
 
         /**
-         * Step 10. Build and return response.
+         * Step 10. Immediately create WashSession for each BookingDetail in PENDING
+         * status.
+         */
+        for (BookingDetail bookingDetail : savedDetails) {
+            WashSession washSession = WashSession.builder()
+                    .booking(savedBooking)
+                    .customer(customer)
+                    .vehicle(vehicle)
+                    .servicePrice(bookingDetail.getServicePrice())
+                    .staff(null)
+                    .startTime(null)
+                    .endTime(null)
+                    .status(WashSessionStatus.PENDING)
+                    .bay(washBay)
+                    .build();
+            washSessionRepository.save(washSession);
+        }
+
+        /**
+         * Step 11. Build and return response.
          */
         BigDecimal totalOriginalPrice = savedDetails.stream()
                 .map(BookingDetail::getPriceAtBooking)
