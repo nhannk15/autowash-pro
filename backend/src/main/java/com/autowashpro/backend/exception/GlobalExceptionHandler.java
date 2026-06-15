@@ -103,6 +103,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    @ExceptionHandler(BookingNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleBookingNotFound(BookingNotFoundException ex, WebRequest request) {
+        ErrorResponse error = createErrorResponse(HttpStatus.BAD_REQUEST, ex.getCause().toString(), ex.getMessage(), request);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
     @ExceptionHandler(ExceedBookingWindowException.class)
     public ResponseEntity<ErrorResponse> handleExceedBookingWindowException(ExceedBookingWindowException ex, WebRequest request) {
         ErrorResponse error = createErrorResponse(HttpStatus.BAD_REQUEST, "BOOKING ERROR", ex.getMessage(), request);
