@@ -3,6 +3,7 @@ package com.autowashpro.backend.repository;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -27,4 +28,5 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             @Param("today") LocalDate today,
             @Param("cutOffTime") LocalTime cutOffTime);
 
+    Optional<Booking> findByBookingCode(String bookingCode);
 }
