@@ -96,6 +96,9 @@ public class Booking {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "booking_code", nullable = false)
+    private String bookingCode;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
