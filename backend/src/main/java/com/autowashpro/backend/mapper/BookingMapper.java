@@ -10,11 +10,14 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
+import com.autowashpro.backend.model.dto.BookingResponse;
 import com.autowashpro.backend.model.dto.UpcomingBookingResponse;
 import com.autowashpro.backend.model.entity.AvailableSlot;
 import com.autowashpro.backend.model.entity.Booking;
+import com.autowashpro.backend.model.entity.WashSession;
 
-@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, uses = {VehicleMapper.class, CustomerMapper.class})
+@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, uses = {
+        VehicleMapper.class, CustomerMapper.class, BookingDetailMapper.class })
 public interface BookingMapper {
     void updateBookingFromRequest(Booking source, @MappingTarget Booking target);
 
@@ -48,4 +51,18 @@ public interface BookingMapper {
     }
 
     List<UpcomingBookingResponse> toUpcomingBookingResponses(List<Booking> bookings);
+
+    @Mapping(target = "slotDate", source = "availableSlots", qualifiedByName = "toSlotDate")
+    @Mapping(target = "startTime", source = "availableSlots", qualifiedByName = "toStartTime")
+    @Mapping(target = "endTime", source = "availableSlots", qualifiedByName = "toEndTime")
+    @Mapping(target = "washBay", source = "washSessions", qualifiedByName = "toWashBayName")
+    BookingResponse toBookingResponse(Booking booking);
+
+    @Named("toWashBayName")
+    default String toWashBayName(List<WashSession> washSessions) {
+        if (washSessions == null || washSessions.isEmpty()) {
+            return null;
+        }
+        return washSessions.getFirst().getBay().getName().toString();
+    }
 }

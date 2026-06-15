@@ -7,16 +7,19 @@ import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import com.autowashpro.backend.exception.BookingNotFoundException;
 import com.autowashpro.backend.exception.ExceedBookingWindowException;
 import com.autowashpro.backend.exception.SlotInavailabilityException;
 import com.autowashpro.backend.exception.UserNotFoundException;
 import com.autowashpro.backend.mapper.BookingMapper;
 import com.autowashpro.backend.model.dto.BookingDetailResponse;
+import com.autowashpro.backend.model.dto.BookingResponse;
 import com.autowashpro.backend.model.dto.CreateBookingRequest;
 import com.autowashpro.backend.model.dto.CreateBookingResponse;
 import com.autowashpro.backend.model.dto.SlotAvailabilityByDateResponse;
@@ -30,11 +33,13 @@ import com.autowashpro.backend.model.entity.MembershipTier;
 import com.autowashpro.backend.model.entity.Promotion;
 import com.autowashpro.backend.model.entity.ServicePrice;
 import com.autowashpro.backend.model.entity.TimeSlot;
+import com.autowashpro.backend.model.entity.User;
 import com.autowashpro.backend.model.entity.Vehicle;
 import com.autowashpro.backend.model.entity.WashBay;
 import com.autowashpro.backend.model.entity.WashSession;
 import com.autowashpro.backend.model.enums.BookingStatus;
 import com.autowashpro.backend.model.enums.PromotionDiscountType;
+import com.autowashpro.backend.model.enums.Role;
 import com.autowashpro.backend.model.enums.WashSessionStatus;
 import com.autowashpro.backend.repository.AvailableSlotRepository;
 import com.autowashpro.backend.repository.BookingDetailRepository;
@@ -43,6 +48,7 @@ import com.autowashpro.backend.repository.CustomerRepository;
 import com.autowashpro.backend.repository.PromotionRepository;
 import com.autowashpro.backend.repository.ServicePriceRepository;
 import com.autowashpro.backend.repository.TimeSlotRepository;
+import com.autowashpro.backend.repository.UserRepository;
 import com.autowashpro.backend.repository.VehicleRepository;
 import com.autowashpro.backend.repository.WashSessionRepository;
 import com.autowashpro.backend.utils.BookingCodeGenerator;
@@ -64,6 +70,7 @@ public class BookingService {
     private final BookingMapper bookingMapper;
     private final BookingCodeGenerator bookingCodeGenerator;
     private final EmailService emailService;
+    private final UserRepository userRepository;
 
     @Autowired
     public BookingService(CustomerRepository customerRepository, ServicePriceRepository servicePriceRepository,
@@ -71,7 +78,8 @@ public class BookingService {
             VehicleRepository vehicleRepository, PromotionRepository promotionRepository,
             BookingRepository bookingRepository, BookingDetailRepository bookingDetailRepository,
             WashSessionRepository washSessionRepository, BookingMapper bookingMapper,
-            BookingCodeGenerator bookingCodeGenerator, EmailService emailService) {
+            BookingCodeGenerator bookingCodeGenerator, EmailService emailService,
+            UserRepository userRepository) {
         this.customerRepository = customerRepository;
         this.servicePriceRepository = servicePriceRepository;
         this.availableSlotRepository = availableSlotRepository;
@@ -84,6 +92,7 @@ public class BookingService {
         this.bookingMapper = bookingMapper;
         this.bookingCodeGenerator = bookingCodeGenerator;
         this.emailService = emailService;
+        this.userRepository = userRepository;
     }
 
     public SlotAvailabilityByDateResponse getAvailableTimeSlots(LocalDate date) {
@@ -98,7 +107,8 @@ public class BookingService {
     public List<UpcomingBookingResponse> getUpcomingBookings() {
         LocalDate today = LocalDate.now();
         LocalTime rightThisTimeMinus15Minutes = LocalTime.now().minusMinutes(15);
-        List<Booking> todayBookings = bookingRepository.getUpcomingBookingsTillNow(today, rightThisTimeMinus15Minutes);
+        List<Booking> todayBookings = bookingRepository.getUpcomingBookingsTillNow(today,
+                rightThisTimeMinus15Minutes);
         return bookingMapper.toUpcomingBookingResponses(todayBookings);
     }
 
@@ -296,6 +306,7 @@ public class BookingService {
                 .bayName(washBay.getName())
                 .status(savedBooking.getStatus())
                 .notes(savedBooking.getNotes())
+                .bookingCode(savedBooking.getBookingCode())
                 .bookingDate(bookingDay)
                 .startTime(startTimeSlot.getStartTime())
                 .endDate(endDateTime.toLocalDate())
@@ -313,10 +324,33 @@ public class BookingService {
         /**
          * Step 12. Send a BookingCode to user's email.
          */
-        emailService.sendBookingSuccessToEmail(customer.getEmail(), savedBooking.getBookingCode(), bookingResponse);
+        emailService.sendBookingSuccessToEmail(customer.getEmail(), savedBooking.getBookingCode(),
+                bookingResponse);
 
         return bookingResponse;
 
+    }
+
+    public BookingResponse getBookingByBookingCode(String email, String bookingCode) {
+
+        User currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Không tìm thấy người dùng!"));
+
+        Optional<Booking> optionalBooking = bookingRepository.findByBookingCode(bookingCode);
+        if (optionalBooking.isEmpty()) {
+            throw new BookingNotFoundException("Không tìm thấy mã đặt lịch: " + bookingCode);
+        }
+
+        Booking booking = optionalBooking.get();
+        if (currentUser.getRole() == Role.ADMIN || currentUser.getRole() == Role.STAFF) {
+            return bookingMapper.toBookingResponse(booking);
+        } else {
+            if (!currentUser.getEmail().equals(booking.getCustomer().getEmail())) {
+                return null;
+            } else {
+                return bookingMapper.toBookingResponse(booking);
+            }
+        }
     }
 
 }

@@ -12,4 +12,6 @@ public interface CustomerMapper {
     void updateCustomerFromRequest(Customer source, @MappingTarget Customer target);
 
     WashBayCustomerResponse toWashBayCustomerResponse(Customer customer);
+
+    
 }
