@@ -10,8 +10,8 @@ import org.springframework.stereotype.Component;
 import com.autowashpro.backend.model.dto.CreateBookingRequest;
 import com.autowashpro.backend.service.BookingService;
 
-@Component
-@Order(15)
+// @Component
+// @Order(15)
 public class BookingSeeder implements Seeder {
 
     private final BookingService bookingService;
