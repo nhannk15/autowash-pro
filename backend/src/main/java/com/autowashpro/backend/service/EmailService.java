@@ -52,7 +52,7 @@ public class EmailService {
                     <div style="max-width:600px; margin:30px auto; background-color:#ffffff; border-radius:12px; overflow:hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
 
                         <!-- Header -->
-                        <div style="background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); padding:30px; text-align:center;">
+                        <div style="background: #0d1b4b; padding:30px; text-align:center;">
                             <h1 style="color:#ffffff; margin:0; font-size:24px;">🚗 AutoWash Pro</h1>
                             <p style="color:#e8e8ff; margin:8px 0 0; font-size:14px;">Đặt lại mật khẩu</p>
                         </div>
@@ -67,8 +67,8 @@ public class EmailService {
 
                             <!-- OTP Code -->
                             <div style="text-align:center; margin:30px 0;">
-                                <div style="display:inline-block; background:#f0f0ff; border:2px dashed #667eea; border-radius:10px; padding:20px 40px;">
-                                    <span style="font-size:36px; font-weight:bold; color:#667eea; letter-spacing:8px;">%s</span>
+                                <div style="display:inline-block; background:#f0f2f8; border:2px dashed #0d1b4b; border-radius:10px; padding:20px 40px;">
+                                    <span style="font-size:36px; font-weight:bold; color:#0d1b4b; letter-spacing:8px;">%s</span>
                                 </div>
                             </div>
 
