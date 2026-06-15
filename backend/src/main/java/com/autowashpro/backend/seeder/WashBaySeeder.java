@@ -1,6 +1,7 @@
 package com.autowashpro.backend.seeder;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import com.autowashpro.backend.model.entity.WashBay;
@@ -8,11 +9,17 @@ import com.autowashpro.backend.model.enums.BayStatus;
 import com.autowashpro.backend.repository.WashBayRepository;
 
 @Component
-public class WashBaySeeder {
+@Order(9)
+public class WashBaySeeder implements Seeder {
     
-    @Autowired
-    private WashBayRepository washBayRepository;
+    private final WashBayRepository washBayRepository;
 
+    @Autowired
+    public WashBaySeeder(WashBayRepository washBayRepository) {
+        this.washBayRepository = washBayRepository;
+    }
+
+    @Override
     public void seed() {
         if (washBayRepository.count() > 0) return;
 

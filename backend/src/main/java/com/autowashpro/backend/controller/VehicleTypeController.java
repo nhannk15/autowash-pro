@@ -1,58 +1,64 @@
 package com.autowashpro.backend.controller;
 
+
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.autowashpro.backend.mapper.VehicleTypeMapper;
-import com.autowashpro.backend.model.dto.ApiResponse;
-import com.autowashpro.backend.model.entity.VehicleType;
+import com.autowashpro.backend.model.dto.VehicleTypeRequest;
+import com.autowashpro.backend.model.dto.VehicleTypeResponse;
 import com.autowashpro.backend.service.VehicleTypeService;
 
 @RestController
-@RequestMapping("/api/vehicle-types")
 public class VehicleTypeController {
 
-    @Autowired
-    private VehicleTypeService service;
+    private final VehicleTypeService service;
+    private final VehicleTypeMapper mapper;
 
     @Autowired
-    private VehicleTypeMapper mapper;
-
-    @GetMapping
-    public ResponseEntity<ApiResponse<List<VehicleType>>> findAll() {
-        return ResponseEntity.ok(ApiResponse.success(service.findAll()));
+    public VehicleTypeController(VehicleTypeService service, VehicleTypeMapper mapper) {
+        this.service = service;
+        this.mapper = mapper;
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<VehicleType>> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.success(service.findById(id)));
+    @PostMapping("/api/admin/vehicle-types")
+    public ResponseEntity<VehicleTypeResponse> create(@RequestBody VehicleTypeRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.createNew(request));
     }
 
-    @PostMapping
-    public ResponseEntity<ApiResponse<VehicleType>> create(@RequestBody VehicleType vehicleType) {
-        return ResponseEntity.ok(ApiResponse.created(service.createNew(vehicleType)));
+    @GetMapping("/api/vehicle-types/{id}")
+    public ResponseEntity<VehicleTypeResponse> findVehicleTypeById(@PathVariable Long id) {
+        return ResponseEntity.ok().body(service.findById(id));
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<ApiResponse<VehicleType>> update(@RequestBody VehicleType vehicleType, @PathVariable Long id) {
-        VehicleType target = service.findById(id);
-        mapper.updateVehicleTypeFromRequest(vehicleType, target);
-        return ResponseEntity.ok(ApiResponse.success(service.update(target)));
+    @GetMapping("/api/vehicle-types")
+    public ResponseEntity<List<VehicleTypeResponse>> findAllVehicleTypes() {
+        return ResponseEntity.status(HttpStatus.OK).body(service.findAll());
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
-        service.delete(id);
-        return ResponseEntity.ok(ApiResponse.noContent());
+    @PutMapping("/api/admin/vehicle-types/{id}")
+    public ResponseEntity<VehicleTypeResponse> updateVehicleType(@PathVariable Long id, @RequestBody VehicleTypeRequest request) {
+        return ResponseEntity.ok().body(service.updateVehicle(id, request));
     }
+
+    @DeleteMapping("/api/admin/vehicle-types/{id}")
+    public ResponseEntity<VehicleTypeResponse> deleteVehicleType(@PathVariable Long id) {
+        return ResponseEntity.ok().body(service.deleteById(id));
+    }
+
+    @PutMapping("/api/admin/vehicle-types/restore/{id}")
+    public ResponseEntity<VehicleTypeResponse> retoreVehicleType(@PathVariable Long id) {
+        return ResponseEntity.ok().body(service.restoreById(id));
+    }
+
 }

@@ -7,14 +7,11 @@ import lombok.Setter;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@Setter
 @Getter
-public class CreateVehicleRequest {
-    
-    private Long vehicleTypeId;
+@Setter
+public class UpdateVehicleRequest {
+
     private String licensePlate;
-    private String brand;
-    private String model;
     private String color;
     private String image;
 

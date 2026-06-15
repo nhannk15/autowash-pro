@@ -1,5 +1,8 @@
+/* ===== Staff Dashboard ===== */
+
 .staff-dashboard {
     padding: 12px;
+    font-family: system-ui, -apple-system, sans-serif;
 }
 
 /* ===== Thống kê (Stats) ===== */
@@ -9,12 +12,18 @@
 
 .stat-card {
     border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-    border: none;
-    height: 100%; /* Đảm bảo các card bằng chiều cao */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e8e8e8;
+    height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
 }
 
 .stat-card .ant-card-body {
@@ -22,22 +31,25 @@
 }
 
 .stat-card .ant-statistic-title {
-    font-size: 14px;
+    font-size: 13px;
+    font-family: system-ui, -apple-system, sans-serif;
     font-weight: 500;
     color: #8c8c8c;
+    letter-spacing: 0.2px;
 }
 
 .stat-card .ant-statistic-content {
     font-weight: 700;
-    font-size: 22px; /* Chỉnh nhỏ lại một xíu để số dài không bị tràn */
-    color: #262626;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 22px;
+    color: #1a1a2e;
 }
 
 .stat-icon {
     margin-right: 12px;
 }
 
-.text-blue { color: #1890ff; }
+.text-blue { color: #2f54eb; }
 .text-orange { color: #fa8c16; }
 .text-green { color: #52c41a; }
 .text-gold { color: #faad14; }
@@ -45,23 +57,28 @@
 /* ===== Tình trạng khoang (Bays) ===== */
 .dashboard__bays-card {
     border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-    border: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e8e8e8;
     margin-bottom: 24px;
 }
 
+.dashboard__bays-card .ant-card-head-title {
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
 .bay-card {
-    border: 1px solid #f0f0f0;
+    border: 1px solid #e8e8e8;
     border-radius: 12px;
     padding: 16px;
-    height: 220px; /* Thống nhất chiều cao cho TẤT CẢ các card khoang */
+    height: 250px;
     display: flex;
     flex-direction: column;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+    background: #fff;
 }
 
 .bay-card:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .bay-card__header {
@@ -70,12 +87,14 @@
     align-items: center;
     margin-bottom: 12px;
     padding-bottom: 8px;
-    border-bottom: 1px dashed rgba(0,0,0,0.06);
+    border-bottom: 1px solid #f0f0f0;
 }
 
 .bay-card__name {
-    font-weight: 600;
-    font-size: 16px;
+    font-weight: 700;
+    font-size: 15px;
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #1a1a2e;
 }
 
 .bay-card__content {
@@ -84,7 +103,6 @@
     flex-direction: column;
 }
 
-/* Kiểu cho khoang trống */
 .bay-card__empty-info {
     flex: 1;
     display: flex;
@@ -92,62 +110,91 @@
     justify-content: center;
     color: #bfbfbf;
     font-style: italic;
+    font-family: system-ui, -apple-system, sans-serif;
     text-align: center;
+    font-size: 14px;
 }
 
-/* Kiểu cho khoang có xe */
 .bay-card__occupied-info {
     flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: space-between; /* Dàn đều các thành phần ra các góc */
+    justify-content: space-between;
 }
 
 .bay-card__plate {
-    font-size: 18px;
-    font-weight: bold;
-    color: #121E4B;
+    font-size: 17px;
+    font-weight: 700;
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #1a1a2e;
     text-align: center;
-    background: #f0f2f5;
+    background: #f5f5f5;
     border-radius: 6px;
-    padding: 2px;
+    padding: 3px;
     margin-bottom: 8px;
     border: 1px solid #d9d9d9;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
 }
 
 .bay-card__details {
     text-align: center;
     margin-bottom: 8px;
-    line-height: 1.4;
+    line-height: 1.5;
 }
 
 .bay-card__service-tag {
     text-align: center;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
-.bay-card__progress {
-    height: 8px;
-    background: #f0f0f0;
-    border-radius: 4px;
-    overflow: hidden;
-    margin-top: auto; /* Ép thanh tiến độ xuống sát đáy */
+.bay-card__actions {
+    margin-top: auto;
 }
 
-.progress-bar {
-    height: 100%;
-    background: linear-gradient(90deg, #1890ff, #52c41a);
-    border-radius: 4px;
-    transition: width 0.5s ease;
+.bay-card__complete-btn {
+    font-weight: 600;
+    font-family: system-ui, -apple-system, sans-serif;
+    border-radius: 6px;
+    font-size: 13px;
+    background: #2f54eb;
+    border: none;
 }
 
-/* Trạng thái nền (Đã được yêu cầu đồng nhất 1 màu) */
-.bay-card--available,
-.bay-card--occupied,
+.bay-card__complete-btn:hover {
+    background: #597ef7 !important;
+}
+
+.bay-card__payment-btn {
+    font-weight: 600;
+    font-family: system-ui, -apple-system, sans-serif;
+    border-radius: 6px;
+    font-size: 13px;
+    background: #52c41a;
+    border: none;
+}
+
+.bay-card__payment-btn:hover {
+    background: #73d13d !important;
+}
+
+.bay-card--completed {
+    border-color: #b7eb8f !important;
+    background-color: #f6ffed !important;
+}
+
+.bay-card--available {
+    background-color: #fafafa;
+    border-color: #e8e8e8;
+}
+
+.bay-card--occupied:not(.bay-card--completed) {
+    background-color: #fff;
+    border-color: #e8e8e8;
+}
+
 .bay-card--maintenance {
-    background-color: #f7f7f7;
-    border-color: #c7c7c7;
+    background-color: #fff2f0;
+    border-color: #ffccc7;
 }
 
 /* ===== Timeline & Actions ===== */
@@ -155,35 +202,42 @@
 .dashboard__actions-card,
 .dashboard__notifications-card {
     border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-    border: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e8e8e8;
     margin-bottom: 24px;
+}
+
+.dashboard__timeline-card .ant-card-head-title,
+.dashboard__notifications-card .ant-card-head-title {
+    font-family: system-ui, -apple-system, sans-serif;
 }
 
 .timeline-item-content {
     padding-bottom: 8px;
+    font-family: system-ui, -apple-system, sans-serif;
 }
 
-/* Nút bấm mới gọn gàng hơn */
 .action-btn {
     font-weight: 600;
-    border-radius: 6px;
+    font-family: system-ui, -apple-system, sans-serif;
+    border-radius: 8px;
+    height: 40px;
 }
 
 .action-btn--checkin {
-    background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+    background: #52c41a;
     border: none;
 }
 
 .action-btn--checkin:hover {
-    background: linear-gradient(135deg, #73d13d 0%, #52c41a 100%) !important;
+    background: #73d13d !important;
 }
 
 .action-btn--walkin {
-    border-color: #1890ff;
-    color: #1890ff;
+    border-color: #2f54eb;
+    color: #2f54eb;
 }
 
 .action-btn--walkin:hover {
-    background: #e6f7ff !important;
+    background: #f0f5ff !important;
 }

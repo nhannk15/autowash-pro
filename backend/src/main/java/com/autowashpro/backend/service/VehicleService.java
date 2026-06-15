@@ -11,6 +11,7 @@ import com.autowashpro.backend.exception.VehicleNotFoundException;
 import com.autowashpro.backend.exception.VehicleTypeNotFoundException;
 import com.autowashpro.backend.mapper.VehicleMapper;
 import com.autowashpro.backend.model.dto.CreateVehicleRequest;
+import com.autowashpro.backend.model.dto.UpdateVehicleRequest;
 import com.autowashpro.backend.model.dto.VehicleResponse;
 import com.autowashpro.backend.model.entity.Customer;
 import com.autowashpro.backend.model.entity.Vehicle;
@@ -22,21 +23,31 @@ import com.autowashpro.backend.repository.VehicleTypeRepository;
 @Service
 public class VehicleService {
 
-    @Autowired
-    private VehicleRepository repository;
+    private final VehicleRepository repository;
+
+    private final CustomerRepository customerRepository;
+
+    private final VehicleMapper vehicleMapper;
+
+    private final VehicleTypeRepository vehicleTypeRepository;
 
     @Autowired
-    private CustomerRepository customerRepository;
+    public VehicleService(VehicleRepository repository, CustomerRepository customerRepository,
+            VehicleMapper vehicleMapper, VehicleTypeRepository vehicleTypeRepository) {
+        this.repository = repository;
+        this.customerRepository = customerRepository;
+        this.vehicleMapper = vehicleMapper;
+        this.vehicleTypeRepository = vehicleTypeRepository;
+    }
 
-    @Autowired
-    private VehicleMapper vehicleMapper;
+    public List<VehicleResponse> findAllVehicles() {
+        return vehicleMapper.toVehicleResponseList(repository.findAll());
+    }
 
-    @Autowired
-    private VehicleTypeRepository vehicleTypeRepository;
-
-    public List<VehicleResponse> findByCustomerId(Long id) {
-        customerRepository.findById(id).orElseThrow(() -> new UserNotFoundException("Người dùng không tồn tại."));
-        return vehicleMapper.toVehicleResponseList(repository.findByCustomerId(id));
+    public List<VehicleResponse> findAllVehiclesForCustomer(String email) {
+        Customer customer = customerRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Người dùng không tồn tại."));
+        return vehicleMapper.toVehicleResponseList(repository.findByCustomerId(customer.getId()));
     }
 
     public Vehicle createNew(Vehicle vehicle) {
@@ -48,13 +59,13 @@ public class VehicleService {
         return repository.save(vehicle);
     }
 
-    public VehicleResponse addNewVehicleForCustomer(CreateVehicleRequest request) {
+    public VehicleResponse addNewVehicleForCustomer(String email, CreateVehicleRequest request) {
         // Validate unique license plate
         if (request.getLicensePlate() != null && repository.existsByLicensePlate(request.getLicensePlate())) {
             throw new IllegalArgumentException("Biển số xe đã tồn tại!");
         }
 
-        Optional<Customer> optionalCustomer = customerRepository.findById(request.getCustomerId());
+        Optional<Customer> optionalCustomer = customerRepository.findByEmail(email);
         if (optionalCustomer.isEmpty()) {
             throw new UserNotFoundException("Khách hàng không tồn tại!");
         }
@@ -90,6 +101,35 @@ public class VehicleService {
         }
         vehicle.setActive(false);
         repository.save(vehicle);
+    }
+
+    public VehicleResponse updateMyCar(String email, Long vehicleId, UpdateVehicleRequest request) {
+
+        Customer customer = customerRepository
+                .findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Người dùng không tồn tại."));
+
+        Vehicle vehicle = repository
+                .findById(vehicleId)
+                .orElseThrow(() -> new VehicleNotFoundException("Xe của người dùng không tồn tại."));
+
+        if (!customer.getId().equals(vehicle.getCustomer().getId())) {
+            throw new VehicleNotFoundException("Xe này không thuộc về bạn");
+        }
+
+
+        if (repository.existsByLicensePlate(request.getLicensePlate())
+                && !request.getLicensePlate().equals(vehicle.getLicensePlate())) {
+            throw new VehicleNotFoundException("Biển số không được trùng");
+        }
+
+        vehicle.setLicensePlate(request.getLicensePlate());
+        vehicle.setColor(request.getColor());
+        vehicle.setImage(request.getImage());
+
+        Vehicle savedVehicle = repository.save(vehicle);
+        return vehicleMapper.toVehicleResponse(savedVehicle);
+
     }
 
 }
