@@ -11,7 +11,6 @@ import com.autowashpro.backend.exception.BookingNotFoundException;
 import com.autowashpro.backend.exception.UserNotFoundException;
 import com.autowashpro.backend.mapper.WashSessionMapper;
 import com.autowashpro.backend.model.dto.WashSessionResponse;
-import com.autowashpro.backend.model.entity.Billing;
 import com.autowashpro.backend.model.entity.Booking;
 import com.autowashpro.backend.model.entity.Staff;
 import com.autowashpro.backend.model.entity.WashSession;
@@ -84,7 +83,7 @@ public class WashSessionService {
         /**
          * Create Billing immediately.
          */
-        Billing newBilling = billingService.createPendingBilling(bookingId);
+        billingService.createPendingBilling(bookingId);
         return washSessionMapper.toResponseList(savedWashSessions);
     }
 

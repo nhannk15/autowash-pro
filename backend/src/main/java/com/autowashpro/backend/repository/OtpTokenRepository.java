@@ -4,11 +4,9 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import com.autowashpro.backend.model.entity.OtpToken;
 
-@Repository
 public interface OtpTokenRepository extends JpaRepository<OtpToken, Long> {
 
     // Tìm OTP còn hạn và chưa sử dụng theo email
