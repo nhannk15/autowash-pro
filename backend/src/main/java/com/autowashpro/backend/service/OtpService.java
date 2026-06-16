@@ -27,17 +27,19 @@ public class OtpService {
 
     private static final int OTP_EXPIRY_MINUTES = 10;
 
-    @Autowired
-    private OtpTokenRepository otpTokenRepository;
+    private final OtpTokenRepository otpTokenRepository;
+    private final UserRepository userRepository;
+    private final EmailService emailService;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private EmailService emailService;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    public OtpService(OtpTokenRepository otpTokenRepository, UserRepository userRepository, EmailService emailService,
+            PasswordEncoder passwordEncoder) {
+        this.otpTokenRepository = otpTokenRepository;
+        this.userRepository = userRepository;
+        this.emailService = emailService;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     /**
      * Xử lý yêu cầu quên mật khẩu:
@@ -83,7 +85,8 @@ public class OtpService {
     }
 
     /**
-     * Xác minh mã OTP (dùng cho bước trung gian nếu frontend cần kiểm tra trước khi cho nhập mật khẩu mới).
+     * Xác minh mã OTP (dùng cho bước trung gian nếu frontend cần kiểm tra trước khi
+     * cho nhập mật khẩu mới).
      */
     public void verifyOtp(VerifyOtpRequest request) {
         otpTokenRepository
