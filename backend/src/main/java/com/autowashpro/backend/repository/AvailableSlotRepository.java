@@ -24,6 +24,7 @@ public interface AvailableSlotRepository extends JpaRepository<AvailableSlot, Lo
             FROM AvailableSlot s
             WHERE s.slotDate = :date
             AND s.timeSlot.isActive = true
+            AND s.washBay.status = com.autowashpro.backend.model.enums.BayStatus.ACTIVE
             GROUP BY s.timeSlot.id, s.timeSlot.startTime, s.timeSlot.endTime
             ORDER BY s.timeSlot.startTime ASC
             """)
@@ -57,6 +58,31 @@ public interface AvailableSlotRepository extends JpaRepository<AvailableSlot, Lo
     // @Param("slotsNeeded") int slotsNeeded,
     // Pageable pageable);
 
+    // @Query(value = """
+    // SELECT a.* FROM available_slot a
+    // WHERE a.date = :date
+    // AND a.wash_bay_id = (
+    // SELECT a2.wash_bay_id FROM available_slot a2
+    // WHERE a2.date = :date
+    // AND a2.time_slot_id = :startTimeSlotId
+    // AND a2.booking_id IS NULL
+    // AND (
+    // SELECT COUNT(a3.id) FROM available_slot a3
+    // WHERE a3.wash_bay_id = a2.wash_bay_id
+    // AND a3.date = :date
+    // AND a3.booking_id IS NULL
+    // AND a3.time_slot_id >= :startTimeSlotId
+    // AND a3.time_slot_id < :startTimeSlotId + :slotsNeeded
+    // ) >= :slotsNeeded
+    // ORDER BY a2.wash_bay_id ASC
+    // LIMIT 1
+    // )
+    // AND a.booking_id IS NULL
+    // AND a.time_slot_id >= :startTimeSlotId
+    // AND a.time_slot_id < :startTimeSlotId + :slotsNeeded
+    // ORDER BY a.time_slot_id ASC
+    // """, nativeQuery = true)
+
     @Query(value = """
             SELECT a.* FROM available_slot a
             WHERE a.date = :date
@@ -65,6 +91,11 @@ public interface AvailableSlotRepository extends JpaRepository<AvailableSlot, Lo
                 WHERE a2.date = :date
                 AND a2.time_slot_id = :startTimeSlotId
                 AND a2.booking_id IS NULL
+                AND EXISTS (
+                    SELECT 1 FROM wash_bay wb
+                    WHERE wb.id = a2.wash_bay_id
+                    AND wb.status = 'ACTIVE'
+                )
                 AND (
                     SELECT COUNT(a3.id) FROM available_slot a3
                     WHERE a3.wash_bay_id = a2.wash_bay_id
