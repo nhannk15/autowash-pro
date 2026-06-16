@@ -171,6 +171,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex, WebRequest request) {
+        ErrorResponse error = createErrorResponse(HttpStatus.NOT_FOUND, "RESOURCE NOT FOUND", ex.getMessage(), request);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleCommonException(Exception ex, WebRequest request) {
         ErrorResponse error = createErrorResponse(HttpStatus.CONFLICT, ex.getClass().toString(), ex.getMessage(), request);

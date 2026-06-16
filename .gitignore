@@ -12,3 +12,6 @@ frontend/.env
 
 # Nginx deploy config + SSL certs (server only)
 nginx/
+
+#ignore docs/ folder (conversation logs)
+docs/
