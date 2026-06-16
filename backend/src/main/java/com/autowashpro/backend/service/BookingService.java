@@ -354,3 +354,15 @@ public class BookingService {
     }
 
 }
+
+/**
+ * Booking tạo xong
+ * → WashSession tạo sẵn (status = PENDING)
+ * → Staff bắt đầu → WashSession (status = IN_PROGRESS, startTime = now)
+ * → Staff stop → WashSession (status = COMPLETED, endTime = now)
+ * → Tất cả WashSession của Booking COMPLETED
+ * → Tạo Billing (status = PENDING, link Booking)
+ *      originalAmount = SUM(BookingDetail.finalPrice)
+ *      discountAmount = từ Voucher (nếu có)
+ *      finalAmount = originalAmount - discountAmount
+ */

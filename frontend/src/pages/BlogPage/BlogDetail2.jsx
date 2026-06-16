@@ -233,7 +233,7 @@ export default function BlogDetail2() {
                         <p className="blog-detail__cta-desc">
                             Giữ cabin xe luôn sạch sẽ, an toàn cho hệ hô hấp. Đội ngũ Car Wash Centre sẵn sàng phục vụ tận nơi.
                         </p>
-                        <Link to="/dich-vu" className="blog-detail__cta-btn">Xem Dịch Vụ</Link>
+                        <Link to="/service" className="blog-detail__cta-btn">Xem Dịch Vụ</Link>
                     </div>
                 </div>
             </div>

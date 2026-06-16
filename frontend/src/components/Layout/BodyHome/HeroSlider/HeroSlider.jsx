@@ -51,7 +51,7 @@ export default function HeroSlider() {
                 navigate('/signup')
             }
         } else if (btnText === 'Xem Ưu Đãi' || btnText === 'Tìm Hiểu Thêm') {
-            navigate('/dich-vu')
+            navigate('/service')
         }
     }
 

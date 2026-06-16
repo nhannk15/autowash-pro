@@ -269,7 +269,7 @@ export default function BlogDetail3() {
                         <p className="blog-detail__cta-desc">
                             Bảo vệ ngoại thất xế yêu bóng đẹp, an toàn với công nghệ chăm sóc xe tiên tiến nhất từ Car Wash Centre.
                         </p>
-                        <Link to="/dich-vu" className="blog-detail__cta-btn">Xem Dịch Vụ</Link>
+                        <Link to="/service" className="blog-detail__cta-btn">Xem Dịch Vụ</Link>
                     </div>
                 </div>
             </div>

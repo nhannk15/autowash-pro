@@ -18,14 +18,17 @@ import com.autowashpro.backend.repository.WashBayRepository;
 @Component
 public class AvailableSlotScheduler {
 
-    @Autowired
-    private AvailableSlotRepository availableSlotRepository;
+    private final AvailableSlotRepository availableSlotRepository;
+    private final WashBayRepository washBayRepository;
+    private final TimeSlotRepository timeSlotRepository;
 
     @Autowired
-    private WashBayRepository washBayRepository;
-
-    @Autowired
-    private TimeSlotRepository timeSlotRepository;
+    public AvailableSlotScheduler(AvailableSlotRepository availableSlotRepository, WashBayRepository washBayRepository,
+            TimeSlotRepository timeSlotRepository) {
+        this.availableSlotRepository = availableSlotRepository;
+        this.washBayRepository = washBayRepository;
+        this.timeSlotRepository = timeSlotRepository;
+    }
 
     private static final int MAX_WINDOW_DAY = 14;
     private static final int MAX_SLOT_PER_DAY = 14;

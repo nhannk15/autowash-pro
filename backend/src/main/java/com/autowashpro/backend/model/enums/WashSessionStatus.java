@@ -4,5 +4,6 @@ public enum WashSessionStatus {
     PENDING,
     IN_PROGRESS,
     COMPLETED,
+    PAID,
     CANCELLED
 }

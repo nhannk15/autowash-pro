@@ -10,6 +10,8 @@ export function AuthProvider({ children }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        // async function: Bản chất nó luôn luôn trả về một đối tượng Promise.
+        // then lắng nghe trạng thái fulfilled, catch lắng nghe trạng thái rejected cả promise, finally luôn thực hiện
         getMe()
             .then((data) => setUser(data))
             .catch(() => setUser(null))
