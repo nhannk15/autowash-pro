@@ -61,6 +61,8 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
+
+
     /**
      * Bean Validation Exceptions
      * @param ex
@@ -88,6 +90,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CreateBookingException.class)
     public ResponseEntity<ErrorResponse> handleScheduleError(CreateBookingException ex, WebRequest request) {
         ErrorResponse error = createErrorResponse(HttpStatus.BAD_REQUEST, "BOOKING ERROR", ex.getMessage(), request);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(BookingNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleBookingNotFound(BookingNotFoundException ex, WebRequest request) {
+        ErrorResponse error = createErrorResponse(HttpStatus.BAD_REQUEST, ex.getCause().toString(), ex.getMessage(), request);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
@@ -153,8 +161,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException ex, WebRequest request) {
-        ErrorResponse error = createErrorResponse(HttpStatus.CONFLICT, ex.getClass().toString(), ex.getMessage(), request);
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+        ErrorResponse error = createErrorResponse(HttpStatus.NOT_FOUND, "USER NOT FOUND", ex.getMessage(), request);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
     @ExceptionHandler(WrongPasswordException.class)

@@ -22,14 +22,17 @@ import com.autowashpro.backend.config.jwt.OAuth2LoginSuccessHandler;
 @EnableMethodSecurity
 public class SecurityConfiguration {
 
-    @Autowired
     private OAuth2LoginSuccessHandler handler;
-
-    @Autowired
     private JwtFilter jwtFilter;
+    private CorsConfigurationSource corsConfigurationSource;
 
     @Autowired
-    private CorsConfigurationSource corsConfigurationSource;
+    public SecurityConfiguration(OAuth2LoginSuccessHandler handler, JwtFilter jwtFilter,
+            CorsConfigurationSource corsConfigurationSource) {
+        this.handler = handler;
+        this.jwtFilter = jwtFilter;
+        this.corsConfigurationSource = corsConfigurationSource;
+    }
 
     @Bean
     @Order(1)
@@ -51,9 +54,12 @@ public class SecurityConfiguration {
         security.securityMatcher("/api/**", "/auth/**");
         security.authorizeHttpRequests(
                 (authorize) -> authorize
-                        .requestMatchers("/auth/login", "/auth/logout", "/auth/register", "/api/services")
+                        .requestMatchers("/auth/login", "/auth/logout", "/auth/register",
+                                "/auth/forgot-password", "/auth/verify-otp", "/auth/reset-password",
+                                "/api/services")
                         .permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/staff/**").hasRole("STAFF")
                         .anyRequest()
                         .authenticated());
         security.csrf((csrf) -> csrf.disable());

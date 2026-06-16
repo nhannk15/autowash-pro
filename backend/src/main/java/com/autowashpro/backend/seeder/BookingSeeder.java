@@ -10,8 +10,8 @@ import org.springframework.stereotype.Component;
 import com.autowashpro.backend.model.dto.CreateBookingRequest;
 import com.autowashpro.backend.service.BookingService;
 
-@Component
-@Order(15)
+// @Component
+// @Order(15)
 public class BookingSeeder implements Seeder {
 
     private final BookingService bookingService;
@@ -85,7 +85,7 @@ public class BookingSeeder implements Seeder {
                 .vehicleId(6L)
                 .timeSlotId(5L)
                 .bookingDate(tomorrow)
-                .servicePriceIds(List.of(13L))
+                .servicePriceIds(List.of(5L))
                 .notes("Booking của Đặng Nhất Thiên Bảo - SEDAN Kia CERATO")
                 .build();
 
@@ -95,7 +95,7 @@ public class BookingSeeder implements Seeder {
                 .vehicleId(7L)
                 .timeSlotId(5L)
                 .bookingDate(tomorrow)
-                .servicePriceIds(List.of(14L))
+                .servicePriceIds(List.of(6L))
                 .notes("Booking của Hồ Dương Nhật Quang - SUV Mitsubishi XPANDER")
                 .build();
 
@@ -105,7 +105,7 @@ public class BookingSeeder implements Seeder {
                 .vehicleId(8L)
                 .timeSlotId(5L)
                 .bookingDate(tomorrow)
-                .servicePriceIds(List.of(13L))
+                .servicePriceIds(List.of(5L))
                 .notes("Booking của Trần Vương Quân - SEDAN Nissan Altima")
                 .build();
 
@@ -115,7 +115,7 @@ public class BookingSeeder implements Seeder {
                 .vehicleId(9L)
                 .timeSlotId(5L)
                 .bookingDate(tomorrow)
-                .servicePriceIds(List.of(14L))
+                .servicePriceIds(List.of(6L))
                 .notes("Booking của Phan Nguyễn Anh Thư - SUV Suzuki Ertiga")
                 .build();
 
@@ -125,7 +125,7 @@ public class BookingSeeder implements Seeder {
                 .vehicleId(10L)
                 .timeSlotId(5L)
                 .bookingDate(tomorrow)
-                .servicePriceIds(List.of(13L))
+                .servicePriceIds(List.of(5L))
                 .notes("Booking của Phan Ngọc Quyết - SEDAN Tesla Model3")
                 .build();
 
