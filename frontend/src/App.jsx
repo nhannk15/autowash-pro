@@ -44,7 +44,7 @@ function App() {
       <Route path="/" element={
         <MainLayout><Home /></MainLayout>
       } />
-      <Route path="/dich-vu" element={
+      <Route path="/service" element={
         <MainLayout><Service /></MainLayout>
       } />
       <Route path="/blog" element={

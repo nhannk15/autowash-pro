@@ -42,7 +42,7 @@ export default function NavBar() {
 
     const navLinks = [
         { label: 'Trang Chủ', to: '/' },
-        { label: 'Dịch Vụ', to: '/dich-vu' },
+        { label: 'Dịch Vụ', to: '/service' },
         { label: 'Blog', to: '/blog' },
     ]
 
