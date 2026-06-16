@@ -55,16 +55,16 @@ export async function validateVoucher(code, amount) {
     return response.data;
 }
 
-export async function getStaffProfile(staffId) {
-    const response = await axios.get(`${API}/api/staff/${staffId}`, {
+export async function getStaffProfile(id) {
+    const response = await axios.get(`${API}/api/users/${id}`, {
         withCredentials: true,
     });
     return response.data.data;
 }
 
-export async function updateStaffProfile(staffId, phoneNumber, avatarUrl) {
+export async function updateStaffProfile(id, phoneNumber, avatarUrl) {
     const response = await axios.patch(
-        `${API}/api/staff/update/${staffId}`,
+        `${API}/api/users/${id}`,
         { phoneNumber, avatarUrl },
         { withCredentials: true }
     );
