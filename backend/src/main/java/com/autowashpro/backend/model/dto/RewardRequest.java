@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 
 import com.autowashpro.backend.model.enums.RewardType;
 
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -29,6 +30,8 @@ public class RewardRequest {
     @Positive(message = "Point cost must be positive")
     private Long pointCost;
 
+    @Min(value = 1, message = "Discount value must be at least 1 for percentage discount")
+    @Max(value = 100, message = "Discount value must not exceed 100 for percentage discount")
     private BigDecimal discountValue;
 
     @NotNull(message = "Validity days is required")

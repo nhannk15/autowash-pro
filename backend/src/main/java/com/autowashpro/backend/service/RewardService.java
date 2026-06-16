@@ -72,6 +72,9 @@ public class RewardService {
                 throw new IllegalArgumentException("Discount value is required and must be positive for discount rewards");
             }
             if (request.getRewardType() == RewardType.DISCOUNT_PERCENTAGE) {
+                if (request.getDiscountValue().compareTo(BigDecimal.ONE) < 0) {
+                    throw new IllegalArgumentException("Percentage discount must be at least 1");
+                }
                 if (request.getDiscountValue().compareTo(new BigDecimal("100")) > 0) {
                     throw new IllegalArgumentException("Percentage discount cannot exceed 100%");
                 }
