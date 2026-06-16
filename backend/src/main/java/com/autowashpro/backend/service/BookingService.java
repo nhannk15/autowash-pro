@@ -1,6 +1,7 @@
 package com.autowashpro.backend.service;
 
 import java.math.BigDecimal;
+import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -17,6 +18,7 @@ import com.autowashpro.backend.exception.BookingNotFoundException;
 import com.autowashpro.backend.exception.ExceedBookingWindowException;
 import com.autowashpro.backend.exception.SlotInavailabilityException;
 import com.autowashpro.backend.exception.UserNotFoundException;
+import com.autowashpro.backend.exception.WashBayInavailableException;
 import com.autowashpro.backend.mapper.BookingMapper;
 import com.autowashpro.backend.model.dto.BookingDetailResponse;
 import com.autowashpro.backend.model.dto.BookingResponse;
@@ -37,6 +39,7 @@ import com.autowashpro.backend.model.entity.User;
 import com.autowashpro.backend.model.entity.Vehicle;
 import com.autowashpro.backend.model.entity.WashBay;
 import com.autowashpro.backend.model.entity.WashSession;
+import com.autowashpro.backend.model.enums.BayStatus;
 import com.autowashpro.backend.model.enums.BookingStatus;
 import com.autowashpro.backend.model.enums.PromotionDiscountType;
 import com.autowashpro.backend.model.enums.Role;
@@ -131,12 +134,26 @@ public class BookingService {
         Customer customer = customerRepository.findById(createBookingRequest.getCustomerId())
                 .orElseThrow(() -> new UserNotFoundException("Customer not found!"));
         /**
-         * Step 1. Check booking windows day.
+         * Step 1. Check booking day (booking windows, travel to the past).
          */
         MembershipTier customerMembership = customer.getTier();
         int bookingWindowDays = customerMembership.getBookingWindowDays();
         LocalDate now = LocalDate.now();
         LocalDate bookingDay = createBookingRequest.getBookingDate();
+
+        /**
+         * For easy test, we can comment these lines of code.
+         */
+        if (bookingDay.isBefore(now)) {
+            throw new DateTimeException("Bạn không thể đặt lịch của ngày trước đó");
+        } else {
+            TimeSlot startTimeSlot = timeSlotRepository.findById(createBookingRequest.getTimeSlotId())
+                    .orElseThrow(() -> new SlotInavailabilityException("Không tìm thấy slot phù hợp"));
+            if (startTimeSlot.getStartTime().isBefore(LocalTime.now().plusMinutes(15L))) {
+                throw new SlotInavailabilityException("Giờ đặt lịch phải trước thời điểm hiện tại 15 phút");
+            }
+        }
+
         long dayBeetween = ChronoUnit.DAYS.between(now, bookingDay);
         if (bookingWindowDays < dayBeetween) {
             throw new ExceedBookingWindowException("Your tier " +
@@ -144,6 +161,9 @@ public class BookingService {
                     " can't book over " + customerMembership.getBookingWindowDays() +
                     " days");
         }
+        /**
+         * *****************************************************************************************
+         */
 
         /**
          * Step 2. Calculate the sum of all the services and the total slots needed.
@@ -156,7 +176,8 @@ public class BookingService {
         int slotsNeeded = (int) Math.ceil((double) totalDuration / SLOT_DURATION);
 
         /**
-         * Step 3. Get all the succcessive slots start from the selected slot.
+         * Step 3. Get all the succcessive/consecutive slots start from the selected
+         * slot.
          */
         TimeSlot startTimeSlot = timeSlotRepository.findById(createBookingRequest.getTimeSlotId())
                 .orElseThrow(() -> new SlotInavailabilityException("Không tìm thất slot còn trống!"));
@@ -189,9 +210,17 @@ public class BookingService {
         Promotion promotion = applicablePromotions.size() == 0 ? null : applicablePromotions.get(0);
 
         /**
-         * Step 6. Find the first available WashBay to assign.
+         * Step 6. Find the first available WashBay to assign. Check if that Bay is
+         * available.
          */
         WashBay washBay = consecutiveSlots.get(0).getWashBay();
+
+        if (!BayStatus.ACTIVE.equals(washBay.getStatus())) {
+            throw new WashBayInavailableException(
+                    String.format("Khoang rửa '%s' đang %s, không thể thực hiện dịch vụ",
+                            washBay.getName(),
+                            washBay.getStatus()));
+        }
 
         /**
          * Step 7. Create Booking.
@@ -324,8 +353,9 @@ public class BookingService {
         /**
          * Step 12. Send a BookingCode to user's email.
          */
-        emailService.sendBookingSuccessToEmail(customer.getEmail(), savedBooking.getBookingCode(),
-                bookingResponse);
+        // emailService.sendBookingSuccessToEmail(customer.getEmail(),
+        // savedBooking.getBookingCode(),
+        // bookingResponse);
 
         return bookingResponse;
 
@@ -362,7 +392,7 @@ public class BookingService {
  * → Staff stop → WashSession (status = COMPLETED, endTime = now)
  * → Tất cả WashSession của Booking COMPLETED
  * → Tạo Billing (status = PENDING, link Booking)
- *      originalAmount = SUM(BookingDetail.finalPrice)
- *      discountAmount = từ Voucher (nếu có)
- *      finalAmount = originalAmount - discountAmount
+ * originalAmount = SUM(BookingDetail.finalPrice)
+ * discountAmount = từ Voucher (nếu có)
+ * finalAmount = originalAmount - discountAmount
  */

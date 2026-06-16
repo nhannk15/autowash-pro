@@ -35,6 +35,9 @@ public class CustomerSeeder implements Seeder {
             return;
 
         MembershipTier bronze = membershipTierRepository.findByTierName("Bronze").orElseThrow();
+        MembershipTier silver = membershipTierRepository.findByTierName("Silver").orElseThrow();
+        MembershipTier gold = membershipTierRepository.findByTierName("Gold").orElseThrow();
+        MembershipTier platinum = membershipTierRepository.findByTierName("Platinum").orElseThrow();
 
         Customer leThiThuy = new Customer();
         leThiThuy.setEmail("lethuyavhs@gmail.com");
@@ -76,7 +79,7 @@ public class CustomerSeeder implements Seeder {
         tranPhuongTrinh.setRole(Role.CUSTOMER);
         tranPhuongTrinh.setActive(true);
         tranPhuongTrinh.setDateOfBirth(LocalDate.of(2006, 11, 3));
-        tranPhuongTrinh.setTier(bronze);
+        tranPhuongTrinh.setTier(silver);
         tranPhuongTrinh.setCurrentPoints(0L);
         tranPhuongTrinh.setLifetimePoints(0L);
         tranPhuongTrinh.setTierStartDate(LocalDate.now());
@@ -92,7 +95,7 @@ public class CustomerSeeder implements Seeder {
         dangNhatThienBao.setRole(Role.CUSTOMER);
         dangNhatThienBao.setActive(true);
         dangNhatThienBao.setDateOfBirth(LocalDate.of(2006, 10, 2));
-        dangNhatThienBao.setTier(bronze);
+        dangNhatThienBao.setTier(silver);
         dangNhatThienBao.setCurrentPoints(0L);
         dangNhatThienBao.setLifetimePoints(0L);
         dangNhatThienBao.setTierStartDate(LocalDate.now());
@@ -108,7 +111,7 @@ public class CustomerSeeder implements Seeder {
         hoDuongNhatQuang.setRole(Role.CUSTOMER);
         hoDuongNhatQuang.setActive(true);
         hoDuongNhatQuang.setDateOfBirth(LocalDate.of(2006, 10, 2));
-        hoDuongNhatQuang.setTier(bronze);
+        hoDuongNhatQuang.setTier(gold);
         hoDuongNhatQuang.setCurrentPoints(0L);
         hoDuongNhatQuang.setLifetimePoints(0L);
         hoDuongNhatQuang.setTierStartDate(LocalDate.now());
@@ -124,7 +127,7 @@ public class CustomerSeeder implements Seeder {
         tranVuongQuan.setRole(Role.CUSTOMER);
         tranVuongQuan.setActive(true);
         tranVuongQuan.setDateOfBirth(LocalDate.of(2006, 7, 27));
-        tranVuongQuan.setTier(bronze);
+        tranVuongQuan.setTier(gold);
         tranVuongQuan.setCurrentPoints(0L);
         tranVuongQuan.setLifetimePoints(0L);
         tranVuongQuan.setTierStartDate(LocalDate.now());
@@ -140,7 +143,7 @@ public class CustomerSeeder implements Seeder {
         phanNguyenAnhThu.setRole(Role.CUSTOMER);
         phanNguyenAnhThu.setActive(true);
         phanNguyenAnhThu.setDateOfBirth(LocalDate.of(2006, 8, 01));
-        phanNguyenAnhThu.setTier(bronze);
+        phanNguyenAnhThu.setTier(gold);
         phanNguyenAnhThu.setCurrentPoints(0L);
         phanNguyenAnhThu.setLifetimePoints(0L);
         phanNguyenAnhThu.setTierStartDate(LocalDate.now());
@@ -156,7 +159,7 @@ public class CustomerSeeder implements Seeder {
         nguyenHuynhMinhNhat.setRole(Role.CUSTOMER);
         nguyenHuynhMinhNhat.setActive(true);
         nguyenHuynhMinhNhat.setDateOfBirth(LocalDate.of(2006, 5, 24));
-        nguyenHuynhMinhNhat.setTier(bronze);
+        nguyenHuynhMinhNhat.setTier(platinum);
         nguyenHuynhMinhNhat.setCurrentPoints(0L);
         nguyenHuynhMinhNhat.setLifetimePoints(0L);
         nguyenHuynhMinhNhat.setTierStartDate(LocalDate.now());
@@ -172,7 +175,7 @@ public class CustomerSeeder implements Seeder {
         phanNgocQuyet.setRole(Role.CUSTOMER);
         phanNgocQuyet.setActive(true);
         phanNgocQuyet.setDateOfBirth(LocalDate.of(2006, 5, 24));
-        phanNgocQuyet.setTier(bronze);
+        phanNgocQuyet.setTier(platinum);
         phanNgocQuyet.setCurrentPoints(0L);
         phanNgocQuyet.setLifetimePoints(0L);
         phanNgocQuyet.setTierStartDate(LocalDate.now());

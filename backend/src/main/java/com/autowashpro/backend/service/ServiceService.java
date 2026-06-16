@@ -25,26 +25,26 @@ import com.autowashpro.backend.repository.StepRepository;
 @org.springframework.stereotype.Service
 public class ServiceService {
 
-    @Autowired
-    private ServiceRepository serviceRepository;
+    private final ServiceRepository serviceRepository;
+    private final ServicePriceRepository servicePriceRepository;
+    private final StepRepository stepRepository;
+    private final HightlightRepository hightlightRepository;
+    private final ServicePriceMapper servicePriceMapper;
+    private final StepMapper stepMapper;
+    private final HighlightMapper highlightMapper;
 
     @Autowired
-    private ServicePriceRepository servicePriceRepository;
-
-    @Autowired
-    private StepRepository stepRepository;
-
-    @Autowired
-    private HightlightRepository hightlightRepository;
-
-    @Autowired
-    private ServicePriceMapper servicePriceMapper;
-
-    @Autowired
-    private StepMapper stepMapper;
-
-    @Autowired
-    private HighlightMapper highlightMapper;
+    public ServiceService(ServiceRepository serviceRepository, ServicePriceRepository servicePriceRepository,
+            StepRepository stepRepository, HightlightRepository hightlightRepository,
+            ServicePriceMapper servicePriceMapper, StepMapper stepMapper, HighlightMapper highlightMapper) {
+        this.serviceRepository = serviceRepository;
+        this.servicePriceRepository = servicePriceRepository;
+        this.stepRepository = stepRepository;
+        this.hightlightRepository = hightlightRepository;
+        this.servicePriceMapper = servicePriceMapper;
+        this.stepMapper = stepMapper;
+        this.highlightMapper = highlightMapper;
+    }
 
     public List<Service> getAllServices() {
         return serviceRepository.findAll();
@@ -117,12 +117,18 @@ public class ServiceService {
         }
 
         // Update fields if provided
-        if (updated.getServiceName() != null) existing.setServiceName(updated.getServiceName());
-        if (updated.getDescription() != null) existing.setDescription(updated.getDescription());
-        if (updated.getDurationMinutes() > 0) existing.setDurationMinutes(updated.getDurationMinutes());
-        if (updated.getPointMultiplier() != null) existing.setPointMultiplier(updated.getPointMultiplier());
-        if (updated.getCategory() != null) existing.setCategory(updated.getCategory());
-        if (updated.getImage() != null) existing.setImage(updated.getImage());
+        if (updated.getServiceName() != null)
+            existing.setServiceName(updated.getServiceName());
+        if (updated.getDescription() != null)
+            existing.setDescription(updated.getDescription());
+        if (updated.getDurationMinutes() > 0)
+            existing.setDurationMinutes(updated.getDurationMinutes());
+        if (updated.getPointMultiplier() != null)
+            existing.setPointMultiplier(updated.getPointMultiplier());
+        if (updated.getCategory() != null)
+            existing.setCategory(updated.getCategory());
+        if (updated.getImage() != null)
+            existing.setImage(updated.getImage());
 
         return serviceRepository.save(existing);
     }
