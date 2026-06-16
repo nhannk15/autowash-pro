@@ -5,11 +5,11 @@ import {
 } from 'antd';
 import { 
     PlusOutlined, EditOutlined, DeleteOutlined, 
-    SearchOutlined, PercentageOutlined, DollarOutlined 
+    SearchOutlined, PercentageOutlined 
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { 
-    getPromotions, createPromotion, 
+    getPromotions, getServices, createPromotion, 
     updatePromotion, deletePromotion 
 } from '../../../service/adminService';
 import './Promotion.css';
@@ -18,6 +18,7 @@ const { Title, Text } = Typography;
 
 export default function Promotion() {
     const [promotions, setPromotions] = useState([]);
+    const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(false);
     const [searchText, setSearchText] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
@@ -41,27 +42,44 @@ export default function Promotion() {
         }
     };
 
+    // Tải danh sách dịch vụ từ API để chọn
+    const fetchServices = async () => {
+        try {
+            const result = await getServices();
+            setServices(result?.data || []);
+        } catch (error) {
+            console.error("Không thể tải danh sách dịch vụ:", error);
+        }
+    };
+
     useEffect(() => {
         fetchPromotions();
+        fetchServices();
     }, []);
 
     // Mở Form Thêm mới
     const handleAddClick = () => {
         setEditingId(null);
         form.resetFields();
+        form.setFieldsValue({
+            maxUsesPerCustomer: 1 // Gán giá trị mặc định là 1 lượt/khách
+        });
         setIsModalOpen(true);
     };
 
     // Mở Form Cập nhật
     const handleEditClick = (record) => {
+        // Tìm serviceId tương ứng dựa vào serviceName trong danh sách services đã tải
+        const matchedService = services.find(s => s.serviceName === record.serviceName);
+
         setEditingId(record.id);
         form.setFieldsValue({
             promotionName: record.promotionName,
             description: record.description,
-            discountType: record.discountType,
             discountValue: record.discountValue,
             maxUsesTotal: record.maxUsesTotal,
             maxUsesPerCustomer: record.maxUsesPerCustomer,
+            serviceId: matchedService ? matchedService.serviceId : null,
             dateRange: [dayjs(record.startDate), dayjs(record.endDate)]
         });
         setIsModalOpen(true);
@@ -87,11 +105,11 @@ export default function Promotion() {
                 description: values.description,
                 startDate: values.dateRange[0].format('YYYY-MM-DDTHH:mm:ss'),
                 endDate: values.dateRange[1].format('YYYY-MM-DDTHH:mm:ss'),
-                discountType: values.discountType,
+                discountType: 'PERCENTAGE', // Luôn gửi PERCENTAGE
                 discountValue: values.discountValue,
                 maxUsesTotal: values.maxUsesTotal,
                 maxUsesPerCustomer: values.maxUsesPerCustomer,
-                serviceId: null, // Mặc định áp dụng tất cả dịch vụ
+                serviceId: values.serviceId || null, // ID dịch vụ cụ thể hoặc null (tất cả dịch vụ)
                 minTierId: null, // Mặc định áp dụng tất cả hạng
                 usageCount: 0
             };
@@ -132,6 +150,9 @@ export default function Promotion() {
 
     // Lọc danh sách khuyến mãi dựa trên Tìm kiếm & Bộ lọc trạng thái
     const filteredPromotions = promotions.filter(promo => {
+        // Chỉ hiển thị khuyến mãi đang hoạt động (chưa bị xóa mềm)
+        if (!promo.active) return false;
+
         const matchesSearch = promo.promotionName?.toLowerCase().includes(searchText.toLowerCase());
         
         if (statusFilter === 'ALL') return matchesSearch;
@@ -165,26 +186,21 @@ export default function Promotion() {
             )
         },
         {
-            title: 'HÌNH THỨC GIẢM',
-            dataIndex: 'discountType',
-            key: 'discountType',
-            render: (type) => (
-                type === 'PERCENTAGE' 
-                    ? <Tag icon={<PercentageOutlined />} color="cyan">Phần trăm</Tag> 
-                    : <Tag icon={<DollarOutlined />} color="gold">Số tiền cố định</Tag>
+            title: 'MỨC GIẢM (%)',
+            dataIndex: 'discountValue',
+            key: 'discountValue',
+            render: (val) => (
+                <Tag icon={<PercentageOutlined />} color="cyan" style={{ fontWeight: '600' }}>
+                    {val}%
+                </Tag>
             )
         },
         {
-            title: 'GIÁ TRỊ GIẢM',
-            dataIndex: 'discountValue',
-            key: 'discountValue',
-            render: (val, record) => (
-                <Text strong>
-                    {record.discountType === 'PERCENTAGE' 
-                        ? `${val}%` 
-                        : `${Number(val).toLocaleString('vi-VN')} đ`
-                    }
-                </Text>
+            title: 'DỊCH VỤ ÁP DỤNG',
+            dataIndex: 'serviceName',
+            key: 'serviceName',
+            render: (name) => (
+                name ? <Tag color="blue">{name}</Tag> : <Tag color="purple">Tất cả dịch vụ</Tag>
             )
         },
         {
@@ -201,7 +217,10 @@ export default function Promotion() {
             title: 'LƯỢT SỬ DỤNG',
             key: 'usage',
             render: (_, record) => (
-                <Text>{record.usageCount} / {record.maxUsesTotal}</Text>
+                <div style={{ fontSize: '13px' }}>
+                    <div><Text type="secondary">Tổng quát:</Text> {record.usageCount} / {record.maxUsesTotal}</div>
+                    <div><Text type="secondary">Mỗi khách:</Text> Tối đa {record.maxUsesPerCustomer} lần</div>
+                </div>
             )
         },
         {
@@ -314,46 +333,38 @@ export default function Promotion() {
                         <Input.TextArea rows={3} placeholder="Mô tả quyền lợi, dịch vụ áp dụng..." />
                     </Form.Item>
 
-                    {/* Dòng 1: Kiểu giảm giá và Giá trị */}
+                    {/* Dòng 1: Mức giảm (%) và Dịch vụ áp dụng */}
                     <div className="promotion-form-grid">
                         <Form.Item 
-                            name="discountType" 
-                            label="Hình thức giảm giá" 
-                            rules={[{ required: true, message: 'Vui lòng chọn hình thức!' }]}
-                        >
-                            <Select placeholder="Chọn hình thức">
-                                <Select.Option value="PERCENTAGE">Giảm theo Phần trăm (%)</Select.Option>
-                                <Select.Option value="FIXED_AMOUNT">Giảm Số tiền cố định (đ)</Select.Option>
-                            </Select>
-                        </Form.Item>
-
-                        <Form.Item 
                             name="discountValue" 
-                            label="Giá trị giảm" 
-                            rules={[{ required: true, message: 'Vui lòng nhập giá trị giảm!' }]}
+                            label="Mức giảm giá (%)" 
+                            rules={[{ required: true, message: 'Vui lòng nhập mức giảm!' }]}
                         >
                             <InputNumber 
                                 min={0} 
+                                max={100}
+                                addonAfter="%"
                                 className="promotion-form-item-full"
-                                placeholder="Nhập số lượng % hoặc tiền đ"
+                                placeholder="Ví dụ: 10"
                             />
+                        </Form.Item>
+
+                        <Form.Item 
+                            name="serviceId" 
+                            label="Dịch vụ áp dụng"
+                        >
+                            <Select placeholder="Chọn dịch vụ áp dụng" allowClear>
+                                <Select.Option value={null}>Áp dụng cho tất cả dịch vụ</Select.Option>
+                                {services.map(s => (
+                                    <Select.Option key={s.serviceId} value={s.serviceId}>
+                                        {s.serviceName}
+                                    </Select.Option>
+                                ))}
+                            </Select>
                         </Form.Item>
                     </div>
 
-                    {/* Dòng 2: Khoảng thời gian áp dụng */}
-                    <Form.Item 
-                        name="dateRange" 
-                        label="Khoảng Thời Gian Áp Dụng" 
-                        rules={[{ required: true, message: 'Vui lòng chọn thời gian bắt đầu và kết thúc!' }]}
-                    >
-                        <DatePicker.RangePicker 
-                            showTime 
-                            format="YYYY-MM-DD HH:mm:ss" 
-                            className="promotion-form-item-full"
-                        />
-                    </Form.Item>
-
-                    {/* Dòng 3: Giới hạn lượt dùng */}
+                    {/* Dòng 2: Tổng lượt dùng tối đa và Lượt dùng/khách hàng */}
                     <div className="promotion-form-grid">
                         <Form.Item 
                             name="maxUsesTotal" 
@@ -366,11 +377,24 @@ export default function Promotion() {
                         <Form.Item 
                             name="maxUsesPerCustomer" 
                             label="Lượt dùng tối đa mỗi khách hàng"
-                            rules={[{ required: true, message: 'Vui lòng nhập số lượt tối đa cho mỗi khách!' }]}
+                            rules={[{ required: true, message: 'Vui lòng nhập lượt dùng/khách hàng!' }]}
                         >
-                            <InputNumber min={1} className="promotion-form-item-full" placeholder="Ví dụ: 1" />
+                            <InputNumber min={1} className="promotion-form-item-full" placeholder="Mặc định: 1" />
                         </Form.Item>
                     </div>
+
+                    {/* Dòng 3: Khoảng thời gian áp dụng */}
+                    <Form.Item 
+                        name="dateRange" 
+                        label="Khoảng Thời Gian Áp Dụng" 
+                        rules={[{ required: true, message: 'Vui lòng chọn thời gian bắt đầu và kết thúc!' }]}
+                    >
+                        <DatePicker.RangePicker 
+                            showTime 
+                            format="YYYY-MM-DD HH:mm:ss" 
+                            className="promotion-form-item-full"
+                        />
+                    </Form.Item>
                 </Form>
             </Modal>
         </div>
