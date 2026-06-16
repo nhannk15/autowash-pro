@@ -1,46 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import {
-    ProductOutlined,
-    TableOutlined,
-    ScanOutlined,
-    CreditCardOutlined,
-    HistoryOutlined,
-    UserOutlined,
-    LogoutOutlined,
-    MenuFoldOutlined,
-    MenuUnfoldOutlined
-} from '@ant-design/icons';
+import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import { Menu } from 'antd';
 import { useAuth } from '../../../context/AuthContext';
 import './Sidebar.css';
 
-function getItem(label, key, icon, children, className) {
-    return {
-        key,
-        icon,
-        children,
-        label,
-        className,
-    };
-}
-
-const items = [
-    getItem('Dashboard', '/staff/dashboard', <ProductOutlined />),
-    getItem('Hàng chờ', '/staff/queue', <TableOutlined />),
-    getItem('Check-in', '/staff/checkin', <ScanOutlined />),
-    getItem('Thanh toán', '/staff/payment', <CreditCardOutlined />),
-    getItem('Lịch sử', '/staff/history', <HistoryOutlined />),
-    getItem('Hồ sơ', '/staff/profile', <UserOutlined />),
-    getItem('Đăng xuất', 'logout', <LogoutOutlined />, null, 'sidebar__menu-item--logout'),
-];
-
 export default function Sidebar({ menuItems, children }) {
     const [collapsed, setCollapsed] = useState(false);
-
-    // Nếu được truyền menuItems từ ngoài vào thì dùng nó, không thì dùng mặc định (của Staff)
-    const renderItems = menuItems || items;
-
+    const renderItems = menuItems;
     const navigate = useNavigate();
     const location = useLocation();
     const { user, logout } = useAuth();

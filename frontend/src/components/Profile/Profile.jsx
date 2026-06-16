@@ -1,41 +1,40 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Avatar, Typography, Divider, Button, Descriptions, Tag, Row, Col } from "antd";
 import { EditOutlined, IdcardOutlined, CalendarOutlined, TeamOutlined, PhoneOutlined, MailOutlined } from '@ant-design/icons';
-import { useAuth } from '../../../context/AuthContext';
-import { getStaffProfile, updateStaffProfile } from '../../../service/staffService';
+import { useAuth } from '../../context/AuthContext.jsx';
+import { getStaffProfile, updateStaffProfile } from '../../service/staffService.js';
 import './Profile.css';
 
 const { Title, Text } = Typography;
 
 export default function Profile() {
     const { user } = useAuth();
-    const [staffProfile, setStaffProfile] = useState({});
+    const [employeeProfile, setEmployeeProfile] = useState({});
     const [avatarError, setAvatarError] = useState(false);
 
     useEffect(() => {
-        async function fetchStaffProfile() {
+        async function fetchEmployeeProfile() {
             if (!user?.id) return;
             try {
                 const data = await getStaffProfile(user.id);
-                setStaffProfile(data);
+                setEmployeeProfile(data);
                 setAvatarError(false);
             } catch (error) {
-                console.error("Failed to fetch staff profile", error);
+                console.error("Failed to fetch employee profile", error);
             }
         }
-        fetchStaffProfile();
+        fetchEmployeeProfile();
     }, [user?.id]);
 
-    const displayName = staffProfile?.fullName;
-    const role = staffProfile?.role;
-    const phone = staffProfile?.phoneNumber;
-    const email = staffProfile?.email;
-    const avatarUrl = staffProfile?.avatarUrl;
+    const displayName = employeeProfile?.fullName;
+    const role = employeeProfile?.role;
+    const phone = employeeProfile?.phoneNumber;
+    const email = employeeProfile?.email;
+    const avatarUrl = employeeProfile?.avatarUrl;
     const avatarLetter = displayName?.charAt(0).toUpperCase();
-    const staffId = user?.id;
-    const department = staffProfile?.team?.name;
-    const joinDate = staffProfile?.hiredDate;
-    const status = staffProfile?.active ? 'active' : 'inactive';
+    const employeeId = user?.id;
+    const joinDate = employeeProfile?.hiredDate;
+    const status = employeeProfile?.active ? 'active' : 'inactive';
 
     const statusConfig = {
         active: { color: 'success', label: 'Đang làm việc' },
@@ -46,11 +45,11 @@ export default function Profile() {
     const handleEditProfile = async (data) => {
         try {
             const data = await updateStaffProfile(user?.id, data);
-            setStaffProfile(data);
+            setEmployeeProfile(data);
             setAvatarError(false);
             message.success("Cập nhật hồ sơ thành công!");
         } catch (error) {
-            console.error("Failed to update staff profile", error);
+            console.error("Failed to update employee profile", error);
             message.error("Cập nhật hồ sơ thất bại!");
         }
     };
@@ -101,10 +100,7 @@ export default function Profile() {
                             }}
                         >
                             <Descriptions.Item label={<><IdcardOutlined style={{ marginRight: 6 }} />Mã nhân viên</>}>
-                                {staffId}
-                            </Descriptions.Item>
-                            <Descriptions.Item label={<><TeamOutlined style={{ marginRight: 6 }} />Phòng ban</>}>
-                                {department}
+                                {employeeId}
                             </Descriptions.Item>
                             <Descriptions.Item label={<><PhoneOutlined style={{ marginRight: 6 }} />Số điện thoại</>}>
                                 {phone}

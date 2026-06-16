@@ -24,7 +24,13 @@ import Queue from './pages/StaffPage/components/Queue.jsx'
 import Checkin from './pages/StaffPage/components/Checkin.jsx'
 import StaffPayment from './pages/StaffPage/components/Payment.jsx'
 import History from './pages/StaffPage/components/History.jsx'
-import Profile from './pages/StaffPage/components/Profile.jsx'
+import Profile from './components/Profile/Profile.jsx'
+import AdminPage from './pages/AdminPage/AdminPage.jsx'
+import AdminDashboard from './pages/AdminPage/components/AdminDashboard.jsx'
+import Customer from './pages/AdminPage/components/Customer.jsx'
+import ServiceCRUD from './pages/AdminPage/components/Service.jsx'
+import Promotion from './pages/AdminPage/components/Promotion.jsx'
+
 
 // Layout chung: Navbar + nội dung + Footer
 function MainLayout({ children }) {
@@ -106,6 +112,20 @@ function App() {
         <Route path="checkin" element={<Checkin />} />
         <Route path="payment" element={<StaffPayment />} />
         <Route path="history" element={<History />} />
+        <Route path="profile" element={<Profile />} />
+      </Route>
+
+      <Route path="/admin" element={
+        <>
+          <Navbar />
+          <AdminPage />
+        </>
+      }>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="customer" element={<Customer />} />
+        <Route path="service" element={<ServiceCRUD />} />
+        <Route path="promotion" element={<Promotion />} />
         <Route path="profile" element={<Profile />} />
       </Route>
 
