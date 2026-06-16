@@ -4,6 +4,7 @@ import { Spin, Alert, Empty, Card, Button, Modal, Form, Input, Select, message, 
 import { PlusOutlined, CarOutlined, DeleteOutlined, UploadOutlined, EditOutlined } from '@ant-design/icons';
 import './MyCars.css';
 import axios from 'axios';
+import { createVehicle, deleteVehicle, getVehicleByCustomer, getVehicleType, updateVehicle } from '../../../service/CustomerService';
 
 function VehicleImage({ src, alt, fallbackIcon }) {
     const [hasError, setHasError] = useState(false);
@@ -49,7 +50,7 @@ export default function MyCars() {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.get(`/api/vehicles/user`);
+            const result = await getVehicleByCustomer()
             // nếu không có await nó sẽ chạy tiếp code bên dưới và biến respone không chứa dữ liệu thực mà chỉ chứa đối tượng Promise. khi đó các dòng code đọc dữ liệu phía sau sẽ báo lỗi vì dữ liệu chưa kịp tải về
             // Khi bạn gọi await axios.get(...), Axios trả về một đối tượng chứa toàn bộ thông tin của phản hồi HTTP (gọi là Axios Response). Đối tượng response này có các thuộc tính cố định do Axios quy định:
 
@@ -72,7 +73,6 @@ export default function MyCars() {
             //                     "message": "Success", Thông báo đi kèm từ Backend (thường là "Success")
             //                         "data": [...]      Dữ liệu thực tế (chứa mảng danh sách xe)
             //             }
-            const result = response.data
             const vehicleList = result?.data || [];
             // Nếu result có dữ liệu thì lấy result.data, nếu không có thì trả về undefined (không bị crash app). || []: Nếu vế trước là undefined hoặc null thì lập tức lấy mảng rỗng[].
             setVehicles(vehicleList);
@@ -103,9 +103,7 @@ export default function MyCars() {
     const fetchVehicleTypes = async () => {
         setTypesLoading(true)
         try {
-            const response = await axios.get('/api/vehicle-types');
-
-            const result = response.data
+            const result = await getVehicleType()
             setVehicleTypes(result || []);
         } catch (err) {
             setError(err.response?.data.message || err.message || 'không thể tải danh sách các loại xe')
@@ -134,16 +132,18 @@ export default function MyCars() {
                 formData.append("upload_preset", "autowash_vehicle")
 
                 const uploadRes = await axios.post("https://api.cloudinary.com/v1_1/dyws8cvor/image/upload", formData)
+                // ó gọi API tải ảnh lên Cloudinary (https://api.cloudinary.com/v1_1/...). Đây là API bên thứ 3
                 uploadedImageUrl = uploadRes.data.secure_url
             }
-            await axios.post('/api/vehicles', {
+            const payload = {
                 brand: values.brand,
                 model: values.model,
                 licensePlate: values.licensePlate,
                 color: values.color,
                 vehicleTypeId: values.vehicleTypeId,
                 image: uploadedImageUrl
-            });
+            }
+            await createVehicle(payload)
             message.success("Thêm xe mới thành công!");
             setIsModalOpen(false);
             form.resetFields();
@@ -198,11 +198,13 @@ export default function MyCars() {
                 uploadedImageUrl = null;
             }
 
-            await axios.put(`/api/vehicles/${editingVehicle.vehicleId}`, {
+            const payload = {
                 licensePlate: values.licensePlate,
                 color: values.color,
                 image: uploadedImageUrl
-            });
+            }
+
+            await updateVehicle(editingVehicle.vehicleId, payload)
 
             message.success("Cập nhật thông tin xe thành công!");
             setIsEditModalOpen(false);
@@ -219,7 +221,7 @@ export default function MyCars() {
     // Xử lý Xóa xe
     const handleDeleteVehicle = async (vehicleId) => {
         try {
-            await axios.delete(`/api/vehicles/${vehicleId}`);
+            await deleteVehicle(vehicleId)
             message.success("Xóa xe thành công!");
             fetchVehicles(); // Tải lại danh sách xe
         } catch (err) {
@@ -298,10 +300,10 @@ export default function MyCars() {
                                     {/* Nút hành động Sửa & Xóa xe - Chỉ hiện cho xe đang hoạt động */}
                                     {isCarActive && (
                                         <div className="mycar-card__actions">
-                                            <Button 
-                                                type="text" 
-                                                icon={<EditOutlined />} 
-                                                size="small" 
+                                            <Button
+                                                type="text"
+                                                icon={<EditOutlined />}
+                                                size="small"
                                                 onClick={() => handleEditClick(vehicle)}
                                                 style={{ marginRight: '4px', color: '#002b7f' }}
                                             />
