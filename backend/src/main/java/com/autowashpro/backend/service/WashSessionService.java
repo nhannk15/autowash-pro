@@ -17,6 +17,7 @@ import com.autowashpro.backend.model.entity.Customer;
 import com.autowashpro.backend.model.entity.Staff;
 import com.autowashpro.backend.model.entity.Vehicle;
 import com.autowashpro.backend.model.entity.WashSession;
+import com.autowashpro.backend.model.enums.BookingStatus;
 import com.autowashpro.backend.model.enums.WashSessionStatus;
 import com.autowashpro.backend.repository.BookingRepository;
 import com.autowashpro.backend.repository.CustomerRepository;
@@ -46,11 +47,18 @@ public class WashSessionService {
     public List<WashSessionResponse> startWashSession(Long bookingId, String email) {
         Staff staff = staffRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("Không tìm thấy staff"));
-        
+
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy Booking với id: " + bookingId));
+
+        booking.setStatus(BookingStatus.COMPLETED);
+        bookingRepository.save(booking);
+
         List<WashSession> washSessions = repository.findByBookingId(bookingId);
-        for (WashSession washSession: washSessions) {
+        for (WashSession washSession : washSessions) {
             washSession.setStaff(staff);
             washSession.setStatus(WashSessionStatus.IN_PROGRESS);
+            washSession.setStartTime(LocalDateTime.now());
             repository.save(washSession);
         }
 
@@ -61,11 +69,11 @@ public class WashSessionService {
     public List<WashSessionResponse> completeWashSession(Long bookingId, String email) {
         Staff staff = staffRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("Không tìm thấy staff"));
-        
         List<WashSession> washSessions = repository.findByBookingId(bookingId);
-        for (WashSession washSession: washSessions) {
+        for (WashSession washSession : washSessions) {
             washSession.setStaff(staff);
             washSession.setStatus(WashSessionStatus.COMPLETED);
+            washSession.setEndTime(LocalDateTime.now());
             repository.save(washSession);
         }
 
@@ -76,9 +84,9 @@ public class WashSessionService {
     public List<WashSessionResponse> cancleWashSession(Long bookingId, String email) {
         Staff staff = staffRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("Không tìm thấy staff"));
-        
+
         List<WashSession> washSessions = repository.findByBookingId(bookingId);
-        for (WashSession washSession: washSessions) {
+        for (WashSession washSession : washSessions) {
             washSession.setStaff(staff);
             washSession.setStatus(WashSessionStatus.CANCELLED);
             repository.save(washSession);
