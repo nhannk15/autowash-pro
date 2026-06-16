@@ -40,7 +40,8 @@ public class WashBayService {
             WashBayResponse washBayResponse = washBayMapper.toWashBayResponse(washBay);
 
             WashSession washSessions = washBay.getWashSessions().stream()
-                    .filter(session -> session.getStatus().equals(WashSessionStatus.IN_PROGRESS))
+                    .filter(session -> session.getStatus().equals(WashSessionStatus.IN_PROGRESS)
+                            || session.getStatus().equals(WashSessionStatus.COMPLETED))
                     .findFirst()
                     .orElse(null);
             CurrentSessionResponse currentSessionResponse = washSessionMapper.toCurrentSessionResponse(washSessions);
