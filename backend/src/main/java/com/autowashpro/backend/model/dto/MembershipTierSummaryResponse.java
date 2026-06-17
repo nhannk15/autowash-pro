@@ -12,12 +12,21 @@ import lombok.Setter;
 @Getter
 @Setter
 public class MembershipTierSummaryResponse {
-    private Long id;
-    private String tierName;
+    /**
+     * Membership info
+     */
+    private Long membershipTierId;
+    private String currentTierName;
     private int tierLevel;
+    private String nextTierName;
+    private int minPointsForNextTier;
+    private int minPointsToMaintain;
+
+    /**
+     * Tier benefits
+     */
+    private String perksDescription;
     private int bookingWindowDays;
     private int priorityQueueOrder;
     private BigDecimal pointEarnRate;
-    private int minPointsToMaintain;
-    private String perksDescription;
 }

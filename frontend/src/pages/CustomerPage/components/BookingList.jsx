@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { CarOutlined } from '@ant-design/icons';
 import './Booking.css';
-import axios from 'axios';
 import { message } from 'antd';
+import { getAvailableSlot, getPromotion, getService, getVehicleByCustomer, createBooking } from '../../../service/customerService';
 function VehicleImage({ src, alt, fallbackIcon }) {
     const [hasError, setHasError] = useState(false);
 
@@ -63,10 +63,9 @@ export default function BookingList() {
             setLoadingVehicles(true);
             setErrorVehicles(null);
             try {
-                const response = await axios.get(`/api/vehicles/user`);
-                const result = response.data
+                const result = await getVehicleByCustomer()
                 const vehicleList = result?.data || [];
-                
+
                 // Lọc bỏ những xe đã bị xóa mềm/vô hiệu hóa
                 const activeVehicles = vehicleList.filter(v => v.active !== false && v.isActive !== false);
                 setUserVehicles(activeVehicles);
@@ -116,11 +115,8 @@ export default function BookingList() {
     useEffect(() => {
         const fetchPromotions = async () => {
             try {
-                const response = await axios.get('/api/promotions');
-
-                const result = response.data;
+                const result = await getPromotion()
                 setPromotions(result?.data || []);
-
             } catch (err) {
                 console.error("Failed to fetch promotions:", err);
                 message.warning(err.response?.data.message || err.message || "không thể tải danh sách chương trình khuyến mãi")
@@ -194,8 +190,7 @@ export default function BookingList() {
             setLoadingServices(true);
             setErrorServices(null);
             try {
-                const response = await axios.get("/api/services");
-                const result = response.data;
+                const result = await getService()
                 const serviceList = result?.data || [];
                 if (Array.isArray(serviceList)) {
                     // Chuẩn hóa cấu trúc dịch vụ tương tự trang Dịch Vụ chính
@@ -234,9 +229,7 @@ export default function BookingList() {
             setLoadingSlots(true);
             setErrorSlots(null);
             try {
-                const response = await axios.get(`/api/bookings/available-slots?date=${selectedDate}`);
-
-                const result = response.data
+                const result = await getAvailableSlot(selectedDate)
                 const slotList = result?.timeSlotAvailabilityResponses || [];
                 setTimeSlots(slotList);
             } catch (err) {
@@ -365,7 +358,7 @@ export default function BookingList() {
                 notes: contactInfo.notes
             };
 
-            await axios.post("/api/bookings", payload);
+            await createBooking(payload)
 
             setIsSuccess(true);
         } catch (err) {
