@@ -146,14 +146,16 @@ public class BookingService {
          */
         if (bookingDay.isBefore(now)) {
             throw new DateTimeException("Bạn không thể đặt lịch của ngày trước đó");
-        } else {
-            TimeSlot startTimeSlot = timeSlotRepository.findById(createBookingRequest.getTimeSlotId())
-                    .orElseThrow(() -> new SlotInavailabilityException("Không tìm thấy slot phù hợp"));
-            if (startTimeSlot.getStartTime().isBefore(LocalTime.now().plusMinutes(15L))) {
-                throw new SlotInavailabilityException("Giờ đặt lịch phải trước thời điểm hiện tại 15 phút");
+        }
+        TimeSlot startTimeSlot = timeSlotRepository.findById(createBookingRequest.getTimeSlotId())
+                .orElseThrow(() -> new SlotInavailabilityException("Không tìm thấy slot phù hợp"));
+
+        if (bookingDay.equals(now)) {
+            LocalTime minStartTime = LocalTime.now().plusMinutes(15L);
+            if (startTimeSlot.getStartTime().isBefore(minStartTime)) {
+                throw new SlotInavailabilityException("Giờ đặt lịch phải trước thời điểm hiện tại ít nhất 15 phút");
             }
         }
-
         long dayBeetween = ChronoUnit.DAYS.between(now, bookingDay);
         if (bookingWindowDays < dayBeetween) {
             throw new ExceedBookingWindowException("Your tier " +
@@ -179,9 +181,6 @@ public class BookingService {
          * Step 3. Get all the succcessive/consecutive slots start from the selected
          * slot.
          */
-        TimeSlot startTimeSlot = timeSlotRepository.findById(createBookingRequest.getTimeSlotId())
-                .orElseThrow(() -> new SlotInavailabilityException("Không tìm thất slot còn trống!"));
-
         List<AvailableSlot> consecutiveSlots = availableSlotRepository.findConsecutiveSlotsFromDate(
                 bookingDay,
                 startTimeSlot.getId(),

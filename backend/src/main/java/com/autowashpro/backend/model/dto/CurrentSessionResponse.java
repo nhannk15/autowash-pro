@@ -19,6 +19,7 @@ import lombok.Setter;
 public class CurrentSessionResponse {
 
     private Long id;
+    private Long bookingId;
     private WashSessionStatus status;
     private LocalDateTime startTime;
     private WashBayCustomerResponse customer;
