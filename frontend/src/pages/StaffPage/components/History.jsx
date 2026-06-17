@@ -8,7 +8,7 @@ import {
     CaretRightFilled,
     EyeOutlined
 } from "@ant-design/icons";
-import { getAllBookings } from "../../../service/staffService";
+import { getTodayBookings } from "../../../service/staffService";
 import "./History.css";
 
 const { Title } = Typography;
@@ -23,8 +23,7 @@ export default function History() {
     useEffect(() => {
         async function fetchBooking() {
             try {
-                const response = await getAllBookings();
-                const bookings = Array.isArray(response) ? response : (response?.data || []);
+                const bookings = await getTodayBookings();
                 setData(bookings);
             } catch (error) {
                 console.error("Failed to fetch booking", error);
