@@ -48,7 +48,18 @@ export async function confirmBooking(bookingId, staffId, bayId, staffNote) {
 }
 
 export async function getBillByBookingId(bookingId) {
-    const response = await axios.get(`${API}/api/bill/${bookingId}`, {
+    const response = await axios.post(`${API}/api/billings`,
+        [bookingId], {
+        withCredentials: true,
+    });
+    return response.data;
+}
+
+export async function confirmPaymentAPI(bookingId, paymentMethod) {
+    const url = paymentMethod 
+        ? `${API}/api/billings/confirm/${bookingId}?paymentMethod=${paymentMethod}`
+        : `${API}/api/billings/confirm/${bookingId}`;
+    const response = await axios.post(url, {}, {
         withCredentials: true,
     });
     return response.data;

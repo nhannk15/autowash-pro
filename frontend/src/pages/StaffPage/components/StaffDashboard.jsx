@@ -123,6 +123,24 @@ export default function StaffDashboard() {
                 }
                 return bay;
             }));
+
+            // Nếu có paidBookingId thì giả lập chuyển washSession đó thành PAID
+            if (location.state.paidBookingId) {
+                setBookings(prev => prev.map(b => {
+                    if (b.id === location.state.paidBookingId) {
+                        return { 
+                            ...b, 
+                            washSessions: b.washSessions?.map(ws => 
+                                (ws.status === 'COMPLETED' || ws.status === 'COMPLETE') 
+                                ? { ...ws, status: 'PAID' } 
+                                : ws
+                            )
+                        };
+                    }
+                    return b;
+                }));
+            }
+
             message.success('Khoang đã được giải phóng và sẵn sàng phục vụ!');
             window.history.replaceState({}, document.title);
         }
