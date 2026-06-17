@@ -29,5 +29,10 @@ public class BillingController {
     public ResponseEntity<List<BillingResponse>> getAllBillingAccordingToListOfBookingIds(@RequestBody List<Long> bookingIds) {
         return ResponseEntity.status(HttpStatus.OK).body(billingService.getAllBillingAccordingToListOfBookingIds(bookingIds));
     }
+
+    @PostMapping("/api/billings/complete/cash")
+    public ResponseEntity<BillingResponse> completeBillingUsingCashMethod(@RequestBody Long billingId) {
+        return ResponseEntity.status(HttpStatus.OK).body(billingService.completeBillingUsingCashMethod(billingId));
+    }
     
 }
