@@ -63,6 +63,7 @@ public interface WashSessionMapper {
     }
 
     @Mapping(target = "services", source = "booking.bookingDetails", qualifiedByName = "toServiceNames")
+    @Mapping(target = "bookingId", source = "booking.id")
     CurrentSessionResponse toCurrentSessionResponse(WashSession washSession);
 
     @Named("toServiceNames")
