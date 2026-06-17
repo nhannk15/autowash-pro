@@ -65,4 +65,6 @@ public interface BookingMapper {
         }
         return washSessions.getFirst().getBay().getName().toString();
     }
+
+    List<BookingResponse> toBookingResponses(List<Booking> bookings); 
 }
