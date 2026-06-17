@@ -60,4 +60,14 @@ public class BookingController {
         return ResponseEntity.status(HttpStatus.OK).body(bookingService.getTodayBookings());
     }
 
+    @GetMapping("/api/customer/upcoming-bookings")
+    public ResponseEntity<List<BookingResponse>> getCustomerUpcomingBookings(@AuthenticationPrincipal String email) {
+        return ResponseEntity.status(HttpStatus.OK).body(bookingService.getCustomerUpcomingBookings(email));
+    }
+
+    @GetMapping("/api/customer/all-bookings")
+    public ResponseEntity<List<BookingResponse>> getCustomerAllBookings(@AuthenticationPrincipal String email) {
+        return ResponseEntity.status(HttpStatus.OK).body(bookingService.getCustomerAllBookings(email));
+    }
+
 }
