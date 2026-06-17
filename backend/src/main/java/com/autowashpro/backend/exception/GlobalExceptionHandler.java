@@ -131,6 +131,18 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Billing Exceptions
+     * @param ex
+     * @param request
+     * @return
+     */
+    @ExceptionHandler(BillingNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleBilliongNotFoundException(BillingNotFoundException ex, WebRequest request) {
+        ErrorResponse error = createErrorResponse(HttpStatus.BAD_REQUEST, ex.getClass().getSimpleName(), ex.getMessage(), request);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    /**
      * Promotion exceptions
      * @param ex
      * @param request

@@ -1,24 +1,33 @@
 package com.autowashpro.backend.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.autowashpro.backend.mapper.BillingMapper;
+import com.autowashpro.backend.model.dto.BillingResponse;
 import com.autowashpro.backend.service.BillingService;
 
 @RestController
-@RequestMapping("/api/billings")
 public class BillingController {
 
-    private final BillingService service;
+    private final BillingService billingService;
     private final BillingMapper mapper;
 
     @Autowired
-    public BillingController(BillingService service, BillingMapper mapper) {
-        this.service = service;
+    public BillingController(BillingService billingService, BillingMapper mapper) {
+        this.billingService = billingService;
         this.mapper = mapper;
     }
 
+    @GetMapping("/api/billings")
+    public ResponseEntity<List<BillingResponse>> getAllBillingAccordingToListOfBookingIds(@RequestBody List<Long> bookingIds) {
+        return ResponseEntity.status(HttpStatus.OK).body(billingService.getAllBillingAccordingToListOfBookingIds(bookingIds));
+    }
     
 }
