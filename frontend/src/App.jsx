@@ -28,6 +28,8 @@ import Profile from './components/Profile/Profile.jsx'
 import AdminPage from './pages/AdminPage/AdminPage.jsx'
 import AdminDashboard from './pages/AdminPage/components/AdminDashboard.jsx'
 import Customer from './pages/AdminPage/components/Customer.jsx'
+import Membership from './pages/AdminPage/components/Membership.jsx'
+import Voucher from './pages/AdminPage/components/Voucher.jsx'
 import ServiceCRUD from './pages/AdminPage/components/Service.jsx'
 import Promotion from './pages/AdminPage/components/Promotion.jsx'
 
@@ -124,6 +126,8 @@ function App() {
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="customer" element={<Customer />} />
+        <Route path="membership" element={<Membership />} />
+        <Route path="voucher" element={<Voucher />} />
         <Route path="service" element={<ServiceCRUD />} />
         <Route path="promotion" element={<Promotion />} />
         <Route path="profile" element={<Profile />} />
