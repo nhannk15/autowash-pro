@@ -383,6 +383,10 @@ public class BookingService {
         }
     }
 
+    public List<BookingResponse> getTodayBookings() {
+        return bookingMapper.toBookingResponses(bookingRepository.findTodayBookings(LocalDate.now()));
+    }
+
 }
 
 /**

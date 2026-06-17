@@ -9,7 +9,7 @@ import {
     CaretLeftFilled,
     CaretRightFilled
 } from "@ant-design/icons";
-import { getAllBookings } from "../../../service/staffService";
+import { getTodayBookings } from "../../../service/staffService";
 import "./Queue.css";
 
 const { Title } = Typography;
@@ -25,8 +25,7 @@ export default function Queue() {
     useEffect(() => {
         async function fetchBooking() {
             try {
-                const response = await getAllBookings();
-                const bookings = Array.isArray(response) ? response : (response?.data || []);
+                const bookings = await getTodayBookings();
                 setData(bookings);
             } catch (error) {
                 console.error("Failed to fetch booking", error);
@@ -40,8 +39,8 @@ export default function Queue() {
     // === Tính stats tự động từ data ===
     const stats = useMemo(() => {
         const todayCount = data.length;
-        const inProgressCount = data.filter(b => b.status === 'IN_PROGRESS' || b.washSessions?.some(s => s.status === 'IN_PROGRESS')).length;
-        const completedCount = data.filter(b => b.status === 'COMPLETED').length;
+        const inProgressCount = data.filter(b => b.status === 'IN_PROGRESS').length;
+        const completedCount = data.filter(b => b.status === 'PAID').length;
         return { todayCount, inProgressCount, completedCount };
     }, [data]);
 
@@ -63,7 +62,7 @@ export default function Queue() {
                 result = result.filter(b => b.status === 'CONFIRMED');
             } else if (statusFilter === 'processing') {
                 result = result.filter(b =>
-                    b.status === 'IN_PROGRESS' || b.washSessions?.some(s => s.status === 'IN_PROGRESS')
+                    b.status === 'IN_PROGRESS'
                 );
             }
         }
@@ -85,7 +84,7 @@ export default function Queue() {
             case 'CONFIRMED': return { label: 'Đang chờ', color: 'warning' };
             case 'COMPLETED': return { label: 'Hoàn thành', color: 'success' };
             case 'CANCELLED': return { label: 'Đã hủy', color: 'error' };
-            case 'NO_SHOW': return { label: 'Không đến', color: 'default' };
+            case 'PAID': return { label: 'Đã thanh toán', color: 'success' };
             default: return { label: record.status || 'N/A', color: 'default' };
         }
     };
@@ -112,16 +111,21 @@ export default function Queue() {
             title: 'Dịch vụ',
             key: 'service',
             render: (_, record) => {
-                const services = record.bookingDetails?.map(d => d.servicePrice?.service?.name).filter(Boolean);
-                return services?.join(', ') || 'N/A';
+                const services = record.bookingDetails?.map(d => d.serviceName).filter(Boolean);
+                return (services && services.length > 0) ? (
+                    services.map((service, index) => (
+                        <Tag color="blue" key={index} style={{ margin: 0 }}>
+                            {service}
+                        </Tag>
+                    ))
+                ) : 'N/A';
             }
         },
         {
             title: 'Thời gian',
             key: 'time',
             render: (_, record) => {
-                const slot = record.availableSlots?.[0];
-                return slot?.timeSlot?.startTime?.substring(0, 5) || 'N/A';
+                return record?.startTime?.substring(0, 5) || 'N/A';
             }
         },
         {

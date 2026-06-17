@@ -9,7 +9,7 @@ import {
     CalendarOutlined, UserAddOutlined, ArrowRightOutlined, BellOutlined, UserOutlined,
     CreditCardOutlined
 } from '@ant-design/icons';
-import { getAllBays, getAllBookings, completeSession } from '../../../service/staffService';
+import { getAllBays, getUpcomingBookings, completeSession } from '../../../service/staffService';
 import './StaffDashboard.css';
 
 const { Title, Text } = Typography;
@@ -49,7 +49,7 @@ export default function StaffDashboard() {
     useEffect(() => {
         async function fetchBookings() {
             try {
-                const data = await getAllBookings();
+                const data = await getUpcomingBookings();
                 setBookings(data);
             } catch (error) {
                 console.error("Failed to fetch bookings", error);
@@ -69,7 +69,8 @@ export default function StaffDashboard() {
         }).length;
         const todayAppointments = bookings.length;
         // Doanh thu: tính sau khi có billing data, tạm để 0
-        return { activeCars, todayAppointments, completed, revenue: 0 };
+        const revenue = bookings.reduce((total, booking) => total + (booking.finalPrice || 0), 0);
+        return { activeCars, todayAppointments, completed, revenue };
     }, [bays, bookings]);
 
     // === Lịch hẹn sắp tới: filter từ bookings ===
@@ -115,17 +116,13 @@ export default function StaffDashboard() {
     useEffect(() => {
         if (location.state?.paidBayId && !processedRef.current) {
             processedRef.current = true;
-            // Refetch bays sau khi thanh toán
-            async function refetch() {
-                try {
-                    const response = await getAllBays();
-                    const data = Array.isArray(response) ? response : (response?.data || []);
-                    setBays(data);
-                } catch (error) {
-                    console.error("Failed to refetch bays", error);
+            // Xóa session khỏi bay để giải phóng khoang
+            setBays(prev => prev.map(bay => {
+                if (bay.id === location.state.paidBayId) {
+                    return { ...bay, currentSession: null };
                 }
-            }
-            refetch();
+                return bay;
+            }));
             message.success('Khoang đã được giải phóng và sẵn sàng phục vụ!');
             window.history.replaceState({}, document.title);
         }
@@ -180,7 +177,7 @@ export default function StaffDashboard() {
             // Cập nhật lại bays state
             setBays(prev => prev.map(bay => {
                 const session = getCurrentSession(bay);
-                if (session?.id === bookingId) {
+                if (session?.bookingId === bookingId) {
                     return {
                         ...bay,
                         currentSession: {
@@ -203,7 +200,7 @@ export default function StaffDashboard() {
         navigate('/staff/payment', {
             state: {
                 bayId: bay.id,
-                bookingId: session?.id,
+                bookingId: session?.bookingId,
             }
         });
     };
@@ -312,7 +309,7 @@ export default function StaffDashboard() {
                                                                         block
                                                                         size="small"
                                                                         className="bay-card__complete-btn"
-                                                                        onClick={() => handleCompleteService(session.id)}
+                                                                        onClick={() => handleCompleteService(session.bookingId)}
                                                                     >
                                                                         <CheckCircleOutlined /> Hoàn thành dịch vụ
                                                                     </Button>

@@ -71,6 +71,15 @@ public class Billing {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    /**
+     * Banking Transaction
+     */
+    @Column(name = "transaction_id", nullable = true, unique = true)
+    private String transactionId;
+
+    @Column(name = "reference_code", nullable = true, unique = true)
+    private String referenceCode;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

@@ -9,8 +9,15 @@ export async function getAllBays() {
     return response.data;
 }
 
-export async function getAllBookings() {
+export async function getUpcomingBookings() {
     const response = await axios.get(`${API}/api/staff/upcoming-bookings`, {
+        withCredentials: true,
+    });
+    return response.data;
+}
+
+export async function getTodayBookings() {
+    const response = await axios.get(`${API}/api/staff/today-bookings`, {
         withCredentials: true,
     });
     return response.data;
