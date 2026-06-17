@@ -13,6 +13,15 @@ import com.autowashpro.backend.model.entity.Booking;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
+    List<Booking> findByCustomerId(Long id);
+
+    /**
+     * Complex Queries
+     * @param today
+     * @param cutOffTime
+     * @return
+     */
+
     // @Query(value = """
     // SELECT b.* FROM bookings b
     // JOIN available_slot a ON a.booking_id = b.id
@@ -47,9 +56,17 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     Optional<Booking> findByBookingCode(String bookingCode);
 
     @Query("""
-            SELECT booking FROM Booking booking 
-            JOIN booking.availableSlots availableSlot 
-            WHERE availableSlot.slotDate = :today        
+            SELECT booking FROM Booking booking
+            JOIN booking.availableSlots availableSlot
+            WHERE availableSlot.slotDate = :today
             """)
     List<Booking> findTodayBookings(@Param("today") LocalDate today);
+
+    @Query("""
+            SELECT booking FROM Booking booking
+            JOIN booking.availableSlots availableSlot
+            WHERE booking.customer.id = :customerId
+            AND availableSlot.slotDate >= :today
+            """)
+    List<Booking> findCustomerUpcomingBookings(@Param("customerId") Long customerId, @Param("today") LocalDate today);
 }
