@@ -2,11 +2,16 @@ package com.autowashpro.backend.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.autowashpro.backend.exception.BillingNotFoundException;
 import com.autowashpro.backend.exception.BookingNotFoundException;
+import com.autowashpro.backend.mapper.BillingMapper;
+import com.autowashpro.backend.model.dto.BillingResponse;
 import com.autowashpro.backend.model.entity.Billing;
 import com.autowashpro.backend.model.entity.Booking;
 import com.autowashpro.backend.model.entity.BookingDetail;
@@ -21,11 +26,14 @@ public class BillingService {
 
     private final BillingRepository billingRepository;
     private final BookingRepository bookingRepository;
+    private final BillingMapper billingMapper;
 
     @Autowired
-    public BillingService(BillingRepository billingRepository, BookingRepository bookingRepository) {
+    public BillingService(BillingRepository billingRepository, BookingRepository bookingRepository,
+            BillingMapper billingMapper) {
         this.billingRepository = billingRepository;
         this.bookingRepository = bookingRepository;
+        this.billingMapper = billingMapper;
     }
 
     public Billing createPendingBilling(Long bookingId) {
@@ -49,7 +57,7 @@ public class BillingService {
                 .map(BookingDetail::getFinalPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        PaymentMethod paymentMethod = PaymentMethod.BANK_TRANSFER;
+        PaymentMethod paymentMethod = PaymentMethod.CASH;
 
         PaymentStatus paymentStatus = PaymentStatus.PENDING;
 
@@ -69,6 +77,16 @@ public class BillingService {
 
         Billing savedBilling = billingRepository.save(newBilling);
         return savedBilling;
+    }
+
+    public List<BillingResponse> getAllBillingAccordingToListOfBookingIds(List<Long> bookingIds) {
+        List<Billing> billings = new ArrayList<>();
+        for (Long bookingId : bookingIds) {
+            Billing billing = billingRepository.findByBookingId(bookingId).orElseThrow(
+                    () -> new BillingNotFoundException("Không tìm thấy hóa đơn với id lịch đặt là: " + bookingId));
+            billings.add(billing);
+        }
+        return billingMapper.toBillingResponses(billings);
     }
 
 }
