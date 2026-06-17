@@ -55,4 +55,9 @@ public class BookingController {
         return ResponseEntity.status(HttpStatus.OK).body(bookingService.getBookingByBookingCode(email, bookingCode));
     }
 
+    @GetMapping("/api/staff/today-bookings")
+    public ResponseEntity<List<BookingResponse>> getTodayBookings() {
+        return ResponseEntity.status(HttpStatus.OK).body(bookingService.getTodayBookings());
+    }
+
 }

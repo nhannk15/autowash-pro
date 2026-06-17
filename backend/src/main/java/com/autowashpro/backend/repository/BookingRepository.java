@@ -45,4 +45,11 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             @Param("cutOffTime") LocalTime cutOffTime);
 
     Optional<Booking> findByBookingCode(String bookingCode);
+
+    @Query("""
+            SELECT booking FROM Booking booking 
+            JOIN booking.availableSlots availableSlot 
+            WHERE availableSlot.slotDate = :today        
+            """)
+    List<Booking> findTodayBookings(@Param("today") LocalDate today);
 }
