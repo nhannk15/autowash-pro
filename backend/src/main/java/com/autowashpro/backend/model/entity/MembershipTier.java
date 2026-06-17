@@ -10,7 +10,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -25,7 +24,6 @@ import lombok.Setter;
 @Table(name = "membership_tiers")
 public class MembershipTier {
 
-    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -33,7 +31,7 @@ public class MembershipTier {
     @Column(name = "tier_name", nullable = false, unique = true)
     private String tierName;
 
-    @Column(name = "tier_level", nullable = false, unique = true)   
+    @Column(name = "tier_level", nullable = false, unique = true)
     private int tierLevel;
 
     @Column(name = "booking_window_days", nullable = false)
@@ -45,6 +43,9 @@ public class MembershipTier {
     @Column(name = "point_earn_rate", nullable = false, precision = 5, scale = 2)
     private BigDecimal pointEarnRate;
 
+    @Column(name = "min_points_for_next_tier", nullable = false)
+    private int minPointsForNextTier;
+
     @Column(name = "min_points_to_maintain", nullable = false)
     private int minPointsToMaintain;
 
@@ -55,13 +56,7 @@ public class MembershipTier {
     @JsonIgnoreProperties("tier")
     private List<Customer> customers;
 
-    @OneToOne(mappedBy = "tier")
-    private TierRule tierRule;
-
-    @OneToMany(mappedBy = "downgradeTier")
-    private List<TierRule> downgradedRules;
-
     @OneToMany(mappedBy = "membershipTier")
-    @JsonIgnoreProperties({"membershipTier", "service", "staff"})
+    @JsonIgnoreProperties({ "membershipTier", "service", "staff" })
     private List<Promotion> promotions;
 }
