@@ -40,7 +40,10 @@ export default function Queue() {
     const stats = useMemo(() => {
         const todayCount = data.length;
         const inProgressCount = data.filter(b => b.status === 'IN_PROGRESS').length;
-        const completedCount = data.filter(b => b.status === 'PAID').length;
+        // Đếm các lịch hẹn có WashSession đã thanh toán (PAID)
+        const completedCount = data.filter(b =>
+            b.washSessions?.some(ws => ws.status === 'PAID')
+        ).length;
         return { todayCount, inProgressCount, completedCount };
     }, [data]);
 
@@ -74,9 +77,11 @@ export default function Queue() {
     const getStatusTag = (record) => {
         // Kiểm tra washSession trước
         const activeSession = record.washSessions?.find(s => s.status === 'IN_PROGRESS');
+        const paidSession = record.washSessions?.find(s => s.status === 'PAID');
         const completedSession = record.washSessions?.find(s => s.status === 'COMPLETED' || s.status === 'COMPLETE');
 
         if (activeSession) return { label: 'Đang xử lý', color: 'processing' };
+        if (paidSession) return { label: 'Đã thanh toán', color: 'success' };
         if (completedSession) return { label: 'Hoàn thành', color: 'success' };
 
         // Dựa vào booking status

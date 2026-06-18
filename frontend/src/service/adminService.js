@@ -1,5 +1,31 @@
 import axios from "axios";
 
+const API = import.meta.env.VITE_BACKEND_ABSOLUTE_PATH;
+
+// Lấy danh sách tất cả khách hàng
+export async function getCustomers(params) {
+    const response = await axios.get(`${API}/api/admin/customers`, {
+        params,
+        withCredentials: true,
+    });
+    return response.data;
+}
+
+// export async function getPointsTiers() {
+//     const response = await axios.get(`${API}/api/admin/customers/tiers`);
+//     return response.data;
+// }
+
+// export async function updateCustomerTier(data) {
+//     const response = await axios.put(`${API}/api/admin/customers/${data.id}`, { tierId: data.tierId });
+//     return response.data;
+// }
+
+// export async function deleteCustomer(id) {
+//     const response = await axios.delete(`${API}/api/admin/customers/${id}`);
+//     return response.data;
+// }
+
 // Lấy danh sách tất cả khuyến mãi
 export async function getPromotions() {
     const response = await axios.get(`/api/promotions`);

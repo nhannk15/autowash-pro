@@ -80,6 +80,9 @@ public class Billing {
     @Column(name = "reference_code", nullable = true, unique = true)
     private String referenceCode;
 
+    @OneToOne(mappedBy = "billing")
+    private PointTransaction pointTransaction;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

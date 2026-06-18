@@ -31,25 +31,41 @@ export async function completeSession(bookingId) {
     return response.data;
 }
 
-export async function searchBookingByQR(qrCode) {
-    const response = await axios.get(`${API}/api/booking/qr/${qrCode}`, {
+export async function searchBookingByQR(bookingCode) {
+    const response = await axios.get(`${API}/api/bookings/booking-code`, {
+        params: { bookingCode },
         withCredentials: true,
     });
     return response.data;
 }
 
-export async function confirmBooking(bookingId, staffId, bayId, staffNote) {
-    const response = await axios.patch(`${API}/api/booking/confirm/${bookingId}`, {
-        staffId,
-        bayId,
-        staffNote,
+export async function confirmBooking(bookingId) {
+    const response = await axios.post(`${API}/api/staff/wash-sessions/start`, {
+        bookingId,
     }, { withCredentials: true });
     return response.data;
 }
 
 export async function getBillByBookingId(bookingId) {
-    const response = await axios.get(`${API}/api/bill/${bookingId}`, {
+    const response = await axios.post(`${API}/api/billings`,
+        [bookingId], {
         withCredentials: true,
+    });
+    return response.data;
+}
+
+export async function confirmPaymentByCash(bookingId) {
+    const response = await axios.post(`${API}/api/billings/complete/cash`, bookingId, {
+        withCredentials: true,
+        headers: { 'Content-Type': 'application/json' }
+    });
+    return response.data;
+}
+
+export async function confirmPaymentByBank(bookingId) {
+    const response = await axios.post(`${API}/api/billings/complete/bank`, bookingId, {
+        withCredentials: true,
+        headers: { 'Content-Type': 'application/json' }
     });
     return response.data;
 }

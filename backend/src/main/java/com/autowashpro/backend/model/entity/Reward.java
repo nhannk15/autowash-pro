@@ -17,6 +17,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -52,9 +53,9 @@ public class Reward {
     private Integer validityDays;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "service_id")
-    @JsonIgnoreProperties({"servicePrices", "rewards", "promotions", "steps", "highlights"})
-    private Service service;
+    @JoinColumn(name = "service_price_id")
+    @JsonIgnoreProperties({"rewards", "bookingDetails"})
+    private ServicePrice servicePrice;
 
     @Column(name = "description", nullable = true)
     private String description;
@@ -65,8 +66,17 @@ public class Reward {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }

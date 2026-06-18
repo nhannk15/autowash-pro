@@ -386,6 +386,17 @@ public class BookingService {
         return bookingMapper.toBookingResponses(bookingRepository.findTodayBookings(LocalDate.now()));
     }
 
+    public List<BookingResponse> getCustomerUpcomingBookings(String email) {
+        Customer customer = customerRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("Không tìm thấy khách hàng"));
+        LocalDate today = LocalDate.now();
+        return bookingMapper.toBookingResponses(bookingRepository.findCustomerUpcomingBookings(customer.getId(), today));
+    }
+
+    public List<BookingResponse> getCustomerAllBookings(String email) {
+        Customer customer = customerRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("Không tìm thấy khách hàng"));
+        return bookingMapper.toBookingResponses(bookingRepository.findByCustomerId(customer.getId()));
+    }
+
 }
 
 /**

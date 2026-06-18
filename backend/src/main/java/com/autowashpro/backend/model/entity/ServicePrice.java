@@ -30,7 +30,8 @@ import lombok.ToString;
 @Setter
 @ToString
 @Entity
-@Table(name = "service_prices", uniqueConstraints = @UniqueConstraint(columnNames = { "service_id", "vehicle_type_id" }))
+@Table(name = "service_prices", uniqueConstraints = @UniqueConstraint(columnNames = { "service_id",
+        "vehicle_type_id" }))
 public class ServicePrice {
 
     @Id
@@ -44,7 +45,7 @@ public class ServicePrice {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vehicle_type_id", nullable = false)
-    @JsonIgnoreProperties({"vehicles", "servicePrices"})
+    @JsonIgnoreProperties({ "vehicles", "servicePrices" })
     private VehicleType vehicleType;
 
     @Column(name = "price", nullable = false, precision = 10, scale = 2)
@@ -62,6 +63,10 @@ public class ServicePrice {
     @OneToMany(mappedBy = "servicePrice")
     @JsonIgnoreProperties("servicePrice")
     private List<BookingDetail> bookingDetails;
+
+    @OneToMany(mappedBy = "servicePrice")
+    @JsonIgnoreProperties("servicePrice")
+    private List<Reward> rewards;
 
     @PrePersist
     public void onCreate() {
