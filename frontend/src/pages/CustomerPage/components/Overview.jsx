@@ -69,11 +69,35 @@ export default function Overview() {
     const currentTierName = tierData?.membershipTierSummaryResponse?.currentTierName || 'Đồng';
     const nextTierName = tierData?.membershipTierSummaryResponse?.nextTierName || 'Hạng tiếp theo';
 
-    // Phân tích quyền lợi thành viên
-    const perksDescription = tierData?.membershipTierSummaryResponse?.perksDescription || '';
-    const tierBenefits = perksDescription
-        ? perksDescription.split(',').map(item => item.trim()).filter(Boolean)
-        : [];
+    // Phân tích quyền lợi thành viên từ API (Động hoàn toàn, không hardcode)
+    const buildTierBenefits = () => {
+        const list = [];
+        const summary = tierData?.membershipTierSummaryResponse;
+        if (!summary) return list;
+
+        // 1. Phân tách và thêm các đặc quyền từ perksDescription
+        if (summary.perksDescription) {
+            const perks = summary.perksDescription
+                .split(',')
+                .map(item => item.trim())
+                .filter(Boolean);
+            list.push(...perks);
+        }
+
+        // 2. Thêm đặc quyền thời gian đặt lịch trước (bookingWindowDays)
+        if (summary.bookingWindowDays > 0) {
+            list.push(`Bạn có thể đặt lịch trước tối đa ${summary.bookingWindowDays} ngày`);
+        }
+
+        // 3. Thêm quy tắc tích điểm (pointEarnRate)
+        if (summary.pointEarnRate) {
+            list.push(`Quy đổi điểm thưởng: 1 point = ${(summary.pointEarnRate * 1000).toLocaleString('en-US')} VND`);
+        }
+
+        return list;
+    };
+
+    const tierBenefits = buildTierBenefits();
 
     const getTierClass = (tierName) => {
         const name = tierName?.toLowerCase() || '';
@@ -356,16 +380,9 @@ export default function Overview() {
                                         </div>
                                     </div>
                                     <ul className="tier-benefits">
-                                        {tierBenefits.length > 0 ? (
-                                            tierBenefits.map((benefit, index) => (
-                                                <li key={index}>✨ {benefit}</li>
-                                            ))
-                                        ) : (
-                                            <>
-                                                <li>✨ Tích điểm và thăng hạng thành viên.</li>
-                                                <li>✨ Nhận các ưu đãi chăm sóc xe hấp dẫn.</li>
-                                            </>
-                                        )}
+                                        {tierBenefits.map((benefit, index) => (
+                                            <li key={index}>✨ {benefit}</li>
+                                        ))}
                                     </ul>
                                 </>
                             )}
