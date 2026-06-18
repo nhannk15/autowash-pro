@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './Service.css'
 import { useAuth } from '../../context/AuthContext';
-import axios from 'axios';
 // Import các hình ảnh cục bộ từ assets
 import exteriorImg from '../../assets/Service/RuaXeNgoaiThat.jpg';
 import interiorImg from '../../assets/Service/VeSinhNoiThat.jpg';
@@ -11,6 +10,7 @@ import engineImg from '../../assets/Service/VeSinhKhoangMay.png';
 import odorImg from '../../assets/Service/KhuMui.png';
 import baoDuong from '../../assets/Service/baoDuong.jpg';
 import cachNhiet from '../../assets/Service/cachNhiet.jpg';
+import { getService } from '../../service/customerService';
 
 // Bản đồ mapping tên dịch vụ -> hình ảnh cục bộ tương ứng
 const localImages = {
@@ -34,9 +34,7 @@ export default function Service() {
         setLoading(true);
         setError(null);
         try {
-            const response = await axios.get("/api/services");
-
-            const result = response.data
+            const result = await getService()
             const serviceList = result?.data || [];
 
             if (Array.isArray(serviceList)) {

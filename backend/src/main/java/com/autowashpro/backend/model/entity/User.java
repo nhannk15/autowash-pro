@@ -1,5 +1,6 @@
 package com.autowashpro.backend.model.entity;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -47,6 +48,9 @@ public class User {
 
     @Column(name = "full_name", nullable = false, columnDefinition = "NVARCHAR(150)")
     private String fullName;
+
+    @Column(name = "birthdate", nullable = true)
+    private LocalDate birthday;
 
     @Column(name = "phone_number", nullable = true)
     private String phoneNumber;

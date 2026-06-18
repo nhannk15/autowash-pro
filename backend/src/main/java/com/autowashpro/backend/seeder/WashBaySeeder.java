@@ -27,7 +27,7 @@ public class WashBaySeeder implements Seeder {
         washBayRepository.save(build("Bay 2", BayStatus.ACTIVE));
         washBayRepository.save(build("Bay 3", BayStatus.ACTIVE));
         washBayRepository.save(build("Bay 4", BayStatus.MAINTENANCE));
-        washBayRepository.save(build("Bay 5", BayStatus.INACTIVE));
+        washBayRepository.save(build("Bay 5", BayStatus.ACTIVE));
     }
 
     private WashBay build(String name, BayStatus status) {

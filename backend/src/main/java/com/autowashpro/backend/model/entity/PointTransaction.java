@@ -15,13 +15,16 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -39,10 +42,13 @@ public class PointTransaction {
     @JsonIgnoreProperties({"bookings", "vehicles", "washSessions"})
     private Customer customer;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "session_id", nullable = false)
-    @JsonIgnoreProperties({"booking", "customer", "vehicle", "servicePrice", "staff", "bay"})
-    private WashSession washSession;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "billing_id", nullable = true)
+    private Billing billing;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "voucher_id", nullable = true)
+    private Voucher voucher;
 
     @Column(name = "transaction_type", nullable = false)
     @Enumerated(EnumType.STRING)
@@ -57,8 +63,8 @@ public class PointTransaction {
     @Column(name = "description", nullable = true)
     private String description;
 
-    @Column(name = "expiry_date", nullable = false)
-    private LocalDateTime expiryDate;
+    // @Column(name = "expiry_date", nullable = false)
+    // private LocalDateTime expiryDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_staff_id")

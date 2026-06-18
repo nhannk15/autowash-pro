@@ -4,8 +4,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import com.autowashpro.backend.model.dto.CreateBookingRequest;
 import com.autowashpro.backend.service.BookingService;

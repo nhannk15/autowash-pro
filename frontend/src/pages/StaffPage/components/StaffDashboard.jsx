@@ -2,24 +2,23 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Row, Col, Card, Statistic, Button,
-    Timeline, Tag, Typography, Badge, message, Spin
+    Timeline, Tag, Typography, Badge, message, Spin, Divider
 } from 'antd';
 import {
     CarOutlined, DollarCircleOutlined, CheckCircleOutlined, ScanOutlined,
     CalendarOutlined, UserAddOutlined, ArrowRightOutlined, BellOutlined, UserOutlined,
     CreditCardOutlined
 } from '@ant-design/icons';
-import { getAllBays, getAllBookings, completeSession } from '../../../service/staffService';
+import { getAllBays, getUpcomingBookings, completeSession } from '../../../service/staffService';
 import './StaffDashboard.css';
 
 const { Title, Text } = Typography;
 
 // Helper: tìm session hiện tại (IN_PROGRESS hoặc COMPLETED) trên 1 bay
 const getCurrentSession = (bay) => {
-    if (!bay.washSessions?.length) return null;
+    if (!bay.currentSession) return null;
     // Ưu tiên IN_PROGRESS trước
-    return bay.washSessions.find(s => s.status === 'IN_PROGRESS')
-        || bay.washSessions.find(s => s.status === 'COMPLETED' || s.status === 'COMPLETE');
+    return bay.currentSession;
 };
 
 export default function StaffDashboard() {
@@ -35,9 +34,7 @@ export default function StaffDashboard() {
     useEffect(() => {
         async function fetchBays() {
             try {
-                const response = await getAllBays();
-                // Xử lý cả trường hợp ApiResponse wrapper hoặc trả mảng trực tiếp
-                const data = Array.isArray(response) ? response : (response?.data || []);
+                const data = await getAllBays();
                 setBays(data);
             } catch (error) {
                 console.error("Failed to fetch bays", error);
@@ -52,8 +49,7 @@ export default function StaffDashboard() {
     useEffect(() => {
         async function fetchBookings() {
             try {
-                const response = await getAllBookings();
-                const data = Array.isArray(response) ? response : (response?.data || []);
+                const data = await getUpcomingBookings();
                 setBookings(data);
             } catch (error) {
                 console.error("Failed to fetch bookings", error);
@@ -67,13 +63,14 @@ export default function StaffDashboard() {
     // === Tính stats tự động từ data đã fetch ===
     const stats = useMemo(() => {
         const activeCars = bays.filter(bay => getCurrentSession(bay)?.status === 'IN_PROGRESS').length;
-        const completed = bays.filter(bay => {
-            const s = getCurrentSession(bay);
-            return s?.status === 'COMPLETED' || s?.status === 'COMPLETE';
+        const completed = bookings.filter(booking => {
+            const s = getCurrentSession(booking);
+            return s?.status === 'PAID';
         }).length;
         const todayAppointments = bookings.length;
         // Doanh thu: tính sau khi có billing data, tạm để 0
-        return { activeCars, todayAppointments, completed, revenue: 0 };
+        const revenue = bookings.reduce((total, booking) => total + (booking.finalPrice || 0), 0);
+        return { activeCars, todayAppointments, completed, revenue };
     }, [bays, bookings]);
 
     // === Lịch hẹn sắp tới: filter từ bookings ===
@@ -83,25 +80,28 @@ export default function StaffDashboard() {
 
         return bookings
             .filter(b => {
-                // Chỉ lấy booking CONFIRMED
-                if (b.status !== 'CONFIRMED') return false;
-                // Lấy time slot
-                const slot = b.availableSlots?.[0];
-                if (!slot?.timeSlot?.startTime) return false;
+                // Chỉ lấy booking CONFIRMED (nếu API có trả về trường status)
+                if (b.status && b.status !== 'CONFIRMED') return false;
+
+                // Lấy time slot trực tiếp từ booking
+                if (!b.startTime) return false;
+
                 // So sánh startTime với thời gian hiện tại
-                const slotTime = slot.timeSlot.startTime.substring(0, 5); // "HH:mm"
+                const slotTime = b.startTime.substring(0, 5); // "HH:mm"
                 return slotTime > currentTime;
             })
             .sort((a, b) => {
-                const timeA = a.availableSlots?.[0]?.timeSlot?.startTime || '';
-                const timeB = b.availableSlots?.[0]?.timeSlot?.startTime || '';
+                const timeA = a.startTime || '';
+                const timeB = b.startTime || '';
                 return timeA.localeCompare(timeB);
             })
             .slice(0, 5)
             .map(b => ({
                 id: b.id,
-                time: b.availableSlots?.[0]?.timeSlot?.startTime?.substring(0, 5) || '--:--',
-                plate: b.vehicle?.licensePlate || 'N/A',
+                time: b.startTime?.substring(0, 5) || '--:--',
+                customerName: b.customer?.fullName || 'Khách hàng',
+                licensePlate: b.vehicle?.licensePlate || 'N/A',
+                typeName: b.vehicle?.typeName || 'Loại xe',
                 brand: b.vehicle?.brand || '',
             }));
     }, [bookings]);
@@ -116,17 +116,31 @@ export default function StaffDashboard() {
     useEffect(() => {
         if (location.state?.paidBayId && !processedRef.current) {
             processedRef.current = true;
-            // Refetch bays sau khi thanh toán
-            async function refetch() {
-                try {
-                    const response = await getAllBays();
-                    const data = Array.isArray(response) ? response : (response?.data || []);
-                    setBays(data);
-                } catch (error) {
-                    console.error("Failed to refetch bays", error);
+            // Xóa session khỏi bay để giải phóng khoang
+            setBays(prev => prev.map(bay => {
+                if (bay.id === location.state.paidBayId) {
+                    return { ...bay, currentSession: null };
                 }
+                return bay;
+            }));
+
+            // Nếu có paidBookingId thì giả lập chuyển washSession đó thành PAID
+            if (location.state.paidBookingId) {
+                setBookings(prev => prev.map(b => {
+                    if (b.id === location.state.paidBookingId) {
+                        return { 
+                            ...b, 
+                            washSessions: b.washSessions?.map(ws => 
+                                (ws.status === 'COMPLETED' || ws.status === 'COMPLETE') 
+                                ? { ...ws, status: 'PAID' } 
+                                : ws
+                            )
+                        };
+                    }
+                    return b;
+                }));
             }
-            refetch();
+
             message.success('Khoang đã được giải phóng và sẵn sàng phục vụ!');
             window.history.replaceState({}, document.title);
         }
@@ -170,19 +184,24 @@ export default function StaffDashboard() {
     };
 
     // Hoàn thành dịch vụ
-    const handleCompleteService = async (sessionId) => {
+    const handleCompleteService = async (bookingId) => {
         try {
-            await completeSession(sessionId);
+            await completeSession(bookingId);
             message.success('Đã đánh dấu hoàn thành dịch vụ!');
+
+            // Xoá booking này khỏi danh sách "Lịch hẹn sắp tới"
+            setBookings(prev => prev.filter(b => b.id !== bookingId));
+
             // Cập nhật lại bays state
             setBays(prev => prev.map(bay => {
                 const session = getCurrentSession(bay);
-                if (session?.id === sessionId) {
+                if (session?.bookingId === bookingId) {
                     return {
                         ...bay,
-                        washSessions: bay.washSessions.map(s =>
-                            s.id === sessionId ? { ...s, status: 'COMPLETED' } : s
-                        )
+                        currentSession: {
+                            ...bay.currentSession,
+                            status: 'COMPLETED'
+                        }
                     };
                 }
                 return bay;
@@ -199,8 +218,7 @@ export default function StaffDashboard() {
         navigate('/staff/payment', {
             state: {
                 bayId: bay.id,
-                sessionId: session?.id,
-                bookingId: session?.booking?.id,
+                bookingId: session?.bookingId,
             }
         });
     };
@@ -291,9 +309,15 @@ export default function StaffDashboard() {
                                                                 </Text>
                                                             </div>
                                                             <div className="bay-card__service-tag">
-                                                                <Tag color="blue">
-                                                                    {session.servicePrice?.service?.name || 'Dịch vụ'}
-                                                                </Tag>
+                                                                {(session.services && session.services.length > 0) ? (
+                                                                    session.services.map((service, index) => (
+                                                                        <Tag color="blue" key={index} style={{ margin: 0 }}>
+                                                                            {service}
+                                                                        </Tag>
+                                                                    ))
+                                                                ) : (
+                                                                    <Tag color="blue" style={{ margin: 0 }}>Dịch vụ</Tag>
+                                                                )}
                                                             </div>
                                                             {/* Nút hành động */}
                                                             <div className="bay-card__actions">
@@ -303,7 +327,7 @@ export default function StaffDashboard() {
                                                                         block
                                                                         size="small"
                                                                         className="bay-card__complete-btn"
-                                                                        onClick={() => handleCompleteService(session.id)}
+                                                                        onClick={() => handleCompleteService(session.bookingId)}
                                                                     >
                                                                         <CheckCircleOutlined /> Hoàn thành dịch vụ
                                                                     </Button>
@@ -381,10 +405,10 @@ export default function StaffDashboard() {
                                     color: 'blue',
                                     children: (
                                         <div className="timeline-item-content" key={item.id}>
-                                            <Text strong>{item.time}</Text> - <Text>{item.brand}</Text>
+                                            <Text strong>{item.time}</Text> - <Text strong>{item.customerName}</Text> - <Text strong>{item.brand}</Text>
                                             <br />
                                             <Text type="secondary">
-                                                Xe: <Tag color="blue">{item.plate}</Tag>
+                                                {item.typeName}<Divider vertical />{item.licensePlate}
                                             </Text>
                                         </div>
                                     )

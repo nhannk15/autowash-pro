@@ -3,22 +3,29 @@ import axios from "axios";
 const API = import.meta.env.VITE_BACKEND_ABSOLUTE_PATH;
 
 export async function getAllBays() {
-    const response = await axios.get(`${API}/api/bay`, {
+    const response = await axios.get(`${API}/api/staff/wash-bays`, {
         withCredentials: true,
     });
     return response.data;
 }
 
-export async function getAllBookings() {
-    const response = await axios.get(`${API}/api/booking`, {
+export async function getUpcomingBookings() {
+    const response = await axios.get(`${API}/api/staff/upcoming-bookings`, {
         withCredentials: true,
     });
     return response.data;
 }
 
-export async function completeSession(sessionId) {
-    const response = await axios.patch(`${API}/api/wash-sessions/${sessionId}`,
-        null,
+export async function getTodayBookings() {
+    const response = await axios.get(`${API}/api/staff/today-bookings`, {
+        withCredentials: true,
+    });
+    return response.data;
+}
+
+export async function completeSession(bookingId) {
+    const response = await axios.post(`${API}/api/staff/wash-sessions/complete`,
+        { bookingId },
         { withCredentials: true }
     );
     return response.data;
@@ -41,7 +48,18 @@ export async function confirmBooking(bookingId, staffId, bayId, staffNote) {
 }
 
 export async function getBillByBookingId(bookingId) {
-    const response = await axios.get(`${API}/api/bill/${bookingId}`, {
+    const response = await axios.post(`${API}/api/billings`,
+        [bookingId], {
+        withCredentials: true,
+    });
+    return response.data;
+}
+
+export async function confirmPaymentAPI(bookingId, paymentMethod) {
+    const url = paymentMethod 
+        ? `${API}/api/billings/confirm/${bookingId}?paymentMethod=${paymentMethod}`
+        : `${API}/api/billings/confirm/${bookingId}`;
+    const response = await axios.post(url, {}, {
         withCredentials: true,
     });
     return response.data;

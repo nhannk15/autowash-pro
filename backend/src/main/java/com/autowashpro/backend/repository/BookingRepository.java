@@ -13,20 +13,60 @@ import com.autowashpro.backend.model.entity.Booking;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
+    List<Booking> findByCustomerId(Long id);
+
+    /**
+     * Complex Queries
+     * @param today
+     * @param cutOffTime
+     * @return
+     */
+
+    // @Query(value = """
+    // SELECT b.* FROM bookings b
+    // JOIN available_slot a ON a.booking_id = b.id
+    // JOIN time_slot ts ON ts.id = a.time_slot_id
+    // WHERE b.status = 'CONFIRMED'
+    // AND (a.date > :today
+    // OR (a.date = :today
+    // AND ts.start_time >= :cutOffTime))
+    // GROUP BY b.id
+    // ORDER BY MIN(a.date) ASC, MIN(ts.start_time) ASC
+    // """, nativeQuery = true)
     @Query(value = """
             SELECT b.* FROM bookings b
             JOIN available_slot a ON a.booking_id = b.id
             JOIN time_slot ts ON ts.id = a.time_slot_id
+            JOIN customers c ON c.id = b.customer_id
+            JOIN membership_tiers mt ON mt.id = c.tier_id
             WHERE b.status = 'CONFIRMED'
             AND (a.date > :today
                 OR (a.date = :today
                     AND ts.start_time >= :cutOffTime))
-            GROUP BY b.id
-            ORDER BY MIN(a.date) ASC, MIN(ts.start_time) ASC
+            GROUP BY b.id, b.booking_code, b.customer_id, b.vehicle_id, b.status,
+                     b.notes, b.promotion_id, b.created_at, b.updated_at,
+                     b.cancelled_at, b.cancel_reason,
+                     mt.tier_level
+            ORDER BY mt.tier_level DESC, MIN(a.date) ASC, MIN(ts.start_time) ASC
             """, nativeQuery = true)
     List<Booking> getUpcomingBookingsTillNow(
             @Param("today") LocalDate today,
             @Param("cutOffTime") LocalTime cutOffTime);
 
     Optional<Booking> findByBookingCode(String bookingCode);
+
+    @Query("""
+            SELECT booking FROM Booking booking
+            JOIN booking.availableSlots availableSlot
+            WHERE availableSlot.slotDate = :today
+            """)
+    List<Booking> findTodayBookings(@Param("today") LocalDate today);
+
+    @Query("""
+            SELECT booking FROM Booking booking
+            JOIN booking.availableSlots availableSlot
+            WHERE booking.customer.id = :customerId
+            AND availableSlot.slotDate >= :today
+            """)
+    List<Booking> findCustomerUpcomingBookings(@Param("customerId") Long customerId, @Param("today") LocalDate today);
 }
