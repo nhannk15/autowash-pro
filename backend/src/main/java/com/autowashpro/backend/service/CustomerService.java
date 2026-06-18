@@ -188,12 +188,16 @@ public class CustomerService {
             return null;
         }
 
-        MembershipTier nextTier = membershipTierRepository.findByTierLevel(tier.getTierLevel() + 1)
-                .orElseThrow(() -> new RuntimeException("Không thể tìm thấy MembershipTier"));
+        String nextTierName = "Đã đạt mức Rank cao nhất";
+
+        Optional<MembershipTier> nextTier = membershipTierRepository.findByTierLevel(tier.getTierLevel() + 1);
+        if (nextTier.isPresent()) {
+            nextTierName = nextTier.get().getTierName();
+        }
 
         MembershipTierSummaryResponse newMembershipTierSummaryResponse = membershipTierMapper
                 .toMembershipTierSummaryResponse(tier);
-        newMembershipTierSummaryResponse.setNextTierName(nextTier.getTierName());
+        newMembershipTierSummaryResponse.setNextTierName(nextTierName);
         return newMembershipTierSummaryResponse;
     }
 
