@@ -62,11 +62,6 @@ export default function Overview() {
         : '';
     const nearestBookingLicensePlate = nearestBooking?.vehicle?.licensePlate || 'N/A';
 
-    // Tính tổng giá cuối sau khi giảm giá của tất cả dịch vụ đã chọn của lịch đặt gần nhất
-    const totalFinalPrice = nearestBooking?.bookingDetails
-        ? nearestBooking.bookingDetails.reduce((sum, detail) => sum + detail.finalPrice, 0)
-        : 0;
-
     // Điểm tích lũy & hạng thành viên từ API
     const points = tierData?.customerCurrentPoints || 0;
     const nextTierPoints = tierData?.membershipTierSummaryResponse?.minPointsForNextTier || 0;
@@ -87,6 +82,78 @@ export default function Overview() {
         if (name.includes('kim cương') || name.includes('diamond')) return 'diamond';
         return 'bronze';
     };
+
+    // Định nghĩa các cột cho bảng hiển thị tất cả lịch đặt sắp tới trong Modal
+    const upcomingTableColumns = [
+        {
+            title: 'MÃ ĐẶT LỊCH',
+            dataIndex: 'bookingCode',
+            key: 'bookingCode',
+            render: (text) => <Text strong style={{ color: '#002b7f' }}>{text}</Text>,
+        },
+        {
+            title: 'GIỜ HẸN',
+            dataIndex: 'startTime',
+            key: 'startTime',
+            render: (time) => time ? time.substring(0, 5) : '',
+        },
+        {
+            title: 'NGÀY HẸN',
+            dataIndex: 'slotDate',
+            key: 'slotDate',
+            render: (date) => date ? date.split('-').reverse().join('/') : '',
+        },
+        {
+            title: 'DỊCH VỤ',
+            key: 'services',
+            render: (_, record) => (
+                <ul style={{ paddingLeft: '16px', margin: 0, fontSize: '12px' }}>
+                    {record.bookingDetails?.map((detail, index) => (
+                        <li key={index}>
+                            {detail.serviceName} ({detail.finalPrice.toLocaleString()}đ)
+                        </li>
+                    ))}
+                </ul>
+            ),
+        },
+        {
+            title: 'TẠM TÍNH (GIÁ CUỐI)',
+            key: 'totalPrice',
+            render: (_, record) => {
+                const total = record.bookingDetails
+                    ? record.bookingDetails.reduce((sum, d) => sum + d.finalPrice, 0)
+                    : 0;
+                return <Text strong style={{ color: '#52c41a' }}>{total.toLocaleString()} VND</Text>;
+            },
+        },
+        {
+            title: 'HÀNH ĐỘNG',
+            key: 'action',
+            render: (_, record) => (
+                <Button 
+                    danger 
+                    type="primary" 
+                    size="small"
+                    onClick={() => {
+                        Modal.confirm({
+                            title: 'Xác nhận hủy lịch',
+                            content: `Bạn có chắc chắn muốn hủy lịch đặt xe ${record.bookingCode} không?`,
+                            okText: 'Xác nhận hủy',
+                            okType: 'danger',
+                            cancelText: 'Quay lại',
+                            onOk: () => {
+                                // Hủy lịch tượng trưng ở FrontEnd
+                                setUpcomingBookings(prev => prev.filter(b => b.id !== record.id));
+                                message.success(`Hủy lịch đặt xe ${record.bookingCode} thành công (FE Mockup)!`);
+                            }
+                        });
+                    }}
+                >
+                    Hủy lịch
+                </Button>
+            ),
+        },
+    ];
 
     // 3. Mockup Bảng hoạt động gần đây
     const mockActivities = [
@@ -206,16 +273,9 @@ export default function Overview() {
                                     )}
                                     <Button 
                                         type="primary" 
+                                        icon={<ArrowRightOutlined />}
                                         className="action-btn"
                                         onClick={() => setIsModalOpen(true)}
-                                    >
-                                        Xem chi tiết
-                                    </Button>
-                                    <Button 
-                                        type="default" 
-                                        icon={<ArrowRightOutlined />} 
-                                        className="action-btn-outline"
-                                        onClick={() => navigate('/ca-nhan/dat-lich')}
                                     >
                                         Xem tất cả ({upcomingBookings.length})
                                     </Button>
@@ -331,78 +391,23 @@ export default function Overview() {
                 </Card>
             </div>
 
-            {/* Modal xem chi tiết lịch đặt sắp tới */}
+            {/* Modal hiển thị danh sách tất cả các lịch đặt sắp tới */}
             <Modal
-                title={<span style={{ color: '#002b7f', fontWeight: 700, fontSize: '18px' }}>CHI TIẾT LỊCH ĐẶT XE</span>}
+                title={<span style={{ color: '#002b7f', fontWeight: 700, fontSize: '18px' }}>DANH SÁCH LỊCH ĐẶT SẮP TỚI</span>}
                 open={isModalOpen}
                 onCancel={() => setIsModalOpen(false)}
                 footer={null}
-                width={650}
+                width={850}
             >
-                {nearestBooking ? (
-                    <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '16px' }} className="detail-booking-table">
-                        <tbody>
-                            <tr style={{ borderBottom: '1px solid #f0f0f0' }}>
-                                <td style={{ padding: '12px 8px', fontWeight: 600, width: '180px' }}>Mã đặt lịch:</td>
-                                <td style={{ padding: '12px 8px', color: '#002b7f', fontWeight: 'bold' }}>{nearestBooking.bookingCode}</td>
-                            </tr>
-                            <tr style={{ borderBottom: '1px solid #f0f0f0' }}>
-                                <td style={{ padding: '12px 8px', fontWeight: 600 }}>Giờ hẹn:</td>
-                                <td style={{ padding: '12px 8px' }}>{nearestBookingTime}</td>
-                            </tr>
-                            <tr style={{ borderBottom: '1px solid #f0f0f0' }}>
-                                <td style={{ padding: '12px 8px', fontWeight: 600 }}>Ngày hẹn:</td>
-                                <td style={{ padding: '12px 8px' }}>{nearestBookingDate}</td>
-                            </tr>
-                            <tr style={{ borderBottom: '1px solid #f0f0f0' }}>
-                                <td style={{ padding: '12px 8px', fontWeight: 600 }}>Dịch vụ:</td>
-                                <td style={{ padding: '12px 8px' }}>
-                                    <ul style={{ paddingLeft: '16px', margin: 0 }}>
-                                        {nearestBooking.bookingDetails?.map((detail, index) => (
-                                            <li key={index}>
-                                                {detail.serviceName} - <span style={{ color: '#52c41a', fontWeight: '500' }}>{detail.finalPrice.toLocaleString()} VND</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </td>
-                            </tr>
-                            <tr style={{ borderBottom: '1px solid #f0f0f0' }}>
-                                <td style={{ padding: '12px 8px', fontWeight: 600 }}>Tạm tính (giá cuối):</td>
-                                <td style={{ padding: '12px 8px', color: '#52c41a', fontWeight: 'bold', fontSize: '16px' }}>
-                                    {totalFinalPrice.toLocaleString()} VND
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style={{ padding: '16px 8px', fontWeight: 600 }}>Hành động:</td>
-                                <td style={{ padding: '16px 8px' }}>
-                                    <Button 
-                                        danger 
-                                        type="primary"
-                                        onClick={() => {
-                                            Modal.confirm({
-                                                title: 'Xác nhận hủy lịch',
-                                                content: 'Bạn có chắc chắn muốn hủy lịch đặt xe này không?',
-                                                okText: 'Xác nhận hủy',
-                                                okType: 'danger',
-                                                cancelText: 'Quay lại',
-                                                onOk: () => {
-                                                    // Hủy lịch tượng trưng ở FrontEnd
-                                                    setUpcomingBookings(prev => prev.filter(b => b.id !== nearestBooking.id));
-                                                    message.success("Hủy lịch đặt xe thành công (FE Mockup)!");
-                                                    setIsModalOpen(false);
-                                                }
-                                            });
-                                        }}
-                                    >
-                                        Hủy lịch đặt
-                                    </Button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                ) : (
-                    <Empty description="Không có thông tin lịch đặt" />
-                )}
+                <Table 
+                    columns={upcomingTableColumns} 
+                    dataSource={upcomingBookings} 
+                    rowKey="id"
+                    pagination={{ pageSize: 5 }}
+                    className="custom-table"
+                    style={{ marginTop: '16px' }}
+                    locale={{ emptyText: <Empty description="Bạn không có lịch đặt sắp tới" /> }}
+                />
             </Modal>
         </div>
     );
