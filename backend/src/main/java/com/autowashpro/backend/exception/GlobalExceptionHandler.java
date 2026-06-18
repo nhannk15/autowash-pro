@@ -196,5 +196,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
-
+    @ExceptionHandler(VoucherException.class)
+    public ResponseEntity<ErrorResponse> handleVoucherException(VoucherException ex, WebRequest request) {
+        ErrorResponse error = createErrorResponse(HttpStatus.BAD_REQUEST, ex.getClass().getSimpleName(), ex.getMessage(), request);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
 }

@@ -28,5 +28,6 @@ public class BillingResponse {
     private String transactionId;
     private String referenceCode;
     private LocalDateTime createdAt;
+    private Long pointsChange;
 
 }
