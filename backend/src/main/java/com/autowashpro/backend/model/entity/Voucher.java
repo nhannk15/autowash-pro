@@ -17,13 +17,16 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -67,6 +70,9 @@ public class Voucher {
 
     @Column(name = "used_at", nullable = true)
     private LocalDateTime usedAt;
+
+    @OneToOne(mappedBy = "voucher")
+    private PointTransaction pointTransaction;
 
     @PrePersist
     protected void onCreate() {
