@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import { Row, Col, Card, Table, Tag, Progress, Button, Empty, Space, Typography, Badge } from 'antd';
+import { useState, useEffect } from 'react';
+import { Row, Col, Card, Table, Tag, Progress, Button, Empty, Space, Typography, Badge, Spin, Modal, message } from 'antd';
 import { CalendarOutlined, TrophyOutlined, CrownOutlined, ArrowRightOutlined, GiftOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
+import { getMembershipTier, getUpcomingBooking } from '../../../service/customerService';
 import './Overview.css';
 
 const { Title, Text } = Typography;
@@ -11,43 +12,81 @@ export default function Overview() {
     const { user } = useAuth();
     const navigate = useNavigate();
 
-    // 1. Mockup Danh sách Lịch đặt sắp tới (Có thể có nhiều lịch đặt)
-    const [upcomingBookings] = useState([
-        {
-            bookingId: 101,
-            serviceName: "Rửa xe ngoại thất cao cấp",
-            bookingDate: "2026-06-20",
-            startTime: "09:00",
-            licensePlate: "30F-123.45",
-            status: "CONFIRMED"
-        },
-        {
-            bookingId: 102,
-            serviceName: "Vệ sinh khoang máy chuyên sâu",
-            bookingDate: "2026-06-25",
-            startTime: "14:00",
-            licensePlate: "30F-123.45",
-            status: "CONFIRMED"
-        },
-        {
-            bookingId: 103,
-            serviceName: "Khử mùi và diệt khuẩn cabin",
-            bookingDate: "2026-07-02",
-            startTime: "10:30",
-            licensePlate: "30F-123.45",
-            status: "CONFIRMED"
+    // State cho dữ liệu từ API
+    const [upcomingBookings, setUpcomingBookings] = useState([]);
+    const [tierData, setTierData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    useEffect(() => {
+        let isMounted = true;
+        async function fetchDashboardData() {
+            try {
+                setLoading(true);
+                const [bookings, tier] = await Promise.all([
+                    getUpcomingBooking(),
+                    getMembershipTier()
+                ]);
+                if (isMounted) {
+                    setUpcomingBookings(bookings || []);
+                    setTierData(tier);
+                }
+            } catch (err) {
+                console.error("Lỗi khi tải thông tin dashboard:", err);
+            } finally {
+                if (isMounted) {
+                    setLoading(false);
+                }
+            }
         }
-    ]);
+        fetchDashboardData();
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     // Lịch đặt gần nhất (sắp diễn ra đầu tiên)
     const nearestBooking = upcomingBookings.length > 0 ? upcomingBookings[0] : null;
     // Số lượng lịch đặt khác
     const otherBookingsCount = upcomingBookings.length > 1 ? upcomingBookings.length - 1 : 0;
 
-    // 2. Mockup điểm tích lũy & hạng thành viên
-    const points = 450;
-    const nextTierPoints = 500;
-    const percentToNextTier = Math.min(Math.round((points / nextTierPoints) * 100), 100);
+    // Chi tiết lịch đặt gần nhất
+    const nearestBookingServiceName = nearestBooking?.bookingDetails
+        ? nearestBooking.bookingDetails.map(d => d.serviceName).join(', ')
+        : 'Chưa chọn dịch vụ';
+    const nearestBookingDate = nearestBooking?.slotDate
+        ? nearestBooking.slotDate.split('-').reverse().join('/')
+        : '';
+    const nearestBookingTime = nearestBooking?.startTime
+        ? nearestBooking.startTime.substring(0, 5)
+        : '';
+    const nearestBookingLicensePlate = nearestBooking?.vehicle?.licensePlate || 'N/A';
+
+    // Tính tổng giá cuối sau khi giảm giá của tất cả dịch vụ đã chọn của lịch đặt gần nhất
+    const totalFinalPrice = nearestBooking?.bookingDetails
+        ? nearestBooking.bookingDetails.reduce((sum, detail) => sum + detail.finalPrice, 0)
+        : 0;
+
+    // Điểm tích lũy & hạng thành viên từ API
+    const points = tierData?.customerCurrentPoints || 0;
+    const nextTierPoints = tierData?.membershipTierSummaryResponse?.minPointsForNextTier || 0;
+    const percentToNextTier = nextTierPoints > 0 ? Math.min(Math.round((points / nextTierPoints) * 100), 100) : 100;
+    const currentTierName = tierData?.membershipTierSummaryResponse?.currentTierName || 'Đồng';
+    const nextTierName = tierData?.membershipTierSummaryResponse?.nextTierName || 'Hạng tiếp theo';
+
+    // Phân tích quyền lợi thành viên
+    const perksDescription = tierData?.membershipTierSummaryResponse?.perksDescription || '';
+    const tierBenefits = perksDescription
+        ? perksDescription.split(',').map(item => item.trim()).filter(Boolean)
+        : [];
+
+    const getTierClass = (tierName) => {
+        const name = tierName?.toLowerCase() || '';
+        if (name.includes('bạc') || name.includes('silver')) return 'silver';
+        if (name.includes('vàng') || name.includes('gold')) return 'gold';
+        if (name.includes('kim cương') || name.includes('diamond')) return 'diamond';
+        return 'bronze';
+    };
 
     // 3. Mockup Bảng hoạt động gần đây
     const mockActivities = [
@@ -147,14 +186,18 @@ export default function Overview() {
                             <Text className="card-title">LỊCH ĐẶT SẮP TỚI</Text>
                         </Space>
                         <div className="card-body">
-                            {nearestBooking ? (
+                            {loading ? (
+                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100px' }}>
+                                    <Spin size="small" />
+                                </div>
+                            ) : nearestBooking ? (
                                 <div className="booking-info">
-                                    <div className="booking-service">{nearestBooking.serviceName}</div>
+                                    <div className="booking-service">{nearestBookingServiceName}</div>
                                     <div className="booking-detail">
-                                        📅 {nearestBooking.bookingDate} | 🕒 {nearestBooking.startTime}
+                                        📅 {nearestBookingDate} | 🕒 {nearestBookingTime}
                                     </div>
                                     <div className="booking-car">
-                                        🚗 Biển số: <strong>{nearestBooking.licensePlate}</strong>
+                                        🚗 Biển số: <strong>{nearestBookingLicensePlate}</strong>
                                     </div>
                                     {otherBookingsCount > 0 && (
                                         <div className="other-bookings-alert">
@@ -163,8 +206,15 @@ export default function Overview() {
                                     )}
                                     <Button 
                                         type="primary" 
-                                        icon={<ArrowRightOutlined />} 
                                         className="action-btn"
+                                        onClick={() => setIsModalOpen(true)}
+                                    >
+                                        Xem chi tiết
+                                    </Button>
+                                    <Button 
+                                        type="default" 
+                                        icon={<ArrowRightOutlined />} 
+                                        className="action-btn-outline"
                                         onClick={() => navigate('/ca-nhan/dat-lich')}
                                     >
                                         Xem tất cả ({upcomingBookings.length})
@@ -193,23 +243,35 @@ export default function Overview() {
                             <Text className="card-title">ĐIỂM TÍCH LŨY</Text>
                         </Space>
                         <div className="card-body">
-                            <div className="points-display">
-                                <span className="points-number">{points}</span>
-                                <span className="points-unit">điểm</span>
-                            </div>
-                            <div className="progress-section">
-                                <div className="progress-text">
-                                    <span>Tiến trình lên Hạng Vàng</span>
-                                    <span>{points}/{nextTierPoints}</span>
+                            {loading ? (
+                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100px' }}>
+                                    <Spin size="small" />
                                 </div>
-                                <Progress 
-                                    percent={percentToNextTier} 
-                                    strokeColor="#faad14"
-                                    trailColor="#f0f0f0"
-                                    showInfo={false}
-                                />
-                                <div className="progress-tip">Còn {nextTierPoints - points} điểm để thăng hạng</div>
-                            </div>
+                            ) : (
+                                <>
+                                    <div className="points-display">
+                                        <span className="points-number">{points}</span>
+                                        <span className="points-unit">điểm</span>
+                                    </div>
+                                    <div className="progress-section">
+                                        <div className="progress-text">
+                                            <span>Tiến trình lên {nextTierName}</span>
+                                            <span>{points}/{nextTierPoints}</span>
+                                        </div>
+                                        <Progress 
+                                            percent={percentToNextTier} 
+                                            strokeColor="#faad14"
+                                            trailColor="#f0f0f0"
+                                            showInfo={false}
+                                        />
+                                        <div className="progress-tip">
+                                            {nextTierPoints > points 
+                                                ? `Còn ${nextTierPoints - points} điểm để thăng hạng`
+                                                : 'Bạn đã đạt mức điểm tối đa'}
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </Card>
                 </Col>
@@ -222,14 +284,31 @@ export default function Overview() {
                             <Text className="card-title">HẠNG THÀNH VIÊN</Text>
                         </Space>
                         <div className="card-body">
-                            <div className="tier-display">
-                                <div className="tier-badge silver">BẠC</div>
-                            </div>
-                            <ul className="tier-benefits">
-                                <li>✨ Giảm 5% cho tất cả các hóa đơn dịch vụ.</li>
-                                <li>✨ Nhận thông báo sớm về các chương trình ưu đãi.</li>
-                                <li>✨ Tích điểm gấp 1.2 lần vào dịp sinh nhật.</li>
-                            </ul>
+                            {loading ? (
+                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100px' }}>
+                                    <Spin size="small" />
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="tier-display">
+                                        <div className={`tier-badge ${getTierClass(currentTierName)}`}>
+                                            {currentTierName.toUpperCase()}
+                                        </div>
+                                    </div>
+                                    <ul className="tier-benefits">
+                                        {tierBenefits.length > 0 ? (
+                                            tierBenefits.map((benefit, index) => (
+                                                <li key={index}>✨ {benefit}</li>
+                                            ))
+                                        ) : (
+                                            <>
+                                                <li>✨ Tích điểm và thăng hạng thành viên.</li>
+                                                <li>✨ Nhận các ưu đãi chăm sóc xe hấp dẫn.</li>
+                                            </>
+                                        )}
+                                    </ul>
+                                </>
+                            )}
                         </div>
                     </Card>
                 </Col>
@@ -251,6 +330,80 @@ export default function Overview() {
                     />
                 </Card>
             </div>
+
+            {/* Modal xem chi tiết lịch đặt sắp tới */}
+            <Modal
+                title={<span style={{ color: '#002b7f', fontWeight: 700, fontSize: '18px' }}>CHI TIẾT LỊCH ĐẶT XE</span>}
+                open={isModalOpen}
+                onCancel={() => setIsModalOpen(false)}
+                footer={null}
+                width={650}
+            >
+                {nearestBooking ? (
+                    <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '16px' }} className="detail-booking-table">
+                        <tbody>
+                            <tr style={{ borderBottom: '1px solid #f0f0f0' }}>
+                                <td style={{ padding: '12px 8px', fontWeight: 600, width: '180px' }}>Mã đặt lịch:</td>
+                                <td style={{ padding: '12px 8px', color: '#002b7f', fontWeight: 'bold' }}>{nearestBooking.bookingCode}</td>
+                            </tr>
+                            <tr style={{ borderBottom: '1px solid #f0f0f0' }}>
+                                <td style={{ padding: '12px 8px', fontWeight: 600 }}>Giờ hẹn:</td>
+                                <td style={{ padding: '12px 8px' }}>{nearestBookingTime}</td>
+                            </tr>
+                            <tr style={{ borderBottom: '1px solid #f0f0f0' }}>
+                                <td style={{ padding: '12px 8px', fontWeight: 600 }}>Ngày hẹn:</td>
+                                <td style={{ padding: '12px 8px' }}>{nearestBookingDate}</td>
+                            </tr>
+                            <tr style={{ borderBottom: '1px solid #f0f0f0' }}>
+                                <td style={{ padding: '12px 8px', fontWeight: 600 }}>Dịch vụ:</td>
+                                <td style={{ padding: '12px 8px' }}>
+                                    <ul style={{ paddingLeft: '16px', margin: 0 }}>
+                                        {nearestBooking.bookingDetails?.map((detail, index) => (
+                                            <li key={index}>
+                                                {detail.serviceName} - <span style={{ color: '#52c41a', fontWeight: '500' }}>{detail.finalPrice.toLocaleString()} VND</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr style={{ borderBottom: '1px solid #f0f0f0' }}>
+                                <td style={{ padding: '12px 8px', fontWeight: 600 }}>Tạm tính (giá cuối):</td>
+                                <td style={{ padding: '12px 8px', color: '#52c41a', fontWeight: 'bold', fontSize: '16px' }}>
+                                    {totalFinalPrice.toLocaleString()} VND
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style={{ padding: '16px 8px', fontWeight: 600 }}>Hành động:</td>
+                                <td style={{ padding: '16px 8px' }}>
+                                    <Button 
+                                        danger 
+                                        type="primary"
+                                        onClick={() => {
+                                            Modal.confirm({
+                                                title: 'Xác nhận hủy lịch',
+                                                content: 'Bạn có chắc chắn muốn hủy lịch đặt xe này không?',
+                                                okText: 'Xác nhận hủy',
+                                                okType: 'danger',
+                                                cancelText: 'Quay lại',
+                                                onOk: () => {
+                                                    // Hủy lịch tượng trưng ở FrontEnd
+                                                    setUpcomingBookings(prev => prev.filter(b => b.id !== nearestBooking.id));
+                                                    message.success("Hủy lịch đặt xe thành công (FE Mockup)!");
+                                                    setIsModalOpen(false);
+                                                }
+                                            });
+                                        }}
+                                    >
+                                        Hủy lịch đặt
+                                    </Button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                ) : (
+                    <Empty description="Không có thông tin lịch đặt" />
+                )}
+            </Modal>
         </div>
     );
 }

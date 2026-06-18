@@ -57,3 +57,12 @@ export async function updateVehicle(id, payload) {
 export async function deleteVehicle(id) {
     await axios.delete(`/api/vehicles/${id}`);
 }
+
+export async function getMembershipTier() {
+    const response = await axios.get('/api/membership-tier')
+    return response.data
+}
+export async function getUpcomingBooking() {
+    const response = await axios.get('/api/customer/upcoming-bookings')
+    return response.data
+}
