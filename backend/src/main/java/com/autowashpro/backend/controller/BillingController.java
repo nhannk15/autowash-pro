@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.autowashpro.backend.mapper.BillingMapper;
+import com.autowashpro.backend.model.dto.ApplyVoucherToBillingRequest;
 import com.autowashpro.backend.model.dto.BillingResponse;
+import com.autowashpro.backend.model.dto.VoucherResponse;
 import com.autowashpro.backend.service.BillingService;
 
 @RestController
@@ -33,6 +35,11 @@ public class BillingController {
     @PostMapping("/api/billings/complete/cash")
     public ResponseEntity<BillingResponse> completeBillingUsingCashMethod(@RequestBody Long billingId) {
         return ResponseEntity.status(HttpStatus.OK).body(billingService.completeBillingUsingCashMethod(billingId));
+    }
+
+    @PostMapping("/api/billings/apply-voucher")
+    public ResponseEntity<VoucherResponse> applyVoucherForBilling(@RequestBody ApplyVoucherToBillingRequest request) {
+        return ResponseEntity.status(HttpStatus.OK).body(billingService.applyVoucherForBilling(request));
     }
     
 }
