@@ -44,7 +44,7 @@ export default function Checkin() {
             // Xử lý ApiResponse wrapper
             const data = Array.isArray(response) ? response
                 : Array.isArray(response?.data) ? response.data
-                : response ? [response] : [];
+                    : response ? [response] : [];
             setSearchResults(data);
 
             if (data.length === 0) {
@@ -64,9 +64,9 @@ export default function Checkin() {
 
     const handleConfirm = async () => {
         try {
-            const staffId = user?.id || null;
-            const bayId = selectedCustomer.availableSlots?.[0]?.washBay?.id || null;
-            await confirmBooking(selectedCustomer.id, staffId, bayId, staffNote);
+            // staffId và bayId để backend tự lấy từ JWT và bookingId
+            // Chỉ truyền bookingId và staffNote
+            await confirmBooking(selectedCustomer.id, staffNote);
             message.success('Đã xác nhận check-in! Bắt đầu dịch vụ.');
             navigate('/staff/dashboard');
         } catch (error) {
@@ -79,44 +79,37 @@ export default function Checkin() {
     const getCustomerName = (record) => record.customer?.fullName || 'N/A';
     const getCustomerPhone = (record) => record.customer?.phoneNumber || 'N/A';
     const getCustomerEmail = (record) => record.customer?.email || '';
+
+    // FIX: vehicle response dùng trực tiếp các field flat, không có nested vehicleType
     const getLicensePlate = (record) => record.vehicle?.licensePlate || 'N/A';
     const getVehicleModel = (record) => {
         const v = record.vehicle;
         return `${v?.brand || ''} ${v?.model || ''}`.trim() || 'N/A';
     };
-    const getVehicleType = (record) => record.vehicle?.vehicleType?.name || '';
-    const getBayName = (record) => record.availableSlots?.[0]?.washBay?.name || 'Chưa phân khoang';
+    const getVehicleType = (record) => record.vehicle?.typeName || '';
 
-    // Lấy danh sách dịch vụ từ bookingDetails
+    // FIX: washBay là string trực tiếp, không phải nested object
+    const getBayName = (record) => record.washBay || 'Chưa phân khoang';
+
+    // FIX: bookingDetails dùng field flat: serviceName, priceAtBooking
     const getServices = (record) => {
         return (record.bookingDetails || []).map((d, idx) => ({
-            id: d.id || idx,
-            name: d.servicePrice?.service?.name || 'Dịch vụ',
-            price: Number(d.priceAtBooking || d.servicePrice?.price || 0),
+            id: d.servicePriceId || idx,
+            name: d.serviceName || 'Dịch vụ',
+            price: Number(d.priceAtBooking || 0),
         }));
     };
 
-    // Lấy danh sách khuyến mãi từ bookingDetails
+    // FIX: promotion là flat field promotionName + discountAmount, không có nested object
+    // Không còn nguy cơ trùng promotion
     const getPromotions = (record) => {
-        const promos = [];
-        (record.bookingDetails || []).forEach(d => {
-            if (d.promotion) {
-                promos.push({
-                    id: d.promotion.id,
-                    name: d.promotion.name || 'Khuyến mãi',
-                    discount: Number(d.discountAmount || 0),
-                });
-            }
-        });
-        // Booking-level promotion
-        if (record.promotion) {
-            promos.push({
-                id: record.promotion.id,
-                name: record.promotion.name || 'Khuyến mãi',
-                discount: 0, // discount đã tính trong bookingDetails
-            });
-        }
-        return promos;
+        return (record.bookingDetails || [])
+            .filter(d => d.promotionName)
+            .map((d, idx) => ({
+                id: idx,
+                name: d.promotionName,
+                discount: Number(d.discountAmount || 0),
+            }));
     };
 
     const columns = [
