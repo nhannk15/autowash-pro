@@ -13,7 +13,7 @@ jobs:
 
       - name: Deploy via SSH
         id: deploy
-        continue-on-error: true
+        continue-on-error: false
         uses: appleboy/ssh-action@v1
         with:
           host: 3.36.70.151
@@ -46,4 +46,4 @@ jobs:
             Author: ${{ github.event.head_commit.author.name }}
             Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
-            Kiểm tra GitHub Actions để xem log chi tiết nhé.
+            Check GitHub Actions to see detailed logs.
