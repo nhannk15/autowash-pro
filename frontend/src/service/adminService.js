@@ -1,5 +1,13 @@
 import axios from "axios";
 
+const API = import.meta.env.VITE_BACKEND_ABSOLUTE_PATH;
+
+// Lấy danh sách tất cả khách hàng
+export async function getCustomers() {
+    const response = await axios.get(`${API}/api/customers`);
+    return response.data;
+}
+
 // Lấy danh sách tất cả khuyến mãi
 export async function getPromotions() {
     const response = await axios.get(`/api/promotions`);
