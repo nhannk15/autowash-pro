@@ -133,6 +133,23 @@
     background-color: #001f5c !important;
 }
 
+.action-btn-outline {
+    background-color: transparent !important;
+    border: 1px solid #002b7f !important;
+    border-radius: 6px !important;
+    width: 100%;
+    margin-top: 8px;
+    height: 38px !important;
+    font-weight: 600 !important;
+    color: #002b7f !important;
+}
+
+.action-btn-outline:hover {
+    background-color: #f0f5ff !important;
+    color: #001f5c !important;
+    border-color: #001f5c !important;
+}
+
 .compact-empty {
     margin: 0 !important;
     padding: 0 !important;
@@ -204,6 +221,24 @@
     background-color: #cbd5e1;
     color: #1e293b;
     border: 1px solid #94a3b8;
+}
+
+.tier-badge.bronze {
+    background-color: #ffedd5;
+    color: #9a3412;
+    border: 1px solid #f97316;
+}
+
+.tier-badge.gold {
+    background-color: #fef9c3;
+    color: #854d0e;
+    border: 1px solid #eab308;
+}
+
+.tier-badge.diamond {
+    background-color: #fae8ff;
+    color: #86198f;
+    border: 1px solid #d946ef;
 }
 
 .tier-benefits {
