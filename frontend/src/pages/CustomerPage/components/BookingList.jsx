@@ -129,7 +129,7 @@ export default function BookingList() {
         const fetchPromotions = async () => {
             try {
                 const result = await getPromotion()
-                setPromotions(result?.data || []);
+                setPromotions(result || []);
             } catch (err) {
                 console.error("Failed to fetch promotions:", err);
                 message.warning(err.response?.data.message || err.message || "không thể tải danh sách chương trình khuyến mãi")
