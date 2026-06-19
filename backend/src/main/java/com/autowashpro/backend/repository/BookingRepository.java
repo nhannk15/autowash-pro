@@ -67,6 +67,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             JOIN booking.availableSlots availableSlot
             WHERE booking.customer.id = :customerId
             AND availableSlot.slotDate >= :today
+            AND booking.status = com.autowashpro.backend.model.enums.BookingStatus.CONFIRMED
             """)
     List<Booking> findCustomerUpcomingBookings(@Param("customerId") Long customerId, @Param("today") LocalDate today);
 }

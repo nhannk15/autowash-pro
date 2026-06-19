@@ -138,6 +138,7 @@ public class BillingService {
         Customer customer = billing.getBooking().getCustomer();
         Long pointsChange = billing.getFinalAmount().divide(BigDecimal.valueOf(1000L)).longValue();
         customer.setCurrentPoints(customer.getCurrentPoints() + pointsChange);
+        customer.setLifetimePoints(customer.getLifetimePoints() + pointsChange);
 
         PointTransaction newPointTransaction = PointTransaction
                 .builder()
