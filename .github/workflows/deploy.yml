@@ -22,7 +22,7 @@ jobs:
           script: |
             cd /home/ubuntu/autowash-pro
             git pull origin develop
-            docker compose down --remove-orphans || true
+            docker compose down -v --remove-orphans || true
             docker compose up -d --build
 
       - name: Notify deploy failure via email
