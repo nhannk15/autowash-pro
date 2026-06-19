@@ -18,6 +18,39 @@ export default function Overview() {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    // State cho reward
+    const [rewards, setRewards] = useState([])
+    const [isRewardModalOpen, setIsRewardModalOpen] = useState(false)
+    const [exchanging, setExchanging] = useState(false)
+
+    // hàm xử lí đổi điểm
+    // THÊM HÀM NÀY ĐỂ XỬ LÝ ĐỔI ĐIỂM:
+    const handleExchange = (reward) => {
+        Modal.confirm({
+            title: 'Xác nhận đổi phần thưởng',
+            content: `Bạn có chắc chắn muốn dùng ${reward.pointCost} điểm để đổi lấy voucher "${reward.rewardName}" không?`,
+            okText: 'Đổi điểm',
+            cancelText: 'Hủy',
+            onOk: async () => {
+                try {
+                    setExchanging(true);
+                    await exchangeVoucher(reward.id);
+                    message.success(`Đổi voucher "${reward.rewardName}" thành công!`);
+
+                    // Gọi lại API lấy thông tin Membership Tier để cập nhật điểm mới trên giao diện
+                    const tier = await getMembershipTier();
+                    setTierData(tier);
+                    setIsRewardModalOpen(false);
+                } catch (error) {
+                    console.error("Lỗi đổi voucher:", error);
+                    message.error(error.response?.data?.message || "Đổi voucher thất bại, vui lòng thử lại!");
+                } finally {
+                    setExchanging(false);
+                }
+            }
+        });
+    };
+
     useEffect(() => {
         let isMounted = true;
         async function fetchDashboardData() {
@@ -154,9 +187,9 @@ export default function Overview() {
             title: 'HÀNH ĐỘNG',
             key: 'action',
             render: (_, record) => (
-                <Button 
-                    danger 
-                    type="primary" 
+                <Button
+                    danger
+                    type="primary"
                     size="small"
                     onClick={() => {
                         Modal.confirm({
@@ -295,8 +328,8 @@ export default function Overview() {
                                             <Badge status="processing" text={`Bạn có thêm ${otherBookingsCount} lịch đặt khác`} />
                                         </div>
                                     )}
-                                    <Button 
-                                        type="primary" 
+                                    <Button
+                                        type="primary"
                                         icon={<ArrowRightOutlined />}
                                         className="action-btn"
                                         onClick={() => setIsModalOpen(true)}
@@ -305,8 +338,8 @@ export default function Overview() {
                                     </Button>
                                 </div>
                             ) : (
-                                <Empty 
-                                    image={Empty.PRESENTED_IMAGE_SIMPLE} 
+                                <Empty
+                                    image={Empty.PRESENTED_IMAGE_SIMPLE}
                                     description="Bạn không có lịch đặt sắp tới"
                                     className="compact-empty"
                                 >
@@ -342,14 +375,14 @@ export default function Overview() {
                                             <span>Tiến trình lên {nextTierName}</span>
                                             <span>{points}/{nextTierPoints}</span>
                                         </div>
-                                        <Progress 
-                                            percent={percentToNextTier} 
+                                        <Progress
+                                            percent={percentToNextTier}
                                             strokeColor="#faad14"
                                             trailColor="#f0f0f0"
                                             showInfo={false}
                                         />
                                         <div className="progress-tip">
-                                            {nextTierPoints > points 
+                                            {nextTierPoints > points
                                                 ? `Còn ${nextTierPoints - points} điểm để thăng hạng`
                                                 : 'Bạn đã đạt mức điểm tối đa'}
                                         </div>
@@ -399,9 +432,9 @@ export default function Overview() {
                     </Title>
                 </div>
                 <Card className="table-card">
-                    <Table 
-                        columns={columns} 
-                        dataSource={mockActivities} 
+                    <Table
+                        columns={columns}
+                        dataSource={mockActivities}
                         pagination={{ pageSize: 5 }}
                         className="custom-table"
                     />
@@ -416,9 +449,9 @@ export default function Overview() {
                 footer={null}
                 width={850}
             >
-                <Table 
-                    columns={upcomingTableColumns} 
-                    dataSource={upcomingBookings} 
+                <Table
+                    columns={upcomingTableColumns}
+                    dataSource={upcomingBookings}
                     rowKey="id"
                     pagination={{ pageSize: 5 }}
                     className="custom-table"

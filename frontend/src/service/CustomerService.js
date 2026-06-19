@@ -66,3 +66,7 @@ export async function getUpcomingBooking() {
     const response = await axios.get('/api/customer/upcoming-bookings')
     return response.data
 }
+export async function getReward() {
+    const response = await axios.get('/api/customer/rewards')
+    return response.data
+}
