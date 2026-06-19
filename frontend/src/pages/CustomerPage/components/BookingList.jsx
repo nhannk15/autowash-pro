@@ -3,7 +3,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { CarOutlined } from '@ant-design/icons';
 import './Booking.css';
 import { message } from 'antd';
-import { getAvailableSlot, getPromotion, getService, getVehicleByCustomer, createBooking } from '../../../service/CustomerService';
+import { getAvailableSlot, getPromotion, getService, getVehicleByCustomer, createBooking, getMembershipTier } from '../../../service/customerService';
 function VehicleImage({ src, alt, fallbackIcon }) {
     const [hasError, setHasError] = useState(false);
 

@@ -4,7 +4,7 @@ import { Spin, Alert, Empty, Card, Button, Modal, Form, Input, Select, message, 
 import { PlusOutlined, CarOutlined, DeleteOutlined, UploadOutlined, EditOutlined } from '@ant-design/icons';
 import './MyCars.css';
 import axios from 'axios';
-import { createVehicle, deleteVehicle, getVehicleByCustomer, getVehicleType, updateVehicle } from '../../../service/CustomerService';
+import { createVehicle, deleteVehicle, getVehicleByCustomer, getVehicleType, updateVehicle } from '../../../service/customerService';
 
 function VehicleImage({ src, alt, fallbackIcon }) {
     const [hasError, setHasError] = useState(false);

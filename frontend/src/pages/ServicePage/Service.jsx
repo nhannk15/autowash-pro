@@ -10,7 +10,7 @@ import engineImg from '../../assets/Service/VeSinhKhoangMay.png';
 import odorImg from '../../assets/Service/KhuMui.png';
 import baoDuong from '../../assets/Service/baoDuong.jpg';
 import cachNhiet from '../../assets/Service/cachNhiet.jpg';
-import { getService } from '../../service/CustomerService';
+import { getService } from '../../service/customerService';
 
 // Bản đồ mapping tên dịch vụ -> hình ảnh cục bộ tương ứng
 const localImages = {
