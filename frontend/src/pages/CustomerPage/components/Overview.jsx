@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Row, Col, Card, Table, Tag, Progress, Button, Empty, Space, Typography, Badge, Spin, Modal, message } from 'antd';
-import { CalendarOutlined, TrophyOutlined, CrownOutlined, ArrowRightOutlined, GiftOutlined } from '@ant-design/icons';
+import { Row, Col, Card, Table, Tag, Progress, Button, Empty, Space, Typography, Badge, Spin, Modal, message, Tooltip } from 'antd';
+import { CalendarOutlined, TrophyOutlined, CrownOutlined, ArrowRightOutlined, GiftOutlined, StarOutlined, WalletOutlined, RiseOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { getMembershipTier, getUpcomingBooking, getReward, exchangeVoucher } from '../../../service/customerService';
@@ -101,11 +101,18 @@ export default function Overview() {
     const nearestBookingLicensePlate = nearestBooking?.vehicle?.licensePlate || 'N/A';
 
     // Điểm tích lũy & hạng thành viên từ API
-    const points = tierData?.customerCurrentPoints || 0;
+    const currentPoints = tierData?.customerCurrentPoints || 0;
+    const lifetimePoints = tierData?.lifetimePoints || 0;
+    const deltaPoints = tierData?.deltaPoints || 0;
     const nextTierPoints = tierData?.membershipTierSummaryResponse?.minPointsForNextTier || 0;
-    const percentToNextTier = nextTierPoints > 0 ? Math.min(Math.round((points / nextTierPoints) * 100), 100) : 100;
+    const minPointsToMaintain = tierData?.membershipTierSummaryResponse?.minPointsToMaintain || 0;
     const currentTierName = tierData?.membershipTierSummaryResponse?.currentTierName || 'Đồng';
     const nextTierName = tierData?.membershipTierSummaryResponse?.nextTierName || 'Hạng tiếp theo';
+
+    // Tính % delta so với ngưỡng duy trì và nâng hạng
+    const deltaPercentMaintain = minPointsToMaintain > 0 ? Math.min(Math.round((deltaPoints / minPointsToMaintain) * 100), 100) : 100;
+    const deltaPercentUpgrade = nextTierPoints > 0 ? Math.min(Math.round((deltaPoints / nextTierPoints) * 100), 100) : 100;
+
 
     // Phân tích quyền lợi thành viên từ API (Động hoàn toàn, không hardcode)
     const buildTierBenefits = () => {
@@ -357,7 +364,7 @@ export default function Overview() {
                     </Card>
                 </Col>
 
-                {/* Cột 2: Điểm tích lũy */}
+                {/* Cột 2: Điểm tích lũy (Lifetime + Current) */}
                 <Col xs={24} md={8}>
                     <Card className="dashboard-card points-card" hoverable>
                         <Space className="card-header">
@@ -371,27 +378,38 @@ export default function Overview() {
                                 </div>
                             ) : (
                                 <>
-                                    <div className="points-display">
-                                        <span className="points-number">{points}</span>
-                                        <span className="points-unit">điểm</span>
-                                    </div>
-                                    <div className="progress-section">
-                                        <div className="progress-text">
-                                            <span>Tiến trình lên {nextTierName}</span>
-                                            <span>{points}/{nextTierPoints}</span>
+                                    {/* Lifetime Point */}
+                                    <div className="point-row lifetime-row">
+                                        <div className="point-row-header">
+                                            <StarOutlined className="point-row-icon lifetime-icon" />
+                                            <Text className="point-row-label">Tổng điểm tích lũy</Text>
+                                            <Tooltip title="Tổng điểm bạn đã đạt được từ trước đến nay, chỉ tăng, không giảm">
+                                                <InfoCircleOutlined className="point-info-icon" />
+                                            </Tooltip>
                                         </div>
-                                        <Progress
-                                            percent={percentToNextTier}
-                                            strokeColor="#faad14"
-                                            trailColor="#f0f0f0"
-                                            showInfo={false}
-                                        />
-                                        <div className="progress-tip">
-                                            {nextTierPoints > points
-                                                ? `Còn ${nextTierPoints - points} điểm để thăng hạng`
-                                                : 'Bạn đã đạt mức điểm tối đa'}
+                                        <div className="point-row-value lifetime-value">
+                                            {lifetimePoints.toLocaleString()}
+                                            <span className="point-row-unit">điểm</span>
                                         </div>
                                     </div>
+
+                                    <div className="points-divider" />
+
+                                    {/* Current Point */}
+                                    <div className="point-row current-row">
+                                        <div className="point-row-header">
+                                            <WalletOutlined className="point-row-icon current-icon" />
+                                            <Text className="point-row-label">Điểm hiện có</Text>
+                                            <Tooltip title="Điểm dùng để đổi voucher. Có hạn 6 tháng nếu không đặt lịch">
+                                                <InfoCircleOutlined className="point-info-icon" />
+                                            </Tooltip>
+                                        </div>
+                                        <div className="point-row-value current-value">
+                                            {currentPoints.toLocaleString()}
+                                            <span className="point-row-unit">điểm</span>
+                                        </div>
+                                    </div>
+
                                     <Button
                                         type="primary"
                                         icon={<GiftOutlined />}
@@ -404,7 +422,7 @@ export default function Overview() {
                                                 message.error("Không thể tải danh sách phần thưởng!");
                                             }
                                         }}
-                                        style={{ marginTop: '16px', width: '100%', backgroundColor: '#faad14', borderColor: '#faad14' }}
+                                        className="voucher-btn"
                                     >
                                         Đổi voucher
                                     </Button>
@@ -414,7 +432,7 @@ export default function Overview() {
                     </Card>
                 </Col>
 
-                {/* Cột 3: Hạng thành viên */}
+                {/* Cột 3: Hạng thành viên + Delta Point */}
                 <Col xs={24} md={8}>
                     <Card className="dashboard-card tier-card" hoverable>
                         <Space className="card-header">
@@ -433,6 +451,61 @@ export default function Overview() {
                                             {currentTierName.toUpperCase()}
                                         </div>
                                     </div>
+
+                                    {/* Delta Point Section */}
+                                    <div className="delta-section">
+                                        <div className="delta-header">
+                                            <RiseOutlined className="delta-icon" />
+                                            <Text className="delta-label">Điểm quý hiện tại</Text>
+                                            <Tooltip title="Điểm được tính theo quý, quyết định duy trì hoặc nâng hạng thành viên">
+                                                <InfoCircleOutlined className="point-info-icon" />
+                                            </Tooltip>
+                                        </div>
+                                        <div className="delta-value">
+                                            {deltaPoints.toLocaleString()}
+                                            <span className="delta-unit">điểm</span>
+                                        </div>
+
+                                        {/* Progress: Duy trì rank */}
+                                        <div className="delta-progress-group">
+                                            <div className="delta-progress-label">
+                                                <span>🛡️ Duy trì {currentTierName}</span>
+                                                <span className={deltaPoints >= minPointsToMaintain ? 'delta-status-ok' : 'delta-status-warn'}>
+                                                    {deltaPoints}/{minPointsToMaintain}
+                                                </span>
+                                            </div>
+                                            <Progress
+                                                percent={deltaPercentMaintain}
+                                                strokeColor={deltaPoints >= minPointsToMaintain ? '#52c41a' : '#ff4d4f'}
+                                                trailColor="#f0f0f0"
+                                                showInfo={false}
+                                                size="small"
+                                            />
+                                        </div>
+
+                                        {/* Progress: Nâng rank */}
+                                        {nextTierPoints > 0 && (
+                                            <div className="delta-progress-group">
+                                                <div className="delta-progress-label">
+                                                    <span>🚀 Lên {nextTierName}</span>
+                                                    <span className={deltaPoints >= nextTierPoints ? 'delta-status-ok' : 'delta-status-neutral'}>
+                                                        {deltaPoints}/{nextTierPoints}
+                                                    </span>
+                                                </div>
+                                                <Progress
+                                                    percent={deltaPercentUpgrade}
+                                                    strokeColor={{
+                                                        '0%': '#faad14',
+                                                        '100%': '#52c41a',
+                                                    }}
+                                                    trailColor="#f0f0f0"
+                                                    showInfo={false}
+                                                    size="small"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+
                                     <ul className="tier-benefits">
                                         {tierBenefits.map((benefit, index) => (
                                             <li key={index}>✨ {benefit}</li>
@@ -518,8 +591,8 @@ export default function Overview() {
                                 <Button
                                     type="primary"
                                     onClick={() => handleExchange(record)}
-                                    disabled={points < record.pointCost || exchanging}
-                                    style={{ backgroundColor: points >= record.pointCost ? '#faad14' : undefined, borderColor: points >= record.pointCost ? '#faad14' : undefined }}
+                                    disabled={currentPoints < record.pointCost || exchanging}
+                                    style={{ backgroundColor: currentPoints >= record.pointCost ? '#faad14' : undefined, borderColor: currentPoints >= record.pointCost ? '#faad14' : undefined }}
                                 >
                                     Đổi điểm
                                 </Button>
