@@ -58,9 +58,13 @@ export default function Overview() {
 
     useEffect(() => {
         let isMounted = true;
+        let isFirstLoad = true;
+
         async function fetchDashboardData() {
             try {
-                setLoading(true);
+                // Chỉ hiện loading spinner lần đầu, tránh flicker khi poll
+                if (isFirstLoad) setLoading(true);
+
                 const [bookings, tier] = await Promise.all([
                     getUpcomingBooking(),
                     getMembershipTier()
@@ -74,14 +78,21 @@ export default function Overview() {
             } finally {
                 if (isMounted) {
                     setLoading(false);
+                    isFirstLoad = false;
                 }
             }
         }
+
         fetchDashboardData();
+        // Tự động cập nhật mỗi 30 giây
+        const intervalId = setInterval(fetchDashboardData, 30000);
+
         return () => {
             isMounted = false;
+            clearInterval(intervalId);
         };
     }, []);
+
 
     // Lịch đặt gần nhất (sắp diễn ra đầu tiên)
     const nearestBooking = upcomingBookings.length > 0 ? upcomingBookings[0] : null;
