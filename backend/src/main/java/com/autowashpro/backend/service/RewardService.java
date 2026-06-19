@@ -59,6 +59,12 @@ public class RewardService {
                 .collect(Collectors.toList());
     }
 
+    public List<RewardResponse> getActiveRewards() {
+        return rewardRepository.findByActiveTrue().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
     public void deactivateReward(Long id) {
         Reward reward = rewardRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Reward not found with id: " + id));
