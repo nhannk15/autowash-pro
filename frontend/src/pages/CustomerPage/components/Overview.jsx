@@ -398,7 +398,7 @@ export default function Overview() {
                                         onClick={async () => {
                                             try {
                                                 const data = await getReward();
-                                                setRewards(data || []);
+                                                setRewards(data.data || []);
                                                 setIsRewardModalOpen(true);
                                             } catch (error) {
                                                 message.error("Không thể tải danh sách phần thưởng!");
@@ -478,6 +478,54 @@ export default function Overview() {
                     className="custom-table"
                     style={{ marginTop: '16px' }}
                     locale={{ emptyText: <Empty description="Bạn không có lịch đặt sắp tới" /> }}
+                />
+            </Modal>
+            <Modal
+                title={<span style={{ color: '#002b7f', fontWeight: 700, fontSize: '18px' }}>DANH SÁCH VOUCHER QUY ĐỔI</span>}
+                open={isRewardModalOpen}
+                onCancel={() => setIsRewardModalOpen(false)}
+                footer={null}
+                width={800}
+            >
+                <Table
+                    dataSource={rewards}
+                    rowKey="id"
+                    pagination={{ pageSize: 5 }}
+                    style={{ marginTop: '16px' }}
+                    className="custom-table"
+                    columns={[
+                        {
+                            title: 'TÊN PHẦN THƯỞNG',
+                            dataIndex: 'rewardName',
+                            key: 'rewardName',
+                            render: (text) => <Text strong style={{ color: '#002b7f' }}>{text}</Text>
+                        },
+                        {
+                            title: 'MÔ TẢ',
+                            dataIndex: 'description',
+                            key: 'description',
+                        },
+                        {
+                            title: 'ĐIỂM CẦN ĐỔI',
+                            dataIndex: 'pointCost',
+                            key: 'pointCost',
+                            render: (pts) => <Text strong style={{ color: '#faad14' }}>{pts} điểm</Text>
+                        },
+                        {
+                            title: 'HÀNH ĐỘNG',
+                            key: 'action',
+                            render: (_, record) => (
+                                <Button
+                                    type="primary"
+                                    onClick={() => handleExchange(record)}
+                                    disabled={points < record.pointCost || exchanging}
+                                    style={{ backgroundColor: points >= record.pointCost ? '#faad14' : undefined, borderColor: points >= record.pointCost ? '#faad14' : undefined }}
+                                >
+                                    Đổi điểm
+                                </Button>
+                            )
+                        }
+                    ]}
                 />
             </Modal>
         </div >
