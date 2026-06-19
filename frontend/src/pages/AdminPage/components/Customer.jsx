@@ -1,24 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import {
-    Table, Input, Button, Space, Tag, Modal, Form,
+    Table, Input, Button, Space, Tag, Modal,
     notification, Select, Tooltip, Badge
 } from 'antd';
 import {
-    SearchOutlined, EditOutlined, DeleteOutlined,
-    StarOutlined, CarOutlined, ExclamationCircleOutlined
+    SearchOutlined, DeleteOutlined,
+    StarOutlined, CarOutlined, ExclamationCircleOutlined, RedoOutlined
 } from '@ant-design/icons';
-import {
-    getCustomers,
-    // getPointsTiers,
-    // updateCustomerTier,
-    // deleteCustomer
-} from '../../../service/adminService';
+import { getCustomers, deleteCustomer, recoverCustomer } from '../../../service/adminService';
 
-const { Option } = Select;
 const { confirm } = Modal;
 
 export default function Customer() {
-    const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState([]);
     const [pagination, setPagination] = useState({ current: 1, pageSize: 10 });
@@ -26,16 +19,10 @@ export default function Customer() {
     const [searchInput, setSearchInput] = useState('');
     const [sortField, setSortField] = useState(null);
     const [sortOrder, setSortOrder] = useState('asc');
-    const [editingCustomer, setEditingCustomer] = useState(null);
-    const [tiers, setTiers] = useState([]);
 
     useEffect(() => {
         fetchCustomers();
     }, [pagination.current, pagination.pageSize, searchName, sortField, sortOrder]);
-
-    useEffect(() => {
-        fetchTiers();
-    }, []);
 
     const fetchCustomers = async () => {
         setLoading(true);
@@ -62,21 +49,6 @@ export default function Customer() {
             });
         } finally {
             setLoading(false);
-        }
-    };
-
-    const fetchTiers = async () => {
-        try {
-            // mock tiers since endpoint is not available
-            setTiers([
-                { id: 1, name: 'Bronze' },
-                { id: 2, name: 'Silver' },
-                { id: 3, name: 'Gold' },
-                { id: 4, name: 'Platinum' },
-                { id: 5, name: 'Diamond' },
-            ]);
-        } catch (error) {
-            console.log('Failed to fetch tiers:', error);
         }
     };
 
@@ -107,22 +79,24 @@ export default function Customer() {
         setSortOrder(order);
     };
 
-    const handleEdit = (record) => {
-        setEditingCustomer(record);
-        form.setFieldsValue({ tierId: record.tier?.membershipTierId || null });
-    };
-
-    const handleSaveTier = async () => {
-        try {
-            await form.validateFields();
-            // const values = form.getFieldsValue();
-            // await updateCustomerTier({ id: editingCustomer.id, tierId: values.tierId });
-            notification.success({ message: 'Thành công', description: 'Cập nhật hạng thành viên thành công' });
-            setEditingCustomer(null);
-            fetchCustomers();
-        } catch (error) {
-            console.log(error);
-        }
+    const handleRecover = (record) => {
+        confirm({
+            title: 'Xác nhận khôi phục',
+            icon: <ExclamationCircleOutlined />,
+            content: `Bạn có chắc muốn khôi phục khách hàng "${record.fullName}" không?`,
+            okText: 'Khôi phục',
+            okType: 'success',
+            cancelText: 'Hủy',
+            onOk: async () => {
+                try {
+                    await recoverCustomer(record.id);
+                    notification.success({ message: 'Thành công', description: 'Đã khôi phục khách hàng' });
+                    fetchCustomers();
+                } catch (error) {
+                    notification.error({ message: 'Lỗi', description: 'Không thể khôi phục khách hàng' });
+                }
+            },
+        });
     };
 
     const handleDelete = (record) => {
@@ -135,7 +109,7 @@ export default function Customer() {
             cancelText: 'Hủy',
             onOk: async () => {
                 try {
-                    // await deleteCustomer(record.id);
+                    await deleteCustomer(record.id);
                     notification.success({ message: 'Thành công', description: 'Đã xóa khách hàng' });
                     fetchCustomers();
                 } catch (error) {
@@ -154,7 +128,7 @@ export default function Customer() {
             title: 'Họ tên',
             dataIndex: 'fullName',
             key: 'fullName',
-            render: (name, record) => (
+            render: (name) => (
                 <Space>
                     <span style={{ fontWeight: 500 }}>{name}</span>
                 </Space>
@@ -256,12 +230,12 @@ export default function Customer() {
             width: 110,
             render: (_, record) => (
                 <Space size={6}>
-                    <Tooltip title="Chỉnh sửa hạng">
+                    <Tooltip title="Khôi phục tài khoản">
                         <Button
-                            type="primary"
+                            disabled={record.active}
                             size="small"
-                            icon={<EditOutlined />}
-                            onClick={() => handleEdit(record)}
+                            icon={<RedoOutlined style={{ color: 'green' }} />}
+                            onClick={() => handleRecover(record)}
                         />
                     </Tooltip>
                     <Tooltip title="Xóa khách hàng">
@@ -330,49 +304,6 @@ export default function Customer() {
                 loading={loading}
                 onChange={handleTableChange}
             />
-
-            {/* Modal chỉnh sửa hạng thành viên */}
-            <Modal
-                title="Chỉnh sửa hạng thành viên"
-                open={!!editingCustomer}
-                onOk={handleSaveTier}
-                onCancel={() => { setEditingCustomer(null); form.resetFields(); }}
-                okText="Lưu"
-                cancelText="Hủy"
-                destroyOnClose
-            >
-                {editingCustomer && (
-                    <Form form={form} layout="vertical">
-                        <Form.Item label="Họ tên">
-                            <span style={{ fontWeight: 500 }}>{editingCustomer.fullName}</span>
-                        </Form.Item>
-                        <Form.Item label="Email">
-                            {editingCustomer.email}
-                        </Form.Item>
-                        <Form.Item label="Số điện thoại">
-                            {editingCustomer.phoneNumber || '—'}
-                        </Form.Item>
-                        <Form.Item label="Ngày sinh">
-                            {editingCustomer.dateOfBirth
-                                ? new Date(editingCustomer.dateOfBirth).toLocaleDateString('vi-VN')
-                                : '—'}
-                        </Form.Item>
-                        <Form.Item
-                            name="tierId"
-                            label="Hạng thành viên"
-                            rules={[{ required: true, message: 'Vui lòng chọn hạng thành viên' }]}
-                        >
-                            <Select placeholder="Chọn hạng thành viên" allowClear>
-                                {tiers.map(tier => (
-                                    <Option key={tier.id} value={tier.id}>
-                                        <Tag color={getTierColor(tier.name)}>{tier.name}</Tag>
-                                    </Option>
-                                ))}
-                            </Select>
-                        </Form.Item>
-                    </Form>
-                )}
-            </Modal>
         </div>
     );
 }

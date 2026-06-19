@@ -1,9 +1,9 @@
 import React from "react";
 
-export default function Voucher() {
+export default function Staff() {
     return (
         <div>
-            <h1>Voucher</h1>
+            <h1>Staff</h1>
         </div>
     );
 }

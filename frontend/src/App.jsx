@@ -28,11 +28,11 @@ import Profile from './components/Profile/Profile.jsx'
 import AdminPage from './pages/AdminPage/AdminPage.jsx'
 import AdminDashboard from './pages/AdminPage/components/AdminDashboard.jsx'
 import Customer from './pages/AdminPage/components/Customer.jsx'
+import Staff from './pages/AdminPage/components/Staff.jsx'
 import Membership from './pages/AdminPage/components/Membership.jsx'
-import Voucher from './pages/AdminPage/components/Voucher.jsx'
+import Reward from './pages/AdminPage/components/Reward.jsx'
 import ServiceCRUD from './pages/AdminPage/components/Service.jsx'
 import Promotion from './pages/AdminPage/components/Promotion.jsx'
-
 
 // Layout chung: Navbar + nội dung + Footer
 function MainLayout({ children }) {
@@ -126,13 +126,13 @@ function App() {
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="customer" element={<Customer />} />
+        <Route path="staff" element={<Staff />} />
         <Route path="membership" element={<Membership />} />
-        <Route path="voucher" element={<Voucher />} />
+        <Route path="rewards" element={<Reward />} />
         <Route path="service" element={<ServiceCRUD />} />
         <Route path="promotion" element={<Promotion />} />
         <Route path="profile" element={<Profile />} />
       </Route>
-
     </Routes>
   )
 }
