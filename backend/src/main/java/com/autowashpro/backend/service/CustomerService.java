@@ -336,6 +336,12 @@ public class CustomerService {
         repository.save(customer);
     }
 
+    public void activate(Long id) {
+        Customer customer = findById(id);
+        customer.setActive(true);
+        repository.save(customer);
+    }
+
     // ==================== Helper methods ====================
 
     private void applyCustomerDefaults(Customer customer) {
