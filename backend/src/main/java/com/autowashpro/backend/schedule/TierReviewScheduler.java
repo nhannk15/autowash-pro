@@ -38,7 +38,7 @@ public class TierReviewScheduler implements TaskScheduler {
 
         for (Customer customer : customers) {
             MembershipTier customerMembershipTier = customer.getTier();
-            Long totalPointsEarned = pointTransactionService.totalPointsEarnForCustomer(customer.getId());
+            Long totalPointsEarned = pointTransactionService.calculateTotalPointsEarnForCustomer(customer.getId());
             if (totalPointsEarned == null) {
                 totalPointsEarned = 0L;
             }

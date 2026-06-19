@@ -17,6 +17,7 @@ public class CustomerTierResponse {
     private Long customerId;
     private Long customerCurrentPoints;
     private Long lifetimePoints;
+    private Long deltaPoints;
 
     /**
      * Membership info

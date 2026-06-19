@@ -18,12 +18,15 @@ import com.autowashpro.backend.exception.ResourceNotFoundException;
 
 @Service
 public class RewardService {
-    
-    @Autowired
-    private RewardRepository rewardRepository;
+
+    private final RewardRepository rewardRepository;
+    private final ServicePriceRepository servicePriceRepository;
 
     @Autowired
-    private ServicePriceRepository servicePriceRepository;
+    public RewardService(RewardRepository rewardRepository, ServicePriceRepository servicePriceRepository) {
+        this.rewardRepository = rewardRepository;
+        this.servicePriceRepository = servicePriceRepository;
+    }
 
     public RewardResponse createReward(RewardRequest request) {
         validateRewardRequest(request);
@@ -38,7 +41,7 @@ public class RewardService {
 
     public RewardResponse updateReward(Long id, RewardRequest request) {
         Reward reward = rewardRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Reward not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Reward not found with id: " + id));
 
         validateRewardRequest(request);
         mapRequestToEntity(request, reward);
@@ -49,7 +52,7 @@ public class RewardService {
 
     public RewardResponse getRewardById(Long id) {
         Reward reward = rewardRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Reward not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Reward not found with id: " + id));
         return mapToResponse(reward);
     }
 
@@ -67,15 +70,17 @@ public class RewardService {
 
     public void deactivateReward(Long id) {
         Reward reward = rewardRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Reward not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Reward not found with id: " + id));
         reward.setActive(false);
         rewardRepository.save(reward);
     }
 
     private void validateRewardRequest(RewardRequest request) {
-        if (request.getRewardType() == RewardType.DISCOUNT_FLAT || request.getRewardType() == RewardType.DISCOUNT_PERCENTAGE) {
+        if (request.getRewardType() == RewardType.DISCOUNT_FLAT
+                || request.getRewardType() == RewardType.DISCOUNT_PERCENTAGE) {
             if (request.getDiscountValue() == null || request.getDiscountValue().compareTo(BigDecimal.ZERO) <= 0) {
-                throw new IllegalArgumentException("Discount value is required and must be positive for discount rewards");
+                throw new IllegalArgumentException(
+                        "Discount value is required and must be positive for discount rewards");
             }
             if (request.getRewardType() == RewardType.DISCOUNT_PERCENTAGE) {
                 if (request.getDiscountValue().compareTo(BigDecimal.ONE) < 0) {
@@ -102,7 +107,8 @@ public class RewardService {
 
         if (request.getServicePriceId() != null) {
             ServicePrice servicePrice = servicePriceRepository.findById(request.getServicePriceId())
-                .orElseThrow(() -> new ResourceNotFoundException("ServicePrice not found with id: " + request.getServicePriceId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "ServicePrice not found with id: " + request.getServicePriceId()));
             reward.setServicePrice(servicePrice);
         } else {
             reward.setServicePrice(null);
@@ -124,8 +130,8 @@ public class RewardService {
 
         if (entity.getServicePrice() != null) {
             // Include service name + vehicle type for a descriptive name
-            String serviceName = entity.getServicePrice().getService().getServiceName() 
-                + " - " + entity.getServicePrice().getVehicleType().getTypeName();
+            String serviceName = entity.getServicePrice().getService().getServiceName()
+                    + " - " + entity.getServicePrice().getVehicleType().getTypeName();
             response.setServiceName(serviceName);
         }
 

@@ -23,13 +23,15 @@ public class MembershipTierService {
     private final MembershipTierRepository membershipTierRepository;
     private final CustomerMapper customerMapper;
     private final CustomerRepository customerRepository;
+    private final PointTransactionService pointTransactionService;
 
     @Autowired
     public MembershipTierService(MembershipTierRepository membershipTierRepository, CustomerMapper customerMapper,
-            CustomerRepository customerRepository) {
+            CustomerRepository customerRepository, PointTransactionService pointTransactionService) {
         this.membershipTierRepository = membershipTierRepository;
         this.customerMapper = customerMapper;
         this.customerRepository = customerRepository;
+        this.pointTransactionService = pointTransactionService;
     }
 
     public CustomerTierResponse getCustomerMembershipTier(String email) {
@@ -46,6 +48,7 @@ public class MembershipTierService {
         }
         CustomerTierResponse customerTierResponse = customerMapper.toCustomerTierResponse(customer);
         customerTierResponse.getMembershipTierSummaryResponse().setNextTierName(nextTierName);
+        customerTierResponse.setDeltaPoints(pointTransactionService.calculateTotalPointsEarnForCustomer(customer.getId()));
         return customerTierResponse;
     }
 
