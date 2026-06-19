@@ -4,6 +4,7 @@ import { CalendarOutlined, TrophyOutlined, CrownOutlined, ArrowRightOutlined, Gi
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { getMembershipTier, getUpcomingBooking, getReward, exchangeVoucher } from '../../../service/customerService';
+
 import './Overview.css';
 
 const { Title, Text } = Typography;

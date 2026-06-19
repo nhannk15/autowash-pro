@@ -29,7 +29,6 @@ export default function StaffPayment() {
     // Nhận data từ Dashboard
     const bayId = location.state?.bayId || null;
     const bookingId = location.state?.bookingId || null;
-    const sessionId = location.state?.sessionId || null;
 
     useEffect(() => {
         async function getBill() {
@@ -174,7 +173,7 @@ export default function StaffPayment() {
         : promotions.reduce((acc, p) => acc + (Number(p.discountAmount) || Number(p.discount) || 0), 0);
 
     // Voucher discount từ API response (đã được backend tính sẵn)
-    const voucherDiscount = appliedVoucher?.discountAmount ? Number(appliedVoucher.discountAmount) : 0;
+    const voucherDiscount = appliedVoucher?.discountValue ? Number(appliedVoucher.discountValue) : 0;
 
     const finalTotal = billData.finalAmount
         ? Number(billData.finalAmount) - voucherDiscount
@@ -188,7 +187,7 @@ export default function StaffPayment() {
         }
 
         try {
-            const response = await validateVoucher(voucherCode.trim(), subtotal - promotionDiscount);
+            const response = await validateVoucher(customer.id, billData.billingId, voucherCode.trim());
             const voucherData = response?.data || response;
 
             if (voucherData) {
@@ -227,9 +226,9 @@ export default function StaffPayment() {
         setConfirming(true);
         try {
             if (paymentMethod === 'CASH') {
-                await confirmPaymentByCash(bookingId);
+                await confirmPaymentByCash(billId);
             } else {
-                await confirmPaymentByBank(bookingId);
+                await confirmPaymentByBank(billId);
             }
 
             setIsPaymentReceived(true);
@@ -358,7 +357,7 @@ export default function StaffPayment() {
                                     <Row justify="space-between" className="payment-voucher-applied-row">
                                         <Col>
                                             <Tag color="blue">{voucherCode.toUpperCase()}</Tag>
-                                            <Text style={{ color: '#1890ff' }}>{appliedVoucher.name || appliedVoucher.voucherCode}</Text>
+                                            <Text style={{ color: '#1890ff' }}>{appliedVoucher.rewardName}</Text>
                                         </Col>
                                         <Col><Text strong style={{ color: '#1890ff' }}>-{voucherDiscount.toLocaleString('vi-VN')} đ</Text></Col>
                                     </Row>
@@ -438,7 +437,7 @@ export default function StaffPayment() {
                                 <div className="voucher-applied-info">
                                     <CheckCircleOutlined style={{ color: '#52c41a', marginRight: 8 }} />
                                     <Text strong style={{ color: '#52c41a' }}>
-                                        Đã áp dụng: {appliedVoucher.name || appliedVoucher.voucherCode}
+                                        Đã áp dụng: {appliedVoucher.rewardName}
                                     </Text>
                                 </div>
                             )}
@@ -529,7 +528,7 @@ export default function StaffPayment() {
                                         <Row justify="space-between" className="payment-promo-row">
                                             <Col>
                                                 <Tag color="blue" style={{ marginRight: 4 }}>{voucherCode.toUpperCase()}</Tag>
-                                                <Text style={{ color: '#1890ff' }}>{appliedVoucher.name || appliedVoucher.voucherCode}</Text>
+                                                <Text style={{ color: '#1890ff' }}>{appliedVoucher.rewardName}</Text>
                                             </Col>
                                             <Col><Text strong style={{ color: '#1890ff' }}>-{voucherDiscount.toLocaleString('vi-VN')} đ</Text></Col>
                                         </Row>

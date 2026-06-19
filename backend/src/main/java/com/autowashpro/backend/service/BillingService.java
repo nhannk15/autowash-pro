@@ -2,6 +2,7 @@ package com.autowashpro.backend.service;
 
 import com.autowashpro.backend.repository.WashSessionRepository;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -146,6 +147,7 @@ public class BillingService {
                 .pointsChange(pointsChange)
                 .balanceAfter(customer.getCurrentPoints())
                 .description(null)
+                .expiryDate(LocalDate.now().plusMonths(6))
                 .staff(null)
                 .build();
         customerRepository.save(customer);
