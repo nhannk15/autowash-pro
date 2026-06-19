@@ -4,6 +4,7 @@ import java.text.NumberFormat;
 import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -101,7 +102,7 @@ public class EmailService {
                 .formatted(otp);
     }
 
-    public void sendBookingSuccessToEmail(String toEmail, String bookingCode, CreateBookingResponse bookingResponse) {
+    public void sendBookingSuccessToEmail(String toEmail, String bookingCode, CreateBookingResponse bookingResponse, byte[] qrCodeImage) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -110,13 +111,17 @@ public class EmailService {
             helper.setTo(toEmail);
             helper.setSubject("Đặt lịch thành công - AutoWash Pro");
 
+            // Set HTML content TRƯỚC khi addInline
             String htmlContent = buildBookingSuccessHtml(bookingResponse, bookingCode);
             helper.setText(htmlContent, true);
 
+            // Nhúng QR Code inline vào email (phải gọi SAU setText)
+            helper.addInline("qrcode", new ByteArrayResource(qrCodeImage), "image/png");
+
             mailSender.send(message);
-            log.info("OTP email sent successfully to: {}", toEmail);
+            log.info("Booking success email sent successfully to: {}", toEmail);
         } catch (Exception e) {
-            log.error("Failed to send OTP email to: {}", toEmail, e);
+            log.error("Failed to send booking success email to: {}", toEmail, e);
             throw new RuntimeException("Không thể gửi email. Vui lòng thử lại sau!");
         }
     }
@@ -225,6 +230,14 @@ public class EmailService {
                                     📌 Vui lòng có mặt trước <strong>10 phút</strong>.<br>
                                     ❌ Hủy lịch trước <strong>2 tiếng</strong> để không bị tính phí.
                                 </p>
+                            </div>
+
+                            <!-- QR Code -->
+                            <div style="text-align:center; margin:30px 0; padding:20px; background:#f9faff; border-radius:10px; border:1px solid #e0e4f0;">
+                                <h3 style="color:#0d1b4b; margin:0 0 10px;">Mã QR Check-in</h3>
+                                <p style="color:#555; font-size:14px; margin:0 0 15px;">Đưa mã QR này cho nhân viên khi đến cửa hàng</p>
+                                <img src="cid:qrcode" alt="QR Code" style="width:200px; height:200px; border:4px solid #fff; border-radius:8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
+                                <p style="color:#999; font-size:12px; margin:12px 0 0;">Mã booking: <strong style="color:#0d1b4b;">#{bookingCode}</strong></p>
                             </div>
                         </div>
 
