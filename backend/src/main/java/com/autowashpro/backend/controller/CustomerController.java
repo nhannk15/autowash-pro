@@ -58,4 +58,10 @@ public class CustomerController {
         service.deactivate(id);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
+
+    @PutMapping("/restore/{id}")
+    public ResponseEntity<ApiResponse<Void>> restore(@PathVariable Long id) {
+        service.activate(id);
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
 }
