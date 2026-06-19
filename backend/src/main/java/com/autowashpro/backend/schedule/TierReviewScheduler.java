@@ -46,13 +46,18 @@ public class TierReviewScheduler implements TaskScheduler {
                 if (customerMembershipTier.getTierLevel() == 4) {
                     // --- Do nothing.
                 } else {
-                    MembershipTier nextTier = membershipTierRepository
-                            .findByTierLevel(customerMembershipTier.getTierLevel() + 1).get();
+                    MembershipTier nextTier = customerMembershipTier;
+                    while (true) {
+                        nextTier = membershipTierRepository
+                                .findByTierLevel(nextTier.getTierLevel() + 1).get();
+                        if (totalPointsEarned < nextTier.getMinPointsForNextTier() || nextTier.getTierLevel() == 4) {
+                            break;
+                        }
+                    }
                     customer.setTier(nextTier);
-                    customerRepository.save(customer);
                 }
             } else if (totalPointsEarned >= customerMembershipTier.getMinPointsToMaintain()) {
-                //--- Do nothing
+                // --- Do nothing
             } else {
                 if (customerMembershipTier.getTierLevel() == 1) {
                     // --- Do nothing.
@@ -60,10 +65,10 @@ public class TierReviewScheduler implements TaskScheduler {
                     MembershipTier nextTier = membershipTierRepository
                             .findByTierLevel(customerMembershipTier.getTierLevel() - 1).get();
                     customer.setTier(nextTier);
-                    customer.setLastReviewDate(LocalDate.now());
-                    customerRepository.save(customer);
                 }
             }
+            customer.setLastReviewDate(LocalDate.now());
+            customerRepository.save(customer);
         }
     }
 
