@@ -49,6 +49,9 @@ public class MembershipTier {
     @Column(name = "min_points_to_maintain", nullable = false)
     private int minPointsToMaintain;
 
+    @Column(name = "point_expiration_months", nullable = false)
+    private int pointExpirationMonths;
+
     @Column(name = "perks_description", nullable = true)
     private String perksDescription;
 
