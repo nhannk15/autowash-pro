@@ -18,5 +18,7 @@ public interface CustomerMapper {
     @Mapping(target = "customerId", source = "id")
     @Mapping(target = "customerCurrentPoints", source = "currentPoints")
     @Mapping(target = "membershipTierSummaryResponse", source = "tier")
+    @Mapping(target = "deltaPoints", ignore = true)
     CustomerTierResponse toCustomerTierResponse(Customer customer);
+
 }

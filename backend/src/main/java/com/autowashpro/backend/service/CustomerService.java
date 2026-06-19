@@ -122,8 +122,6 @@ public class CustomerService {
         customer.setCurrentPoints(0L);
         customer.setLifetimePoints(0L);
         customer.setTierStartDate(LocalDate.now());
-        customer.setTierEndDate(LocalDate.now().plusYears(1));
-        customer.setNextReviewDate(LocalDate.now().plusMonths(6));
 
         applyCustomerDefaults(customer);
         return repository.save(customer);
@@ -173,9 +171,7 @@ public class CustomerService {
                 customer.getCurrentPoints(),
                 customer.getLifetimePoints(),
                 customer.getTierStartDate(),
-                customer.getTierEndDate(),
                 customer.getLastReviewDate(),
-                customer.getNextReviewDate(),
                 customer.getVehicles() == null
                         ? List.of()
                         : customer.getVehicles().stream()
@@ -336,6 +332,12 @@ public class CustomerService {
         repository.save(customer);
     }
 
+    public void activate(Long id) {
+        Customer customer = findById(id);
+        customer.setActive(true);
+        repository.save(customer);
+    }
+
     // ==================== Helper methods ====================
 
     private void applyCustomerDefaults(Customer customer) {
@@ -356,12 +358,6 @@ public class CustomerService {
         }
         if (customer.getTierStartDate() == null) {
             customer.setTierStartDate(LocalDate.now());
-        }
-        if (customer.getTierEndDate() == null) {
-            customer.setTierEndDate(LocalDate.now().plusYears(1));
-        }
-        if (customer.getNextReviewDate() == null) {
-            customer.setNextReviewDate(LocalDate.now().plusMonths(6));
         }
     }
 

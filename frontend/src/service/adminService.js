@@ -11,20 +11,53 @@ export async function getCustomers(params) {
     return response.data;
 }
 
-// export async function getPointsTiers() {
-//     const response = await axios.get(`${API}/api/admin/customers/tiers`);
-//     return response.data;
-// }
+export async function recoverCustomer(customerId) {
+    const response = await axios.put(`${API}/api/admin/customers/restore/${customerId}`, {
+        withCredentials: true,
+    });
+    return response.data;
+}
 
-// export async function updateCustomerTier(data) {
-//     const response = await axios.put(`${API}/api/admin/customers/${data.id}`, { tierId: data.tierId });
-//     return response.data;
-// }
+export async function deleteCustomer(customerId) {
+    const response = await axios.delete(`${API}/api/admin/customers/${customerId}`, {
+        withCredentials: true,
+    });
+    return response.data;
+}
 
-// export async function deleteCustomer(id) {
-//     const response = await axios.delete(`${API}/api/admin/customers/${id}`);
-//     return response.data;
-// }
+export async function getStaffs(params) {
+    const response = await axios.get(`${API}/api/admin/staffs`, {
+        params,
+        withCredentials: true,
+    });
+    return response.data;
+}
+
+export async function addStaff({ fullName, email, phoneNumber, hiredDate }) {
+    const response = await axios.post(`${API}/api/admin/staffs`, {
+        fullName,
+        email,
+        phoneNumber,
+        hiredDate
+    }, {
+        withCredentials: true,
+    });
+    return response.data;
+}
+
+export async function recoverStaff(staffId) {
+    const response = await axios.put(`${API}/api/admin/staffs/restore/${staffId}`, {
+        withCredentials: true,
+    });
+    return response.data;
+}
+
+export async function deleteStaff(staffId) {
+    const response = await axios.delete(`${API}/api/admin/staffs/${staffId}`, {
+        withCredentials: true,
+    });
+    return response.data;
+}
 
 // Lấy danh sách tất cả khuyến mãi
 export async function getPromotions() {

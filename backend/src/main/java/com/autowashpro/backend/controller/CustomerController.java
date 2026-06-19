@@ -25,8 +25,12 @@ import com.autowashpro.backend.service.CustomerService;
 @PreAuthorize("hasRole('ADMIN')")
 public class CustomerController {
 
+    private final CustomerService service;
+
     @Autowired
-    private CustomerService service;
+    public CustomerController(CustomerService service) {
+        this.service = service;
+    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<CustomerAdminResponse>>> findAll(
@@ -56,6 +60,12 @@ public class CustomerController {
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deactivate(@PathVariable Long id) {
         service.deactivate(id);
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    @PutMapping("/restore/{id}")
+    public ResponseEntity<ApiResponse<Void>> restore(@PathVariable Long id) {
+        service.activate(id);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 }

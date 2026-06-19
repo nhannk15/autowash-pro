@@ -1,7 +1,6 @@
 package com.autowashpro.backend.model.entity;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 import com.autowashpro.backend.model.enums.TransactionType;
 
@@ -73,10 +72,10 @@ public class PointTransaction {
     private Staff staff;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private LocalDate createdAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        createdAt = LocalDate.now();
     }
 }

@@ -51,8 +51,6 @@ public class CustomerSeeder implements Seeder {
         leThiThuy.setCurrentPoints(1500L);
         leThiThuy.setLifetimePoints(1500L);
         leThiThuy.setTierStartDate(LocalDate.now());
-        leThiThuy.setTierEndDate(LocalDate.now().plusYears(1));
-        leThiThuy.setNextReviewDate(LocalDate.now().plusMonths(6));
         customerRepository.save(leThiThuy);
 
         Customer nguyenKhacLeNhan = new Customer();
@@ -67,8 +65,6 @@ public class CustomerSeeder implements Seeder {
         nguyenKhacLeNhan.setCurrentPoints(400L);
         nguyenKhacLeNhan.setLifetimePoints(400L);
         nguyenKhacLeNhan.setTierStartDate(LocalDate.now());
-        nguyenKhacLeNhan.setTierEndDate(LocalDate.now().plusYears(1));
-        nguyenKhacLeNhan.setNextReviewDate(LocalDate.now().plusMonths(6));
         customerRepository.save(nguyenKhacLeNhan);
 
         Customer tranPhuongTrinh = new Customer();
@@ -83,8 +79,6 @@ public class CustomerSeeder implements Seeder {
         tranPhuongTrinh.setCurrentPoints(600L);
         tranPhuongTrinh.setLifetimePoints(600L);
         tranPhuongTrinh.setTierStartDate(LocalDate.now());
-        tranPhuongTrinh.setTierEndDate(LocalDate.now().plusYears(1));
-        tranPhuongTrinh.setNextReviewDate(LocalDate.now().plusMonths(6));
         customerRepository.save(tranPhuongTrinh);
 
         Customer dangNhatThienBao = new Customer();
@@ -99,8 +93,6 @@ public class CustomerSeeder implements Seeder {
         dangNhatThienBao.setCurrentPoints(700L);
         dangNhatThienBao.setLifetimePoints(700L);
         dangNhatThienBao.setTierStartDate(LocalDate.now());
-        dangNhatThienBao.setTierEndDate(LocalDate.now().plusYears(1));
-        dangNhatThienBao.setNextReviewDate(LocalDate.now().plusMonths(6));
         customerRepository.save(dangNhatThienBao);
 
         Customer hoDuongNhatQuang = new Customer();
@@ -115,8 +107,6 @@ public class CustomerSeeder implements Seeder {
         hoDuongNhatQuang.setCurrentPoints(700L);
         hoDuongNhatQuang.setLifetimePoints(700L);
         hoDuongNhatQuang.setTierStartDate(LocalDate.now());
-        hoDuongNhatQuang.setTierEndDate(LocalDate.now().plusYears(1));
-        hoDuongNhatQuang.setNextReviewDate(LocalDate.now().plusMonths(6));
         customerRepository.save(hoDuongNhatQuang);
 
         Customer tranVuongQuan = new Customer();
@@ -131,8 +121,6 @@ public class CustomerSeeder implements Seeder {
         tranVuongQuan.setCurrentPoints(700L);
         tranVuongQuan.setLifetimePoints(700L);
         tranVuongQuan.setTierStartDate(LocalDate.now());
-        tranVuongQuan.setTierEndDate(LocalDate.now().plusYears(1));
-        tranVuongQuan.setNextReviewDate(LocalDate.now().plusMonths(6));
         customerRepository.save(tranVuongQuan);
 
         Customer phanNguyenAnhThu = new Customer();
@@ -147,8 +135,6 @@ public class CustomerSeeder implements Seeder {
         phanNguyenAnhThu.setCurrentPoints(700L);
         phanNguyenAnhThu.setLifetimePoints(700L);
         phanNguyenAnhThu.setTierStartDate(LocalDate.now());
-        phanNguyenAnhThu.setTierEndDate(LocalDate.now().plusYears(1));
-        phanNguyenAnhThu.setNextReviewDate(LocalDate.now().plusMonths(6));
         customerRepository.save(phanNguyenAnhThu);
 
         Customer nguyenHuynhMinhNhat = new Customer();
@@ -163,8 +149,6 @@ public class CustomerSeeder implements Seeder {
         nguyenHuynhMinhNhat.setCurrentPoints(700L);
         nguyenHuynhMinhNhat.setLifetimePoints(700L);
         nguyenHuynhMinhNhat.setTierStartDate(LocalDate.now());
-        nguyenHuynhMinhNhat.setTierEndDate(LocalDate.now().plusYears(1));
-        nguyenHuynhMinhNhat.setNextReviewDate(LocalDate.now().plusMonths(6));
         customerRepository.save(nguyenHuynhMinhNhat);
 
         Customer phanNgocQuyet = new Customer();
@@ -179,8 +163,6 @@ public class CustomerSeeder implements Seeder {
         phanNgocQuyet.setCurrentPoints(0L);
         phanNgocQuyet.setLifetimePoints(0L);
         phanNgocQuyet.setTierStartDate(LocalDate.now());
-        phanNgocQuyet.setTierEndDate(LocalDate.now().plusYears(1));
-        phanNgocQuyet.setNextReviewDate(LocalDate.now().plusMonths(6));
         customerRepository.save(phanNgocQuyet);
     }
 }

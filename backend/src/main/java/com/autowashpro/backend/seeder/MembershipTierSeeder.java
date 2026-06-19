@@ -26,7 +26,7 @@ public class MembershipTierSeeder implements Seeder {
             return;
 
         membershipTierRepository.save(build("Bronze", 1, 7, 4, "1.00", 0, 500, 12, "Thành viên mới, tích điểm cơ bản."));
-        membershipTierRepository.save(build("Silver", 2, 10, 3, "1.25", 300, 500, 12, "Ưu tiên đặt lịch, tích điểm nhanh hơn."));
+        membershipTierRepository.save(build("Silver", 2, 10, 3, "1.25", 300, 2000, 12, "Ưu tiên đặt lịch, tích điểm nhanh hơn."));
         membershipTierRepository.save(build("Gold", 3, 12, 2, "1.50", 1500, 5000, 12, "Hàng đợi ưu tiên cao, nhiều ưu đãi hơn."));
         membershipTierRepository.save(build("Platinum", 4, 14, 1, "2.00", 5000, 99999, 12, "Quyền lợi cao nhất, phục vụ VIP."));
     }
