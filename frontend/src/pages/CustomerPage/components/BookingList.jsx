@@ -47,6 +47,7 @@ export default function BookingList() {
     // Thông tin khách hàng & khuyến mãi phục vụ tính tiền ở Frontend
     const [customer, setCustomer] = useState(null);
     const [promotions, setPromotions] = useState([]);
+    const [membershipTier, setMembershipTier] = useState();
     const [submitting, setSubmitting] = useState(false);
     const [bookingError, setBookingError] = useState(null);
 
@@ -110,13 +111,25 @@ export default function BookingList() {
     //     };
     //     fetchCustomerInfo();
     // }, [user]);
+    useEffect(() => {
+        const fetchMembershipTier = async () => {
+            try {
+                const result = await getMembershipTier()
+                setMembershipTier(result || undefined)
+            } catch (err) {
+                console.error("Failed to fetch membershipTier:", err);
+                message.warning(err.response?.data.message || err.message || "không thể tải membership tier")
+            }
+        }
+        fetchMembershipTier()
+    }, [])
 
     // Lấy danh sách chương trình khuyến mãi
     useEffect(() => {
         const fetchPromotions = async () => {
             try {
                 const result = await getPromotion()
-                setPromotions(result?.data || []);
+                setPromotions(result || []);
             } catch (err) {
                 console.error("Failed to fetch promotions:", err);
                 message.warning(err.response?.data.message || err.message || "không thể tải danh sách chương trình khuyến mãi")
@@ -127,8 +140,9 @@ export default function BookingList() {
 
     // Tìm chương trình khuyến mãi phù hợp dựa trên ngày đặt lịch và hạng thành viên
     const getApplicablePromotion = () => {
-        if (!selectedDate || !customer || !customer.tier || promotions.length === 0) return null;
-        const tierId = customer.tier.id;
+        if (!selectedDate || !membershipTier || !membershipTier.membershipTierSummaryResponse) return null;
+
+        const tierId = membershipTier.membershipTierSummaryResponse.membershipTierId;
         const bookingDateTime = new Date(selectedDate + "T00:00:00");
 
         const applicable = promotions.filter(p => {
@@ -147,10 +161,9 @@ export default function BookingList() {
             };
             if (p.minTierName) {
                 const requiredLevel = TIER_LEVELS[p.minTierName] || 0;
-                const currentLevel = customer.tier.tierLevel || 0;
+                const currentLevel = membershipTier.membershipTierSummaryResponse.tierLevel || 0;
                 if (currentLevel < requiredLevel) return false;
             }
-
             return true;
         });
 

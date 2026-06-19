@@ -9,7 +9,7 @@ import {
     UserOutlined, CarOutlined, TagOutlined, MoneyCollectOutlined
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { getBillByBookingId, validateVoucher, confirmPaymentAPI } from '../../../service/staffService';
+import { getBillByBookingId, validateVoucher, confirmPaymentByCash, confirmPaymentByBank } from '../../../service/staffService';
 import './Payment.css';
 
 const { Title, Text } = Typography;
@@ -22,13 +22,13 @@ export default function StaffPayment() {
     const [paymentMethod, setPaymentMethod] = useState('QR'); // 'QR' hoặc 'CASH'
     const [billData, setBillData] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [confirming, setConfirming] = useState(false); // loading riêng cho lúc xác nhận thanh toán
     const navigate = useNavigate();
     const location = useLocation();
 
     // Nhận data từ Dashboard
     const bayId = location.state?.bayId || null;
     const bookingId = location.state?.bookingId || null;
-    const sessionId = location.state?.sessionId || null;
 
     useEffect(() => {
         async function getBill() {
@@ -150,7 +150,18 @@ export default function StaffPayment() {
     const staffNote = billData.booking?.notes || billData.session?.note || billData.staffNote || '';
 
     // Khuyến mãi đã áp dụng từ check-in
-    const promotions = billData.promotionUsages || billData.promotions || [];
+    // FIX: API thực tế trả promotionName + discountAmount nằm trong từng item của
+    // booking.bookingDetails, không có field promotionUsages/promotions ở root.
+    const promotions = billData.booking?.bookingDetails
+        ?.filter(s => s.promotionName && Number(s.discountAmount) > 0)
+        .map(s => ({
+            id: s.servicePriceId,
+            name: s.promotionName,
+            discountAmount: s.discountAmount
+        }))
+        || billData.promotionUsages
+        || billData.promotions
+        || [];
 
     // === Tính tiền ===
     const subtotal = billData.originalAmount
@@ -162,7 +173,7 @@ export default function StaffPayment() {
         : promotions.reduce((acc, p) => acc + (Number(p.discountAmount) || Number(p.discount) || 0), 0);
 
     // Voucher discount từ API response (đã được backend tính sẵn)
-    const voucherDiscount = appliedVoucher?.discountAmount ? Number(appliedVoucher.discountAmount) : 0;
+    const voucherDiscount = appliedVoucher?.discountValue ? Number(appliedVoucher.discountValue) : 0;
 
     const finalTotal = billData.finalAmount
         ? Number(billData.finalAmount) - voucherDiscount
@@ -176,7 +187,7 @@ export default function StaffPayment() {
         }
 
         try {
-            const response = await validateVoucher(voucherCode.trim(), subtotal - promotionDiscount);
+            const response = await validateVoucher(customer.id, billData.billingId, voucherCode.trim());
             const voucherData = response?.data || response;
 
             if (voucherData) {
@@ -204,21 +215,29 @@ export default function StaffPayment() {
         setCurrentStep(1);
     };
 
-    // Giả lập nhận thanh toán (Mock Frontend) + Code API (đã comment)
-    const handleSimulatePayment = async () => {
-        setLoading(true);
-        try {
-            // === CODE GỌI API SAU NÀY BẠN UNCOMMENT RA ĐỂ DÙNG ===
-            /*
-            if (bookingId) {
-                await confirmPaymentAPI(bookingId, paymentMethod);
-            }
-            */
+    // FIX: Gọi API thật theo đúng phương thức thanh toán (CASH/QR-bank),
+    // thay cho logic mock cũ và tên function sai (confirmPaymentAPI không tồn tại).
+    const handlePayment = async () => {
+        if (!bookingId) {
+            message.error('Không xác định được booking để xác nhận thanh toán!');
+            return;
+        }
 
-            // === LOGIC MOCK HIỆN TẠI ===
+        setConfirming(true);
+        try {
+            if (paymentMethod === 'CASH') {
+                await confirmPaymentByCash(billId);
+            } else {
+                await confirmPaymentByBank(billId);
+            }
+
             setIsPaymentReceived(true);
             message.success(paymentMethod === 'CASH' ? 'Đã thu tiền mặt thành công!' : 'Thanh toán QR thành công!');
-            
+
+            // Tắt loading ngay khi đã xác nhận xong, tránh treo nút trong lúc
+            // hiển thị màn hình Result và chờ chuyển trang.
+            setConfirming(false);
+
             setTimeout(() => {
                 // Quay về Dashboard với paidBayId và paidBookingId để giải phóng bay & update UI
                 if (bayId) {
@@ -229,9 +248,9 @@ export default function StaffPayment() {
             }, 2500);
         } catch (error) {
             console.error("Failed to confirm payment", error);
-            message.error('Lỗi khi cập nhật trạng thái thanh toán!');
-        } finally {
-            setLoading(false);
+            const errorMsg = error.response?.data?.message || 'Lỗi khi cập nhật trạng thái thanh toán!';
+            message.error(errorMsg);
+            setConfirming(false);
         }
     };
 
@@ -338,7 +357,7 @@ export default function StaffPayment() {
                                     <Row justify="space-between" className="payment-voucher-applied-row">
                                         <Col>
                                             <Tag color="blue">{voucherCode.toUpperCase()}</Tag>
-                                            <Text style={{ color: '#1890ff' }}>{appliedVoucher.name || appliedVoucher.voucherCode}</Text>
+                                            <Text style={{ color: '#1890ff' }}>{appliedVoucher.rewardName}</Text>
                                         </Col>
                                         <Col><Text strong style={{ color: '#1890ff' }}>-{voucherDiscount.toLocaleString('vi-VN')} đ</Text></Col>
                                     </Row>
@@ -418,7 +437,7 @@ export default function StaffPayment() {
                                 <div className="voucher-applied-info">
                                     <CheckCircleOutlined style={{ color: '#52c41a', marginRight: 8 }} />
                                     <Text strong style={{ color: '#52c41a' }}>
-                                        Đã áp dụng: {appliedVoucher.name || appliedVoucher.voucherCode}
+                                        Đã áp dụng: {appliedVoucher.rewardName}
                                     </Text>
                                 </div>
                             )}
@@ -509,7 +528,7 @@ export default function StaffPayment() {
                                         <Row justify="space-between" className="payment-promo-row">
                                             <Col>
                                                 <Tag color="blue" style={{ marginRight: 4 }}>{voucherCode.toUpperCase()}</Tag>
-                                                <Text style={{ color: '#1890ff' }}>{appliedVoucher.name || appliedVoucher.voucherCode}</Text>
+                                                <Text style={{ color: '#1890ff' }}>{appliedVoucher.rewardName}</Text>
                                             </Col>
                                             <Col><Text strong style={{ color: '#1890ff' }}>-{voucherDiscount.toLocaleString('vi-VN')} đ</Text></Col>
                                         </Row>
@@ -540,8 +559,8 @@ export default function StaffPayment() {
                                         Phương thức thanh toán
                                     </Title>
 
-                                    <Radio.Group 
-                                        value={paymentMethod} 
+                                    <Radio.Group
+                                        value={paymentMethod}
                                         onChange={(e) => setPaymentMethod(e.target.value)}
                                         buttonStyle="solid"
                                         style={{ width: '100%', marginBottom: 24, display: 'flex' }}
@@ -581,8 +600,8 @@ export default function StaffPayment() {
                                                 type="dashed"
                                                 block
                                                 className="simulate-payment-btn"
-                                                onClick={handleSimulatePayment}
-                                                loading={loading}
+                                                onClick={handlePayment}
+                                                loading={confirming}
                                             >
                                                 <CheckCircleOutlined /> Giả lập: Đã nhận chuyển khoản
                                             </Button>
@@ -613,8 +632,8 @@ export default function StaffPayment() {
                                                 size="large"
                                                 icon={<CheckCircleOutlined />}
                                                 style={{ background: '#52c41a', borderColor: '#52c41a' }}
-                                                onClick={handleSimulatePayment}
-                                                loading={loading}
+                                                onClick={handlePayment}
+                                                loading={confirming}
                                             >
                                                 Xác nhận đã thu tiền mặt
                                             </Button>

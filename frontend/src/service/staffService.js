@@ -31,18 +31,17 @@ export async function completeSession(bookingId) {
     return response.data;
 }
 
-export async function searchBookingByQR(qrCode) {
-    const response = await axios.get(`${API}/api/booking/qr/${qrCode}`, {
+export async function searchBookingByQR(bookingCode) {
+    const response = await axios.get(`${API}/api/bookings/booking-code`, {
+        params: { bookingCode },
         withCredentials: true,
     });
     return response.data;
 }
 
-export async function confirmBooking(bookingId, staffId, bayId, staffNote) {
-    const response = await axios.patch(`${API}/api/booking/confirm/${bookingId}`, {
-        staffId,
-        bayId,
-        staffNote,
+export async function confirmBooking(bookingId) {
+    const response = await axios.post(`${API}/api/staff/wash-sessions/start`, {
+        bookingId,
     }, { withCredentials: true });
     return response.data;
 }
@@ -55,19 +54,29 @@ export async function getBillByBookingId(bookingId) {
     return response.data;
 }
 
-export async function confirmPaymentAPI(bookingId, paymentMethod) {
-    const url = paymentMethod 
-        ? `${API}/api/billings/confirm/${bookingId}?paymentMethod=${paymentMethod}`
-        : `${API}/api/billings/confirm/${bookingId}`;
-    const response = await axios.post(url, {}, {
+export async function confirmPaymentByCash(billingId) {
+    const response = await axios.post(`${API}/api/billings/complete/cash`, billingId, {
         withCredentials: true,
+        headers: { 'Content-Type': 'application/json' }
     });
     return response.data;
 }
 
-export async function validateVoucher(code, amount) {
-    const response = await axios.post(`${API}/api/voucher/validate`,
-        { voucherCode: code, amount },
+export async function confirmPaymentByBank(billingId) {
+    const response = await axios.post(`${API}/api/billings/complete/bank`, billingId, {
+        withCredentials: true,
+        headers: { 'Content-Type': 'application/json' }
+    });
+    return response.data;
+}
+
+export async function validateVoucher(customerId, billingId, voucherCode) {
+    const response = await axios.post(`${API}/api/billings/apply-voucher`,
+        {
+            "customerId": customerId,
+            "billingId": billingId,
+            "voucherCode": voucherCode
+        },
         { withCredentials: true }
     );
     return response.data;

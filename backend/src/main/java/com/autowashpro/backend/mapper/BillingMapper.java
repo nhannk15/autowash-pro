@@ -16,6 +16,7 @@ public interface BillingMapper {
 
     @Mapping(target = "billingId", source = "id")
     @Mapping(target = "billingVoucherResponse", source = "voucher")
+    @Mapping(target = "pointsChange", ignore = true)
     BillingResponse toBillingResponse(Billing billing);
 
     List<BillingResponse> toBillingResponses(List<Billing> billings);
