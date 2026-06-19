@@ -3,7 +3,7 @@ import { Row, Col, Card, Table, Tag, Progress, Button, Empty, Space, Typography,
 import { CalendarOutlined, TrophyOutlined, CrownOutlined, ArrowRightOutlined, GiftOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import { getMembershipTier, getUpcomingBooking } from '../../../service/customerService';
+import { getMembershipTier, getUpcomingBooking } from '../../../service/CustomerService';
 import './Overview.css';
 
 const { Title, Text } = Typography;
