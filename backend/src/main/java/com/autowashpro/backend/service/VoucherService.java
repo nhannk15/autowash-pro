@@ -1,5 +1,6 @@
 package com.autowashpro.backend.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +36,8 @@ public class VoucherService {
 
     @Autowired
     public VoucherService(VoucherRepository voucherRepository, CustomerRepository customerRepository,
-            RewardRepository rewardRepository, VoucherCodeGenerator voucherCodeGenerator, PointTransactionRepository pointTransactionRepository, VoucherMapper voucherMapper) {
+            RewardRepository rewardRepository, VoucherCodeGenerator voucherCodeGenerator,
+            PointTransactionRepository pointTransactionRepository, VoucherMapper voucherMapper) {
         this.voucherRepository = voucherRepository;
         this.customerRepository = customerRepository;
         this.rewardRepository = rewardRepository;
@@ -78,9 +80,10 @@ public class VoucherService {
                 .pointsChange(reward.getPointCost())
                 .balanceAfter(savedCustomer.getCurrentPoints())
                 .description(null)
+                .expiryDate(LocalDate.now().plusMonths(6))
                 .staff(null)
                 .build();
-        pointTransactionRepository.save(pointTransaction);        
+        pointTransactionRepository.save(pointTransaction);
         return voucherMapper.toVoucherResponse(savedVoucher);
     }
 }

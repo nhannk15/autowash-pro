@@ -1,45 +1,41 @@
 package com.autowashpro.backend.service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.autowashpro.backend.model.entity.Customer;
 import com.autowashpro.backend.model.entity.PointTransaction;
+import com.autowashpro.backend.model.enums.TransactionType;
+import com.autowashpro.backend.repository.CustomerRepository;
 import com.autowashpro.backend.repository.PointTransactionRepository;
 
 @Service
 public class PointTransactionService {
-    
-    private PointTransactionRepository repository;
 
-    public PointTransactionService() {
-    }
+    private final PointTransactionRepository pointTransactionRepository;
+    private final CustomerRepository customerRepository;
 
     @Autowired
-    public PointTransactionService(PointTransactionRepository repository) {
-        this.repository = repository;
+    public PointTransactionService(PointTransactionRepository pointTransactionRepository, CustomerRepository customerRepository) {
+        this.pointTransactionRepository = pointTransactionRepository;
+        this.customerRepository = customerRepository;
     }
 
-    public PointTransaction createNew(PointTransaction pointTransaction) {
-        return repository.save(pointTransaction);
-    }
+    public void evaluatePointTransactionExpiryDate() {
+        LocalDate today = LocalDate.now();
+        List<PointTransaction> pointTransactions = pointTransactionRepository.getExpiredAndEarnPointTransactions(today);
+        for (PointTransaction pointTransaction: pointTransactions) {
+            pointTransaction.setTransactionType(TransactionType.EXPIRE);
+            pointTransactionRepository.save(pointTransaction);
 
-    public PointTransaction findById(Long id) {
-        return repository.findById(id).get();
-    }
-
-    public List<PointTransaction> findAll() {
-        return repository.findAll();
-    }
-
-    public PointTransaction update(PointTransaction pointTransaction) {
-        return repository.save(pointTransaction);
-    }
-
-    public void delete(Long id) {
-        PointTransaction pointTransaction = findById(id);
-        repository.delete(pointTransaction);
+            Customer customer = pointTransaction.getCustomer();
+            customer.setCurrentPoints(customer.getCurrentPoints() - pointTransaction.getPointsChange());
+            customerRepository.save(customer);
+            
+        }
     }
 
 }
