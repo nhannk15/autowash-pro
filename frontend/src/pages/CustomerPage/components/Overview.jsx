@@ -3,7 +3,7 @@ import { Row, Col, Card, Table, Tag, Progress, Button, Empty, Space, Typography,
 import { CalendarOutlined, TrophyOutlined, CrownOutlined, ArrowRightOutlined, GiftOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import { getMembershipTier, getUpcomingBooking } from '../../../service/customerService';
+import { getMembershipTier, getUpcomingBooking, getReward, exchangeVoucher } from '../../../service/customerService';
 import './Overview.css';
 
 const { Title, Text } = Typography;
@@ -34,7 +34,11 @@ export default function Overview() {
             onOk: async () => {
                 try {
                     setExchanging(true);
-                    await exchangeVoucher(reward.id);
+                    const payload = {
+                        customerId: user.id,
+                        rewardId: reward.id
+                    };
+                    await exchangeVoucher(payload);
                     message.success(`Đổi voucher "${reward.rewardName}" thành công!`);
 
                     // Gọi lại API lấy thông tin Membership Tier để cập nhật điểm mới trên giao diện
@@ -387,6 +391,22 @@ export default function Overview() {
                                                 : 'Bạn đã đạt mức điểm tối đa'}
                                         </div>
                                     </div>
+                                    <Button
+                                        type="primary"
+                                        icon={<GiftOutlined />}
+                                        onClick={async () => {
+                                            try {
+                                                const data = await getReward();
+                                                setRewards(data || []);
+                                                setIsRewardModalOpen(true);
+                                            } catch (error) {
+                                                message.error("Không thể tải danh sách phần thưởng!");
+                                            }
+                                        }}
+                                        style={{ marginTop: '16px', width: '100%', backgroundColor: '#faad14', borderColor: '#faad14' }}
+                                    >
+                                        Đổi voucher
+                                    </Button>
                                 </>
                             )}
                         </div>
@@ -459,6 +479,6 @@ export default function Overview() {
                     locale={{ emptyText: <Empty description="Bạn không có lịch đặt sắp tới" /> }}
                 />
             </Modal>
-        </div>
+        </div >
     );
 }

@@ -70,3 +70,8 @@ export async function getReward() {
     const response = await axios.get('/api/customer/rewards')
     return response.data
 }
+
+export async function exchangeVoucher(payload) {
+    const response = await axios.post('/api/voucher/exchange', payload);
+    return response.data;
+}
