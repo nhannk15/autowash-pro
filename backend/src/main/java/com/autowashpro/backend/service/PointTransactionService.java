@@ -39,7 +39,7 @@ public class PointTransactionService {
         }
     }
 
-    public Long totalPointsEarnForCustomer(Long customerId) {
+    public Long calculateTotalPointsEarnForCustomer(Long customerId) {
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new UserNotFoundException("Không tìm thấy khách hàng với id: " + customerId));
         return pointTransactionRepository.calculateTotalPointsEarned(customer.getId());
