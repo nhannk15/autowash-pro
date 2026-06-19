@@ -1,5 +1,6 @@
 package com.autowashpro.backend.model.entity;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.autowashpro.backend.model.enums.TransactionType;
@@ -63,8 +64,8 @@ public class PointTransaction {
     @Column(name = "description", nullable = true)
     private String description;
 
-    // @Column(name = "expiry_date", nullable = false)
-    // private LocalDateTime expiryDate;
+    @Column(name = "expiry_date", nullable = false)
+    private LocalDate expiryDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_staff_id")
