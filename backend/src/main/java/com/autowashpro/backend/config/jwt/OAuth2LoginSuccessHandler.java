@@ -70,8 +70,6 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                     newCustomer.setCurrentPoints(0L);
                     newCustomer.setLifetimePoints(0L);
                     newCustomer.setTierStartDate(LocalDate.now());
-                    newCustomer.setTierEndDate(LocalDate.now().plusYears(1));
-                    newCustomer.setNextReviewDate(LocalDate.now().plusMonths(6));
 
                     return customerRepository.save(newCustomer);
                 });

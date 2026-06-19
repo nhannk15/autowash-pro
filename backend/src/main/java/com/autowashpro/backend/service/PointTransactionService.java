@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.autowashpro.backend.exception.UserNotFoundException;
 import com.autowashpro.backend.model.entity.Customer;
 import com.autowashpro.backend.model.entity.PointTransaction;
 import com.autowashpro.backend.model.enums.TransactionType;
@@ -36,6 +37,12 @@ public class PointTransactionService {
             customerRepository.save(customer);
             
         }
+    }
+
+    public Long totalPointsEarnForCustomer(Long customerId) {
+        Customer customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new UserNotFoundException("Không tìm thấy khách hàng với id: " + customerId));
+        return pointTransactionRepository.calculateTotalPointsEarned(customer.getId());
     }
 
 }
