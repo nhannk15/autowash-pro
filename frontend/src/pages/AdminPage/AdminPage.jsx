@@ -8,7 +8,8 @@ import {
     ContainerOutlined,
     TagOutlined,
     RubyOutlined,
-    GiftOutlined
+    GiftOutlined,
+    AuditOutlined
 } from '@ant-design/icons';
 
 export default function AdminPage() {
@@ -26,9 +27,10 @@ export default function AdminPage() {
     const adminItems = [
         getItem('Dashboard', '/admin/dashboard', <ProductOutlined />),
         getItem('Khách hàng', '/admin/customer', <TeamOutlined />),
-        getItem('Hạng thành viên', '/admin/membership', <RubyOutlined />),
-        getItem('Voucher', '/admin/voucher', <GiftOutlined />),
+        getItem('Nhân viên', '/admin/staff', <AuditOutlined />),
         getItem('Dịch vụ', '/admin/service', <ContainerOutlined />),
+        getItem('Hạng thành viên', '/admin/membership', <RubyOutlined />),
+        getItem('Đổi thưởng', '/admin/rewards', <GiftOutlined />),
         getItem('Khuyến mãi', '/admin/promotion', <TagOutlined />),
         getItem('Hồ sơ', '/admin/profile', <UserOutlined />),
         getItem('Đăng xuất', 'logout', <LogoutOutlined />, null, 'sidebar__menu-item--logout'),
