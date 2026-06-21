@@ -120,3 +120,46 @@
     background-color: #e6b800;
     transform: translateY(-2px);
 }
+
+/* Media Query for Tablet & Mobile */
+@media (max-width: 768px) {
+    .booking-form-section {
+        padding: 48px 16px;
+    }
+
+    .booking-form__header h2 {
+        font-size: 1.4rem;
+        line-height: 1.3;
+    }
+
+    .booking-form__header p {
+        font-size: 0.85rem;
+    }
+
+    .booking-form__container {
+        padding: 24px 16px;
+    }
+
+    .booking-form {
+        gap: 12px;
+    }
+
+    .form-input {
+        padding: 12px;
+        font-size: 0.9rem;
+    }
+
+    .checkbox-group {
+        display: grid;
+        grid-template-columns: 1fr; /* single column for easy touch tapping */
+        gap: 12px;
+    }
+
+    .btn-submit {
+        width: 100%;
+        align-self: stretch;
+        text-align: center;
+        padding: 14px 0;
+        font-size: 0.95rem;
+    }
+}
