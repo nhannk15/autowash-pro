@@ -12,7 +12,7 @@ export async function getCustomers(params) {
 }
 
 export async function recoverCustomer(customerId) {
-    const response = await axios.put(`${API}/api/admin/customers/restore/${customerId}`, {
+    const response = await axios.put(`${API}/api/admin/customers/restore/${customerId}`, null, {
         withCredentials: true,
     });
     return response.data;
@@ -33,10 +33,11 @@ export async function getStaffs(params) {
     return response.data;
 }
 
-export async function addStaff({ fullName, email, phoneNumber, hiredDate }) {
+export async function addStaff({ fullName, email, password, phoneNumber, hiredDate }) {
     const response = await axios.post(`${API}/api/admin/staffs`, {
         fullName,
         email,
+        password,
         phoneNumber,
         hiredDate
     }, {
@@ -46,7 +47,7 @@ export async function addStaff({ fullName, email, phoneNumber, hiredDate }) {
 }
 
 export async function recoverStaff(staffId) {
-    const response = await axios.put(`${API}/api/admin/staffs/restore/${staffId}`, {
+    const response = await axios.put(`${API}/api/admin/staffs/restore/${staffId}`, null, {
         withCredentials: true,
     });
     return response.data;

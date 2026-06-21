@@ -169,6 +169,138 @@
     font-family: system-ui, -apple-system, sans-serif;
 }
 
+/* --- Camera Scanner Buttons --- */
+.qr-action-buttons {
+    margin-top: 16px;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.camera-btn {
+    height: 40px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: system-ui, -apple-system, sans-serif;
+    border-radius: 8px;
+    padding: 0 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1.5px solid rgba(255, 255, 255, 0.25);
+    color: #fff;
+    transition: all 0.2s ease;
+}
+
+.camera-btn:hover {
+    background: rgba(255, 255, 255, 0.18) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+    color: #fff !important;
+}
+
+.camera-btn-close {
+    background: rgba(255, 77, 79, 0.15) !important;
+    border-color: rgba(255, 77, 79, 0.3) !important;
+    color: #ff7875 !important;
+}
+
+.camera-btn-close:hover {
+    background: rgba(255, 77, 79, 0.25) !important;
+    border-color: rgba(255, 77, 79, 0.5) !important;
+    color: #ffa39e !important;
+}
+
+/* --- Camera Scanner (Html5QrcodeScanner) --- */
+.camera-scanner-wrapper {
+    margin-top: 20px;
+    width: 100%;
+    max-width: 500px;
+}
+
+.camera-reader {
+    width: 100% !important;
+    min-height: 300px;
+    border-radius: 12px;
+    overflow: hidden !important;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    background: #000;
+}
+
+/* Video feed */
+.camera-reader video {
+    width: 100% !important;
+    border-radius: 0;
+    display: block;
+}
+
+/* Scanning region (qrbox highlight) */
+.camera-reader #qr-camera-reader__scan_region {
+    position: relative;
+}
+
+.camera-reader #qr-camera-reader__scan_region img {
+    /* QR box corner guides */
+    opacity: 0.9;
+}
+
+/* Dashboard (camera select + file input) */
+.camera-reader #qr-camera-reader__dashboard {
+    padding: 12px 16px;
+    background: rgba(0, 0, 0, 0.8);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.camera-reader #qr-camera-reader__dashboard_section {
+    padding: 4px 0;
+}
+
+.camera-reader #qr-camera-reader__dashboard_section_csr {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.camera-reader #qr-camera-reader__dashboard_section_csr span {
+    color: rgba(255, 255, 255, 0.6) !important;
+    font-size: 13px;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.camera-reader select {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 13px;
+    font-family: system-ui, -apple-system, sans-serif;
+    outline: none;
+}
+
+.camera-reader button {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-family: system-ui, -apple-system, sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.camera-reader button:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Permission/status message */
+.camera-reader #qr-camera-reader__header_message {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 14px;
+    text-align: center;
+    padding: 20px;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
 /* --- Bảng kết quả --- */
 .search-table {
     border-radius: 12px;

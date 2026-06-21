@@ -55,6 +55,7 @@ import com.autowashpro.backend.repository.UserRepository;
 import com.autowashpro.backend.repository.VehicleRepository;
 import com.autowashpro.backend.repository.WashSessionRepository;
 import com.autowashpro.backend.utils.BookingCodeGenerator;
+import com.autowashpro.backend.utils.QrCodeGenerator;
 
 @Service
 public class BookingService {
@@ -72,6 +73,7 @@ public class BookingService {
     private final WashSessionRepository washSessionRepository;
     private final BookingMapper bookingMapper;
     private final BookingCodeGenerator bookingCodeGenerator;
+    private final QrCodeGenerator qrCodeGenerator;
     private final EmailService emailService;
     private final UserRepository userRepository;
 
@@ -81,7 +83,7 @@ public class BookingService {
             VehicleRepository vehicleRepository, PromotionRepository promotionRepository,
             BookingRepository bookingRepository, BookingDetailRepository bookingDetailRepository,
             WashSessionRepository washSessionRepository, BookingMapper bookingMapper,
-            BookingCodeGenerator bookingCodeGenerator, EmailService emailService,
+            BookingCodeGenerator bookingCodeGenerator, QrCodeGenerator qrCodeGenerator, EmailService emailService,
             UserRepository userRepository) {
         this.customerRepository = customerRepository;
         this.servicePriceRepository = servicePriceRepository;
@@ -94,6 +96,7 @@ public class BookingService {
         this.washSessionRepository = washSessionRepository;
         this.bookingMapper = bookingMapper;
         this.bookingCodeGenerator = bookingCodeGenerator;
+        this.qrCodeGenerator = qrCodeGenerator;
         this.emailService = emailService;
         this.userRepository = userRepository;
     }
@@ -350,11 +353,13 @@ public class BookingService {
                 .build();
 
         /**
-         * Step 12. Send a BookingCode to user's email.
+         * Step 12. Generate QR Code and send booking confirmation email.
          */
-        // emailService.sendBookingSuccessToEmail(customer.getEmail(),
-        // savedBooking.getBookingCode(),
-        // bookingResponse);
+        byte[] qrCodeBytes = qrCodeGenerator.generateQrCode(savedBooking.getBookingCode());
+        emailService.sendBookingSuccessToEmail(customer.getEmail(),
+                savedBooking.getBookingCode(),
+                bookingResponse,
+                qrCodeBytes);
 
         return bookingResponse;
 
