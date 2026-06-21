@@ -160,51 +160,109 @@
     margin-bottom: 8px !important;
 }
 
-/* Card 2: Points */
-.points-display {
-    display: flex;
-    align-items: baseline;
-    gap: 4px;
-    margin-bottom: 12px;
+/* Card 2: Points - Lifetime + Current */
+.point-row {
+    padding: 10px 12px;
+    border-radius: 8px;
+    transition: background-color 0.2s;
 }
 
-.points-number {
-    font-size: 38px;
+.lifetime-row {
+    background-color: #fafafa;
+}
+
+.current-row {
+    background-color: #fffbe6;
+}
+
+.point-row-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.point-row-icon {
+    font-size: 14px;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+.lifetime-icon {
+    color: #8c8c8c;
+    background-color: #f0f0f0;
+}
+
+.current-icon {
+    color: #faad14;
+    background-color: #fff7e6;
+}
+
+.point-row-label {
+    font-size: 12px !important;
+    color: #666666 !important;
+    font-weight: 600 !important;
+}
+
+.point-info-icon {
+    font-size: 12px;
+    color: #bfbfbf;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.point-info-icon:hover {
+    color: #666666;
+}
+
+.point-row-value {
+    font-size: 28px;
     font-weight: 800;
+    line-height: 1.2;
+}
+
+.lifetime-value {
+    color: #595959;
+}
+
+.current-value {
     color: #faad14;
 }
 
-.points-unit {
-    font-size: 14px;
-    color: #666666;
-    font-weight: 600;
-}
-
-.progress-section {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.progress-text {
-    display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    color: #666666;
-    font-weight: 600;
-}
-
-.progress-tip {
-    font-size: 11px;
+.point-row-unit {
+    font-size: 13px;
     color: #8c8c8c;
-    font-style: italic;
+    font-weight: 600;
+    margin-left: 4px;
 }
 
-/* Card 3: Membership Tier */
+.points-divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, #e8e8e8, transparent);
+    margin: 6px 0;
+}
+
+.voucher-btn {
+    margin-top: 12px !important;
+    width: 100%;
+    height: 36px !important;
+    font-weight: 600 !important;
+    background-color: #faad14 !important;
+    border-color: #faad14 !important;
+    border-radius: 6px !important;
+    transition: all 0.3s !important;
+}
+
+.voucher-btn:hover {
+    background-color: #d48806 !important;
+    border-color: #d48806 !important;
+}
+
+/* Card 3: Membership Tier + Delta */
 .tier-display {
     display: flex;
     justify-content: center;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
 }
 
 .tier-badge {
@@ -241,17 +299,91 @@
     border: 1px solid #d946ef;
 }
 
+/* Delta Point Section */
+.delta-section {
+    background-color: #f8fafc;
+    border: 1px solid #e8edf2;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+}
+
+.delta-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 2px;
+}
+
+.delta-icon {
+    font-size: 14px;
+    color: #1890ff;
+}
+
+.delta-label {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #333333 !important;
+}
+
+.delta-value {
+    font-size: 24px;
+    font-weight: 800;
+    color: #1890ff;
+    line-height: 1.2;
+    margin-bottom: 8px;
+}
+
+.delta-unit {
+    font-size: 12px;
+    color: #8c8c8c;
+    font-weight: 600;
+    margin-left: 4px;
+}
+
+.delta-progress-group {
+    margin-bottom: 6px;
+}
+
+.delta-progress-group:last-child {
+    margin-bottom: 0;
+}
+
+.delta-progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #666666;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.delta-status-ok {
+    color: #52c41a;
+    font-weight: 700;
+}
+
+.delta-status-warn {
+    color: #ff4d4f;
+    font-weight: 700;
+}
+
+.delta-status-neutral {
+    color: #8c8c8c;
+    font-weight: 600;
+}
+
 .tier-benefits {
     list-style: none;
     padding: 0;
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
 }
 
 .tier-benefits li {
-    font-size: 12px;
+    font-size: 11px;
     color: #666666;
     line-height: 1.4;
 }
