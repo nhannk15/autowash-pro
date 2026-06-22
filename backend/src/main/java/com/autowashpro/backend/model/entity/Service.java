@@ -20,10 +20,12 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -53,7 +55,7 @@ public class Service {
     private ServiceCategory category;
 
     @Column(name = "is_active", nullable = false)
-    private boolean isActive = true;
+    private boolean isActive;
 
     @OneToMany(mappedBy = "service")
     @JsonIgnoreProperties("service")
@@ -85,6 +87,7 @@ public class Service {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        isActive = true;
     }
 
     @PreUpdate

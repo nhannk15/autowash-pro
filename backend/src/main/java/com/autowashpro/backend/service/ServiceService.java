@@ -5,11 +5,14 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.autowashpro.backend.exception.UserNotFoundException;
 import com.autowashpro.backend.mapper.HighlightMapper;
+import com.autowashpro.backend.mapper.ServiceMapper;
 import com.autowashpro.backend.mapper.ServicePriceMapper;
 import com.autowashpro.backend.mapper.StepMapper;
+import com.autowashpro.backend.model.dto.NewServiceRequest;
 import com.autowashpro.backend.model.dto.ServiceAdminResponse;
 import com.autowashpro.backend.model.dto.ServicePriceItemResponse;
 import com.autowashpro.backend.model.dto.ServiceResponse;
@@ -17,10 +20,14 @@ import com.autowashpro.backend.model.entity.Highlight;
 import com.autowashpro.backend.model.entity.Service;
 import com.autowashpro.backend.model.entity.ServicePrice;
 import com.autowashpro.backend.model.entity.Step;
+import com.autowashpro.backend.model.entity.VehicleType;
 import com.autowashpro.backend.repository.HightlightRepository;
 import com.autowashpro.backend.repository.ServicePriceRepository;
 import com.autowashpro.backend.repository.ServiceRepository;
 import com.autowashpro.backend.repository.StepRepository;
+import com.autowashpro.backend.repository.VehicleTypeRepository;
+
+import jakarta.persistence.EntityManager;
 
 @org.springframework.stereotype.Service
 public class ServiceService {
@@ -32,11 +39,15 @@ public class ServiceService {
     private final ServicePriceMapper servicePriceMapper;
     private final StepMapper stepMapper;
     private final HighlightMapper highlightMapper;
+    private final VehicleTypeRepository vehicleTypeRepository;
+    private final ServiceMapper serviceMapper;
+    private final EntityManager entityManager;
 
     @Autowired
     public ServiceService(ServiceRepository serviceRepository, ServicePriceRepository servicePriceRepository,
             StepRepository stepRepository, HightlightRepository hightlightRepository,
-            ServicePriceMapper servicePriceMapper, StepMapper stepMapper, HighlightMapper highlightMapper) {
+            ServicePriceMapper servicePriceMapper, StepMapper stepMapper, HighlightMapper highlightMapper,
+            VehicleTypeRepository vehicleTypeRepository, ServiceMapper serviceMapper, EntityManager entityManager) {
         this.serviceRepository = serviceRepository;
         this.servicePriceRepository = servicePriceRepository;
         this.stepRepository = stepRepository;
@@ -44,6 +55,9 @@ public class ServiceService {
         this.servicePriceMapper = servicePriceMapper;
         this.stepMapper = stepMapper;
         this.highlightMapper = highlightMapper;
+        this.vehicleTypeRepository = vehicleTypeRepository;
+        this.serviceMapper = serviceMapper;
+        this.entityManager = entityManager;
     }
 
     public List<Service> getAllServices() {
@@ -144,18 +158,76 @@ public class ServiceService {
         return serviceRepository.save(service);
     }
 
-    public ServiceAdminResponse toServiceAdminResponse(Service service) {
-        return new ServiceAdminResponse(
-                service.getId(),
-                service.getServiceName(),
-                service.getDescription(),
-                service.getDurationMinutes(),
-                service.getPointMultiplier(),
-                service.getCategory(),
-                service.isActive(),
-                service.getImage(),
-                service.getCreatedAt(),
-                service.getUpdatedAt());
+    @Transactional
+    public ServiceAdminResponse createNewService(NewServiceRequest request) {
+        Service newServie = Service
+                .builder()
+                .serviceName(request.getServiceName())
+                .description(request.getDescription())
+                .durationMinutes(request.getDurationMinutes())
+                .pointMultiplier(request.getPointMultiplier())
+                .category(request.getCategory())
+                .image(request.getImage())
+                .build();
+
+        Service savedService = serviceRepository.save(newServie);
+
+        List<String> steps = request.getSteps();
+        for (int step = 1; step <= steps.size(); step++) {
+            Step newStep = Step
+                    .builder()
+                    .step(Long.valueOf(step))
+                    .stepDescription(steps.get(step - 1))
+                    .service(savedService)
+                    .build();
+            stepRepository.save(newStep);
+        }
+
+        List<String> highlights = request.getHighLights();
+        for (String hightlight : highlights) {
+            Highlight newHighlight = Highlight
+                    .builder()
+                    .highlightDescription(hightlight)
+                    .service(savedService)
+                    .build();
+            hightlightRepository.save(newHighlight);
+        }
+
+        VehicleType sedan = vehicleTypeRepository.findByTypeName("SEDAN").get();
+        VehicleType suv = vehicleTypeRepository.findByTypeName("SUV").get();
+
+        ServicePrice newServicePriceForSedan = ServicePrice
+                .builder()
+                .service(savedService)
+                .vehicleType(sedan)
+                .price(request.getPriceForSedan())
+                .build();
+        ServicePrice newServicePriceForSuv = ServicePrice
+                .builder()
+                .service(savedService)
+                .vehicleType(suv)
+                .price(request.getPriceForSuv())
+                .build();
+
+        servicePriceRepository.saveAndFlush(newServicePriceForSedan);
+        servicePriceRepository.saveAndFlush(newServicePriceForSuv);
+
+        entityManager.flush();
+        entityManager.refresh(savedService);
+
+        // Force load lazy collection
+        savedService.getServicePrices().size();
+
+        return serviceMapper.toServiceAdminResponse(savedService);
+    }
+
+    public ServiceAdminResponse deactiveService(Long serviceId) {
+        Service targetService = serviceRepository.findById(serviceId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy Service với id " + serviceId));
+        
+        targetService.setActive(false);
+        Service savedService = serviceRepository.save(targetService);
+        return serviceMapper.toServiceAdminResponse(savedService);
     }
 
 }
