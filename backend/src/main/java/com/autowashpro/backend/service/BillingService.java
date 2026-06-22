@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -205,6 +206,47 @@ public class BillingService {
         voucher.setIssuedAt(LocalDateTime.now());
         Voucher savedVoucher = voucherRepository.save(voucher);
         return voucherMapper.toVoucherResponse(savedVoucher);
+    }
+
+    public BillingResponse completeBankingPayment(Map<String, String> params) {
+        Long billingId = Long.valueOf(params.get("vnp_TxnRef").split("_")[0]);
+        Billing billing = billingRepository.findById(billingId)
+                .orElseThrow(() -> new BillingNotFoundException(
+                        "Hóa đơn " + billingId + " không tồn tại"));
+
+        billing.setPaymentStatus(PaymentStatus.PAID);
+        billing.setPaymentMethod(PaymentMethod.BANK_TRANSFER);
+        billing.setPaidAt(LocalDateTime.now());
+
+        for (WashSession washSession : billing.getBooking().getWashSessions()) {
+            washSession.setStatus(WashSessionStatus.PAID);
+            washSessionRepository.save(washSession);
+        }
+
+        Billing savedBilling = billingRepository.save(billing);
+
+        Customer customer = billing.getBooking().getCustomer();
+        Long pointsChange = billing.getFinalAmount().divide(BigDecimal.valueOf(1000L)).longValue();
+        customer.setCurrentPoints(customer.getCurrentPoints() + pointsChange);
+        customer.setLifetimePoints(customer.getLifetimePoints() + pointsChange);
+
+        PointTransaction newPointTransaction = PointTransaction
+                .builder()
+                .customer(billing.getBooking().getCustomer())
+                .billing(savedBilling)
+                .transactionType(TransactionType.EARN)
+                .pointsChange(pointsChange)
+                .balanceAfter(customer.getCurrentPoints())
+                .description(null)
+                .expiryDate(LocalDate.now().plusMonths(6))
+                .staff(null)
+                .build();
+        customerRepository.save(customer);
+        pointTransactionRepository.save(newPointTransaction);
+
+        BillingResponse billingResponse = billingMapper.toBillingResponse(savedBilling);
+        billingResponse.setPointsChange(pointsChange);
+        return billingResponse;
     }
 
 }
