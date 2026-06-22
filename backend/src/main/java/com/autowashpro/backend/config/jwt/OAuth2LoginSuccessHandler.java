@@ -30,17 +30,19 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     @Value("${frontend.base-url}")
     private String FRONTEND_BASE_URL;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final JwtService jwtService;
+    private final CustomerRepository customerRepository;
+    private final MembershipTierRepository membershipTierRepository;
 
     @Autowired
-    private JwtService jwtService;
-
-    @Autowired
-    private CustomerRepository customerRepository;
-
-    @Autowired
-    private MembershipTierRepository membershipTierRepository;
+    public OAuth2LoginSuccessHandler(UserRepository userRepository, JwtService jwtService,
+            CustomerRepository customerRepository, MembershipTierRepository membershipTierRepository) {
+        this.userRepository = userRepository;
+        this.jwtService = jwtService;
+        this.customerRepository = customerRepository;
+        this.membershipTierRepository = membershipTierRepository;
+    }
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,

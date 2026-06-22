@@ -56,7 +56,7 @@ public class SecurityConfiguration {
                 (authorize) -> authorize
                         .requestMatchers("/auth/login", "/auth/logout", "/auth/register",
                                 "/auth/forgot-password", "/auth/verify-otp", "/auth/reset-password",
-                                "/api/services")
+                                "/api/services", "/api/payment/vnpay/**")
                         .permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/staff/**").hasRole("STAFF")

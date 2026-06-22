@@ -10,17 +10,23 @@ import org.springframework.stereotype.Component;
 public class DataSeeder implements CommandLineRunner {
 
     private final List<Seeder> seeders;
+    private final BookingSeeder bookingSeeder;
 
     @Autowired
-    public DataSeeder(List<Seeder> seeders) {
+    public DataSeeder(List<Seeder> seeders, BookingSeeder bookingSeeder) {
         this.seeders = seeders;
+        this.bookingSeeder = bookingSeeder;
     }
 
     @Override
     public void run(String... args) throws Exception {
-        for (Seeder seeder : seeders) {
-            seeder.seed();
-        }
+        // 1. Uncomment this for one time.
+        // for (Seeder seeder : seeders) {
+        //     seeder.seed();
+        // }
+
+        // 2. Uncomment this for everyday's creating new bookings.
+        // bookingSeeder.seed();
     }
 
 }
