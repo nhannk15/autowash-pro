@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -61,6 +62,9 @@ import com.autowashpro.backend.utils.QrCodeGenerator;
 public class BookingService {
 
     private static final int SLOT_DURATION = 60;
+
+    @Value("${email.sendbooking}")
+    private String useEmailService;
 
     private final CustomerRepository customerRepository;
     private final ServicePriceRepository servicePriceRepository;
@@ -355,11 +359,13 @@ public class BookingService {
         /**
          * Step 12. Generate QR Code and send booking confirmation email.
          */
-        byte[] qrCodeBytes = qrCodeGenerator.generateQrCode(savedBooking.getBookingCode());
-        emailService.sendBookingSuccessToEmail(customer.getEmail(),
-                savedBooking.getBookingCode(),
-                bookingResponse,
-                qrCodeBytes);
+        if (useEmailService.equals("yes")) {
+            byte[] qrCodeBytes = qrCodeGenerator.generateQrCode(savedBooking.getBookingCode());
+            emailService.sendBookingSuccessToEmail(customer.getEmail(),
+                    savedBooking.getBookingCode(),
+                    bookingResponse,
+                    qrCodeBytes);
+        }
 
         return bookingResponse;
 
@@ -392,13 +398,16 @@ public class BookingService {
     }
 
     public List<BookingResponse> getCustomerUpcomingBookings(String email) {
-        Customer customer = customerRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("Không tìm thấy khách hàng"));
+        Customer customer = customerRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Không tìm thấy khách hàng"));
         LocalDate today = LocalDate.now();
-        return bookingMapper.toBookingResponses(bookingRepository.findCustomerUpcomingBookings(customer.getId(), today));
+        return bookingMapper
+                .toBookingResponses(bookingRepository.findCustomerUpcomingBookings(customer.getId(), today));
     }
 
     public List<BookingResponse> getCustomerAllBookings(String email) {
-        Customer customer = customerRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("Không tìm thấy khách hàng"));
+        Customer customer = customerRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Không tìm thấy khách hàng"));
         return bookingMapper.toBookingResponses(bookingRepository.findByCustomerId(customer.getId()));
     }
 

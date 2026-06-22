@@ -2,141 +2,77 @@ package com.autowashpro.backend.seeder;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 import com.autowashpro.backend.model.dto.CreateBookingRequest;
+import com.autowashpro.backend.model.entity.Vehicle;
+import com.autowashpro.backend.repository.VehicleRepository;
 import com.autowashpro.backend.service.BookingService;
 
-// @Component
-// @Order(15)
+@Component
+@Order(15)
 public class BookingSeeder implements Seeder {
 
     private final BookingService bookingService;
+    private final VehicleRepository vehicleRepository;
+
+    private static final List<Long> CUSTOMER_IDS = List.of(3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L);
+    private static final List<Long> SERVICE_PRICE_IDS = List.of(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L, 11L, 12L, 13L,
+            14L);
+    private static final List<Long> TIME_SLOT_IDS = List.of(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L);
+
+    private final Random random = new Random();
 
     @Autowired
-    public BookingSeeder(BookingService bookingService) {
+    public BookingSeeder(BookingService bookingService, VehicleRepository vehicleRepository) {
         this.bookingService = bookingService;
+        this.vehicleRepository = vehicleRepository;
     }
 
     @Override
     public void seed() {
 
         LocalDate tomorrow = LocalDate.now().plusDays(1L);
+        int created = 0;
+        int attempts = 0;
 
-        CreateBookingRequest bookingRequest_1 = CreateBookingRequest
-                .builder()
-                .customerId(3L)
-                .vehicleId(1L)
-                .timeSlotId(4L)
-                .bookingDate(tomorrow)
-                .servicePriceIds(List.of(13L))
-                .notes("Booking của Lê Thị Thúy: SEDAN Hyundai CREATA")
-                .build();
+        while (created < 60 && attempts < 300) {
+            attempts++;
 
-        CreateBookingRequest bookingRequest_2 = CreateBookingRequest
-                .builder()
-                .customerId(3L)
-                .vehicleId(2L)
-                .timeSlotId(4L)
-                .bookingDate(tomorrow)
-                .servicePriceIds(List.of(13L))
-                .notes("Booking của Lê Thị Thúy: SEDAN Toyota CAMRY")
-                .build();
+            Long customerId = CUSTOMER_IDS.get(random.nextInt(CUSTOMER_IDS.size()));
 
-        CreateBookingRequest bookingRequest_3 = CreateBookingRequest
-                .builder()
-                .customerId(4L)
-                .vehicleId(3L)
-                .timeSlotId(4L)
-                .bookingDate(tomorrow)
-                .servicePriceIds(List.of(14L))
-                .notes("Booking của Nguyễn Khắc Lê Nhân: SUV Honda CR-V")
-                .build();
+            List<Vehicle> vehicles = vehicleRepository.findByCustomerId(customerId);
+            if (vehicles.isEmpty()) {
+                continue;
+            }
+            Vehicle vehicle = vehicles.get(random.nextInt(vehicles.size()));
 
-        CreateBookingRequest bookingRequest_4 = CreateBookingRequest
-                .builder()
-                .customerId(4L)
-                .vehicleId(4L)
-                .timeSlotId(4L)
-                .bookingDate(tomorrow)
-                .servicePriceIds(List.of(13L))
-                .notes("Booking của Nguyễn Khắc Lê Nhân: SEDAN Mazda 3")
-                .build();
+            Long servicePriceId = SERVICE_PRICE_IDS.get(random.nextInt(SERVICE_PRICE_IDS.size()));
+            Long timeSlotId = TIME_SLOT_IDS.get(random.nextInt(TIME_SLOT_IDS.size()));
 
-        CreateBookingRequest bookingRequest_5 = CreateBookingRequest
-                .builder()
-                .customerId(5L)
-                .vehicleId(5L)
-                .timeSlotId(4L)
-                .bookingDate(tomorrow)
-                .servicePriceIds(List.of(14L))
-                .notes("Booking của Trần Bùi Phương Trinh - SUV Ford Everest")
-                .build();
+            CreateBookingRequest request = CreateBookingRequest
+                    .builder()
+                    .customerId(customerId)
+                    .vehicleId(vehicle.getId())
+                    .timeSlotId(timeSlotId)
+                    .bookingDate(tomorrow)
+                    .servicePriceIds(List.of(servicePriceId))
+                    .notes("Seed booking #" + (created + 1))
+                    .build();
 
-        /**
-         * Now, all the bays in Slot 4 (10:00 - 11:00) tomorrow are booked.
-         */
-        CreateBookingRequest bookingRequest_6 = CreateBookingRequest
-                .builder()
-                .customerId(6L)
-                .vehicleId(6L)
-                .timeSlotId(5L)
-                .bookingDate(tomorrow)
-                .servicePriceIds(List.of(5L))
-                .notes("Booking của Đặng Nhất Thiên Bảo - SEDAN Kia CERATO")
-                .build();
+            try {
+                bookingService.createBooking(request);
+                created++;
+            } catch (RuntimeException ex) {
+                // Slot đã đầy hoặc lỗi khác -> thử lại với tổ hợp khác
+                continue;
+            }
+        }
 
-        CreateBookingRequest bookingRequest_7 = CreateBookingRequest
-                .builder()
-                .customerId(7L)
-                .vehicleId(7L)
-                .timeSlotId(5L)
-                .bookingDate(tomorrow)
-                .servicePriceIds(List.of(6L))
-                .notes("Booking của Hồ Dương Nhật Quang - SUV Mitsubishi XPANDER")
-                .build();
-
-        CreateBookingRequest bookingRequest_8 = CreateBookingRequest
-                .builder()
-                .customerId(8L)
-                .vehicleId(8L)
-                .timeSlotId(5L)
-                .bookingDate(tomorrow)
-                .servicePriceIds(List.of(5L))
-                .notes("Booking của Trần Vương Quân - SEDAN Nissan Altima")
-                .build();
-
-        CreateBookingRequest bookingRequest_9 = CreateBookingRequest
-                .builder()
-                .customerId(9L)
-                .vehicleId(9L)
-                .timeSlotId(5L)
-                .bookingDate(tomorrow)
-                .servicePriceIds(List.of(6L))
-                .notes("Booking của Phan Nguyễn Anh Thư - SUV Suzuki Ertiga")
-                .build();
-
-        CreateBookingRequest bookingRequest_10 = CreateBookingRequest
-                .builder()
-                .customerId(11L)
-                .vehicleId(10L)
-                .timeSlotId(5L)
-                .bookingDate(tomorrow)
-                .servicePriceIds(List.of(5L))
-                .notes("Booking của Phan Ngọc Quyết - SEDAN Tesla Model3")
-                .build();
-
-        bookingService.createBooking(bookingRequest_1);
-        bookingService.createBooking(bookingRequest_2);
-        bookingService.createBooking(bookingRequest_3);
-        bookingService.createBooking(bookingRequest_4);
-        bookingService.createBooking(bookingRequest_5);
-        bookingService.createBooking(bookingRequest_6);
-        bookingService.createBooking(bookingRequest_7);
-        bookingService.createBooking(bookingRequest_8);
-        bookingService.createBooking(bookingRequest_9);
-        bookingService.createBooking(bookingRequest_10);
     }
 
 }

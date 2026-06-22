@@ -14,15 +14,17 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class ServiceAdminResponse {
-    
-    private Long id;
+public class NewServiceRequest {
+
     private String serviceName;
     private String description;
     private int durationMinutes;
     private BigDecimal pointMultiplier;
     private ServiceCategory category;
-    private List<ServicePriceItemResponse> servicePriceItemResponses;
+    private List<String> steps;
+    private List<String> highLights;
+    private BigDecimal priceForSedan;
+    private BigDecimal priceForSuv;
     private String image;
 
 }
