@@ -3,8 +3,11 @@ package com.autowashpro.backend.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,8 +24,6 @@ import com.autowashpro.backend.model.dto.CustomerRequest;
 import com.autowashpro.backend.service.CustomerService;
 
 @RestController
-@RequestMapping("/api/admin/customers")
-@PreAuthorize("hasRole('ADMIN')")
 public class CustomerController {
 
     private final CustomerService service;
@@ -32,7 +33,12 @@ public class CustomerController {
         this.service = service;
     }
 
-    @GetMapping
+    @GetMapping("/api/customers/info")
+    public ResponseEntity<?> getCurrentCustomerInfo(@AuthenticationPrincipal String email) {
+        return ResponseEntity.status(HttpStatus.OK).body(service.getCurrentInfo(email));
+    }
+
+    @GetMapping("/api/admin/customers")
     public ResponseEntity<ApiResponse<Page<CustomerAdminResponse>>> findAll(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Long tierId,
@@ -40,30 +46,30 @@ public class CustomerController {
         return ResponseEntity.ok(ApiResponse.success(service.searchCustomersAdmin(search, tierId, pageable)));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/api/admin/customers/{id}")
     public ResponseEntity<ApiResponse<CustomerAdminResponse>> findById(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success(service.toCustomerAdminResponse(service.findById(id))));
     }
 
-    @PostMapping
+    @PostMapping("/api/admin/customers")
     public ResponseEntity<ApiResponse<CustomerAdminResponse>> create(@RequestBody CustomerRequest request) {
         return ResponseEntity.ok(ApiResponse.created(service.toCustomerAdminResponse(service.createByAdmin(request))));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/api/admin/customers/{id}")
     public ResponseEntity<ApiResponse<CustomerAdminResponse>> update(@RequestBody CustomerRequest request,
             @PathVariable Long id) {
         return ResponseEntity
                 .ok(ApiResponse.success(service.toCustomerAdminResponse(service.updateByAdmin(id, request))));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/api/admin/customers/{id}")
     public ResponseEntity<ApiResponse<Void>> deactivate(@PathVariable Long id) {
         service.deactivate(id);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
-    @PutMapping("/restore/{id}")
+    @PutMapping("/api/admin/customers/restore/{id}")
     public ResponseEntity<ApiResponse<Void>> restore(@PathVariable Long id) {
         service.activate(id);
         return ResponseEntity.ok(ApiResponse.success(null));

@@ -1,7 +1,9 @@
 package com.autowashpro.backend.service;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,17 +42,19 @@ public class CustomerService {
     private final MembershipTierRepository membershipTierRepository;
     private final PasswordEncoder passwordEncoder;
     private final MembershipTierMapper membershipTierMapper;
+    private final CustomerRepository customerRepository;
 
     @Autowired
     public CustomerService(CustomerRepository repository,
             UserRepository userRepository,
             MembershipTierRepository membershipTierRepository,
-            PasswordEncoder passwordEncoder, MembershipTierMapper membershipTierMapper) {
+            PasswordEncoder passwordEncoder, MembershipTierMapper membershipTierMapper, CustomerRepository customerRepository) {
         this.repository = repository;
         this.userRepository = userRepository;
         this.membershipTierRepository = membershipTierRepository;
         this.passwordEncoder = passwordEncoder;
         this.membershipTierMapper = membershipTierMapper;
+        this.customerRepository = customerRepository;
     }
 
     public Customer register(RegistrationRequest request) {
@@ -361,4 +365,9 @@ public class CustomerService {
         }
     }
 
+    public CustomerAdminResponse getCurrentInfo(String email) {
+        Customer customer = customerRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Không tìm thấy khách hàng với email: " + email));
+        return toCustomerAdminResponse(customer);
+    }
 }

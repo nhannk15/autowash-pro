@@ -1,12 +1,14 @@
 package com.autowashpro.backend.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,7 +60,10 @@ import com.autowashpro.backend.repository.WashSessionRepository;
 import com.autowashpro.backend.utils.BookingCodeGenerator;
 import com.autowashpro.backend.utils.QrCodeGenerator;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Service
+@Slf4j
 public class BookingService {
 
     private static final int SLOT_DURATION = 60;
@@ -210,10 +215,29 @@ public class BookingService {
         /**
          * Step 5. Find applicable promotions.
          */
+        log.info("Customer date of birth: {}", customer.getDateOfBirth());
+        log.info("Booking date: {}", bookingDay);
+        boolean isBirthday = customer.getDateOfBirth() != null
+                && customer.getDateOfBirth().getMonth() == bookingDay.getMonth()
+                && customer.getDateOfBirth().getDayOfMonth() == bookingDay.getDayOfMonth();
+        log.info("Is bookingdate customer's birthday: {}", isBirthday);
+        BigDecimal totalOriginalPrice = servicePrices.stream()
+                .map(ServicePrice::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
         List<Promotion> applicablePromotions = promotionRepository.findApplicablePromotions(
                 bookingDay.atStartOfDay(),
                 customerMembership.getId());
-        Promotion promotion = applicablePromotions.size() == 0 ? null : applicablePromotions.get(0);
+        log.info("Promotions size: {}", applicablePromotions.size());
+        Promotion promotion = applicablePromotions.stream()
+                .filter(p -> {
+                    if ("Ưu Đãi Sinh Nhật".equals(p.getPromotionName())) {
+                        return isBirthday;
+                    }
+                    return true; // Promotion thường
+                })
+                .max(Comparator.comparing(p -> calculateDiscountValue(p, totalOriginalPrice)))
+                .orElse(null);
+        log.info("Promotion's name: {}", promotion == null ? null : promotion.getPromotionName());
 
         /**
          * Step 6. Find the first available WashBay to assign. Check if that Bay is
@@ -304,10 +328,6 @@ public class BookingService {
         /**
          * Step 11. Build and return response.
          */
-        BigDecimal totalOriginalPrice = savedDetails.stream()
-                .map(BookingDetail::getPriceAtBooking)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
         BigDecimal totalDiscount = savedDetails.stream()
                 .map(BookingDetail::getDiscountAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -409,6 +429,21 @@ public class BookingService {
         Customer customer = customerRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("Không tìm thấy khách hàng"));
         return bookingMapper.toBookingResponses(bookingRepository.findByCustomerId(customer.getId()));
+    }
+
+    public BigDecimal calculateDiscountValue(Promotion promotion, BigDecimal totalOriginalPrice) {
+        if (promotion == null || totalOriginalPrice == null) {
+            return BigDecimal.ZERO;
+        }
+        if (promotion.getDiscountType().equals(PromotionDiscountType.FIXED_AMOUNT)) {
+            return promotion.getDiscountValue();
+        } else if (promotion.getDiscountType().equals(PromotionDiscountType.PERCENTAGE)) {
+            return totalOriginalPrice
+                    .multiply(promotion.getDiscountValue())
+                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        } else {
+            return totalOriginalPrice;
+        }
     }
 
 }
