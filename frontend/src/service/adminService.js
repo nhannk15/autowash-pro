@@ -124,6 +124,8 @@ export async function deleteReward(id) {
 
 // Lấy danh sách bảng giá dịch vụ (Service Prices)
 export async function getServicePrices() {
-    const response = await axios.get(`/api/service-prices`);
+    const response = await axios.get(`${API}/api/service-prices`, {
+        withCredentials: true,
+    });
     return response.data;
 }
