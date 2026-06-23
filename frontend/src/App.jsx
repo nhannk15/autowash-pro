@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/Layout/Header/Navbar.jsx'
 import Footer from './components/Layout/Footer/Footer.jsx'
 import Home from './pages/HomePage/Home.jsx'
+import { ProtectedRoute } from './routes/ProtectedRoute.jsx'
 import Service from './pages/ServicePage/Service.jsx'
 import Blog from './pages/BlogPage/Blog.jsx'
 import BlogDetail from './pages/BlogPage/BlogDetail.jsx'
@@ -93,7 +94,9 @@ function App() {
       } />
       {/* Trang Cá nhân (Customer Dashboard) */}
       <Route path="/ca-nhan" element={
-        <MainLayout><CustomerPage /></MainLayout>
+        <ProtectedRoute allowedRoles={["CUSTOMER"]}>
+          <MainLayout><CustomerPage /></MainLayout>
+        </ProtectedRoute>
       }>
         <Route index element={<Navigate to="ho-so" replace />} />
         <Route path="tong-quan" element={<Overview />} />
@@ -103,10 +106,10 @@ function App() {
         <Route path="ho-so" element={<PersonalProfile />} />
       </Route>
       <Route path="/staff" element={
-        <>
+        <ProtectedRoute allowedRoles={["STAFF"]}>
           <Navbar />
           <StaffPage />
-        </>
+        </ProtectedRoute>
       }>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<StaffDashboard />} />
@@ -118,10 +121,10 @@ function App() {
       </Route>
 
       <Route path="/admin" element={
-        <>
+        <ProtectedRoute allowedRoles={["ADMIN"]}>
           <Navbar />
           <AdminPage />
-        </>
+        </ProtectedRoute>
       }>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboard />} />
