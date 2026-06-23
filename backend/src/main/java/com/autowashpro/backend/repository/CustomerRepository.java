@@ -1,5 +1,7 @@
 package com.autowashpro.backend.repository;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -26,5 +28,17 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
     Page<Customer> searchCustomers(@Param("search") String search,
                                    @Param("tierId") Long tierId,
                                    Pageable pageable);
+
+    default Long countByCreatedAtDate(LocalDate date) {
+        return countByCreatedAtRange(date.atStartOfDay(), date.plusDays(1).atStartOfDay());
+    }
+
+    @Query("""
+            SELECT COUNT(customer) FROM Customer customer
+            WHERE customer.createdAt >= :startOfDay
+            AND customer.createdAt < :nextDay
+            """)
+    Long countByCreatedAtRange(@Param("startOfDay") LocalDateTime startOfDay,
+                               @Param("nextDay") LocalDateTime nextDay);
 
 }

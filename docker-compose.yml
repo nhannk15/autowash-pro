@@ -11,7 +11,7 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - ./docker-data/mysql:/var/lib/mysql
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       start_period: 30s
@@ -56,8 +56,7 @@ services:
     networks:
       - autowash-net
 
-volumes:
-  mysql_data:
+
 
 networks:
   autowash-net:
