@@ -25,6 +25,8 @@ import com.autowashpro.backend.model.entity.Booking;
 import com.autowashpro.backend.model.entity.BookingDetail;
 import com.autowashpro.backend.model.entity.Customer;
 import com.autowashpro.backend.model.entity.PointTransaction;
+import com.autowashpro.backend.model.entity.Promotion;
+import com.autowashpro.backend.model.entity.PromotionUsage;
 import com.autowashpro.backend.model.entity.Voucher;
 import com.autowashpro.backend.model.entity.WashSession;
 import com.autowashpro.backend.model.enums.PaymentMethod;
@@ -50,12 +52,13 @@ public class BillingService {
     private final CustomerRepository customerRepository;
     private final VoucherMapper voucherMapper;
     private final PointTransactionRepository pointTransactionRepository;
+    private final PromotionService promotionService;
 
     @Autowired
     public BillingService(BillingRepository billingRepository, BookingRepository bookingRepository,
             BillingMapper billingMapper, WashSessionRepository washSessionRepository,
             VoucherRepository voucherRepository, CustomerRepository customerRepository, VoucherMapper voucherMapper,
-            PointTransactionRepository pointTransactionRepository) {
+            PointTransactionRepository pointTransactionRepository, PromotionService promotionService) {
         this.billingRepository = billingRepository;
         this.bookingRepository = bookingRepository;
         this.billingMapper = billingMapper;
@@ -64,6 +67,7 @@ public class BillingService {
         this.customerRepository = customerRepository;
         this.voucherMapper = voucherMapper;
         this.pointTransactionRepository = pointTransactionRepository;
+        this.promotionService = promotionService;
     }
 
     public Billing createPendingBilling(Long bookingId) {
@@ -157,6 +161,9 @@ public class BillingService {
 
         BillingResponse billingResponse = billingMapper.toBillingResponse(savedBilling);
         billingResponse.setPointsChange(pointsChange);
+
+        Promotion promotion = billing.getBooking().getPromotion();
+        promotionService.commitPromotionUsage(promotion == null ? null : promotion.getId(), billingId);
         return billingResponse;
     }
 
@@ -246,6 +253,9 @@ public class BillingService {
 
         BillingResponse billingResponse = billingMapper.toBillingResponse(savedBilling);
         billingResponse.setPointsChange(pointsChange);
+
+        Promotion promotion = billing.getBooking().getPromotion();
+        promotionService.commitPromotionUsage(promotion == null ? null : promotion.getId(), billingId);
         return billingResponse;
     }
 
