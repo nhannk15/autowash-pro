@@ -32,20 +32,21 @@ import jakarta.validation.Valid;
 
 @RestController
 public class AuthenticationController {
-    @Autowired
-    private UserRepository repository;
 
-    @Autowired
-    private JwtService jwtService;
+    private final UserRepository repository;
+    private final JwtService jwtService;
+    private final PasswordEncoder passwordEncoder;
+    private final CustomerService customerService;
+    private final OtpService otpService;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private CustomerService customerService;
-
-    @Autowired
-    private OtpService otpService;
+    public AuthenticationController(UserRepository repository, JwtService jwtService, PasswordEncoder passwordEncoder,
+            CustomerService customerService, OtpService otpService) {
+        this.repository = repository;
+        this.jwtService = jwtService;
+        this.passwordEncoder = passwordEncoder;
+        this.customerService = customerService;
+        this.otpService = otpService;
+    }
 
     @PostMapping("/auth/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response)
@@ -58,14 +59,24 @@ public class AuthenticationController {
         if (!matched) {
             throw new WrongPasswordException("Wrong password");
         }
-        String token = jwtService.generateToken(user);
+        String token = jwtService.generateAccessToken(user);
+        String refreshToken = jwtService.generateRefreshToken(user);
 
         Cookie cookie = new Cookie("access_token", token);
         cookie.setHttpOnly(true);
         cookie.setSecure(false);
         cookie.setPath("/");
-        cookie.setMaxAge(60 * 60);
+        cookie.setMaxAge(60 * 15);
         response.addCookie(cookie);
+
+        Cookie refreshTokenCookie = new Cookie("refresh_token", refreshToken);
+        refreshTokenCookie.setHttpOnly(true);
+        refreshTokenCookie.setSecure(false);
+        refreshTokenCookie.setPath("/");
+        refreshTokenCookie.setMaxAge(60 * 60 * 24 * 7);
+        response.addCookie(refreshTokenCookie);
+        user.setRefreshToken(refreshToken);
+        repository.save(user);
         return ResponseEntity.ok(new LoginResponse(token, "Bearer", 3600));
     }
 

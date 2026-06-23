@@ -1,6 +1,7 @@
 package com.autowashpro.backend.config.jwt;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,44 +36,49 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        String token = null;
+        String accessToken = null;
+        String refreshToken = null;
 
-        // Đọc từ Cookie (Google login + Email/Password login)
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
                 if (cookie.getName().equals("access_token")) {
-                    token = cookie.getValue();
-                    break;
+                    accessToken = cookie.getValue();
+                }
+                if (cookie.getName().equals("refresh_token")) {
+                    refreshToken = cookie.getValue();
                 }
             }
         }
 
-        // Nếu không có trong Cookie, đọc từ Authorization header (Bearer token)
-        if (token == null) {
+        if (accessToken == null) {
             String authHeader = request.getHeader("Authorization");
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                token = authHeader.substring(7);
+                accessToken = authHeader.substring(7);
             }
         }
 
-        // Không có token → bỏ qua
-        if (token == null) {
+        if (accessToken == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
-            if (jwtService.verifyToken(token)) {
-                String email = jwtService.extractEmail(token);
-
+            if (jwtService.verifyToken(accessToken)) {
+                authenticateUser(accessToken);
+            } else if (refreshToken != null && jwtService.verifyToken(refreshToken)) {
+                String email = jwtService.extractEmail(refreshToken);
                 User user = userRepository.findByEmail(email).orElse(null);
-                if (user != null) {
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            email, // principal → getPrincipal() trả về String email
-                            null,
-                            List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().toString())));
 
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                if (user.getRefreshToken().equals(refreshToken)) {
+                    String newAccessToken = jwtService.generateAccessToken(user);
+                    Cookie newAccessCookie = new Cookie("access_token", newAccessToken);
+                    newAccessCookie.setHttpOnly(true);
+                    newAccessCookie.setSecure(false); // true khi production
+                    newAccessCookie.setPath("/");
+                    newAccessCookie.setMaxAge(60 * 15);
+                    response.addCookie(newAccessCookie);
+
+                    authenticateUser(newAccessToken);
                 }
             }
         } catch (Exception e) {
@@ -81,6 +87,20 @@ public class JwtFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
 
+    }
+
+    private void authenticateUser(String accessToken) throws ParseException {
+        String email = jwtService.extractEmail(accessToken);
+
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user != null) {
+            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                    email, // principal → getPrincipal() trả về String email
+                    null,
+                    List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().toString())));
+
+            SecurityContextHolder.getContext().setAuthentication(authToken);
+        }
     }
 
 }
