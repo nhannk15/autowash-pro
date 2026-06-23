@@ -21,8 +21,10 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd /home/ubuntu/autowash-pro
+            git switch develop
+            git fetch
             git pull origin develop
-            docker compose down -v --remove-orphans || true
+            docker compose down --remove-orphans || true
             docker compose up -d --build
 
       - name: Notify deploy failure via email
