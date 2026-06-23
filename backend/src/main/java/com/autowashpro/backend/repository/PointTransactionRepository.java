@@ -28,4 +28,11 @@ public interface PointTransactionRepository extends JpaRepository<PointTransacti
             """)
     Long calculateTotalPointsEarned(@Param("customerId") Long customerId);
 
+    @Query("""
+            SELECT SUM(pointTransaction.pointsChange) FROM PointTransaction pointTransaction
+            WHERE pointTransaction.transactionType = com.autowashpro.backend.model.enums.TransactionType.EARN
+            AND pointTransaction.createdAt = :date
+            """)
+    Long sumPointsIssuedByDate(@Param("date") LocalDate date);
+
 }
