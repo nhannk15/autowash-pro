@@ -408,9 +408,10 @@ export default function BookingList() {
             {/* STEPPER BAR PROGRESS */}
             <div className="booking-stepper">
                 {steps.map((step) => {
-                    const isCompleted = step.num < currentStep;
-                    const isActive = step.num === currentStep;
-                    const isClickable = step.num <= maxUnlockedStep;
+                    const isCompleted = step.num < currentStep; //nghĩa là người dùng đã đi qua bước này và hoàn thành xong thông tin của nó. (Ví dụ: Bạn đang ở Bước 3 thì Bước 1 và 2 sẽ có isCompleted = true).
+                    const isActive = step.num === currentStep; //Xác định xem đây có phải là bước mà người dùng hiện tại đang nhìn thấy trên màn hình hay không.
+                    const isClickable = step.num <= maxUnlockedStep; //maxUnlockedStep lưu trữ bước xa nhất mà người dùng đã đạt được sau khi điền đầy đủ thông tin bắt buộc của các bước trước đó. (Ví dụ: Bạn đã chọn xe ở Bước 1 và chọn dịch vụ ở Bước 2, lúc này maxUnlockedStep sẽ là 3. Bạn có thể tự do click qua lại giữa Bước 1, 2 và 3, nhưng không thể click sang Bước 4 vì chưa chọn thời gian ở Bước 3).
+
 
                     return (
                         <button
