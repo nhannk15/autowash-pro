@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Row, Col, Card, Statistic, Button,
-    Timeline, Tag, Typography, Badge, message, Spin, Divider
+    Timeline, Tag, Typography, Badge, message, Spin, Divider, Tooltip
 } from 'antd';
 import {
     CarOutlined, DollarCircleOutlined, CheckCircleOutlined, ScanOutlined,
@@ -332,13 +332,22 @@ export default function StaffDashboard() {
                                                             </div>
                                                             <div className="bay-card__service-tag">
                                                                 {(session.services && session.services.length > 0) ? (
-                                                                    session.services.map((service, index) => (
-                                                                        <Tag color="blue" key={index} style={{ margin: 0 }}>
-                                                                            {service}
-                                                                        </Tag>
-                                                                    ))
+                                                                    <>
+                                                                        {session.services.slice(0, 2).map((service, index) => (
+                                                                            <Tag color="blue" key={index} style={{ margin: '2px' }}>
+                                                                                {service}
+                                                                            </Tag>
+                                                                        ))}
+                                                                        {session.services.length > 2 && (
+                                                                            <Tooltip title={session.services.slice(2).join(', ')}>
+                                                                                <Tag color="default" style={{ margin: '2px', cursor: 'pointer' }}>
+                                                                                    +{session.services.length - 2}
+                                                                                </Tag>
+                                                                            </Tooltip>
+                                                                        )}
+                                                                    </>
                                                                 ) : (
-                                                                    <Tag color="blue" style={{ margin: 0 }}>Dịch vụ</Tag>
+                                                                    <Tag color="blue" style={{ margin: '2px' }}>Dịch vụ</Tag>
                                                                 )}
                                                             </div>
                                                             {/* Nút hành động */}
