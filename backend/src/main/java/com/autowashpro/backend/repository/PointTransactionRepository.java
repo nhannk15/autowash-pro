@@ -28,4 +28,6 @@ public interface PointTransactionRepository extends JpaRepository<PointTransacti
             """)
     Long calculateTotalPointsEarned(@Param("customerId") Long customerId);
 
+    List<PointTransaction> findByCustomerIdOrderByCreatedAtDesc(Long customerId);
+
 }
