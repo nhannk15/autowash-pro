@@ -1,6 +1,9 @@
 package com.autowashpro.backend.service;
 
 import com.autowashpro.backend.repository.WashSessionRepository;
+
+import lombok.extern.slf4j.Slf4j;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -9,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 import com.autowashpro.backend.exception.BillingNotFoundException;
 import com.autowashpro.backend.exception.BookingNotFoundException;
@@ -26,7 +28,7 @@ import com.autowashpro.backend.model.entity.BookingDetail;
 import com.autowashpro.backend.model.entity.Customer;
 import com.autowashpro.backend.model.entity.PointTransaction;
 import com.autowashpro.backend.model.entity.Promotion;
-import com.autowashpro.backend.model.entity.PromotionUsage;
+import com.autowashpro.backend.model.entity.Service;
 import com.autowashpro.backend.model.entity.Voucher;
 import com.autowashpro.backend.model.entity.WashSession;
 import com.autowashpro.backend.model.enums.PaymentMethod;
@@ -41,7 +43,8 @@ import com.autowashpro.backend.repository.CustomerRepository;
 import com.autowashpro.backend.repository.PointTransactionRepository;
 import com.autowashpro.backend.repository.VoucherRepository;
 
-@Service
+@org.springframework.stereotype.Service
+@Slf4j
 public class BillingService {
 
     private final WashSessionRepository washSessionRepository;
@@ -141,7 +144,15 @@ public class BillingService {
         Billing savedBilling = billingRepository.save(billing);
 
         Customer customer = billing.getBooking().getCustomer();
-        Long pointsChange = billing.getFinalAmount().divide(BigDecimal.valueOf(1000L)).longValue();
+        BigDecimal tempPointsChange = billing.getFinalAmount();
+        log.info("pointsChange: {}", tempPointsChange);
+        for (WashSession wassSession: billing.getBooking().getWashSessions()) {
+            Service service = wassSession.getServicePrice().getService();
+            log.info("service {} has pointsMultiplier: {}", service.getServiceName(), service.getPointMultiplier());
+            tempPointsChange = tempPointsChange.multiply(service.getPointMultiplier());
+        }
+        Long pointsChange = tempPointsChange.divide(BigDecimal.valueOf(1000L)).longValue();
+        log.info("pointsChange after getting services: {}", pointsChange);
         customer.setCurrentPoints(customer.getCurrentPoints() + pointsChange);
         customer.setLifetimePoints(customer.getLifetimePoints() + pointsChange);
 

@@ -71,6 +71,9 @@ public class User {
     @Column(name = "updated_at", nullable = false, updatable = true)
     private LocalDateTime updatedAt; // new
 
+    @Column(name = "refresh_token", nullable = true, columnDefinition = "TEXT")
+    private String refreshToken;
+
      @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
