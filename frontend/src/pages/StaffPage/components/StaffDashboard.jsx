@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Row, Col, Card, Statistic, Button,
@@ -40,50 +40,52 @@ export default function StaffDashboard() {
     const [loadingTodayBookings, setLoadingTodayBookings] = useState(true);
     const [loadingUpcomingBookings, setLoadingUpcomingBookings] = useState(true);
 
-    // Fetch bays
-    useEffect(() => {
-        async function fetchBays() {
-            try {
-                const data = await getAllBays();
-                setBays(data);
-            } catch (error) {
-                console.error("Failed to fetch bays", error);
-            } finally {
-                setLoadingBays(false);
-            }
+    const fetchBays = useCallback(async () => {
+        try {
+            const data = await getAllBays();
+            setBays(data);
+        } catch (error) {
+            console.error("Failed to fetch bays", error);
+        } finally {
+            setLoadingBays(false);
         }
+    }, []);
+
+    const fetchTodayBookings = useCallback(async () => {
+        try {
+            const data = await getTodayBookings();
+            setTodayBookings(data);
+        } catch (error) {
+            console.error("Failed to fetch bookings", error);
+        } finally {
+            setLoadingTodayBookings(false);
+        }
+    }, []);
+
+    const fetchUpcomingBookings = useCallback(async () => {
+        try {
+            const data = await getUpcomingBookings();
+            setBookings(data);
+        } catch (error) {
+            console.error("Failed to fetch bookings", error);
+        } finally {
+            setLoadingUpcomingBookings(false);
+        }
+    }, []);
+
+    useEffect(() => {
         fetchBays();
-    }, []);
-
-    // Fetch bookings
-    useEffect(() => {
-        async function fetchBookings() {
-            try {
-                const data = await getTodayBookings();
-                setTodayBookings(data);
-            } catch (error) {
-                console.error("Failed to fetch bookings", error);
-            } finally {
-                setLoadingTodayBookings(false);
-            }
-        }
-        fetchBookings();
-    }, []);
-
-    //Fetch upcoming bookings
-    useEffect(() => {
-        async function fetchUpcomingBookings() {
-            try {
-                const data = await getUpcomingBookings();
-                setBookings(data);
-            } catch (error) {
-                console.error("Failed to fetch bookings", error);
-            } finally {
-                setLoadingUpcomingBookings(false);
-            }
-        }
+        fetchTodayBookings();
         fetchUpcomingBookings();
-    }, []);
+
+        const interval = setInterval(() => {
+            fetchBays();
+            fetchTodayBookings();
+            fetchUpcomingBookings();
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, [fetchBays, fetchTodayBookings, fetchUpcomingBookings]);
 
     // === Tính stats tự động từ data đã fetch ===
     const stats = useMemo(() => {
