@@ -15,6 +15,7 @@ import com.autowashpro.backend.model.dto.UpcomingBookingResponse;
 import com.autowashpro.backend.model.entity.AvailableSlot;
 import com.autowashpro.backend.model.entity.Booking;
 import com.autowashpro.backend.model.entity.WashSession;
+import com.autowashpro.backend.model.enums.WashSessionStatus;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, uses = {
         VehicleMapper.class, CustomerMapper.class, BookingDetailMapper.class })
@@ -56,6 +57,7 @@ public interface BookingMapper {
     @Mapping(target = "startTime", source = "availableSlots", qualifiedByName = "toStartTime")
     @Mapping(target = "endTime", source = "availableSlots", qualifiedByName = "toEndTime")
     @Mapping(target = "washBay", source = "washSessions", qualifiedByName = "toWashBayName")
+    @Mapping(target = "washSessionStatus", source = "washSessions", qualifiedByName = "toWashSessionStatus")
     BookingResponse toBookingResponse(Booking booking);
 
     @Named("toWashBayName")
@@ -64,6 +66,14 @@ public interface BookingMapper {
             return null;
         }
         return washSessions.getFirst().getBay().getName().toString();
+    }
+
+    @Named("toWashSessionStatus")
+    default WashSessionStatus toWashSessionStatus(List<WashSession> washSessions) {
+        if (washSessions == null || washSessions.isEmpty()) {
+            return null;
+        }
+        return washSessions.getFirst().getStatus();
     }
 
     List<BookingResponse> toBookingResponses(List<Booking> bookings); 

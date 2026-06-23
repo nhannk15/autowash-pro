@@ -5,6 +5,7 @@ import java.time.LocalTime;
 import java.util.List;
 
 import com.autowashpro.backend.model.enums.BookingStatus;
+import com.autowashpro.backend.model.enums.WashSessionStatus;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -27,5 +28,6 @@ public class BookingResponse {
     private LocalTime endTime;
     private String washBay;
     private BookingStatus status;
+    private WashSessionStatus washSessionStatus;
     
 }
