@@ -225,11 +225,7 @@ public class BookingService {
                 0,
                 0,
                 0);
-        BigDecimal totalOriginalPrice = servicePrices.stream()
-                .map(ServicePrice::getPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        Promotion promotion = promotionService.autoFindApplicablePromotion(customer.getEmail(), bookingDateTime,
-                totalOriginalPrice);
+        Promotion promotion = promotionService.autoFindApplicablePromotion(customer.getEmail(), bookingDateTime);
 
         /**
          * Step 6. Find the first available WashBay to assign. Check if that Bay is
@@ -320,10 +316,12 @@ public class BookingService {
         /**
          * Step 11. Build and return response.
          */
+        BigDecimal totalOriginalPrice = servicePrices.stream()
+                .map(ServicePrice::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal totalDiscount = savedDetails.stream()
                 .map(BookingDetail::getDiscountAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
         BigDecimal totalFinalPrice = savedDetails.stream()
                 .map(BookingDetail::getFinalPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);

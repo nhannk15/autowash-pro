@@ -1,7 +1,5 @@
 package com.autowashpro.backend.controller;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -61,9 +59,9 @@ public class PromotionController {
     }
 
 
-    public record ApplicablePromotionRequest(LocalDateTime bookingDateTime, BigDecimal totalOriginalPrice){}
+    public record ApplicablePromotionRequest(LocalDateTime bookingDateTime){}
     @PostMapping("/applicable-promotions")
     public ResponseEntity<PromotionResponse> findApplicablePromotionForUser(@AuthenticationPrincipal String email, @RequestBody ApplicablePromotionRequest request) {
-        return ResponseEntity.status(HttpStatus.OK).body(promotionMapper.toPromotionResponse(promotionService.autoFindApplicablePromotion(email, request.bookingDateTime(), request.totalOriginalPrice())));
+        return ResponseEntity.status(HttpStatus.OK).body(promotionMapper.toPromotionResponse(promotionService.autoFindApplicablePromotion(email, request.bookingDateTime())));
     }
 }

@@ -3,7 +3,6 @@ package com.autowashpro.backend.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.DateTimeException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
@@ -184,8 +183,10 @@ public class PromotionService {
 
     }
 
-    public Promotion autoFindApplicablePromotion(String email, LocalDateTime bookingDateTime,
-            BigDecimal totalOriginalPrice) {
+    public Promotion autoFindApplicablePromotion(String email, LocalDateTime bookingDateTime) {
+
+        BigDecimal totalOriginalPrice = new BigDecimal("10000000");
+
         log.info("Email khách hàng: {}", email);
         Customer customer = customerRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("Không tìm thấy khách hàng với email: " + email));
