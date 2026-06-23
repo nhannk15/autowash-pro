@@ -80,8 +80,12 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
          * Generate Access Token for that USER.
          */
         String accessToken = null;
+        String refreshToken = null;
         try {
-            accessToken = jwtService.generateToken(user);
+            accessToken = jwtService.generateAccessToken(user);
+            refreshToken = jwtService.generateRefreshToken(user);
+            user.setRefreshToken(refreshToken);
+            userRepository.save(user);
         } catch (JOSEException ex) {
             ex.printStackTrace();
         }
@@ -90,8 +94,16 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         cookie.setHttpOnly(true);
         cookie.setSecure(false);
         cookie.setPath("/");
-        cookie.setMaxAge(60 * 60);
+        cookie.setMaxAge(60 * 15);
         response.addCookie(cookie);
+
+        Cookie refreshTokenCookie = new Cookie("refresh_token", refreshToken);
+        refreshTokenCookie.setHttpOnly(true);
+        refreshTokenCookie.setSecure(false);
+        refreshTokenCookie.setPath("/");
+        refreshTokenCookie.setMaxAge(60 * 60 * 24 * 7);
+        response.addCookie(refreshTokenCookie);
+
         response.sendRedirect(FRONTEND_BASE_URL);
         // response.sendRedirect("http://localhost:3000");
 

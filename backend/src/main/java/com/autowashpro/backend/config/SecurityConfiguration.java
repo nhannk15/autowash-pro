@@ -39,12 +39,10 @@ public class SecurityConfiguration {
     public SecurityFilterChain oauth2FilterChain(HttpSecurity security) throws Exception {
         security.securityMatcher("/login/**", "/oauth2/**", "/logout");
         security.authorizeHttpRequests((authorize) -> authorize.anyRequest().permitAll());
-
         security.csrf((csrf) -> csrf.disable());
-
         security.oauth2Login((oauth2) -> oauth2.successHandler(handler));
-
         security.cors(cors -> cors.configurationSource(corsConfigurationSource));
+        security.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         return security.build();
     }
 

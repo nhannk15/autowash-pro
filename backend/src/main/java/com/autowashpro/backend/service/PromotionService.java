@@ -240,26 +240,28 @@ public class PromotionService {
     }
 
     public void commitPromotionUsage(Long promotionId, Long billingId) {
-        Promotion promotion = new Promotion();
-        Optional<Promotion> optionalPromotion = promotionRepository.findById(promotionId);
-        Billing billing = billingRepository.findById(billingId).get();
-        if (optionalPromotion.isPresent()) {
-            promotion = optionalPromotion.get();
-        }
+        if (promotionId != null) {
+            Promotion promotion = new Promotion();
+            Optional<Promotion> optionalPromotion = promotionRepository.findById(promotionId);
+            Billing billing = billingRepository.findById(billingId).get();
+            if (optionalPromotion.isPresent()) {
+                promotion = optionalPromotion.get();
+            }
 
-        log.info("Increase promotion usage count with id: {}", promotionId);
-        if (promotion != null) {
-            promotion.setUsageCount(promotion.getUsageCount() + 1L);
-            promotionRepository.save(promotion);
+            log.info("Increase promotion usage count with id: {}", promotionId);
+            if (promotion != null) {
+                promotion.setUsageCount(promotion.getUsageCount() + 1L);
+                promotionRepository.save(promotion);
+            }
+
+            PromotionUsage promotionUsage = PromotionUsage
+                    .builder()
+                    .promotion(promotion)
+                    .billing(billing)
+                    .discountAmount(promotion == null ? BigDecimal.ZERO : promotion.getDiscountValue())
+                    .build();
+            promotionUsageRepository.save(promotionUsage);
         }
-        
-        PromotionUsage promotionUsage = PromotionUsage
-                .builder()
-                .promotion(promotion)
-                .billing(billing)
-                .discountAmount(promotion == null ? BigDecimal.ZERO : promotion.getDiscountValue())
-                .build();
-        promotionUsageRepository.save(promotionUsage);
     }
 
 }

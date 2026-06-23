@@ -23,9 +23,42 @@ public class JwtService {
     @Value("${jwt.secret-key}")
     private String secretKey;
 
-    public String generateToken(User user) throws KeyLengthException, JOSEException {
+    public String generateAccessToken(User user) throws KeyLengthException, JOSEException {
         Date issuedTime = new Date();
-        Date expiredTime = Date.from(issuedTime.toInstant().plus(30, ChronoUnit.DAYS));
+        Date expiredTime = Date.from(issuedTime.toInstant().plus(15, ChronoUnit.MINUTES));
+
+        /**
+         * Generate JWT Header.
+         */
+        JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
+
+        /**
+         * Generate JWT Payload.
+         */
+        JWTClaimsSet payload = new JWTClaimsSet.Builder()
+                .subject(user.getEmail())
+                .issueTime(issuedTime)
+                .expirationTime(expiredTime)
+                .claim("role", user.getRole())
+                .claim("fullname", user.getFullName())
+                .claim("avatar", user.getAvatarUrl())
+                .build();
+        
+        /**
+         * Generate System own JWT Signature.
+         */
+        SignedJWT signature = new SignedJWT(header, payload);
+        signature.sign(new MACSigner(secretKey));
+
+        /**
+         * Return the JWT String token.
+         */
+        return signature.serialize();
+    }
+
+    public String generateRefreshToken(User user) throws KeyLengthException, JOSEException {
+        Date issuedTime = new Date();
+        Date expiredTime = Date.from(issuedTime.toInstant().plus(7, ChronoUnit.DAYS));
 
         /**
          * Generate JWT Header.
