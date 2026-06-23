@@ -77,6 +77,7 @@ public class BookingService {
     private final TimeSlotRepository timeSlotRepository;
     private final VehicleRepository vehicleRepository;
     private final PromotionRepository promotionRepository;
+    private final PromotionService promotionService;
     private final BookingRepository bookingRepository;
     private final BookingDetailRepository bookingDetailRepository;
     private final WashSessionRepository washSessionRepository;
@@ -93,13 +94,14 @@ public class BookingService {
             BookingRepository bookingRepository, BookingDetailRepository bookingDetailRepository,
             WashSessionRepository washSessionRepository, BookingMapper bookingMapper,
             BookingCodeGenerator bookingCodeGenerator, QrCodeGenerator qrCodeGenerator, EmailService emailService,
-            UserRepository userRepository) {
+            UserRepository userRepository, PromotionService promotionService) {
         this.customerRepository = customerRepository;
         this.servicePriceRepository = servicePriceRepository;
         this.availableSlotRepository = availableSlotRepository;
         this.timeSlotRepository = timeSlotRepository;
         this.vehicleRepository = vehicleRepository;
         this.promotionRepository = promotionRepository;
+        this.promotionService = promotionService;
         this.bookingRepository = bookingRepository;
         this.bookingDetailRepository = bookingDetailRepository;
         this.washSessionRepository = washSessionRepository;
@@ -215,29 +217,19 @@ public class BookingService {
         /**
          * Step 5. Find applicable promotions.
          */
-        log.info("Customer date of birth: {}", customer.getDateOfBirth());
-        log.info("Booking date: {}", bookingDay);
-        boolean isBirthday = customer.getDateOfBirth() != null
-                && customer.getDateOfBirth().getMonth() == bookingDay.getMonth()
-                && customer.getDateOfBirth().getDayOfMonth() == bookingDay.getDayOfMonth();
-        log.info("Is bookingdate customer's birthday: {}", isBirthday);
+        LocalDateTime bookingDateTime = LocalDateTime.of(
+                bookingDay.getYear(),
+                bookingDay.getMonth(),
+                bookingDay.getDayOfMonth(),
+                startTimeSlot.getStartTime().getHour(),
+                0,
+                0,
+                0);
         BigDecimal totalOriginalPrice = servicePrices.stream()
                 .map(ServicePrice::getPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        List<Promotion> applicablePromotions = promotionRepository.findApplicablePromotions(
-                bookingDay.atStartOfDay(),
-                customerMembership.getId());
-        log.info("Promotions size: {}", applicablePromotions.size());
-        Promotion promotion = applicablePromotions.stream()
-                .filter(p -> {
-                    if ("Ưu Đãi Sinh Nhật".equals(p.getPromotionName())) {
-                        return isBirthday;
-                    }
-                    return true; // Promotion thường
-                })
-                .max(Comparator.comparing(p -> calculateDiscountValue(p, totalOriginalPrice)))
-                .orElse(null);
-        log.info("Promotion's name: {}", promotion == null ? null : promotion.getPromotionName());
+        Promotion promotion = promotionService.autoFindApplicablePromotion(customer.getEmail(), bookingDateTime,
+                totalOriginalPrice);
 
         /**
          * Step 6. Find the first available WashBay to assign. Check if that Bay is
@@ -429,21 +421,6 @@ public class BookingService {
         Customer customer = customerRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("Không tìm thấy khách hàng"));
         return bookingMapper.toBookingResponses(bookingRepository.findByCustomerId(customer.getId()));
-    }
-
-    public BigDecimal calculateDiscountValue(Promotion promotion, BigDecimal totalOriginalPrice) {
-        if (promotion == null || totalOriginalPrice == null) {
-            return BigDecimal.ZERO;
-        }
-        if (promotion.getDiscountType().equals(PromotionDiscountType.FIXED_AMOUNT)) {
-            return promotion.getDiscountValue();
-        } else if (promotion.getDiscountType().equals(PromotionDiscountType.PERCENTAGE)) {
-            return totalOriginalPrice
-                    .multiply(promotion.getDiscountValue())
-                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
-        } else {
-            return totalOriginalPrice;
-        }
     }
 
 }
