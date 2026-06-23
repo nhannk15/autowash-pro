@@ -148,7 +148,7 @@ export default function NavBar() {
                             ))}
                         </div>
                     ) : (
-                        <div className="navbar__auth-desktop">
+                        <div className="navbar__auth-desktop" style={{ display: 'flex', gap: '5px' }}>
                             <NavLink to="/login" className="navbar__btn navbar__btn--login">Login</NavLink>
                             <NavLink to="/signup" className="navbar__btn navbar__btn--signup">Sign Up</NavLink>
                         </div>
@@ -156,7 +156,7 @@ export default function NavBar() {
                 </div>
 
                 {user?.role?.toUpperCase() !== "STAFF" && user?.role?.toUpperCase() !== "ADMIN" && (
-                    <button 
+                    <button
                         className={`navbar__hamburger ${isMobileMenuOpen ? 'navbar__hamburger--open' : ''}`}
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                         aria-label="Toggle menu"
