@@ -34,5 +34,6 @@ public interface PointTransactionRepository extends JpaRepository<PointTransacti
             AND pointTransaction.createdAt = :date
             """)
     Long sumPointsIssuedByDate(@Param("date") LocalDate date);
+    List<PointTransaction> findByCustomerIdOrderByCreatedAtDesc(Long customerId);
 
 }
