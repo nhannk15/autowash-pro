@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
-import { 
-    Table, Button, Input, Select, Tag, Modal, Form, 
-    DatePicker, InputNumber, Space, Popconfirm, message, Typography 
+import {
+    Table, Button, Input, Select, Tag, Modal, Form,
+    DatePicker, InputNumber, Space, Popconfirm, message, Typography
 } from 'antd';
-import { 
-    PlusOutlined, EditOutlined, DeleteOutlined, 
-    SearchOutlined, PercentageOutlined 
+import {
+    PlusOutlined, EditOutlined, DeleteOutlined,
+    SearchOutlined, PercentageOutlined
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { 
-    getPromotions, getServices, createPromotion, 
-    updatePromotion, deletePromotion 
+import {
+    getPromotions, getServices, createPromotion,
+    updatePromotion, deletePromotion
 } from '../../../service/adminService';
 import './Promotion.css';
 
@@ -154,7 +154,7 @@ export default function Promotion() {
         if (!promo.active) return false;
 
         const matchesSearch = promo.promotionName?.toLowerCase().includes(searchText.toLowerCase());
-        
+
         if (statusFilter === 'ALL') return matchesSearch;
 
         const now = dayjs();
@@ -229,14 +229,14 @@ export default function Promotion() {
             render: (_, record) => getStatusTag(record)
         },
         {
-            title: 'HÀNH ĐỘNG',
+            title: 'THAO TÁC',
             key: 'action',
             render: (_, record) => (
                 <Space size="middle">
-                    <Button 
-                        type="text" 
-                        icon={<EditOutlined style={{ color: '#1890ff' }} />} 
-                        onClick={() => handleEditClick(record)} 
+                    <Button
+                        type="text"
+                        icon={<EditOutlined style={{ color: '#1890ff' }} />}
+                        onClick={() => handleEditClick(record)}
                     />
                     <Popconfirm
                         title="Bạn có chắc chắn muốn xóa khuyến mãi này?"
@@ -244,10 +244,10 @@ export default function Promotion() {
                         okText="Có"
                         cancelText="Hủy"
                     >
-                        <Button 
-                            type="text" 
-                            danger 
-                            icon={<DeleteOutlined />} 
+                        <Button
+                            type="text"
+                            danger
+                            icon={<DeleteOutlined />}
                         />
                     </Popconfirm>
                 </Space>
@@ -262,9 +262,9 @@ export default function Promotion() {
                     <Title level={3} className="promotion-header-title">QUẢN LÝ KHUYẾN MÃI</Title>
                     <Text type="secondary">Tạo mới, chỉnh sửa thông tin và quản lý các chương trình ưu đãi của hệ thống</Text>
                 </div>
-                <Button 
-                    type="primary" 
-                    icon={<PlusOutlined />} 
+                <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
                     size="large"
                     onClick={handleAddClick}
                     className="promotion-add-btn"
@@ -275,16 +275,16 @@ export default function Promotion() {
 
             {/* Thanh Tìm Kiếm và Lọc */}
             <Space className="promotion-filter-bar">
-                <Input 
-                    placeholder="Tìm tên khuyến mãi..." 
-                    prefix={<SearchOutlined />} 
+                <Input
+                    placeholder="Tìm tên khuyến mãi..."
+                    prefix={<SearchOutlined />}
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
                     className="promotion-search-input"
                 />
-                <Select 
-                    value={statusFilter} 
-                    onChange={setStatusFilter} 
+                <Select
+                    value={statusFilter}
+                    onChange={setStatusFilter}
                     className="promotion-status-select"
                 >
                     <Select.Option value="ALL">Tất cả trạng thái</Select.Option>
@@ -295,9 +295,9 @@ export default function Promotion() {
             </Space>
 
             {/* Bảng Hiển Thị */}
-            <Table 
-                columns={columns} 
-                dataSource={filteredPromotions} 
+            <Table
+                columns={columns}
+                dataSource={filteredPromotions}
                 rowKey="id"
                 loading={loading}
                 pagination={{ pageSize: 8 }}
@@ -315,15 +315,15 @@ export default function Promotion() {
                 cancelText="Hủy bỏ"
                 width={650}
             >
-                <Form 
-                    form={form} 
-                    layout="vertical" 
+                <Form
+                    form={form}
+                    layout="vertical"
                     onFinish={handleFormSubmit}
                     className="promotion-form"
                 >
-                    <Form.Item 
-                        name="promotionName" 
-                        label="Tên Chương Trình Khuyến Mãi" 
+                    <Form.Item
+                        name="promotionName"
+                        label="Tên Chương Trình Khuyến Mãi"
                         rules={[{ required: true, message: 'Vui lòng nhập tên chương trình!' }]}
                     >
                         <Input placeholder="Ví dụ: Giáng Sinh An Lành 2026" />
@@ -335,13 +335,13 @@ export default function Promotion() {
 
                     {/* Dòng 1: Mức giảm (%) và Dịch vụ áp dụng */}
                     <div className="promotion-form-grid">
-                        <Form.Item 
-                            name="discountValue" 
-                            label="Mức giảm giá (%)" 
+                        <Form.Item
+                            name="discountValue"
+                            label="Mức giảm giá (%)"
                             rules={[{ required: true, message: 'Vui lòng nhập mức giảm!' }]}
                         >
-                            <InputNumber 
-                                min={0} 
+                            <InputNumber
+                                min={0}
                                 max={100}
                                 addonAfter="%"
                                 className="promotion-form-item-full"
@@ -349,8 +349,8 @@ export default function Promotion() {
                             />
                         </Form.Item>
 
-                        <Form.Item 
-                            name="serviceId" 
+                        <Form.Item
+                            name="serviceId"
                             label="Dịch vụ áp dụng"
                         >
                             <Select placeholder="Chọn dịch vụ áp dụng" allowClear>
@@ -366,16 +366,16 @@ export default function Promotion() {
 
                     {/* Dòng 2: Tổng lượt dùng tối đa và Lượt dùng/khách hàng */}
                     <div className="promotion-form-grid">
-                        <Form.Item 
-                            name="maxUsesTotal" 
+                        <Form.Item
+                            name="maxUsesTotal"
                             label="Tổng số lượt sử dụng tối đa"
                             rules={[{ required: true, message: 'Vui lòng nhập lượt dùng tối đa!' }]}
                         >
                             <InputNumber min={1} className="promotion-form-item-full" placeholder="Ví dụ: 1000" />
                         </Form.Item>
 
-                        <Form.Item 
-                            name="maxUsesPerCustomer" 
+                        <Form.Item
+                            name="maxUsesPerCustomer"
                             label="Lượt dùng tối đa mỗi khách hàng"
                             rules={[{ required: true, message: 'Vui lòng nhập lượt dùng/khách hàng!' }]}
                         >
@@ -384,14 +384,14 @@ export default function Promotion() {
                     </div>
 
                     {/* Dòng 3: Khoảng thời gian áp dụng */}
-                    <Form.Item 
-                        name="dateRange" 
-                        label="Khoảng Thời Gian Áp Dụng" 
+                    <Form.Item
+                        name="dateRange"
+                        label="Khoảng Thời Gian Áp Dụng"
                         rules={[{ required: true, message: 'Vui lòng chọn thời gian bắt đầu và kết thúc!' }]}
                     >
-                        <DatePicker.RangePicker 
-                            showTime 
-                            format="YYYY-MM-DD HH:mm:ss" 
+                        <DatePicker.RangePicker
+                            showTime
+                            format="YYYY-MM-DD HH:mm:ss"
                             className="promotion-form-item-full"
                         />
                     </Form.Item>

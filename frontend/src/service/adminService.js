@@ -60,6 +60,45 @@ export async function deleteStaff(staffId) {
     return response.data;
 }
 
+export async function getAllServices() {
+    const response = await axios.get(`${API}/api/services`, {
+        withCredentials: true,
+    });
+    return response.data;
+}
+
+export async function addService({ serviceName, description, durationMinutes, pointMultiplier, category, steps, highLights, priceForSedan, priceForSuv, image }) {
+    const response = await axios.post(`${API}/api/admin/services`, {
+        serviceName,
+        description,
+        durationMinutes,
+        pointMultiplier,
+        category,
+        steps,
+        highLights,
+        priceForSedan,
+        priceForSuv,
+        image
+    }, {
+        withCredentials: true,
+    });
+    return response.data;
+}
+
+export async function recoverService(serviceId) {
+    const response = await axios.put(`${API}/api/admin/services/restore/${serviceId}`, null, {
+        withCredentials: true,
+    });
+    return response.data;
+}
+
+export async function deleteService(serviceId) {
+    const response = await axios.delete(`${API}/api/admin/services/${serviceId}`, {
+        withCredentials: true,
+    });
+    return response.data;
+}
+
 // Lấy danh sách tất cả khuyến mãi
 export async function getPromotions() {
     const response = await axios.get(`/api/promotions`);
@@ -87,5 +126,45 @@ export async function updatePromotion(id, payload) {
 // Xóa khuyến mãi
 export async function deletePromotion(id) {
     const response = await axios.delete(`/api/promotions/${id}`);
+    return response.data;
+}
+
+// Lấy danh sách tất cả phần thưởng (Rewards)
+export async function getRewards() {
+    const response = await axios.get(`${API}/api/admin/rewards`, {
+        withCredentials: true,
+    });
+    return response.data;
+}
+
+// Thêm phần thưởng mới
+export async function createReward(payload) {
+    const response = await axios.post(`${API}/api/admin/rewards`, payload, {
+        withCredentials: true,
+    });
+    return response.data;
+}
+
+// Cập nhật phần thưởng
+export async function updateReward(id, payload) {
+    const response = await axios.put(`${API}/api/admin/rewards/${id}`, payload, {
+        withCredentials: true,
+    });
+    return response.data;
+}
+
+// Xóa/Vô hiệu hóa phần thưởng
+export async function deleteReward(id) {
+    const response = await axios.delete(`${API}/api/admin/rewards/${id}`, {
+        withCredentials: true,
+    });
+    return response.data;
+}
+
+// Lấy danh sách bảng giá dịch vụ (Service Prices)
+export async function getServicePrices() {
+    const response = await axios.get(`${API}/api/service-prices`, {
+        withCredentials: true,
+    });
     return response.data;
 }

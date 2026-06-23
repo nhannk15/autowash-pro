@@ -181,13 +181,6 @@ export default function Staff() {
             width: 120
         },
         {
-            title: "Ngày sinh",
-            dataIndex: "dateOfBirth",
-            key: "dateOfBirth",
-            render: (date) => date ? new Date(date).toLocaleDateString('vi-VN') : '—',
-            width: 120
-        },
-        {
             title: "Ngày vào làm",
             dataIndex: "hiredDate",
             key: "hiredDate",
@@ -356,17 +349,6 @@ export default function Staff() {
                         name="phoneNumber"
                     >
                         <Input placeholder="0901 234 567" />
-                    </Form.Item>
-
-                    <Form.Item
-                        label="Ngày sinh"
-                        name="dateOfBirth"
-                    >
-                        <DatePicker
-                            style={{ width: '100%' }}
-                            placeholder="Chọn ngày sinh"
-                            format="DD/MM/YYYY"
-                        />
                     </Form.Item>
 
                     <Form.Item
