@@ -9,7 +9,7 @@ import {
     CalendarOutlined, UserAddOutlined, ArrowRightOutlined, BellOutlined, UserOutlined,
     CreditCardOutlined
 } from '@ant-design/icons';
-import { getAllBays, getUpcomingBookings, completeSession } from '../../../service/staffService';
+import { getAllBays, getUpcomingBookings, getTodayBookings, completeSession } from '../../../service/staffService';
 import './StaffDashboard.css';
 
 const { Title, Text } = Typography;
@@ -21,14 +21,24 @@ const getCurrentSession = (bay) => {
     return bay.currentSession;
 };
 
+const getBookingRevenue = (record) => {
+    if (record.washSessionStatus !== 'PAID') return 0;
+    return (record.bookingDetails || []).reduce(
+        (sum, d) => sum + Number(d.finalPrice || 0),
+        0
+    );
+};
+
 export default function StaffDashboard() {
     const navigate = useNavigate();
     const location = useLocation();
 
     const [bays, setBays] = useState([]);
+    const [todayBookings, setTodayBookings] = useState([]);
     const [bookings, setBookings] = useState([]);
     const [loadingBays, setLoadingBays] = useState(true);
-    const [loadingBookings, setLoadingBookings] = useState(true);
+    const [loadingTodayBookings, setLoadingTodayBookings] = useState(true);
+    const [loadingUpcomingBookings, setLoadingUpcomingBookings] = useState(true);
 
     // Fetch bays
     useEffect(() => {
@@ -49,31 +59,43 @@ export default function StaffDashboard() {
     useEffect(() => {
         async function fetchBookings() {
             try {
-                const data = await getUpcomingBookings();
-                setBookings(data);
+                const data = await getTodayBookings();
+                setTodayBookings(data);
             } catch (error) {
                 console.error("Failed to fetch bookings", error);
             } finally {
-                setLoadingBookings(false);
+                setLoadingTodayBookings(false);
             }
         }
         fetchBookings();
     }, []);
 
+    //Fetch upcoming bookings
+    useEffect(() => {
+        async function fetchUpcomingBookings() {
+            try {
+                const data = await getUpcomingBookings();
+                setBookings(data);
+            } catch (error) {
+                console.error("Failed to fetch bookings", error);
+            } finally {
+                setLoadingUpcomingBookings(false);
+            }
+        }
+        fetchUpcomingBookings();
+    }, []);
+
     // === Tính stats tự động từ data đã fetch ===
     const stats = useMemo(() => {
         const activeCars = bays.filter(bay => getCurrentSession(bay)?.status === 'IN_PROGRESS').length;
-        const completed = bookings.filter(booking => {
-            const s = getCurrentSession(booking);
-            return s?.status === 'PAID';
-        }).length;
-        const todayAppointments = bookings.length;
+        const completed = todayBookings.filter(booking => booking.washSessionStatus === 'PAID').length;
+        const todayAppointments = todayBookings.length;
         // Doanh thu: tính sau khi có billing data, tạm để 0
-        const revenue = bookings.reduce((total, booking) => total + (booking.finalPrice || 0), 0);
+        const revenue = todayBookings.reduce((total, booking) => total + getBookingRevenue(booking), 0);
         return { activeCars, todayAppointments, completed, revenue };
-    }, [bays, bookings]);
+    }, [bays, todayBookings]);
 
-    // === Lịch hẹn sắp tới: filter từ bookings ===
+    // === Lịch hẹn sắp tới: filter từ upcoming bookings ===
     const upcoming = useMemo(() => {
         const now = new Date();
         const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
@@ -128,12 +150,12 @@ export default function StaffDashboard() {
             if (location.state.paidBookingId) {
                 setBookings(prev => prev.map(b => {
                     if (b.id === location.state.paidBookingId) {
-                        return { 
-                            ...b, 
-                            washSessions: b.washSessions?.map(ws => 
-                                (ws.status === 'COMPLETED' || ws.status === 'COMPLETE') 
-                                ? { ...ws, status: 'PAID' } 
-                                : ws
+                        return {
+                            ...b,
+                            washSessions: b.washSessions?.map(ws =>
+                                (ws.status === 'COMPLETED' || ws.status === 'COMPLETE')
+                                    ? { ...ws, status: 'PAID' }
+                                    : ws
                             )
                         };
                     }
@@ -397,7 +419,7 @@ export default function StaffDashboard() {
                         extra={<Button type="link" onClick={() => navigate('/staff/queue')} icon={<ArrowRightOutlined />}>Xem hàng chờ</Button>}
                         className="dashboard__timeline-card"
                     >
-                        {loadingBookings ? (
+                        {loadingUpcomingBookings ? (
                             <div style={{ textAlign: 'center', padding: 20 }}><Spin /></div>
                         ) : upcoming.length > 0 ? (
                             <Timeline
