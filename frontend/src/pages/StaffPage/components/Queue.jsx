@@ -5,9 +5,7 @@ import {
     CarOutlined,
     CheckCircleOutlined,
     SearchOutlined,
-    PlayCircleOutlined,
-    CaretLeftFilled,
-    CaretRightFilled
+    PlayCircleOutlined
 } from "@ant-design/icons";
 import { getTodayBookings } from "../../../service/staffService";
 import "./Queue.css";
@@ -15,12 +13,11 @@ import "./Queue.css";
 const { Title } = Typography;
 
 export default function Queue() {
-    const [currentPage, setCurrentPage] = useState(1);
+    const [pagination, setPagination] = useState({ current: 1, pageSize: 5 });
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchText, setSearchText] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
-    const pageSize = 5;
 
     useEffect(() => {
         async function fetchBooking() {
@@ -39,11 +36,10 @@ export default function Queue() {
     // === Tính stats tự động từ data ===
     const stats = useMemo(() => {
         const todayCount = data.length;
-        const inProgressCount = data.filter(b => b.status === 'IN_PROGRESS').length;
+        const inProgressCount = data.filter(b => b.washSessionStatus === 'IN_PROGRESS').length;
         // Đếm các lịch hẹn có WashSession đã thanh toán (PAID)
         const completedCount = data.filter(b =>
-            b.washSessions?.some(ws => ws.status === 'PAID')
-        ).length;
+            b.washSessionStatus === 'PAID').length;
         return { todayCount, inProgressCount, completedCount };
     }, [data]);
 
@@ -65,7 +61,7 @@ export default function Queue() {
                 result = result.filter(b => b.status === 'CONFIRMED');
             } else if (statusFilter === 'processing') {
                 result = result.filter(b =>
-                    b.status === 'IN_PROGRESS'
+                    b.washSessionStatus === 'IN_PROGRESS'
                 );
             }
         }
@@ -168,18 +164,9 @@ export default function Queue() {
         },
     ];
 
-    // Tính toán phân trang hiển thị tối đa 3 số
-    const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
-    const getVisiblePages = () => {
-        if (totalPages <= 3) return Array.from({ length: totalPages }, (_, i) => i + 1);
-        if (currentPage === 1) return [1, 2, 3];
-        if (currentPage === totalPages) return [totalPages - 2, totalPages - 1, totalPages];
-        return [currentPage - 1, currentPage, currentPage + 1];
-    };
-
-    // Reset page khi filter thay đổi
+    // Reset về trang 1 khi search/filter thay đổi
     useEffect(() => {
-        setCurrentPage(1);
+        setPagination(prev => ({ ...prev, current: 1 }));
     }, [searchText, statusFilter]);
 
     return (
@@ -256,43 +243,17 @@ export default function Queue() {
                 ) : (
                     <Table
                         columns={columns}
-                        dataSource={filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
-                        pagination={false}
+                        dataSource={filteredData}
                         rowKey="id"
+                        pagination={{
+                            current: pagination.current,
+                            pageSize: pagination.pageSize,
+                            total: filteredData.length,
+                            onChange: (page, pageSize) => setPagination({ current: page, pageSize }),
+                        }}
                     />
                 )}
             </Card>
-
-            {/* Phân trang tự thiết kế để giới hạn đúng 3 số một lần */}
-            {totalPages > 1 && (
-                <Flex justify="flex-end" style={{ marginTop: '20px' }}>
-                    <Space size="small">
-                        <Button
-                            className="custom-pagination-btn"
-                            icon={<CaretLeftFilled />}
-                            disabled={currentPage === 1}
-                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                        />
-                        {getVisiblePages().map(page => (
-                            <Button
-                                className="custom-pagination-btn"
-                                key={page}
-                                type={currentPage === page ? "primary" : "default"}
-                                onClick={() => setCurrentPage(page)}
-                                style={{ minWidth: '32px', padding: '0 8px' }}
-                            >
-                                {page}
-                            </Button>
-                        ))}
-                        <Button
-                            className="custom-pagination-btn"
-                            icon={<CaretRightFilled />}
-                            disabled={currentPage === totalPages}
-                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                        />
-                    </Space>
-                </Flex>
-            )}
         </div>
     )
 }

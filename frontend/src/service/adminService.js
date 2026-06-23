@@ -60,6 +60,45 @@ export async function deleteStaff(staffId) {
     return response.data;
 }
 
+export async function getAllServices() {
+    const response = await axios.get(`${API}/api/services`, {
+        withCredentials: true,
+    });
+    return response.data;
+}
+
+export async function addService({ serviceName, description, durationMinutes, pointMultiplier, category, steps, highLights, priceForSedan, priceForSuv, image }) {
+    const response = await axios.post(`${API}/api/admin/services`, {
+        serviceName,
+        description,
+        durationMinutes,
+        pointMultiplier,
+        category,
+        steps,
+        highLights,
+        priceForSedan,
+        priceForSuv,
+        image
+    }, {
+        withCredentials: true,
+    });
+    return response.data;
+}
+
+export async function recoverService(serviceId) {
+    const response = await axios.put(`${API}/api/admin/services/restore/${serviceId}`, null, {
+        withCredentials: true,
+    });
+    return response.data;
+}
+
+export async function deleteService(serviceId) {
+    const response = await axios.delete(`${API}/api/admin/services/${serviceId}`, {
+        withCredentials: true,
+    });
+    return response.data;
+}
+
 // Lấy danh sách tất cả khuyến mãi
 export async function getPromotions() {
     const response = await axios.get(`/api/promotions`);

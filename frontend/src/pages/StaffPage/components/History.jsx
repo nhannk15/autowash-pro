@@ -4,8 +4,6 @@ import {
     DollarCircleOutlined,
     CarOutlined,
     SearchOutlined,
-    CaretLeftFilled,
-    CaretRightFilled,
     EyeOutlined
 } from "@ant-design/icons";
 import { getTodayBookings } from "../../../service/staffService";
@@ -13,9 +11,21 @@ import "./History.css";
 
 const { Title } = Typography;
 
+const formatCurrency = (value) =>
+    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value || 0);
+
+// Tính doanh thu của 1 booking — dùng chung cho cả cột "Giá tiền" và stats "Tổng doanh thu"
+// để tránh viết trùng logic ở 2 nơi (dễ lệch nhau nếu sau này sửa 1 chỗ mà quên chỗ kia)
+const getBookingRevenue = (record) => {
+    if (record.washSessionStatus !== 'PAID') return 0;
+    return (record.bookingDetails || []).reduce(
+        (sum, d) => sum + Number(d.finalPrice || 0),
+        0
+    );
+};
+
 export default function History() {
-    const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 5;
+    const [pagination, setPagination] = useState({ current: 1, pageSize: 5 });
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchText, setSearchText] = useState('');
@@ -33,10 +43,6 @@ export default function History() {
         }
         fetchBooking();
     }, []);
-
-    const formatCurrency = (value) => {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
-    };
 
     // === Filter chỉ lấy booking đã COMPLETED ===
     const completedData = useMemo(() => {
@@ -56,15 +62,7 @@ export default function History() {
     // === Stats tự đếm từ data ===
     const stats = useMemo(() => {
         const totalServiced = completedData.length;
-        // Tính tổng doanh thu từ bookingDetails hoặc washSessions billing
-        const totalRevenue = completedData.reduce((sum, b) => {
-            // Thử lấy từ washSession billing
-            const billing = b.washSessions?.[0]?.billing;
-            if (billing?.finalAmount) return sum + Number(billing.finalAmount);
-            // Fallback: tính từ bookingDetails
-            const bookingTotal = (b.bookingDetails || []).reduce((s, d) => s + Number(d.finalPrice || d.priceAtBooking || 0), 0);
-            return sum + bookingTotal;
-        }, 0);
+        const totalRevenue = completedData.reduce((sum, b) => sum + getBookingRevenue(b), 0);
         return { totalServiced, totalRevenue };
     }, [completedData]);
 
@@ -108,13 +106,7 @@ export default function History() {
         {
             title: 'Giá tiền',
             key: 'price',
-            render: (_, record) => {
-                // Lấy giá từ billing hoặc tính từ bookingDetails
-                const billing = record.washSessions?.[0]?.billing;
-                if (billing?.finalAmount) return formatCurrency(Number(billing.finalAmount));
-                const total = (record.bookingDetails || []).reduce((s, d) => s + Number(d.finalPrice || d.priceAtBooking || 0), 0);
-                return formatCurrency(total);
-            }
+            render: (_, record) => formatCurrency(getBookingRevenue(record))
         },
         {
             title: 'Thao tác',
@@ -131,17 +123,8 @@ export default function History() {
         },
     ];
 
-    const totalPages = Math.ceil(completedData.length / pageSize) || 1;
-    const getVisiblePages = () => {
-        if (totalPages <= 3) return Array.from({ length: totalPages }, (_, i) => i + 1);
-        if (currentPage === 1) return [1, 2, 3];
-        if (currentPage === totalPages) return [totalPages - 2, totalPages - 1, totalPages];
-        return [currentPage - 1, currentPage, currentPage + 1];
-    };
-
-    // Reset page khi search thay đổi
     useEffect(() => {
-        setCurrentPage(1);
+        setPagination(prev => ({ ...prev, current: 1 }));
     }, [searchText]);
 
     return (
@@ -194,43 +177,17 @@ export default function History() {
                 ) : (
                     <Table
                         columns={columns}
-                        dataSource={completedData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
-                        pagination={false}
+                        dataSource={completedData}
                         rowKey="id"
+                        pagination={{
+                            current: pagination.current,
+                            pageSize: pagination.pageSize,
+                            total: completedData.length,
+                            onChange: (page, pageSize) => setPagination({ current: page, pageSize }),
+                        }}
                     />
                 )}
             </Card>
-
-            {/* Phân trang tự thiết kế để giới hạn đúng 3 số một lần */}
-            {totalPages > 1 && (
-                <Flex justify="flex-end" style={{ marginTop: '20px' }}>
-                    <Space size="small">
-                        <Button
-                            className="custom-pagination-btn"
-                            icon={<CaretLeftFilled />}
-                            disabled={currentPage === 1}
-                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                        />
-                        {getVisiblePages().map(page => (
-                            <Button
-                                className="custom-pagination-btn"
-                                key={page}
-                                type={currentPage === page ? "primary" : "default"}
-                                onClick={() => setCurrentPage(page)}
-                                style={{ minWidth: '32px', padding: '0 8px' }}
-                            >
-                                {page}
-                            </Button>
-                        ))}
-                        <Button
-                            className="custom-pagination-btn"
-                            icon={<CaretRightFilled />}
-                            disabled={currentPage === totalPages}
-                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                        />
-                    </Space>
-                </Flex>
-            )}
         </div>
     )
 }
