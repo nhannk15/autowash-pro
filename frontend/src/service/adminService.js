@@ -129,3 +129,19 @@ export async function getServicePrices() {
     });
     return response.data;
 }
+
+// Lấy danh sách tất cả hạng thành viên (Membership Tiers) cho Admin
+export async function getAdminMembershipTiers() {
+    const response = await axios.get(`${API}/api/admin/membership-tiers`, {
+        withCredentials: true,
+    });
+    return response.data;
+}
+
+// Cập nhật thông tin/cấu hình hạng thành viên
+export async function updateAdminMembershipTier(id, payload) {
+    const response = await axios.put(`${API}/api/admin/membership-tiers/${id}`, payload, {
+        withCredentials: true,
+    });
+    return response.data;
+}
