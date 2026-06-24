@@ -15,7 +15,6 @@ import com.autowashpro.backend.model.dto.CreateStaffRequest;
 import com.autowashpro.backend.model.dto.StaffAdminResponse;
 import com.autowashpro.backend.model.dto.UpdateStaffRequest;
 import com.autowashpro.backend.model.entity.Staff;
-import com.autowashpro.backend.model.entity.User;
 import com.autowashpro.backend.model.enums.Role;
 import com.autowashpro.backend.repository.StaffRepository;
 import com.autowashpro.backend.repository.UserRepository;

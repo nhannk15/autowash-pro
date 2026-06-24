@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.autowashpro.backend.exception.BillingNotFoundException;
 import com.autowashpro.backend.exception.BookingNotFoundException;
@@ -73,34 +74,28 @@ public class BillingService {
         this.promotionService = promotionService;
     }
 
+    @Transactional
     public Billing createPendingBilling(Long bookingId) {
-        Booking booking = bookingRepository.findById(bookingId)
+        log.info("BillingService - start creating new pendingBilling");
+        Booking booking = bookingRepository.findByIdWithDetails(bookingId)
                 .orElseThrow(() -> new BookingNotFoundException(
                         "Không tìm thấy lịch hẹn với id: " + bookingId));
-
         Voucher voucher = null;
-
         BigDecimal originalAmount = booking.getBookingDetails()
                 .stream()
                 .map(BookingDetail::getPriceAtBooking)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
         BigDecimal discountAmount = booking.getBookingDetails()
                 .stream()
                 .map(BookingDetail::getDiscountAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
         BigDecimal finalAmount = booking.getBookingDetails()
                 .stream()
                 .map(BookingDetail::getFinalPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
         PaymentMethod paymentMethod = PaymentMethod.CASH;
-
         PaymentStatus paymentStatus = PaymentStatus.PENDING;
-
         LocalDateTime paidAt = null;
-
         Billing newBilling = Billing
                 .builder()
                 .booking(booking)
@@ -112,8 +107,7 @@ public class BillingService {
                 .paymentStatus(paymentStatus)
                 .paidAt(paidAt)
                 .build();
-
-        Billing savedBilling = billingRepository.save(newBilling);
+        Billing savedBilling = billingRepository.saveAndFlush(newBilling);
         return savedBilling;
     }
 
@@ -141,12 +135,12 @@ public class BillingService {
             washSessionRepository.save(washSession);
         }
 
-        Billing savedBilling = billingRepository.save(billing);
+        Billing savedBilling = billingRepository.saveAndFlush(billing);
 
         Customer customer = billing.getBooking().getCustomer();
         BigDecimal tempPointsChange = billing.getFinalAmount();
         log.info("pointsChange: {}", tempPointsChange);
-        for (WashSession wassSession: billing.getBooking().getWashSessions()) {
+        for (WashSession wassSession : billing.getBooking().getWashSessions()) {
             Service service = wassSession.getServicePrice().getService();
             log.info("service {} has pointsMultiplier: {}", service.getServiceName(), service.getPointMultiplier());
             tempPointsChange = tempPointsChange.multiply(service.getPointMultiplier());
@@ -180,7 +174,7 @@ public class BillingService {
 
     public VoucherResponse applyVoucherForBilling(ApplyVoucherToBillingRequest request) {
 
-        Customer customer = customerRepository.findById(request.getCustomerId())
+        customerRepository.findById(request.getCustomerId())
                 .orElseThrow(() -> new UserNotFoundException(
                         "Không thể tìm thấy người dùng với id: " + request.getCustomerId()));
 
@@ -195,10 +189,6 @@ public class BillingService {
         Billing billing = billingRepository.findById(request.getBillingId())
                 .orElseThrow(() -> new BillingNotFoundException(
                         "Không thể tìm thấy hóa đơn với id: " + request.getBillingId()));
-
-        if (!billing.getBooking().getCustomer().getEmail().equals(customer.getEmail())) {
-            throw new BillingNotFoundException("Hóa đơn này không thuộc về người dùng: " + customer.getFullName());
-        }
 
         billing.setVoucher(voucher);
         if (voucher.getDiscountType().equals(RewardType.DISCOUNT_FLAT)) {

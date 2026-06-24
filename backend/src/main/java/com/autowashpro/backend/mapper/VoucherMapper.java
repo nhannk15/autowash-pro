@@ -1,5 +1,7 @@
 package com.autowashpro.backend.mapper;
 
+import java.util.List;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -18,4 +20,6 @@ public interface VoucherMapper {
     @Mapping(target = "rewardName", source = "reward.rewardName")
     @Mapping(target = "customerName", source = "customer.fullName")
     VoucherResponse toVoucherResponse(Voucher voucher);
+
+    List<VoucherResponse> toVoucherResponses(List<Voucher> vouchers);
 }

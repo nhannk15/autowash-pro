@@ -17,6 +17,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     /**
      * Complex Queries
+     * 
      * @param today
      * @param cutOffTime
      * @return
@@ -70,5 +71,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             AND booking.status = com.autowashpro.backend.model.enums.BookingStatus.CONFIRMED
             ORDER BY availableSlot.slotDate, availableSlot.timeSlot.startTime
             """)
-    List<Booking> findCustomerUpcomingBookings(@Param("customerId") Long customerId, @Param("today") LocalDate today);
+    List<Booking> findCustomerUpcomingBookings(@Param("customerId") Long customerId,
+            @Param("today") LocalDate today);
+
+     @Query("SELECT b FROM Booking b JOIN FETCH b.bookingDetails WHERE b.id = :id")
+    Optional<Booking> findByIdWithDetails(@Param("id") Long id);
 }

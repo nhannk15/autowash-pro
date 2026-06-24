@@ -2,6 +2,7 @@ package com.autowashpro.backend.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -85,5 +86,9 @@ public class VoucherService {
                 .build();
         pointTransactionRepository.save(pointTransaction);
         return voucherMapper.toVoucherResponse(savedVoucher);
+    }
+
+    public List<VoucherResponse> getCustomerAllVouchers(String email) {
+        return voucherMapper.toVoucherResponses(voucherRepository.findCustomerActiveVouchers(email));
     }
 }
