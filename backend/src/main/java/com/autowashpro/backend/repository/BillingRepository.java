@@ -44,9 +44,16 @@ public interface BillingRepository extends JpaRepository<Billing, Long> {
 
     @Query("""
             SELECT billing FROM Billing billing
-            WHERE billing.paidAt >= :startTime AND billing.paidAt <= :endTime
+            WHERE billing.paymentStatus = com.autowashpro.backend.model.enums.PaymentStatus.PAID 
+            AND billing.paidAt >= :startTime AND billing.paidAt <= :endTime
             """)
     List<Billing> findBillingsByStartDateAndEndDate(@Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime);
+
+    @Query("""
+            SELECT billing FROM Billing billing
+            WHERE billing.paymentStatus = com.autowashpro.backend.model.enums.PaymentStatus.PAID 
+            """)
+    List<Billing> findAllPaidBillings();
 
 }
