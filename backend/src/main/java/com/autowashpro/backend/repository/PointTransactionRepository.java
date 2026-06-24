@@ -1,6 +1,7 @@
 package com.autowashpro.backend.repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -33,7 +34,7 @@ public interface PointTransactionRepository extends JpaRepository<PointTransacti
             WHERE pointTransaction.transactionType = com.autowashpro.backend.model.enums.TransactionType.EARN
             AND pointTransaction.createdAt = :date
             """)
-    Long sumPointsIssuedByDate(@Param("date") LocalDate date);
+    Long sumPointsIssuedByDate(@Param("date") LocalDateTime date);
     List<PointTransaction> findByCustomerIdOrderByCreatedAtDesc(Long customerId);
 
 }

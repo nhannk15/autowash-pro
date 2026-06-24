@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.autowashpro.backend.model.entity.Booking;
+import com.autowashpro.backend.model.enums.BookingStatus;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
@@ -79,6 +80,34 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findCustomerUpcomingBookings(@Param("customerId") Long customerId,
             @Param("today") LocalDate today);
 
-     @Query("SELECT b FROM Booking b JOIN FETCH b.bookingDetails WHERE b.id = :id")
+    @Query("SELECT b FROM Booking b JOIN FETCH b.bookingDetails WHERE b.id = :id")
     Optional<Booking> findByIdWithDetails(@Param("id") Long id);
+
+    @Query("""
+            SELECT booking FROM Booking booking
+            WHERE booking.status = :status
+            AND EXISTS (
+                SELECT 1 FROM AvailableSlot availableSlot
+                JOIN availableSlot.booking b
+                WHERE b = booking
+                AND availableSlot.slotDate >= :startDate
+                AND availableSlot.slotDate <= :endDate
+            )
+            """)
+    List<Booking> findByStatusAccordingToDate(@Param("status") BookingStatus status,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
+
+    @Query("""
+            SELECT booking FROM Booking booking
+            WHERE EXISTS (
+                SELECT 1 FROM AvailableSlot availableSlot
+                JOIN availableSlot.booking b
+                WHERE b = booking
+                AND availableSlot.slotDate >= :startDate
+                AND availableSlot.slotDate <= :endDate
+            )
+            """)
+    List<Booking> findBookingsAccordingToDate(@Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
 }
