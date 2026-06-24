@@ -93,8 +93,8 @@ export default function Overview() {
         }
 
         fetchDashboardData();
-        // Tự động cập nhật mỗi 30 giây
-        const intervalId = setInterval(fetchDashboardData, 30000);
+        // Tự động cập nhật mỗi 5 giây
+        const intervalId = setInterval(fetchDashboardData, 5000);
 
         return () => {
             isMounted = false;
@@ -247,7 +247,7 @@ export default function Overview() {
     // Định nghĩa các cột cho Bảng lịch sử điểm
     const columns = [
         {
-            title: 'LOẠI GIAO DỊCH',
+            title: 'HOẠT ĐỘNG',
             dataIndex: 'transactionType',
             key: 'transactionType',
             render: (type) => {
@@ -538,11 +538,11 @@ export default function Overview() {
                 </Col>
             </Row>
 
-            {/* Hàng 2: Bảng hoạt động gần đây */}
+            {/* Hàng 2: Bảng LỊCH SỬ GIAO DỊCH ĐIỂM */}
             <div className="activity-section">
                 <div className="activity-header">
                     <Title level={4} className="activity-title">
-                        <GiftOutlined style={{ marginRight: '8px', color: '#002b7f' }} /> Hoạt động gần đây
+                        <GiftOutlined style={{ marginRight: '8px', color: '#002b7f' }} /> LỊCH SỬ GIAO DỊCH ĐIỂM
                     </Title>
                 </div>
                 <Card className="table-card">
@@ -667,7 +667,7 @@ export default function Overview() {
                                     return <Tag color="error">Đã hết hạn</Tag>;
                                 }
                                 return <span style={{ fontWeight: '500' }}>{expDate.toLocaleDateString('vi-VN')} ({diffDays} ngày còn lại)</span>;
-                             }
+                            }
                         },
                         {
                             title: 'TRẠNG THÁI',
