@@ -3,7 +3,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { CarOutlined } from '@ant-design/icons';
 import './Booking.css';
 import { message, Select } from 'antd';
-import { getAvailableSlot, getPromotion, getService, getVehicleByCustomer, createBooking, getMembershipTier, getVoucher } from '../../../service/customerService';
+import { getAvailableSlot, getApplicablePromotion as getApplicablePromotionAPI, getService, getVehicleByCustomer, createBooking, getMembershipTier, getVoucher } from '../../../service/customerService';
 function VehicleImage({ src, alt, fallbackIcon }) {
     const [hasError, setHasError] = useState(false);
 
@@ -46,7 +46,7 @@ export default function BookingList() {
 
     // Thông tin khách hàng & khuyến mãi phục vụ tính tiền ở Frontend
     const [customer, setCustomer] = useState(null);
-    const [promotions, setPromotions] = useState([]);
+    const [applicablePromotion, setApplicablePromotion] = useState(null);
     const [vouchers, setVouchers] = useState([]);
     const [membershipTier, setMembershipTier] = useState();
     const [submitting, setSubmitting] = useState(false);
@@ -126,19 +126,24 @@ export default function BookingList() {
         fetchMembershipTier()
     }, [])
 
-    // Lấy danh sách chương trình khuyến mãi
+    // Lấy chương trình khuyến mãi tự động áp dụng dựa trên thời gian hẹn
     useEffect(() => {
-        const fetchPromotions = async () => {
+        const fetchApplicablePromotion = async () => {
+            if (!selectedDate || !selectedTime) {
+                setApplicablePromotion(null);
+                return;
+            }
             try {
-                const result = await getPromotion()
-                setPromotions(result || []);
+                const dateTimeStr = `${selectedDate}T${selectedTime}:00`;
+                const result = await getApplicablePromotionAPI(dateTimeStr);
+                setApplicablePromotion(result || null);
             } catch (err) {
-                console.error("Failed to fetch promotions:", err);
-                message.warning(err.response?.data.message || err.message || "không thể tải danh sách chương trình khuyến mãi")
+                console.error("Failed to fetch applicable promotion:", err);
+                setApplicablePromotion(null);
             }
         };
-        fetchPromotions();
-    }, []);
+        fetchApplicablePromotion();
+    }, [selectedDate, selectedTime]);
 
     // Lấy danh sách voucher của người dùng
     useEffect(() => {
@@ -156,37 +161,7 @@ export default function BookingList() {
 
     // Tìm chương trình khuyến mãi phù hợp dựa trên ngày đặt lịch và hạng thành viên
     const getApplicablePromotion = () => {
-        if (!selectedDate || !membershipTier || !membershipTier.membershipTierSummaryResponse) return null;
-
-        const tierId = membershipTier.membershipTierSummaryResponse.membershipTierId;
-        const bookingDateTime = new Date(selectedDate + "T00:00:00");
-
-        const applicable = promotions.filter(p => {
-            if (!p.active) return false;
-            if (p.usageCount >= p.maxUsesTotal) return false;
-
-            const startDate = new Date(p.startDate);
-            const endDate = new Date(p.endDate);
-            if (bookingDateTime < startDate || bookingDateTime > endDate) return false;
-
-            const TIER_LEVELS = {
-                'Bronze': 1,
-                'Silver': 2,
-                'Gold': 3,
-                'Platinum': 4
-            };
-            if (p.minTierName) {
-                const requiredLevel = TIER_LEVELS[p.minTierName] || 0;
-                const currentLevel = membershipTier.membershipTierSummaryResponse.tierLevel || 0;
-                if (currentLevel < requiredLevel) return false;
-            }
-            return true;
-        });
-
-        if (applicable.length === 0) return null;
-
-        applicable.sort((a, b) => b.discountValue - a.discountValue);
-        return applicable[0];
+        return applicablePromotion;
     };
 
     // Trạng thái tải API dịch vụ

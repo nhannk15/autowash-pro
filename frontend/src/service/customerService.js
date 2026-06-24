@@ -22,9 +22,10 @@ export async function getVehicleByCustomer() {
     return response.data
 }
 
-export async function getPromotion() {
-    const response = await axios.get('/api/promotions');
-    return response.data
+
+export async function getApplicablePromotion(bookingDateTime) {
+    const response = await axios.post('/api/promotions/applicable-promotions', { bookingDateTime });
+    return response.data;
 }
 export async function getService() {
     const response = await axios.get("/api/services");

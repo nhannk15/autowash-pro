@@ -412,7 +412,7 @@ export default function Overview() {
                                         </div>
                                     </div>
 
-                                    <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                                    <div className="points-actions">
                                         <Button
                                             type="primary"
                                             icon={<GiftOutlined />}
