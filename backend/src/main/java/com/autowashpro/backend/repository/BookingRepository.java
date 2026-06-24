@@ -53,7 +53,12 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> getUpcomingBookingsTillNow(
             @Param("today") LocalDate today,
             @Param("cutOffTime") LocalTime cutOffTime);
-
+    
+    @Query("""
+            SELECT booking FROM Booking booking
+            WHERE booking.bookingCode = :bookingCode
+            AND booking.status = com.autowashpro.backend.model.enums.BookingStatus.CONFIRMED
+            """)
     Optional<Booking> findByBookingCode(String bookingCode);
 
     @Query("""
