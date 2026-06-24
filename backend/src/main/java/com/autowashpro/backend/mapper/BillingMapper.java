@@ -1,14 +1,18 @@
 package com.autowashpro.backend.mapper;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.Named;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import com.autowashpro.backend.model.dto.BillingResponse;
 import com.autowashpro.backend.model.dto.RecentTransactionItem;
+import com.autowashpro.backend.model.dto.RevenueDataResponse;
 import com.autowashpro.backend.model.entity.Billing;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, uses = {VoucherMapper.class, BookingMapper.class})
@@ -26,6 +30,16 @@ public interface BillingMapper {
     @Mapping(target = "totalAmount", source = "finalAmount")
     RecentTransactionItem toRecentTransactionItem(Billing billing);
     List<RecentTransactionItem> toRecentTransactionItems(List<Billing> billings);
+
+    @Mapping(target = "day", source = "paidAt", qualifiedByName = "toDate")
+    @Mapping(target = "revenue", source = "finalAmount")
+    RevenueDataResponse toRevenueDataResponse(Billing billing);
+    List<RevenueDataResponse> toRevenueDataResponses(List<Billing> billings);
+
+    @Named("toDate")
+    default LocalDate toDate(LocalDateTime paidAt) {
+        return paidAt.toLocalDate();
+    }
 
     
 }
