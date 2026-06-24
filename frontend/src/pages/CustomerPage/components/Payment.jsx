@@ -308,6 +308,7 @@ export default function Payment() {
                         <div className="selector-group">
                             <Space>
                                 <Select value={selectedQuarter} onChange={setSelectedQuarter} style={{ width: 100 }}>
+                                    <Option value="All">Cả Năm</Option>
                                     <Option value="Q1">Quý 1</Option>
                                     <Option value="Q2">Quý 2</Option>
                                     <Option value="Q3">Quý 3</Option>
