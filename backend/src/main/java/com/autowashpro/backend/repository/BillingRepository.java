@@ -26,6 +26,12 @@ public interface BillingRepository extends JpaRepository<Billing, Long> {
             AND billing.paidAt < :nextDay
             """)
     BigDecimal sumRevenueByPaidDateRange(@Param("startOfDay") LocalDateTime startOfDay,
-                                         @Param("nextDay") LocalDateTime nextDay);
+            @Param("nextDay") LocalDateTime nextDay);
 
+    @Query("""
+            SELECT SUM(billing.finalAmount) FROM Billing billing
+            WHERE billing.paymentStatus = com.autowashpro.backend.model.enums.PaymentStatus.PAID
+            """)
+    BigDecimal sumRevenue();
+    
 }

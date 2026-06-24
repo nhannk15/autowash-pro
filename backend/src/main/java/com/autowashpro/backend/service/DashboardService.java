@@ -3,6 +3,7 @@ package com.autowashpro.backend.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -49,8 +50,8 @@ public class DashboardService {
         Long todayNewCustomers = zeroIfNull(customerRepository.countByCreatedAtDate(today));
         Long yesterdayNewCustomers = zeroIfNull(customerRepository.countByCreatedAtDate(yesterday));
 
-        Long todayPointsIssued = zeroIfNull(pointTransactionRepository.sumPointsIssuedByDate(today));
-        Long yesterdayPointsIssued = zeroIfNull(pointTransactionRepository.sumPointsIssuedByDate(yesterday));
+        Long todayPointsIssued = zeroIfNull(pointTransactionRepository.sumPointsIssuedByDate(LocalDateTime.now()));
+        Long yesterdayPointsIssued = zeroIfNull(pointTransactionRepository.sumPointsIssuedByDate(LocalDateTime.now().minusDays(1)));
 
         return new DashboardMetricsResponse(
                 today,
