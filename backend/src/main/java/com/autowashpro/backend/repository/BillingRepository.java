@@ -3,6 +3,7 @@ package com.autowashpro.backend.repository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -33,5 +34,12 @@ public interface BillingRepository extends JpaRepository<Billing, Long> {
             WHERE billing.paymentStatus = com.autowashpro.backend.model.enums.PaymentStatus.PAID
             """)
     BigDecimal sumRevenue();
+
+    @Query("""
+            SELECT billing FROM Billing billing
+            WHERE billing.paymentStatus = com.autowashpro.backend.model.enums.PaymentStatus.PAID
+            ORDER BY billing.paidAt
+            """)
+    List<Billing> getRecentTransactions();
     
 }

@@ -3,14 +3,15 @@ package com.autowashpro.backend.service;
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.autowashpro.backend.mapper.BillingMapper;
 import com.autowashpro.backend.model.dto.DashboardSummaryResponse;
+import com.autowashpro.backend.model.dto.RecentTransactionItem;
 import com.autowashpro.backend.model.entity.Booking;
 import com.autowashpro.backend.model.enums.BayStatus;
 import com.autowashpro.backend.model.enums.BookingStatus;
@@ -29,14 +30,16 @@ public class AdminDashboardService {
     private final BookingRepository bookingRepository;
     private final CustomerRepository customerRepository;
     private final WashBayRepository washBayRepository;
+    private final BillingMapper billingMapper;
 
     @Autowired
     public AdminDashboardService(BillingRepository billingRepository, BookingRepository bookingRepository,
-            CustomerRepository customerRepository, WashBayRepository washBayRepository) {
+            CustomerRepository customerRepository, WashBayRepository washBayRepository, BillingMapper billingMapper) {
         this.billingRepository = billingRepository;
         this.bookingRepository = bookingRepository;
         this.customerRepository = customerRepository;
         this.washBayRepository = washBayRepository;
+        this.billingMapper = billingMapper;
     }
 
     public DashboardSummaryResponse getSummary(String period) {
@@ -276,6 +279,10 @@ public class AdminDashboardService {
                 .build();
 
         return response;
+    }
+
+    public List<RecentTransactionItem> getRecentTransactions() {
+        return billingMapper.toRecentTransactionItems(billingRepository.getRecentTransactions());
     }
 
 }
