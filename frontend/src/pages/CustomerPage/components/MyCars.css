@@ -164,10 +164,14 @@
     color: #b45309;
 }
 
-.mycar-card__badge-active {
+.mycar-card__actions {
     position: absolute;
     top: 16px;
     right: 16px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    z-index: 10;
 }
 
 .mycars-add-btn {
@@ -181,3 +185,39 @@
     background-color: #001f5c !important;
     border-color: #001f5c !important;
 }
+
+/* Inactive Vehicle Card Styling */
+.mycar-card--inactive {
+    opacity: 0.65;
+    filter: grayscale(0.85);
+    background-color: #f8fafc !important;
+    border: 1px dashed #cbd5e1 !important;
+    cursor: not-allowed;
+}
+
+.mycar-card--inactive:hover {
+    transform: none !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02) !important;
+    border-color: #cbd5e1 !important;
+}
+
+.mycar-card--inactive .mycar-card__type {
+    background-color: #e2e8f0 !important;
+    color: #64748b !important;
+}
+
+.mycar-card--inactive .mycar-card__icon-wrapper {
+    background-color: #f1f5f9 !important;
+    color: #94a3b8 !important;
+}
+
+.mycar-card--inactive .mycar-detail-value.license-plate {
+    background-color: #e2e8f0 !important;
+    border-color: #cbd5e1 !important;
+    color: #64748b !important;
+}
+
+.mycar-card--inactive .mycar-card__name {
+    color: #475569 !important;
+}
+

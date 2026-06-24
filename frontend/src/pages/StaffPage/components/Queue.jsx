@@ -5,28 +5,24 @@ import {
     CarOutlined,
     CheckCircleOutlined,
     SearchOutlined,
-    PlayCircleOutlined,
-    CaretLeftFilled,
-    CaretRightFilled
+    PlayCircleOutlined
 } from "@ant-design/icons";
-import { getAllBookings } from "../../../service/staffService";
+import { getTodayBookings } from "../../../service/staffService";
 import "./Queue.css";
 
 const { Title } = Typography;
 
 export default function Queue() {
-    const [currentPage, setCurrentPage] = useState(1);
+    const [pagination, setPagination] = useState({ current: 1, pageSize: 5 });
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchText, setSearchText] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
-    const pageSize = 5;
 
     useEffect(() => {
         async function fetchBooking() {
             try {
-                const response = await getAllBookings();
-                const bookings = Array.isArray(response) ? response : (response?.data || []);
+                const bookings = await getTodayBookings();
                 setData(bookings);
             } catch (error) {
                 console.error("Failed to fetch booking", error);
@@ -40,8 +36,10 @@ export default function Queue() {
     // === Tính stats tự động từ data ===
     const stats = useMemo(() => {
         const todayCount = data.length;
-        const inProgressCount = data.filter(b => b.status === 'IN_PROGRESS' || b.washSessions?.some(s => s.status === 'IN_PROGRESS')).length;
-        const completedCount = data.filter(b => b.status === 'COMPLETED').length;
+        const inProgressCount = data.filter(b => b.washSessionStatus === 'IN_PROGRESS').length;
+        // Đếm các lịch hẹn có WashSession đã thanh toán (PAID)
+        const completedCount = data.filter(b =>
+            b.washSessionStatus === 'PAID').length;
         return { todayCount, inProgressCount, completedCount };
     }, [data]);
 
@@ -63,7 +61,7 @@ export default function Queue() {
                 result = result.filter(b => b.status === 'CONFIRMED');
             } else if (statusFilter === 'processing') {
                 result = result.filter(b =>
-                    b.status === 'IN_PROGRESS' || b.washSessions?.some(s => s.status === 'IN_PROGRESS')
+                    b.washSessionStatus === 'IN_PROGRESS'
                 );
             }
         }
@@ -75,9 +73,11 @@ export default function Queue() {
     const getStatusTag = (record) => {
         // Kiểm tra washSession trước
         const activeSession = record.washSessions?.find(s => s.status === 'IN_PROGRESS');
+        const paidSession = record.washSessions?.find(s => s.status === 'PAID');
         const completedSession = record.washSessions?.find(s => s.status === 'COMPLETED' || s.status === 'COMPLETE');
 
         if (activeSession) return { label: 'Đang xử lý', color: 'processing' };
+        if (paidSession) return { label: 'Đã thanh toán', color: 'success' };
         if (completedSession) return { label: 'Hoàn thành', color: 'success' };
 
         // Dựa vào booking status
@@ -85,7 +85,7 @@ export default function Queue() {
             case 'CONFIRMED': return { label: 'Đang chờ', color: 'warning' };
             case 'COMPLETED': return { label: 'Hoàn thành', color: 'success' };
             case 'CANCELLED': return { label: 'Đã hủy', color: 'error' };
-            case 'NO_SHOW': return { label: 'Không đến', color: 'default' };
+            case 'PAID': return { label: 'Đã thanh toán', color: 'success' };
             default: return { label: record.status || 'N/A', color: 'default' };
         }
     };
@@ -112,16 +112,21 @@ export default function Queue() {
             title: 'Dịch vụ',
             key: 'service',
             render: (_, record) => {
-                const services = record.bookingDetails?.map(d => d.servicePrice?.service?.name).filter(Boolean);
-                return services?.join(', ') || 'N/A';
+                const services = record.bookingDetails?.map(d => d.serviceName).filter(Boolean);
+                return (services && services.length > 0) ? (
+                    services.map((service, index) => (
+                        <Tag color="blue" key={index} style={{ margin: 0 }}>
+                            {service}
+                        </Tag>
+                    ))
+                ) : 'N/A';
             }
         },
         {
             title: 'Thời gian',
             key: 'time',
             render: (_, record) => {
-                const slot = record.availableSlots?.[0];
-                return slot?.timeSlot?.startTime?.substring(0, 5) || 'N/A';
+                return record?.startTime?.substring(0, 5) || 'N/A';
             }
         },
         {
@@ -159,18 +164,9 @@ export default function Queue() {
         },
     ];
 
-    // Tính toán phân trang hiển thị tối đa 3 số
-    const totalPages = Math.ceil(filteredData.length / pageSize) || 1;
-    const getVisiblePages = () => {
-        if (totalPages <= 3) return Array.from({ length: totalPages }, (_, i) => i + 1);
-        if (currentPage === 1) return [1, 2, 3];
-        if (currentPage === totalPages) return [totalPages - 2, totalPages - 1, totalPages];
-        return [currentPage - 1, currentPage, currentPage + 1];
-    };
-
-    // Reset page khi filter thay đổi
+    // Reset về trang 1 khi search/filter thay đổi
     useEffect(() => {
-        setCurrentPage(1);
+        setPagination(prev => ({ ...prev, current: 1 }));
     }, [searchText, statusFilter]);
 
     return (
@@ -247,43 +243,17 @@ export default function Queue() {
                 ) : (
                     <Table
                         columns={columns}
-                        dataSource={filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize)}
-                        pagination={false}
+                        dataSource={filteredData}
                         rowKey="id"
+                        pagination={{
+                            current: pagination.current,
+                            pageSize: pagination.pageSize,
+                            total: filteredData.length,
+                            onChange: (page, pageSize) => setPagination({ current: page, pageSize }),
+                        }}
                     />
                 )}
             </Card>
-
-            {/* Phân trang tự thiết kế để giới hạn đúng 3 số một lần */}
-            {totalPages > 1 && (
-                <Flex justify="flex-end" style={{ marginTop: '20px' }}>
-                    <Space size="small">
-                        <Button
-                            className="custom-pagination-btn"
-                            icon={<CaretLeftFilled />}
-                            disabled={currentPage === 1}
-                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                        />
-                        {getVisiblePages().map(page => (
-                            <Button
-                                className="custom-pagination-btn"
-                                key={page}
-                                type={currentPage === page ? "primary" : "default"}
-                                onClick={() => setCurrentPage(page)}
-                                style={{ minWidth: '32px', padding: '0 8px' }}
-                            >
-                                {page}
-                            </Button>
-                        ))}
-                        <Button
-                            className="custom-pagination-btn"
-                            icon={<CaretRightFilled />}
-                            disabled={currentPage === totalPages}
-                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                        />
-                    </Space>
-                </Flex>
-            )}
         </div>
     )
 }

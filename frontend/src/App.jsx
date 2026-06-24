@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/Layout/Header/Navbar.jsx'
 import Footer from './components/Layout/Footer/Footer.jsx'
 import Home from './pages/HomePage/Home.jsx'
+import { ProtectedRoute } from './routes/ProtectedRoute.jsx'
 import Service from './pages/ServicePage/Service.jsx'
 import Blog from './pages/BlogPage/Blog.jsx'
 import BlogDetail from './pages/BlogPage/BlogDetail.jsx'
@@ -24,7 +25,15 @@ import Queue from './pages/StaffPage/components/Queue.jsx'
 import Checkin from './pages/StaffPage/components/Checkin.jsx'
 import StaffPayment from './pages/StaffPage/components/Payment.jsx'
 import History from './pages/StaffPage/components/History.jsx'
-import Profile from './pages/StaffPage/components/Profile.jsx'
+import Profile from './components/Profile/Profile.jsx'
+import AdminPage from './pages/AdminPage/AdminPage.jsx'
+import AdminDashboard from './pages/AdminPage/components/AdminDashboard.jsx'
+import Customer from './pages/AdminPage/components/Customer.jsx'
+import Staff from './pages/AdminPage/components/Staff.jsx'
+import Membership from './pages/AdminPage/components/Membership.jsx'
+import Reward from './pages/AdminPage/components/Reward.jsx'
+import ServiceCRUD from './pages/AdminPage/components/Service.jsx'
+import Promotion from './pages/AdminPage/components/Promotion.jsx'
 
 // Layout chung: Navbar + nội dung + Footer
 function MainLayout({ children }) {
@@ -44,7 +53,7 @@ function App() {
       <Route path="/" element={
         <MainLayout><Home /></MainLayout>
       } />
-      <Route path="/dich-vu" element={
+      <Route path="/service" element={
         <MainLayout><Service /></MainLayout>
       } />
       <Route path="/blog" element={
@@ -85,7 +94,9 @@ function App() {
       } />
       {/* Trang Cá nhân (Customer Dashboard) */}
       <Route path="/ca-nhan" element={
-        <MainLayout><CustomerPage /></MainLayout>
+        <ProtectedRoute allowedRoles={["CUSTOMER"]}>
+          <MainLayout><CustomerPage /></MainLayout>
+        </ProtectedRoute>
       }>
         <Route index element={<Navigate to="ho-so" replace />} />
         <Route path="tong-quan" element={<Overview />} />
@@ -95,10 +106,10 @@ function App() {
         <Route path="ho-so" element={<PersonalProfile />} />
       </Route>
       <Route path="/staff" element={
-        <>
+        <ProtectedRoute allowedRoles={["STAFF"]}>
           <Navbar />
           <StaffPage />
-        </>
+        </ProtectedRoute>
       }>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<StaffDashboard />} />
@@ -109,6 +120,22 @@ function App() {
         <Route path="profile" element={<Profile />} />
       </Route>
 
+      <Route path="/admin" element={
+        <ProtectedRoute allowedRoles={["ADMIN"]}>
+          <Navbar />
+          <AdminPage />
+        </ProtectedRoute>
+      }>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="customer" element={<Customer />} />
+        <Route path="staff" element={<Staff />} />
+        <Route path="membership" element={<Membership />} />
+        <Route path="rewards" element={<Reward />} />
+        <Route path="service" element={<ServiceCRUD />} />
+        <Route path="promotion" element={<Promotion />} />
+        <Route path="profile" element={<Profile />} />
+      </Route>
     </Routes>
   )
 }

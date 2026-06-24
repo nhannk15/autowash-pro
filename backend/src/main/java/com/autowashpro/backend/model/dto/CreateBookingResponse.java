@@ -23,6 +23,7 @@ public class CreateBookingResponse {
     private BookingStatus status;
     private String notes;
 
+    private String bookingCode;
     private LocalDate bookingDate;
     private LocalTime startTime;
     private LocalDate endDate;      
@@ -36,4 +37,6 @@ public class CreateBookingResponse {
     private BigDecimal totalFinalPrice;
     private List<BookingDetailResponse> bookingDetails;
     private LocalDateTime createdAt;
+
+    private String voucherCode;
 }

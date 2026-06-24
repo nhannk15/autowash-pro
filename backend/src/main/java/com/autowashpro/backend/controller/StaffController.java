@@ -22,11 +22,14 @@ import com.autowashpro.backend.service.StaffService;
 @RequestMapping("/api/staff")
 public class StaffController {
 
-    @Autowired
     private StaffService service;
+    private StaffMapper mapper;
 
     @Autowired
-    private StaffMapper mapper;
+    public StaffController(StaffService service, StaffMapper mapper) {
+        this.service = service;
+        this.mapper = mapper;
+    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<Staff>>> findAll() {

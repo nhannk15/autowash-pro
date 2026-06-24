@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import com.autowashpro.backend.model.entity.Promotion;
@@ -13,14 +14,19 @@ import com.autowashpro.backend.repository.PromotionRepository;
 import com.autowashpro.backend.repository.StaffRepository;
 
 @Component
-public class PromotionSeeder {
+@Order(11)
+public class PromotionSeeder implements Seeder {
     
-    @Autowired
-    private PromotionRepository promotionRepository;
+    private final PromotionRepository promotionRepository;
+    private final  StaffRepository staffRepository;
 
     @Autowired
-    private  StaffRepository staffRepository;
+    public PromotionSeeder(PromotionRepository promotionRepository, StaffRepository staffRepository) {
+        this.promotionRepository = promotionRepository;
+        this.staffRepository = staffRepository;
+    }
 
+    @Override
     public void seed() {
         if (promotionRepository.count() > 0) return;
 

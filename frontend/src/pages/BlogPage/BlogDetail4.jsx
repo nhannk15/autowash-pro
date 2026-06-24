@@ -336,7 +336,7 @@ export default function BlogDetail4() {
                         <p className="blog-detail__cta-desc">
                             Bảo vệ bề mặt sơn xe, hạn chế tối đa trầy xước xoáy với quy trình rửa xe 3 xô tiêu chuẩn Châu Âu tại nhà.
                         </p>
-                        <Link to="/dich-vu" className="blog-detail__cta-btn">Xem Dịch Vụ</Link>
+                        <Link to="/service" className="blog-detail__cta-btn">Xem Dịch Vụ</Link>
                     </div>
                 </div>
             </div>

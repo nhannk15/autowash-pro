@@ -63,7 +63,7 @@ export default function ServicesSlider() {
     const next = () => setCurrentIndex(i => Math.min(maxIndex, i + 1))
 
     const handleViewMore = () => {
-        navigate('/dich-vu')
+        navigate('/service')
     }
 
     return (

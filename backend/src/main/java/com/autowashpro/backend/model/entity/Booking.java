@@ -1,6 +1,7 @@
 package com.autowashpro.backend.model.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.autowashpro.backend.model.enums.BookingStatus;
@@ -18,6 +19,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -42,12 +44,12 @@ public class Booking {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
-    @JsonIgnoreProperties({"bookings", "washSessions"})
+    @JsonIgnoreProperties({ "bookings", "washSessions" })
     private Customer customer;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vehicle_id", nullable = false)
-    @JsonIgnoreProperties({"bookings", "washSessions"})
+    @JsonIgnoreProperties({ "bookings", "washSessions" })
     private Vehicle vehicle;
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
@@ -96,9 +98,18 @@ public class Booking {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "booking_code", nullable = false)
+    private String bookingCode;
+
+    @OneToOne(mappedBy = "booking", optional = true)
+    @JsonIgnoreProperties("booking")
+    private Billing billing;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+        bookingDetails = new ArrayList<>();
     }
 
     @PreUpdate

@@ -5,7 +5,12 @@ const API = import.meta.env.VITE_BACKEND_ABSOLUTE_PATH;
 
 export async function getMe() {
     const response = await axios.get(`${API}/api/users/me`, {
+        // Gửi một yêu cầu GET đến endpoint /api/users/me của backend.
+        // thiếu await: Dòng code const response = axios.get(...) sẽ thực thi ngay lập tức, nhưng nó không đợi server phản hồi. Thay vào đó, biến response sẽ ngay lập tức được gán bằng một đối tượng Promise (pending)
+        // =>  Khi bạn truy cập response.data, bạn đang truy cập thuộc tính .data của một đối tượng Promise, cái mà chắc chắn là undefined. Do đó, ứng dụng sẽ văng lỗi (thường là TypeError: Cannot read properties of undefined (reading 'data')).
         withCredentials: true,
+        // ra lệnh cho axios yêu cầu trình duyệt phải đính kèm các cookie (chứa JWT) vào header Cookie của request.
+        // Kết quả: Backend nhận được request, kiểm tra cookie, đọc JWT từ đó và xác thực người dùng.
     });
     return response.data;
 }

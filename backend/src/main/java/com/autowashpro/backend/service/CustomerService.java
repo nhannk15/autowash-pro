@@ -15,6 +15,7 @@ import com.autowashpro.backend.model.dto.CustomerRequest;
 
 import com.autowashpro.backend.exception.AccountExistedException;
 import com.autowashpro.backend.exception.UserNotFoundException;
+import com.autowashpro.backend.mapper.MembershipTierMapper;
 import com.autowashpro.backend.model.dto.CustomerAdminResponse;
 import com.autowashpro.backend.model.dto.MembershipTierSummaryResponse;
 import com.autowashpro.backend.model.dto.RegistrationRequest;
@@ -34,23 +35,24 @@ import com.autowashpro.backend.repository.UserRepository;
 @Transactional
 public class CustomerService {
 
-    private CustomerRepository repository;
-    private UserRepository userRepository;
-    private MembershipTierRepository membershipTierRepository;
-    private PasswordEncoder passwordEncoder;
-
-    public CustomerService() {
-    }
+    private final CustomerRepository repository;
+    private final UserRepository userRepository;
+    private final MembershipTierRepository membershipTierRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final MembershipTierMapper membershipTierMapper;
+    private final CustomerRepository customerRepository;
 
     @Autowired
     public CustomerService(CustomerRepository repository,
             UserRepository userRepository,
             MembershipTierRepository membershipTierRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder, MembershipTierMapper membershipTierMapper, CustomerRepository customerRepository) {
         this.repository = repository;
         this.userRepository = userRepository;
         this.membershipTierRepository = membershipTierRepository;
         this.passwordEncoder = passwordEncoder;
+        this.membershipTierMapper = membershipTierMapper;
+        this.customerRepository = customerRepository;
     }
 
     public Customer register(RegistrationRequest request) {
@@ -122,8 +124,6 @@ public class CustomerService {
         customer.setCurrentPoints(0L);
         customer.setLifetimePoints(0L);
         customer.setTierStartDate(LocalDate.now());
-        customer.setTierEndDate(LocalDate.now().plusYears(1));
-        customer.setNextReviewDate(LocalDate.now().plusMonths(6));
 
         applyCustomerDefaults(customer);
         return repository.save(customer);
@@ -173,9 +173,7 @@ public class CustomerService {
                 customer.getCurrentPoints(),
                 customer.getLifetimePoints(),
                 customer.getTierStartDate(),
-                customer.getTierEndDate(),
                 customer.getLastReviewDate(),
-                customer.getNextReviewDate(),
                 customer.getVehicles() == null
                         ? List.of()
                         : customer.getVehicles().stream()
@@ -188,15 +186,17 @@ public class CustomerService {
             return null;
         }
 
-        return new MembershipTierSummaryResponse(
-                tier.getId(),
-                tier.getTierName(),
-                tier.getTierLevel(),
-                tier.getBookingWindowDays(),
-                tier.getPriorityQueueOrder(),
-                tier.getPointEarnRate(),
-                tier.getMinPointsToMaintain(),
-                tier.getPerksDescription());
+        String nextTierName = "Đã đạt mức Rank cao nhất";
+
+        Optional<MembershipTier> nextTier = membershipTierRepository.findByTierLevel(tier.getTierLevel() + 1);
+        if (nextTier.isPresent()) {
+            nextTierName = nextTier.get().getTierName();
+        }
+
+        MembershipTierSummaryResponse newMembershipTierSummaryResponse = membershipTierMapper
+                .toMembershipTierSummaryResponse(tier);
+        newMembershipTierSummaryResponse.setNextTierName(nextTierName);
+        return newMembershipTierSummaryResponse;
     }
 
     private VehicleAdminResponse toVehicleAdminResponse(Vehicle vehicle) {
@@ -334,6 +334,12 @@ public class CustomerService {
         repository.save(customer);
     }
 
+    public void activate(Long id) {
+        Customer customer = findById(id);
+        customer.setActive(true);
+        repository.save(customer);
+    }
+
     // ==================== Helper methods ====================
 
     private void applyCustomerDefaults(Customer customer) {
@@ -355,12 +361,11 @@ public class CustomerService {
         if (customer.getTierStartDate() == null) {
             customer.setTierStartDate(LocalDate.now());
         }
-        if (customer.getTierEndDate() == null) {
-            customer.setTierEndDate(LocalDate.now().plusYears(1));
-        }
-        if (customer.getNextReviewDate() == null) {
-            customer.setNextReviewDate(LocalDate.now().plusMonths(6));
-        }
     }
 
+    public CustomerAdminResponse getCurrentInfo(String email) {
+        Customer customer = customerRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Không tìm thấy khách hàng với email: " + email));
+        return toCustomerAdminResponse(customer);
+    }
 }

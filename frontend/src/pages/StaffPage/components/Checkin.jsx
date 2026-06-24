@@ -6,11 +6,13 @@ import {
 import {
     QrcodeOutlined,
     UserOutlined, CheckCircleOutlined, ArrowLeftOutlined,
-    IdcardOutlined, ScanOutlined, InfoCircleOutlined, EditOutlined
+    IdcardOutlined, ScanOutlined, InfoCircleOutlined, EditOutlined,
+    CameraOutlined, CloseCircleOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { searchBookingByQR, confirmBooking } from '../../../service/staffService';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 import './Checkin.css';
 
 const { Title, Text } = Typography;
@@ -22,8 +24,12 @@ export default function Checkin() {
     const [searchResults, setSearchResults] = useState([]);
     const [selectedCustomer, setSelectedCustomer] = useState(null);
     const [staffNote, setStaffNote] = useState('');
+    const [cameraOpen, setCameraOpen] = useState(false);
+    const [scanning, setScanning] = useState(false);
     const navigate = useNavigate();
     const qrInputRef = useRef(null);
+    const scannerRef = useRef(null);
+    const scannerContainerRef = useRef(null);
     const { user } = useAuth();
 
     // Auto-focus the QR input field when stage 1 is active
@@ -33,18 +39,109 @@ export default function Checkin() {
         }
     }, [currentStep]);
 
-    const handleSearch = async () => {
-        if (!qrCode) {
+    const handleSearch = () => doSearch(qrCode);
+
+    const handleSelectCustomer = (record) => {
+        setSelectedCustomer(record);
+        setStaffNote('');
+        setCurrentStep(1);
+    };
+
+    const handleConfirm = async () => {
+        try {
+            // staffId và bayId để backend tự lấy từ JWT và bookingId
+            // Chỉ truyền bookingId và staffNote
+            await confirmBooking(selectedCustomer.id, staffNote);
+            message.success('Đã xác nhận check-in! Bắt đầu dịch vụ.');
+            navigate('/staff/dashboard');
+        } catch (error) {
+            console.error('Failed to confirm booking', error);
+            message.error('Lỗi khi xác nhận check-in!');
+        }
+    };
+
+    // ===== Camera Scanner (Html5QrcodeScanner) =====
+    const startCamera = () => {
+        setCameraOpen(true);
+    };
+
+    useEffect(() => {
+        if (!cameraOpen || !scannerContainerRef.current) return;
+
+        const container = scannerContainerRef.current;
+
+        // Dọn scanner cũ nếu có
+        if (scannerRef.current) {
+            scannerRef.current.clear().catch(() => {});
+            scannerRef.current = null;
+        }
+
+        // Đợi 1 tick để DOM thực sự sẵn sàng
+        const id = requestAnimationFrame(() => {
+            const scanner = new Html5QrcodeScanner(
+                'qr-camera-reader',
+                {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0,
+                    showTorchButtonIfSupported: true,
+                    rememberLastUsedCamera: true,
+                },
+                /* verbose= */ false
+            );
+
+            scannerRef.current = scanner;
+            setScanning(true);
+
+            scanner.render(
+                (decodedText) => {
+                    setQrCode(decodedText);
+                    message.success(`Đã quét: ${decodedText}`);
+                    scanner.clear().catch(() => {});
+                    scannerRef.current = null;
+                    setCameraOpen(false);
+                    setScanning(false);
+                    doSearch(decodedText);
+                },
+                (errorMessage) => {
+                    console.debug('QR:', errorMessage);
+                }
+            );
+        });
+
+        return () => cancelAnimationFrame(id);
+    }, [cameraOpen]);
+
+    const stopCamera = () => {
+        if (scannerRef.current) {
+            scannerRef.current.clear().catch(() => {});
+            scannerRef.current = null;
+        }
+        setCameraOpen(false);
+        setScanning(false);
+    };
+
+    // Cleanup khi unmount
+    useEffect(() => {
+        return () => {
+            if (scannerRef.current) {
+                scannerRef.current.clear().catch(() => {});
+            }
+        };
+    }, []);
+
+    // Hàm search tách riêng để dùng được từ camera callback
+    const doSearch = async (code) => {
+        if (!code) {
             message.warning('Vui lòng quét mã QR hoặc nhập mã đặt lịch!');
             return;
         }
 
         try {
-            const response = await searchBookingByQR(qrCode);
-            // Xử lý ApiResponse wrapper
+            const response = await searchBookingByQR(code);
             const data = Array.isArray(response) ? response
                 : Array.isArray(response?.data) ? response.data
-                : response ? [response] : [];
+                    : response ? [response] : [];
             setSearchResults(data);
 
             if (data.length === 0) {
@@ -56,67 +153,41 @@ export default function Checkin() {
         }
     };
 
-    const handleSelectCustomer = (record) => {
-        setSelectedCustomer(record);
-        setStaffNote('');
-        setCurrentStep(1);
-    };
-
-    const handleConfirm = async () => {
-        try {
-            const staffId = user?.id || null;
-            const bayId = selectedCustomer.availableSlots?.[0]?.washBay?.id || null;
-            await confirmBooking(selectedCustomer.id, staffId, bayId, staffNote);
-            message.success('Đã xác nhận check-in! Bắt đầu dịch vụ.');
-            navigate('/staff/dashboard');
-        } catch (error) {
-            console.error('Failed to confirm booking', error);
-            message.error('Lỗi khi xác nhận check-in!');
-        }
-    };
-
     // === Helper: Trích xuất dữ liệu từ booking record ===
     const getCustomerName = (record) => record.customer?.fullName || 'N/A';
     const getCustomerPhone = (record) => record.customer?.phoneNumber || 'N/A';
     const getCustomerEmail = (record) => record.customer?.email || '';
+
+    // FIX: vehicle response dùng trực tiếp các field flat, không có nested vehicleType
     const getLicensePlate = (record) => record.vehicle?.licensePlate || 'N/A';
     const getVehicleModel = (record) => {
         const v = record.vehicle;
         return `${v?.brand || ''} ${v?.model || ''}`.trim() || 'N/A';
     };
-    const getVehicleType = (record) => record.vehicle?.vehicleType?.name || '';
-    const getBayName = (record) => record.availableSlots?.[0]?.washBay?.name || 'Chưa phân khoang';
+    const getVehicleType = (record) => record.vehicle?.typeName || '';
 
-    // Lấy danh sách dịch vụ từ bookingDetails
+    // FIX: washBay là string trực tiếp, không phải nested object
+    const getBayName = (record) => record.washBay || 'Chưa phân khoang';
+
+    // FIX: bookingDetails dùng field flat: serviceName, priceAtBooking
     const getServices = (record) => {
         return (record.bookingDetails || []).map((d, idx) => ({
-            id: d.id || idx,
-            name: d.servicePrice?.service?.name || 'Dịch vụ',
-            price: Number(d.priceAtBooking || d.servicePrice?.price || 0),
+            id: d.servicePriceId || idx,
+            name: d.serviceName || 'Dịch vụ',
+            price: Number(d.priceAtBooking || 0),
         }));
     };
 
-    // Lấy danh sách khuyến mãi từ bookingDetails
+    // FIX: promotion là flat field promotionName + discountAmount, không có nested object
+    // Không còn nguy cơ trùng promotion
     const getPromotions = (record) => {
-        const promos = [];
-        (record.bookingDetails || []).forEach(d => {
-            if (d.promotion) {
-                promos.push({
-                    id: d.promotion.id,
-                    name: d.promotion.name || 'Khuyến mãi',
-                    discount: Number(d.discountAmount || 0),
-                });
-            }
-        });
-        // Booking-level promotion
-        if (record.promotion) {
-            promos.push({
-                id: record.promotion.id,
-                name: record.promotion.name || 'Khuyến mãi',
-                discount: 0, // discount đã tính trong bookingDetails
-            });
-        }
-        return promos;
+        return (record.bookingDetails || [])
+            .filter(d => d.promotionName)
+            .map((d, idx) => ({
+                id: idx,
+                name: d.promotionName,
+                discount: Number(d.discountAmount || 0),
+            }));
     };
 
     const columns = [
@@ -194,8 +265,14 @@ export default function Checkin() {
                             <QrcodeOutlined />
                         </div>
 
-                        <Title level={4} className="qr-status-text">Sẵn sàng quét mã QR</Title>
-                        <Text className="qr-sub-text">Click vào ô bên dưới rồi dùng thiết bị quét mã QR</Text>
+                        <Title level={4} className="qr-status-text">
+                            {scanning ? 'Đang quét...' : 'Sẵn sàng quét mã QR'}
+                        </Title>
+                        <Text className="qr-sub-text">
+                            {scanning
+                                ? 'Đưa mã QR vào vùng camera, giữ khoảng cách 15-30cm'
+                                : 'Click vào ô bên dưới rồi dùng thiết bị quét mã QR'}
+                        </Text>
 
                         <div className="qr-input-wrapper">
                             <Input
@@ -209,6 +286,36 @@ export default function Checkin() {
                                 prefix={<ScanOutlined />}
                             />
                         </div>
+
+                        <div className="qr-action-buttons">
+                            {!cameraOpen ? (
+                                <Button
+                                    type="default"
+                                    className="camera-btn"
+                                    icon={<CameraOutlined />}
+                                    onClick={startCamera}
+                                >
+                                    Quét bằng Camera
+                                </Button>
+                            ) : (
+                                <Button
+                                    type="default"
+                                    danger
+                                    className="camera-btn camera-btn-close"
+                                    icon={<CloseCircleOutlined />}
+                                    onClick={stopCamera}
+                                >
+                                    Đóng Camera
+                                </Button>
+                            )}
+                        </div>
+
+                        {/* Camera Scanner Preview */}
+                        {cameraOpen && (
+                            <div className="camera-scanner-wrapper" ref={scannerContainerRef}>
+                                <div id="qr-camera-reader" className="camera-reader" />
+                            </div>
+                        )}
 
                         <div className="qr-scan-hint">
                             <InfoCircleOutlined />

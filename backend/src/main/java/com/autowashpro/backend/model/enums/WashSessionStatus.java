@@ -1,8 +1,9 @@
 package com.autowashpro.backend.model.enums;
 
 public enum WashSessionStatus {
+    PENDING,
     IN_PROGRESS,
-    COMPLETE,
     COMPLETED,
+    PAID,
     CANCELLED
 }

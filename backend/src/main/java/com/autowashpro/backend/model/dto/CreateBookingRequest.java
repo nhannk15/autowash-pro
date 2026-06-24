@@ -30,4 +30,8 @@ public class CreateBookingRequest {
 
     private String notes;
 
+    private Long promotionId;
+
+    private String voucherCode;
+
 }

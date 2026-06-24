@@ -1,24 +1,33 @@
 package com.autowashpro.backend.service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.DateTimeException;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.autowashpro.backend.exception.PromotionException;
+import com.autowashpro.backend.exception.UserNotFoundException;
 import com.autowashpro.backend.mapper.PromotionMapper;
 import com.autowashpro.backend.model.dto.CreatePromotionRequest;
 import com.autowashpro.backend.model.dto.PromotionResponse;
+import com.autowashpro.backend.model.entity.Billing;
+import com.autowashpro.backend.model.entity.Customer;
 import com.autowashpro.backend.model.entity.MembershipTier;
 import com.autowashpro.backend.model.entity.Promotion;
+import com.autowashpro.backend.model.entity.PromotionUsage;
 import com.autowashpro.backend.model.entity.Service;
 import com.autowashpro.backend.model.entity.Staff;
+import com.autowashpro.backend.model.enums.PromotionDiscountType;
+import com.autowashpro.backend.repository.BillingRepository;
+import com.autowashpro.backend.repository.CustomerRepository;
 import com.autowashpro.backend.repository.MembershipTierRepository;
 import com.autowashpro.backend.repository.PromotionRepository;
+import com.autowashpro.backend.repository.PromotionUsageRepository;
 import com.autowashpro.backend.repository.ServiceRepository;
 import com.autowashpro.backend.repository.StaffRepository;
 
@@ -33,16 +42,23 @@ public class PromotionService {
     private final MembershipTierRepository membershipTierRepository;
     private final StaffRepository staffRepository;
     private final PromotionMapper promotionMapper;
+    private final CustomerRepository customerRepository;
+    private final BillingRepository billingRepository;
+    private final PromotionUsageRepository promotionUsageRepository;
 
     @Autowired
     public PromotionService(PromotionRepository repository, PromotionMapper promotionMapper,
             ServiceRepository serviceRepository, MembershipTierRepository membershipTierRepository,
-            StaffRepository staffRepository) {
+            StaffRepository staffRepository, CustomerRepository customerRepository,
+            BillingRepository billingRepository, PromotionUsageRepository promotionUsageRepository) {
         this.promotionRepository = repository;
         this.promotionMapper = promotionMapper;
         this.serviceRepository = serviceRepository;
         this.membershipTierRepository = membershipTierRepository;
         this.staffRepository = staffRepository;
+        this.customerRepository = customerRepository;
+        this.billingRepository = billingRepository;
+        this.promotionUsageRepository = promotionUsageRepository;
     }
 
     public List<PromotionResponse> findAll() {
@@ -174,6 +190,78 @@ public class PromotionService {
 
         return promotionMapper.toPromotionResponse(savedPromotion);
 
+    }
+
+    public Promotion autoFindApplicablePromotion(String email, LocalDateTime bookingDateTime) {
+
+        BigDecimal totalOriginalPrice = new BigDecimal("10000000");
+
+        log.info("Email khách hàng: {}", email);
+        Customer customer = customerRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Không tìm thấy khách hàng với email: " + email));
+        log.info("Customer date of birth: {}", customer.getDateOfBirth());
+        log.info("Booking date: {}", bookingDateTime);
+        List<Promotion> applicablePromotions = promotionRepository.findApplicablePromotions(bookingDateTime,
+                customer.getTier().getId());
+        log.info("Promotions size: {}", applicablePromotions.size());
+
+        boolean isBirthday = customer.getBirthday() != null
+                && bookingDateTime != null
+                && customer.getDateOfBirth().getMonth() == bookingDateTime.getMonth()
+                && customer.getDateOfBirth().getDayOfMonth() == bookingDateTime.getDayOfMonth();
+        log.info("Is bookingdate customer's birthday: {}", isBirthday);
+
+        Promotion finalPromotion = applicablePromotions.stream()
+                .filter(p -> {
+                    if (p.getPromotionName().equals("Ưu Đãi Sinh Nhật")) {
+                        return isBirthday;
+                    }
+                    return true;
+                })
+                .max(Comparator.comparing(p -> calculateDiscountValue(p, totalOriginalPrice)))
+                .orElse(null);
+        log.info("Promotion's name: {}", finalPromotion == null ? null : finalPromotion.getPromotionName());
+        return finalPromotion;
+    }
+
+    public BigDecimal calculateDiscountValue(Promotion promotion, BigDecimal totalOriginalPrice) {
+        if (promotion == null || totalOriginalPrice == null) {
+            return BigDecimal.ZERO;
+        }
+        if (promotion.getDiscountType().equals(PromotionDiscountType.FIXED_AMOUNT)) {
+            return promotion.getDiscountValue();
+        } else if (promotion.getDiscountType().equals(PromotionDiscountType.PERCENTAGE)) {
+            return totalOriginalPrice
+                    .multiply(promotion.getDiscountValue())
+                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        } else {
+            return totalOriginalPrice;
+        }
+    }
+
+    public void commitPromotionUsage(Long promotionId, Long billingId) {
+        if (promotionId != null) {
+            Promotion promotion = new Promotion();
+            Optional<Promotion> optionalPromotion = promotionRepository.findById(promotionId);
+            Billing billing = billingRepository.findById(billingId).get();
+            if (optionalPromotion.isPresent()) {
+                promotion = optionalPromotion.get();
+            }
+
+            log.info("Increase promotion usage count with id: {}", promotionId);
+            if (promotion != null) {
+                promotion.setUsageCount(promotion.getUsageCount() + 1L);
+                promotionRepository.save(promotion);
+            }
+
+            PromotionUsage promotionUsage = PromotionUsage
+                    .builder()
+                    .promotion(promotion)
+                    .billing(billing)
+                    .discountAmount(promotion == null ? BigDecimal.ZERO : promotion.getDiscountValue())
+                    .build();
+            promotionUsageRepository.save(promotionUsage);
+        }
     }
 
 }

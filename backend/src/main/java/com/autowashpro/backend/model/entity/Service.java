@@ -20,10 +20,12 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -53,15 +55,12 @@ public class Service {
     private ServiceCategory category;
 
     @Column(name = "is_active", nullable = false)
-    private boolean isActive = true;
+    private boolean isActive;
 
     @OneToMany(mappedBy = "service")
     @JsonIgnoreProperties("service")
     private List<ServicePrice> servicePrices;
 
-    @OneToMany(mappedBy = "service")
-    @JsonIgnoreProperties("service")
-    private List<Reward> rewards;
 
     @OneToMany(mappedBy = "service")
     @JsonIgnoreProperties("service")
@@ -76,7 +75,7 @@ public class Service {
     @OneToMany(mappedBy = "service", cascade = CascadeType.ALL)
     @JsonIgnoreProperties("service")
     private List<Step> steps;
-    
+
     @OneToMany(mappedBy = "service", cascade = CascadeType.ALL)
     @JsonIgnoreProperties("service")
     private List<Highlight> highlights;
@@ -88,6 +87,7 @@ public class Service {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        isActive = true;
     }
 
     @PreUpdate

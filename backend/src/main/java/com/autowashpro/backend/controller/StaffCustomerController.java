@@ -25,17 +25,19 @@ import com.autowashpro.backend.service.VehicleService;
 @RequestMapping("/api/staff/customers")
 public class StaffCustomerController {
 
-    @Autowired
-    private CustomerService customerService;
+    private final CustomerService customerService;
+    private final VehicleService vehicleService;
+    private final CustomerRepository customerRepository;
+    private final VehicleTypeRepository vehicleTypeRepository;
 
     @Autowired
-    private VehicleService vehicleService;
-
-    @Autowired
-    private CustomerRepository customerRepository;
-
-    @Autowired
-    private VehicleTypeRepository vehicleTypeRepository;
+    public StaffCustomerController(CustomerService customerService, VehicleService vehicleService,
+            CustomerRepository customerRepository, VehicleTypeRepository vehicleTypeRepository) {
+        this.customerService = customerService;
+        this.vehicleService = vehicleService;
+        this.customerRepository = customerRepository;
+        this.vehicleTypeRepository = vehicleTypeRepository;
+    }
 
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<CustomerAdminResponse>> searchByPhone(@RequestParam String phone) {

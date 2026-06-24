@@ -2,19 +2,20 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { CarOutlined } from '@ant-design/icons';
 import './Booking.css';
-
+import { message } from 'antd';
+import { getAvailableSlot, getPromotion, getService, getVehicleByCustomer, createBooking, getMembershipTier } from '../../../service/customerService';
 function VehicleImage({ src, alt, fallbackIcon }) {
     const [hasError, setHasError] = useState(false);
-    
+
     if (!src || hasError) {
         return fallbackIcon;
     }
-    
+
     return (
-        <img 
-            src={src} 
-            alt={alt} 
-            className="vehicle-card__image" 
+        <img
+            src={src}
+            alt={alt}
+            className="vehicle-card__image"
             referrerPolicy="no-referrer"
             onError={() => setHasError(true)}
         />
@@ -46,6 +47,7 @@ export default function BookingList() {
     // Thông tin khách hàng & khuyến mãi phục vụ tính tiền ở Frontend
     const [customer, setCustomer] = useState(null);
     const [promotions, setPromotions] = useState([]);
+    const [membershipTier, setMembershipTier] = useState();
     const [submitting, setSubmitting] = useState(false);
     const [bookingError, setBookingError] = useState(null);
 
@@ -59,26 +61,24 @@ export default function BookingList() {
     useEffect(() => {
         const fetchVehicles = async () => {
             if (!user) return;
-            const customerId = user.id; // Sử dụng ID của tài khoản đang đăng nhập
             setLoadingVehicles(true);
             setErrorVehicles(null);
             try {
-                const response = await fetch(`/api/vehicles/user/${customerId}`);
-                if (!response.ok) {
-                    throw new Error("Không thể tải danh sách xe của khách hàng.");
-                }
-                const result = await response.json();
-                const vehicleList = result && result.data ? result.data : [];
-                setUserVehicles(vehicleList);
-                
-                // Tự động chọn xe đầu tiên nếu có danh sách xe
-                if (vehicleList.length > 0) {
-                    setSelectedVehicle(vehicleList[0]);
-                    setSelectedVehicleType(vehicleList[0].typeName);
+                const result = await getVehicleByCustomer()
+                const vehicleList = result?.data || [];
+
+                // Lọc bỏ những xe đã bị xóa mềm/vô hiệu hóa
+                const activeVehicles = vehicleList.filter(v => v.active !== false && v.isActive !== false);
+                setUserVehicles(activeVehicles);
+
+                // Tự động chọn xe hoạt động đầu tiên nếu có danh sách
+                if (activeVehicles.length > 0) {
+                    setSelectedVehicle(activeVehicles[0]);
+                    setSelectedVehicleType(activeVehicles[0].typeName);
                     setMaxUnlockedStep(prev => Math.max(prev, 2));
                 }
             } catch (err) {
-                setErrorVehicles(err.message);
+                setErrorVehicles(err.response?.data.message || err.message || 'không thể tải danh sách xe của bạn');
                 setUserVehicles([]);
             } finally {
                 setLoadingVehicles(false);
@@ -87,35 +87,52 @@ export default function BookingList() {
 
         fetchVehicles();
     }, [user]);
+    // Mảng phụ thuộc báo cho React biết: "Hãy chạy lại hàm bên trong useEffect mỗi khi giá trị của biến user thay đổi".
+    // Đề phòng trường hợp Token hết hạn ngầm (Session Expired)
+    // Nếu người dùng treo máy ở trang này quá lâu, Token/Cookie đăng nhập bị hết hạn:
+
+    // Hệ thống Auth ngầm sẽ tự động cập nhật user thành null.
+    // Nhờ có [user], giao diện sẽ tự động phản ứng: khóa chức năng đặt lịch và xóa danh sách xe ngay lập tức, thay vì để người dùng tiếp tục bấm đặt lịch bằng dữ liệu cũ và nhận lỗi crash hệ thống từ Backend.
+
 
     // Lấy thông tin chi tiết khách hàng theo tài khoản đang đăng nhập để tính hạng thành viên và áp khuyến mãi
+    // useEffect(() => {
+    //     if (!user) return;
+    //     const fetchCustomerInfo = async () => {
+    //         try {
+    //             const response = await fetch(`/api/customers/${user.id}`);
+    //             if (response.ok) {
+    //                 const result = await response.json();
+    //                 setCustomer(result.data || result);
+    //             }
+    //         } catch (err) {
+    //             console.error("Failed to fetch customer info:", err);
+    //         }
+    //     };
+    //     fetchCustomerInfo();
+    // }, [user]);
     useEffect(() => {
-        if (!user) return;
-        const fetchCustomerInfo = async () => {
+        const fetchMembershipTier = async () => {
             try {
-                const response = await fetch(`/api/customers/${user.id}`);
-                if (response.ok) {
-                    const result = await response.json();
-                    setCustomer(result.data || result);
-                }
+                const result = await getMembershipTier()
+                setMembershipTier(result || undefined)
             } catch (err) {
-                console.error("Failed to fetch customer info:", err);
+                console.error("Failed to fetch membershipTier:", err);
+                message.warning(err.response?.data.message || err.message || "không thể tải membership tier")
             }
-        };
-        fetchCustomerInfo();
-    }, [user]);
+        }
+        fetchMembershipTier()
+    }, [])
 
     // Lấy danh sách chương trình khuyến mãi
     useEffect(() => {
         const fetchPromotions = async () => {
             try {
-                const response = await fetch('/api/promotions');
-                if (response.ok) {
-                    const result = await response.json();
-                    setPromotions(result.data || result);
-                }
+                const result = await getPromotion()
+                setPromotions(result || []);
             } catch (err) {
                 console.error("Failed to fetch promotions:", err);
+                message.warning(err.response?.data.message || err.message || "không thể tải danh sách chương trình khuyến mãi")
             }
         };
         fetchPromotions();
@@ -123,8 +140,9 @@ export default function BookingList() {
 
     // Tìm chương trình khuyến mãi phù hợp dựa trên ngày đặt lịch và hạng thành viên
     const getApplicablePromotion = () => {
-        if (!selectedDate || !customer || !customer.tier || promotions.length === 0) return null;
-        const tierId = customer.tier.id;
+        if (!selectedDate || !membershipTier || !membershipTier.membershipTierSummaryResponse) return null;
+
+        const tierId = membershipTier.membershipTierSummaryResponse.membershipTierId;
         const bookingDateTime = new Date(selectedDate + "T00:00:00");
 
         const applicable = promotions.filter(p => {
@@ -143,10 +161,9 @@ export default function BookingList() {
             };
             if (p.minTierName) {
                 const requiredLevel = TIER_LEVELS[p.minTierName] || 0;
-                const currentLevel = customer.tier.tierLevel || 0;
+                const currentLevel = membershipTier.membershipTierSummaryResponse.tierLevel || 0;
                 if (currentLevel < requiredLevel) return false;
             }
-
             return true;
         });
 
@@ -186,12 +203,8 @@ export default function BookingList() {
             setLoadingServices(true);
             setErrorServices(null);
             try {
-                const response = await fetch("/api/services");
-                if (!response.ok) {
-                    throw new Error("Không thể tải danh sách dịch vụ.");
-                }
-                const result = await response.json();
-                const serviceList = result && result.data ? result.data : result;
+                const result = await getService()
+                const serviceList = result?.data || [];
                 if (Array.isArray(serviceList)) {
                     // Chuẩn hóa cấu trúc dịch vụ tương tự trang Dịch Vụ chính
                     const formatted = serviceList.map(item => {
@@ -214,7 +227,7 @@ export default function BookingList() {
                     throw new Error("Định dạng dữ liệu API không đúng.");
                 }
             } catch (err) {
-                setErrorServices(err.message);
+                setErrorServices(err.response?.data.message || err.message || "Không thể tải danh sách dịch vụ");
             } finally {
                 setLoadingServices(false);
             }
@@ -229,16 +242,11 @@ export default function BookingList() {
             setLoadingSlots(true);
             setErrorSlots(null);
             try {
-                const response = await fetch(`/api/bookings/available-slots?date=${selectedDate}`);
-
-                if (!response.ok) {
-                    throw new Error("Không thể tải danh sách khung giờ trống.");
-                }
-                const result = await response.json();
-                const slotList = result && result.timeSlotAvailabilityResponses ? result.timeSlotAvailabilityResponses : [];
+                const result = await getAvailableSlot(selectedDate)
+                const slotList = result?.timeSlotAvailabilityResponses || [];
                 setTimeSlots(slotList);
             } catch (err) {
-                setErrorSlots(err.message);
+                setErrorSlots(err.response?.data.message || err.message);
                 setTimeSlots([]);
             } finally {
                 setLoadingSlots(false);
@@ -350,7 +358,7 @@ export default function BookingList() {
         setBookingError(null);
 
         try {
-            const servicePriceIds = selectedServices.map(service => 
+            const servicePriceIds = selectedServices.map(service =>
                 selectedVehicleType === 'SEDAN' ? service.priceSedanId : service.priceSuvId
             );
 
@@ -363,22 +371,11 @@ export default function BookingList() {
                 notes: contactInfo.notes
             };
 
-            const response = await fetch("/api/bookings", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const result = await response.json();
-            if (!response.ok) {
-                throw new Error(result.message || "Đã xảy ra lỗi khi tạo lịch đặt.");
-            }
+            await createBooking(payload)
 
             setIsSuccess(true);
         } catch (err) {
-            setBookingError(err.message);
+            setBookingError(err.response?.data?.message || err.message || "Đã xảy ra lỗi khi tạo lịch đặt.")
         } finally {
             setSubmitting(false);
         }
@@ -411,9 +408,10 @@ export default function BookingList() {
             {/* STEPPER BAR PROGRESS */}
             <div className="booking-stepper">
                 {steps.map((step) => {
-                    const isCompleted = step.num < currentStep;
-                    const isActive = step.num === currentStep;
-                    const isClickable = step.num <= maxUnlockedStep;
+                    const isCompleted = step.num < currentStep; //nghĩa là người dùng đã đi qua bước này và hoàn thành xong thông tin của nó. (Ví dụ: Bạn đang ở Bước 3 thì Bước 1 và 2 sẽ có isCompleted = true).
+                    const isActive = step.num === currentStep; //Xác định xem đây có phải là bước mà người dùng hiện tại đang nhìn thấy trên màn hình hay không.
+                    const isClickable = step.num <= maxUnlockedStep; //maxUnlockedStep lưu trữ bước xa nhất mà người dùng đã đạt được sau khi điền đầy đủ thông tin bắt buộc của các bước trước đó. (Ví dụ: Bạn đã chọn xe ở Bước 1 và chọn dịch vụ ở Bước 2, lúc này maxUnlockedStep sẽ là 3. Bạn có thể tự do click qua lại giữa Bước 1, 2 và 3, nhưng không thể click sang Bước 4 vì chưa chọn thời gian ở Bước 3).
+
 
                     return (
                         <button
@@ -461,9 +459,9 @@ export default function BookingList() {
                                     >
                                         {/* Hình ảnh xe hoặc Icon phân khúc xe */}
                                         <div className="vehicle-card__image-container">
-                                            <VehicleImage 
-                                                src={vehicle.image} 
-                                                alt={`${vehicle.brand} ${vehicle.model}`} 
+                                            <VehicleImage
+                                                src={vehicle.image}
+                                                alt={`${vehicle.brand} ${vehicle.model}`}
                                                 fallbackIcon={
                                                     <div className="vehicle-card__icon-wrapper">
                                                         {isSedan ? <CarOutlined /> : <span style={{ fontSize: '24px' }}>🚙</span>}
@@ -564,9 +562,9 @@ export default function BookingList() {
                                                             <h3 className="booking-service-card__title">{service.name}</h3>
                                                             <span className="booking-service-card__price">{formatCurrency(priceVal)}</span>
                                                         </div>
-                                                         <div style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '500' }}>
-                                                             ⏱ <span>Thời gian: {service.duration} phút</span>
-                                                         </div>
+                                                        <div style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '500' }}>
+                                                            ⏱ <span>Thời gian: {service.duration} phút</span>
+                                                        </div>
                                                         <p className="booking-service-card__desc">{service.shortDesc}</p>
                                                         <button
                                                             type="button"
@@ -821,7 +819,7 @@ export default function BookingList() {
                     <div className="booking-main-panel">
                         <div style={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '16px', padding: '24px', boxShadow: '0 8px 24px rgba(13, 27, 75, 0.02)' }}>
                             <h2 className="booking-step-title" style={{ fontSize: '1.4rem', marginBottom: '20px' }}>Chi tiết lịch hẹn</h2>
-                            
+
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '24px' }}>
                                 <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                                     <h4 style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0', fontWeight: 'bold' }}>🚗 Xe chăm sóc</h4>
@@ -866,14 +864,14 @@ export default function BookingList() {
                                 <textarea
                                     name="notes"
                                     className="form-input form-textarea"
-                                    style={{ 
-                                        width: '100%', 
-                                        height: '80px', 
-                                        marginTop: '8px', 
-                                        fontSize: '0.88rem', 
-                                        padding: '10px 12px', 
-                                        borderRadius: '8px', 
-                                        border: '1px solid #cbd5e1', 
+                                    style={{
+                                        width: '100%',
+                                        height: '80px',
+                                        marginTop: '8px',
+                                        fontSize: '0.88rem',
+                                        padding: '10px 12px',
+                                        borderRadius: '8px',
+                                        border: '1px solid #cbd5e1',
                                         resize: 'none',
                                         fontFamily: 'inherit'
                                     }}
@@ -935,15 +933,15 @@ export default function BookingList() {
                             })()}
 
                             {bookingError && (
-                                <div style={{ 
-                                    color: '#ef4444', 
-                                    backgroundColor: '#fef2f2', 
-                                    padding: '10px', 
-                                    borderRadius: '8px', 
-                                    border: '1px solid #fecaca', 
-                                    margin: '0 0 12px 0', 
-                                    fontSize: '0.85rem', 
-                                    fontWeight: '500' 
+                                <div style={{
+                                    color: '#ef4444',
+                                    backgroundColor: '#fef2f2',
+                                    padding: '10px',
+                                    borderRadius: '8px',
+                                    border: '1px solid #fecaca',
+                                    margin: '0 0 12px 0',
+                                    fontSize: '0.85rem',
+                                    fontWeight: '500'
                                 }}>
                                     ⚠️ {bookingError}
                                 </div>
@@ -974,9 +972,9 @@ export default function BookingList() {
             {isSuccess && (
                 <div className="booking-success-modal-backdrop">
                     <div className="booking-success-modal-content">
-                        <button 
-                            type="button" 
-                            className="modal-close-btn" 
+                        <button
+                            type="button"
+                            className="modal-close-btn"
                             onClick={handleResetBooking}
                             aria-label="Close"
                         >
@@ -987,7 +985,7 @@ export default function BookingList() {
                         <p className="success-message">
                             Cảm ơn bạn đã lựa chọn Autowash PRO. Đơn đặt lịch của bạn đã được ghi nhận thành công, chúng tôi sẽ liên hệ sớm nhất để xác nhận.
                         </p>
-                        
+
                         <div className="success-details">
                             <div className="success-detail-item">
                                 <span>Khách hàng:</span>
@@ -1009,7 +1007,7 @@ export default function BookingList() {
                                 <span>Thời gian:</span>
                                 <strong>{selectedTime} - {selectedDate.split('-').reverse().join('/')}</strong>
                             </div>
-                            
+
                             {(() => {
                                 const appPromo = getApplicablePromotion();
                                 const originalTotal = calculateTotal();
@@ -1051,7 +1049,7 @@ export default function BookingList() {
                                 }
                             })()}
                         </div>
-                        
+
                         <button className="btn-success-home" onClick={handleResetBooking}>
                             ĐÓNG
                         </button>

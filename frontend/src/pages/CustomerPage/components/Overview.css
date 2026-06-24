@@ -1,0 +1,434 @@
+.overview-container {
+    padding: 24px;
+    background-color: #ffffff;
+    min-height: 100vh;
+}
+
+/* Welcome Banner */
+.welcome-banner {
+    margin-bottom: 24px;
+}
+
+.welcome-title {
+    color: #002b7f !important;
+    font-weight: 700 !important;
+    margin-bottom: 4px !important;
+}
+
+.welcome-subtitle {
+    color: #666666;
+    font-size: 14px;
+}
+
+/* Card General Styling */
+.dashboard-card {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02) !important;
+    transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1) !important;
+    height: 100%;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 20px rgba(0, 43, 127, 0.08) !important;
+    border-color: rgba(0, 43, 127, 0.2) !important;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.card-icon {
+    font-size: 20px;
+    padding: 8px;
+    border-radius: 8px;
+}
+
+.icon-blue {
+    background-color: #f0f5ff;
+    color: #002b7f;
+}
+
+.icon-gold {
+    background-color: #fffbe6;
+    color: #faad14;
+}
+
+.icon-silver {
+    background-color: #f5f5f5;
+    color: #8c8c8c;
+}
+
+.card-title {
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px;
+    color: #333333 !important;
+}
+
+.card-body {
+    min-height: 130px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Card 1: Booking Info */
+.booking-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.booking-service {
+    font-size: 16px;
+    font-weight: 700;
+    color: #333333;
+}
+
+.booking-detail {
+    font-size: 13px;
+    color: #4a5568;
+    background-color: #f0f5ff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    width: fit-content;
+}
+
+.booking-car {
+    font-size: 13px;
+    color: #666666;
+}
+
+.other-bookings-alert {
+    margin-top: 4px;
+    padding: 6px 12px;
+    background-color: #f8fafc;
+    border-radius: 6px;
+    border: 1px dashed #cbd5e1;
+}
+
+.other-bookings-alert .ant-badge-status-text {
+    font-size: 12px !important;
+    color: #002b7f !important;
+    font-weight: 600 !important;
+}
+
+.action-btn {
+    background-color: #002b7f !important;
+    border: none !important;
+    border-radius: 6px !important;
+    width: 100%;
+    margin-top: 8px;
+    height: 38px !important;
+    font-weight: 600 !important;
+    color: #ffffff !important;
+}
+
+.action-btn:hover {
+    background-color: #001f5c !important;
+}
+
+.action-btn-outline {
+    background-color: transparent !important;
+    border: 1px solid #002b7f !important;
+    border-radius: 6px !important;
+    width: 100%;
+    margin-top: 8px;
+    height: 38px !important;
+    font-weight: 600 !important;
+    color: #002b7f !important;
+}
+
+.action-btn-outline:hover {
+    background-color: #f0f5ff !important;
+    color: #001f5c !important;
+    border-color: #001f5c !important;
+}
+
+.compact-empty {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.compact-empty .ant-empty-image {
+    height: 40px !important;
+    margin-bottom: 8px !important;
+}
+
+/* Card 2: Points - Lifetime + Current */
+.point-row {
+    padding: 10px 12px;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+}
+
+.lifetime-row {
+    background-color: #fafafa;
+}
+
+.current-row {
+    background-color: #fffbe6;
+}
+
+.point-row-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.point-row-icon {
+    font-size: 14px;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+.lifetime-icon {
+    color: #8c8c8c;
+    background-color: #f0f0f0;
+}
+
+.current-icon {
+    color: #faad14;
+    background-color: #fff7e6;
+}
+
+.point-row-label {
+    font-size: 12px !important;
+    color: #666666 !important;
+    font-weight: 600 !important;
+}
+
+.point-info-icon {
+    font-size: 12px;
+    color: #bfbfbf;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.point-info-icon:hover {
+    color: #666666;
+}
+
+.point-row-value {
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.lifetime-value {
+    color: #595959;
+}
+
+.current-value {
+    color: #faad14;
+}
+
+.point-row-unit {
+    font-size: 13px;
+    color: #8c8c8c;
+    font-weight: 600;
+    margin-left: 4px;
+}
+
+.points-divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, #e8e8e8, transparent);
+    margin: 6px 0;
+}
+
+.voucher-btn {
+    margin-top: 12px !important;
+    width: 100%;
+    height: 36px !important;
+    font-weight: 600 !important;
+    background-color: #faad14 !important;
+    border-color: #faad14 !important;
+    border-radius: 6px !important;
+    transition: all 0.3s !important;
+}
+
+.voucher-btn:hover {
+    background-color: #d48806 !important;
+    border-color: #d48806 !important;
+}
+
+/* Card 3: Membership Tier + Delta */
+.tier-display {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.tier-badge {
+    padding: 6px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-align: center;
+    width: fit-content;
+}
+
+.tier-badge.silver {
+    background-color: #cbd5e1;
+    color: #1e293b;
+    border: 1px solid #94a3b8;
+}
+
+.tier-badge.bronze {
+    background-color: #ffedd5;
+    color: #9a3412;
+    border: 1px solid #f97316;
+}
+
+.tier-badge.gold {
+    background-color: #fef9c3;
+    color: #854d0e;
+    border: 1px solid #eab308;
+}
+
+.tier-badge.diamond {
+    background-color: #fae8ff;
+    color: #86198f;
+    border: 1px solid #d946ef;
+}
+
+/* Delta Point Section */
+.delta-section {
+    background-color: #f8fafc;
+    border: 1px solid #e8edf2;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+}
+
+.delta-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 2px;
+}
+
+.delta-icon {
+    font-size: 14px;
+    color: #1890ff;
+}
+
+.delta-label {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    color: #333333 !important;
+}
+
+.delta-value {
+    font-size: 24px;
+    font-weight: 800;
+    color: #1890ff;
+    line-height: 1.2;
+    margin-bottom: 8px;
+}
+
+.delta-unit {
+    font-size: 12px;
+    color: #8c8c8c;
+    font-weight: 600;
+    margin-left: 4px;
+}
+
+.delta-progress-group {
+    margin-bottom: 6px;
+}
+
+.delta-progress-group:last-child {
+    margin-bottom: 0;
+}
+
+.delta-progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #666666;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.delta-status-ok {
+    color: #52c41a;
+    font-weight: 700;
+}
+
+.delta-status-warn {
+    color: #ff4d4f;
+    font-weight: 700;
+}
+
+.delta-status-neutral {
+    color: #8c8c8c;
+    font-weight: 600;
+}
+
+.tier-benefits {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.tier-benefits li {
+    font-size: 11px;
+    color: #666666;
+    line-height: 1.4;
+}
+
+/* Row 2: Recent Activity Table */
+.activity-section {
+    margin-top: 32px;
+}
+
+.activity-header {
+    margin-bottom: 16px;
+}
+
+.activity-title {
+    color: #002b7f !important;
+    font-weight: 700 !important;
+    margin: 0 !important;
+}
+
+.table-card {
+    border-radius: 12px !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02) !important;
+    border: 1px solid #cbd5e1 !important;
+    overflow: hidden;
+}
+
+.custom-table .ant-table-thead > tr > th {
+    background-color: #f8fafc !important;
+    color: #333333 !important;
+    font-weight: 700 !important;
+    font-size: 12px !important;
+    letter-spacing: 0.5px;
+}
+
+.status-tag {
+    font-weight: 600 !important;
+    border-radius: 4px !important;
+    padding: 2px 8px !important;
+}
+
+@media (max-width: 768px) {
+    .overview-container {
+        padding: 16px;
+    }
+    .points-number {
+        font-size: 32px;
+    }
+}

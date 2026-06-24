@@ -10,6 +10,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -41,14 +42,8 @@ public class Customer extends User {
     @Column(name = "tier_start_date", nullable = false)
     private LocalDate tierStartDate;
 
-    @Column(name = "tier_end_date", nullable = false)
-    private LocalDate tierEndDate;
-
     @Column(name = "last_review_date", nullable = true)
     private LocalDate lastReviewDate;
-
-    @Column(name = "next_review_date", nullable = false)
-    private LocalDate nextReviewDate;
 
     @OneToMany(mappedBy = "customer")
     @JsonIgnoreProperties("customer")
@@ -61,5 +56,11 @@ public class Customer extends User {
     @OneToMany(mappedBy = "customer")
     @JsonIgnoreProperties("customer")
     private List<WashSession> washSessions;
+
+    @PrePersist
+    public void onCreate() {
+        super.onCreate();
+        this.lastReviewDate = LocalDate.now();
+    }
 
 }

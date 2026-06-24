@@ -31,8 +31,6 @@ public class CustomerAdminResponse {
     private Long currentPoints;
     private Long lifetimePoints;
     private LocalDate tierStartDate;
-    private LocalDate tierEndDate;
-    private LocalDate lastReviewDate;
     private LocalDate nextReviewDate;
     private List<VehicleAdminResponse> vehicles;
 }

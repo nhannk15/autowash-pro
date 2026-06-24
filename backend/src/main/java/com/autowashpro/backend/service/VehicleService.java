@@ -45,7 +45,8 @@ public class VehicleService {
     }
 
     public List<VehicleResponse> findAllVehiclesForCustomer(String email) {
-        Customer customer = customerRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("Người dùng không tồn tại."));
+        Customer customer = customerRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Người dùng không tồn tại."));
         return vehicleMapper.toVehicleResponseList(repository.findByCustomerId(customer.getId()));
     }
 
@@ -116,18 +117,13 @@ public class VehicleService {
             throw new VehicleNotFoundException("Xe này không thuộc về bạn");
         }
 
-        VehicleType vehicleType = vehicleTypeRepository
-                .findById(request.getVehicleTypeId())
-                .orElseThrow(() -> new VehicleTypeNotFoundException("Loại xe không tồn tại."));
 
-        if(repository.existsByLicensePlate(request.getLicensePlate())) {
+        if (repository.existsByLicensePlate(request.getLicensePlate())
+                && !request.getLicensePlate().equals(vehicle.getLicensePlate())) {
             throw new VehicleNotFoundException("Biển số không được trùng");
         }
 
         vehicle.setLicensePlate(request.getLicensePlate());
-        vehicle.setVehicleType(vehicleType);
-        vehicle.setBrand(request.getBrand());
-        vehicle.setModel(request.getModel());
         vehicle.setColor(request.getColor());
         vehicle.setImage(request.getImage());
 

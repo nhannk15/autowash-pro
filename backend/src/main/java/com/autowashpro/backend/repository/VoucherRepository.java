@@ -1,11 +1,25 @@
 package com.autowashpro.backend.repository;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.autowashpro.backend.model.entity.Voucher;
 
-@Repository
 public interface VoucherRepository extends JpaRepository<Voucher, Long> {
+    
+    Optional<Voucher> findByVoucherCode(String voucherCode);
+
+
+    @Query("""
+            SELECT voucher FROM Voucher voucher
+            JOIN voucher.customer customer
+            WHERE customer.email = :email
+            ORDER BY voucher.status ASC, voucher.issuedAt ASC
+            """)
+    List<Voucher> findCustomerActiveVouchers(@Param("email") String email);
     
 }
