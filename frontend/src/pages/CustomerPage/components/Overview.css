@@ -258,6 +258,41 @@
     border-color: #d48806 !important;
 }
 
+.exchange-voucher-btn-custom {
+    margin-top: 0 !important;
+    flex: 1;
+    height: 36px !important;
+    font-weight: 600 !important;
+    background-color: #faad14 !important;
+    border-color: #faad14 !important;
+    color: #ffffff !important;
+    border-radius: 6px !important;
+    transition: all 0.3s !important;
+}
+
+.exchange-voucher-btn-custom:hover {
+    background-color: #d48806 !important;
+    border-color: #d48806 !important;
+}
+
+.my-voucher-btn-custom {
+    margin-top: 0 !important;
+    flex: 1;
+    height: 36px !important;
+    font-weight: 600 !important;
+    background-color: #ffffff !important;
+    border-color: #faad14 !important;
+    color: #faad14 !important;
+    border-radius: 6px !important;
+    transition: all 0.3s !important;
+}
+
+.my-voucher-btn-custom:hover {
+    background-color: #fff7e6 !important;
+    color: #d48806 !important;
+    border-color: #d48806 !important;
+}
+
 /* Card 3: Membership Tier + Delta */
 .tier-display {
     display: flex;
