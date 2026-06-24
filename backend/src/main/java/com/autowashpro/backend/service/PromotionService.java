@@ -205,7 +205,7 @@ public class PromotionService {
                 customer.getTier().getId());
         log.info("Promotions size: {}", applicablePromotions.size());
 
-        boolean isBirthday = customer.getBirthday() != null
+        boolean isBirthday = customer.getDateOfBirth() != null
                 && bookingDateTime != null
                 && customer.getDateOfBirth().getMonth() == bookingDateTime.getMonth()
                 && customer.getDateOfBirth().getDayOfMonth() == bookingDateTime.getDayOfMonth();

@@ -293,6 +293,21 @@
     border-color: #d48806 !important;
 }
 
+.points-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+    width: 100%;
+}
+
+.points-actions .exchange-voucher-btn-custom,
+.points-actions .my-voucher-btn-custom {
+    width: 100% !important;
+    margin-left: 0 !important;
+    flex: none;
+}
+
 /* Card 3: Membership Tier + Delta */
 .tier-display {
     display: flex;
