@@ -19,6 +19,7 @@ import com.autowashpro.backend.model.dto.DashboardSummaryResponse;
 import com.autowashpro.backend.model.dto.RecentTransactionItem;
 import com.autowashpro.backend.model.dto.RevenueDataRequest;
 import com.autowashpro.backend.model.dto.RevenueDataResponse;
+import com.autowashpro.backend.model.dto.ServiceUsageStats;
 import com.autowashpro.backend.model.entity.Billing;
 import com.autowashpro.backend.model.entity.Booking;
 import com.autowashpro.backend.model.enums.BayStatus;
@@ -26,6 +27,7 @@ import com.autowashpro.backend.model.enums.BookingStatus;
 import com.autowashpro.backend.repository.BillingRepository;
 import com.autowashpro.backend.repository.BookingRepository;
 import com.autowashpro.backend.repository.CustomerRepository;
+import com.autowashpro.backend.repository.ServiceRepository;
 import com.autowashpro.backend.repository.WashBayRepository;
 
 import lombok.extern.slf4j.Slf4j;
@@ -39,16 +41,18 @@ public class AdminDashboardService {
     private final CustomerRepository customerRepository;
     private final WashBayRepository washBayRepository;
     private final BillingMapper billingMapper;
+    private final ServiceRepository serviceRepository;
 
     @Autowired
     public AdminDashboardService(BillingRepository billingRepository, BookingRepository bookingRepository,
             CustomerRepository customerRepository, WashBayRepository washBayRepository,
-            BillingMapper billingMapper) {
+            BillingMapper billingMapper, ServiceRepository serviceRepository) {
         this.billingRepository = billingRepository;
         this.bookingRepository = bookingRepository;
         this.customerRepository = customerRepository;
         this.washBayRepository = washBayRepository;
         this.billingMapper = billingMapper;
+        this.serviceRepository = serviceRepository;
     }
 
     @Transactional(readOnly = true)
@@ -348,4 +352,7 @@ public class AdminDashboardService {
         return new ArrayList<>(revenueMap.values());
     }
 
+    public List<ServiceUsageStats> getServiceUsagesStats() {
+        return serviceRepository.getServiceUsages();
+    }
 }

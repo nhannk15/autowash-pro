@@ -14,6 +14,7 @@ import com.autowashpro.backend.model.dto.DashboardSummaryResponse;
 import com.autowashpro.backend.model.dto.RecentTransactionItem;
 import com.autowashpro.backend.model.dto.RevenueDataRequest;
 import com.autowashpro.backend.model.dto.RevenueDataResponse;
+import com.autowashpro.backend.model.dto.ServiceUsageStats;
 import com.autowashpro.backend.service.AdminDashboardService;
 
 @RestController
@@ -39,5 +40,10 @@ public class AdminDashboardController {
     @PostMapping("/api/admin/dashboard/revenue-chart")
     public ResponseEntity<List<RevenueDataResponse>> getRevenueResponse(@RequestBody RevenueDataRequest request) {
         return ResponseEntity.ok().body(adminDashboardService.getRevenueData(request));
+    }
+
+    @GetMapping("/api/admin/dashboard/service-distribution")
+    public ResponseEntity<List<ServiceUsageStats>> getServiceDistribution() {
+        return ResponseEntity.ok().body(adminDashboardService.getServiceUsagesStats());
     }
 }
