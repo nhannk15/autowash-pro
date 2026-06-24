@@ -70,6 +70,10 @@ public class ServicePrice {
     @JsonIgnoreProperties("servicePrice")
     private List<Reward> rewards;
 
+    @OneToMany(mappedBy = "servicePrice")
+    @JsonIgnoreProperties("servicePrice")
+    private List<WashSession> washSessions;
+
     @PrePersist
     public void onCreate() {
         this.createdAt = LocalDateTime.now();
