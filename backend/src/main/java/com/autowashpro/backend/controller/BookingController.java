@@ -21,6 +21,9 @@ import com.autowashpro.backend.model.dto.SlotAvailabilityByDateResponse;
 import com.autowashpro.backend.model.dto.UpcomingBookingResponse;
 import com.autowashpro.backend.service.BookingService;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @RestController
 public class BookingController {
 
@@ -39,8 +42,8 @@ public class BookingController {
 
     @PostMapping("/api/bookings")
     public ResponseEntity<CreateBookingResponse> createBooking(@RequestBody CreateBookingRequest request) {
-        System.out.println("Request: " + request);
-        System.out.println("customerId: " + request.getCustomerId());
+        log.info("BookingController - start creating booking.");
+        log.info("promotionId: {}", request.getPromotionId());
         CreateBookingResponse response = bookingService.createBooking(request);
         return ResponseEntity.ok(response);
     }

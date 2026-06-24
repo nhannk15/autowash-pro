@@ -28,8 +28,12 @@ import jakarta.validation.Valid;
 @PreAuthorize("hasRole('ADMIN')")
 public class RewardController {
 
-    @Autowired
     private RewardService service;
+
+    @Autowired
+    public RewardController(RewardService service) {
+        this.service = service;
+    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<RewardResponse>>> findAll(@AuthenticationPrincipal User user) {
@@ -37,7 +41,8 @@ public class RewardController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<RewardResponse>> findById(@PathVariable Long id, @AuthenticationPrincipal User user) {
+    public ResponseEntity<ApiResponse<RewardResponse>> findById(@PathVariable Long id,
+            @AuthenticationPrincipal User user) {
         return ResponseEntity.ok(ApiResponse.success(service.getRewardById(id)));
     }
 

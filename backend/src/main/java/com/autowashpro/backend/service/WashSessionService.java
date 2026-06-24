@@ -83,7 +83,7 @@ public class WashSessionService {
         /**
          * Create Billing immediately.
          */
-        billingService.createPendingBilling(bookingId);
+        // billingService.createPendingBilling(bookingId);
         return washSessionMapper.toResponseList(savedWashSessions);
     }
 
