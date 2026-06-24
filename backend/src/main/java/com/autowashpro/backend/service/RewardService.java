@@ -115,7 +115,7 @@ public class RewardService {
         }
     }
 
-    private RewardResponse mapToResponse(Reward entity) {
+    public RewardResponse mapToResponse(Reward entity) {
         RewardResponse response = new RewardResponse();
         response.setId(entity.getId());
         response.setRewardName(entity.getRewardName());

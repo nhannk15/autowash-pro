@@ -22,11 +22,14 @@ import com.autowashpro.backend.service.BookingDetailService;
 @RequestMapping("/api/booking-details")
 public class BookingDetailController {
 
+    private final BookingDetailService service;
+    private final BookingDetailMapper mapper;
+    
     @Autowired
-    private BookingDetailService service;
-
-    @Autowired
-    private BookingDetailMapper mapper;
+    public BookingDetailController(BookingDetailService service, BookingDetailMapper mapper) {
+        this.service = service;
+        this.mapper = mapper;
+    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<BookingDetail>>> findAll() {

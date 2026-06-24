@@ -39,6 +39,7 @@ public class AuthenticationController {
     private final CustomerService customerService;
     private final OtpService otpService;
 
+    @Autowired
     public AuthenticationController(UserRepository repository, JwtService jwtService, PasswordEncoder passwordEncoder,
             CustomerService customerService, OtpService otpService) {
         this.repository = repository;
