@@ -41,5 +41,12 @@ public interface BillingRepository extends JpaRepository<Billing, Long> {
             ORDER BY billing.paidAt
             """)
     List<Billing> getRecentTransactions();
-    
+
+    @Query("""
+            SELECT billing FROM Billing billing
+            WHERE billing.paidAt >= :startTime AND billing.paidAt <= :endTime
+            """)
+    List<Billing> findBillingsByStartDateAndEndDate(@Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime);
+
 }

@@ -1,17 +1,25 @@
 package com.autowashpro.backend.service;
 
 import java.math.BigDecimal;
+import java.time.DateTimeException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.autowashpro.backend.mapper.BillingMapper;
 import com.autowashpro.backend.model.dto.DashboardSummaryResponse;
 import com.autowashpro.backend.model.dto.RecentTransactionItem;
+import com.autowashpro.backend.model.dto.RevenueDataRequest;
+import com.autowashpro.backend.model.dto.RevenueDataResponse;
+import com.autowashpro.backend.model.entity.Billing;
 import com.autowashpro.backend.model.entity.Booking;
 import com.autowashpro.backend.model.enums.BayStatus;
 import com.autowashpro.backend.model.enums.BookingStatus;
@@ -34,7 +42,8 @@ public class AdminDashboardService {
 
     @Autowired
     public AdminDashboardService(BillingRepository billingRepository, BookingRepository bookingRepository,
-            CustomerRepository customerRepository, WashBayRepository washBayRepository, BillingMapper billingMapper) {
+            CustomerRepository customerRepository, WashBayRepository washBayRepository,
+            BillingMapper billingMapper) {
         this.billingRepository = billingRepository;
         this.bookingRepository = bookingRepository;
         this.customerRepository = customerRepository;
@@ -42,6 +51,7 @@ public class AdminDashboardService {
         this.billingMapper = billingMapper;
     }
 
+    @Transactional(readOnly = true)
     public DashboardSummaryResponse getSummary(String period) {
         Long totalRevenue = 0L;
         Long previousRevenue = 0L;
@@ -66,15 +76,18 @@ public class AdminDashboardService {
             totalBookings = bookingRepository.findBookingsAccordingToDate(today, today).size();
             log.info("AdminDashboardService - today's totalBookings: {}}", totalBookings);
 
-            completedBookings = bookingRepository.findByStatusAccordingToDate(BookingStatus.COMPLETED, today, today)
+            completedBookings = bookingRepository
+                    .findByStatusAccordingToDate(BookingStatus.COMPLETED, today, today)
                     .size();
             log.info("AdminDashboardService - today's completedBooking: {}", completedBookings);
 
-            cancelledBookings = bookingRepository.findByStatusAccordingToDate(BookingStatus.CANCELLED, today, today)
+            cancelledBookings = bookingRepository
+                    .findByStatusAccordingToDate(BookingStatus.CANCELLED, today, today)
                     .size();
             log.info("AdminDashboardService - today's cancelledBookings: {}", cancelledBookings);
 
-            pendingBookings = bookingRepository.findByStatusAccordingToDate(BookingStatus.CONFIRMED, today, today)
+            pendingBookings = bookingRepository
+                    .findByStatusAccordingToDate(BookingStatus.CONFIRMED, today, today)
                     .size();
             log.info("AdminDasboardService - today's pendingBookings: {}", pendingBookings);
 
@@ -94,7 +107,8 @@ public class AdminDashboardService {
             LocalDate endOfLastWeek = startOfLastWeek.plusDays(6L);
 
             BigDecimal tempTotalReveneu = billingRepository
-                    .sumRevenueByPaidDateRange(startOfLastWeek.atStartOfDay(), today.plusDays(1L).atStartOfDay());
+                    .sumRevenueByPaidDateRange(startOfLastWeek.atStartOfDay(),
+                            today.plusDays(1L).atStartOfDay());
             if (tempTotalReveneu != null) {
                 totalRevenue = tempTotalReveneu.longValue();
             }
@@ -141,7 +155,8 @@ public class AdminDashboardService {
             LocalDate endOfLastMonth = today.withDayOfMonth(1).minusDays(1L);
 
             BigDecimal tempTotalReveneu = billingRepository
-                    .sumRevenueByPaidDateRange(startOfThisMonth.atStartOfDay(), today.plusDays(1L).atStartOfDay());
+                    .sumRevenueByPaidDateRange(startOfThisMonth.atStartOfDay(),
+                            today.plusDays(1L).atStartOfDay());
             if (tempTotalReveneu != null) {
                 totalRevenue = tempTotalReveneu.longValue();
             }
@@ -188,7 +203,8 @@ public class AdminDashboardService {
             LocalDate endOfLastYear = today.withDayOfYear(1).minusDays(1L);
 
             BigDecimal tempTotalReveneu = billingRepository
-                    .sumRevenueByPaidDateRange(startOfThisYear.atStartOfDay(), today.plusDays(1L).atStartOfDay());
+                    .sumRevenueByPaidDateRange(startOfThisYear.atStartOfDay(),
+                            today.plusDays(1L).atStartOfDay());
             if (tempTotalReveneu != null) {
                 totalRevenue = tempTotalReveneu.longValue();
             }
@@ -243,15 +259,18 @@ public class AdminDashboardService {
             totalBookings = allBookings.size();
             log.info("AdminDashboardService - year's totalBookings: {}}", totalBookings);
 
-            completedBookings = allBookings.stream().filter(booking -> booking.getStatus() == BookingStatus.COMPLETED)
+            completedBookings = allBookings.stream()
+                    .filter(booking -> booking.getStatus() == BookingStatus.COMPLETED)
                     .toList().size();
             log.info("AdminDashboardService - year's completedBooking: {}", completedBookings);
 
-            cancelledBookings = allBookings.stream().filter(booking -> booking.getStatus() == BookingStatus.CANCELLED)
+            cancelledBookings = allBookings.stream()
+                    .filter(booking -> booking.getStatus() == BookingStatus.CANCELLED)
                     .toList().size();
             log.info("AdminDashboardService - year's cancelledBookings: {}", cancelledBookings);
 
-            pendingBookings = allBookings.stream().filter(booking -> booking.getStatus() == BookingStatus.CONFIRMED)
+            pendingBookings = allBookings.stream()
+                    .filter(booking -> booking.getStatus() == BookingStatus.CONFIRMED)
                     .toList().size();
             log.info("AdminDasboardService - year's pendingBookings: {}", pendingBookings);
 
@@ -281,8 +300,52 @@ public class AdminDashboardService {
         return response;
     }
 
+    @Transactional(readOnly = true)
     public List<RecentTransactionItem> getRecentTransactions() {
         return billingMapper.toRecentTransactionItems(billingRepository.getRecentTransactions());
+    }
+
+    public List<RevenueDataResponse> getRevenueData(RevenueDataRequest request) {
+        log.info("AdminDashboardService - getRevenueData()");
+
+        log.info("AdminDashboardService - data: {} {} {} {}", request.getStartDate(), request.getEndDate(),
+                request.getMonth(), request.getYear());
+
+        List<RevenueDataResponse> revenues = new ArrayList<>();
+        List<Billing> billings = new ArrayList<>();
+        if (request.getStartDate() != null && request.getEndDate() != null) {
+            LocalDate startDate = request.getStartDate();
+            LocalDate endDate = request.getEndDate();
+            log.info("AdminDashboardService - get revenue from {} to {}", startDate, endDate);
+            if (endDate.isBefore(startDate)) {
+                throw new DateTimeException("startDate can't be after endDate");
+            }
+
+            billings = billingRepository.findBillingsByStartDateAndEndDate(startDate.atStartOfDay(),
+                    endDate.plusDays(1).atStartOfDay());
+        } else if (request.getMonth() != null && request.getYear() != 0){
+            LocalDate startDate = LocalDate.of(request.getYear(), request.getMonth().getValue(), 1);
+            LocalDate endDate = startDate.plusMonths(1L).minusDays(1L);
+            log.info("AdminDashboardService - get revenue in {}/{}", startDate.getMonth(), startDate.getYear());
+            billings = billingRepository.findBillingsByStartDateAndEndDate(startDate.atStartOfDay(),
+                    endDate.plusDays(1).atStartOfDay());
+        } else {
+            throw new IllegalArgumentException("Vui lòng cung cấp startDate/endDate hoặc month/year");
+        }
+        revenues = billingMapper.toRevenueDataResponses(billings);
+        Map<LocalDate, RevenueDataResponse> revenueMap = new LinkedHashMap<>();
+        for (RevenueDataResponse revenue: revenues) {
+            if (revenueMap.containsKey(revenue.getDay())) {
+                RevenueDataResponse targetRevenue = revenueMap.get(revenue.getDay());
+                targetRevenue.setRevenue(targetRevenue.getRevenue().add(revenue.getRevenue()));
+                targetRevenue.setTotalOrders(targetRevenue.getTotalOrders() + 1);
+            } else {
+                revenue.setTotalOrders(1);
+                revenueMap.put(revenue.getDay(), revenue);
+            }
+        }
+        
+        return new ArrayList<>(revenueMap.values());
     }
 
 }
