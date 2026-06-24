@@ -75,7 +75,7 @@ export default function BookingList() {
                 if (activeVehicles.length > 0) {
                     setSelectedVehicle(activeVehicles[0]);
                     setSelectedVehicleType(activeVehicles[0].typeName);
-                    setMaxUnlockedStep(prev => Math.max(prev, 2));
+                    setMaxUnlockedStep(2);
                 }
             } catch (err) {
                 setErrorVehicles(err.response?.data.message || err.message || 'không thể tải danh sách xe của bạn');
