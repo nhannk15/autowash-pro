@@ -3,7 +3,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { CarOutlined } from '@ant-design/icons';
 import './Booking.css';
 import { message } from 'antd';
-import { getAvailableSlot, getPromotion, getService, getVehicleByCustomer, createBooking, getMembershipTier } from '../../../service/customerService';
+import { getAvailableSlot, getPromotion, getService, getVehicleByCustomer, createBooking, getMembershipTier, getVoucher } from '../../../service/customerService';
 function VehicleImage({ src, alt, fallbackIcon }) {
     const [hasError, setHasError] = useState(false);
 
@@ -47,6 +47,7 @@ export default function BookingList() {
     // Thông tin khách hàng & khuyến mãi phục vụ tính tiền ở Frontend
     const [customer, setCustomer] = useState(null);
     const [promotions, setPromotions] = useState([]);
+    const [vouchers, setVouchers] = useState([]);
     const [membershipTier, setMembershipTier] = useState();
     const [submitting, setSubmitting] = useState(false);
     const [bookingError, setBookingError] = useState(null);
@@ -136,6 +137,20 @@ export default function BookingList() {
             }
         };
         fetchPromotions();
+    }, []);
+
+    // Lấy danh sách voucher của người dùng
+    useEffect(() => {
+        const fetchVoucher = async () => {
+            try {
+                const result = await getVoucher()
+                setVouchers(result || []);
+            } catch (err) {
+                console.error("Failed to fetch vouchers:", err);
+                message.warning(err.response?.data.message || err.message || "không thể tải danh sách voucher")
+            }
+        };
+        fetchVoucher();
     }, []);
 
     // Tìm chương trình khuyến mãi phù hợp dựa trên ngày đặt lịch và hạng thành viên

@@ -75,3 +75,8 @@ export async function exchangeVoucher(payload) {
     const response = await axios.post('/api/voucher/exchange', payload);
     return response.data;
 }
+
+export async function getVoucher() {
+    const response = await axios.get('/api/vouchers');
+    return response.data;
+}

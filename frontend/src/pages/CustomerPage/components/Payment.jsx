@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Row, Col, Card, Table, Tag, Progress, Select, Space, Typography, Badge } from 'antd';
-import { 
-    WalletOutlined, 
-    HistoryOutlined, 
+import {
+    WalletOutlined,
+    HistoryOutlined,
     PayCircleOutlined,
     PieChartOutlined,
     CheckCircleOutlined,
@@ -120,7 +120,7 @@ export default function Payment() {
     // Tính toán số liệu thống kê tổng quát (Chỉ tính giao dịch thành công và phần cọc bị mất thực tế)
     const totalSpent = mockPayments.reduce((sum, item) => sum + item.amount, 0);
     const totalTransactions = mockPayments.length;
-    
+
     // Lọc data theo quý/năm được chọn
     const filteredPayments = mockPayments.filter(
         item => item.quarter === selectedQuarter && item.year === selectedYear
@@ -133,7 +133,7 @@ export default function Payment() {
     const successSpent = filteredPayments
         .filter(item => item.status === 'SUCCESS')
         .reduce((sum, item) => sum + item.amount, 0);
-        
+
     // 2. Chi phí cọc bị mất do hủy lịch muộn
     const forfeitedSpent = filteredPayments
         .filter(item => item.isForfeited)
@@ -294,13 +294,13 @@ export default function Payment() {
             {/* Breakdown section */}
             <Row gutter={[16, 16]} style={{ marginTop: '24px' }}>
                 <Col xs={24} lg={8}>
-                    <Card 
+                    <Card
                         title={
                             <div className="card-title-flex">
                                 <PieChartOutlined />
                                 <span>Phân Tích Chi Tiêu {selectedQuarter}/{selectedYear}</span>
                             </div>
-                        } 
+                        }
                         className="breakdown-card"
                         bordered={false}
                     >
@@ -308,6 +308,7 @@ export default function Payment() {
                         <div className="selector-group">
                             <Space>
                                 <Select value={selectedQuarter} onChange={setSelectedQuarter} style={{ width: 100 }}>
+                                    <Option value="All">Cả Năm</Option>
                                     <Option value="Q1">Quý 1</Option>
                                     <Option value="Q2">Quý 2</Option>
                                     <Option value="Q3">Quý 3</Option>
@@ -357,7 +358,7 @@ export default function Payment() {
                 </Col>
 
                 <Col xs={24} lg={16}>
-                    <Card 
+                    <Card
                         title={
                             <div className="card-title-flex">
                                 <HistoryOutlined />
@@ -367,9 +368,9 @@ export default function Payment() {
                         className="table-card"
                         bordered={false}
                     >
-                        <Table 
-                            columns={columns} 
-                            dataSource={mockPayments} 
+                        <Table
+                            columns={columns}
+                            dataSource={mockPayments}
                             pagination={{ pageSize: 5 }}
                             scroll={{ x: 'max-content' }}
                             className="payment-table"
