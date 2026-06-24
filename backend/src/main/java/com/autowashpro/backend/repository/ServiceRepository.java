@@ -1,5 +1,6 @@
 package com.autowashpro.backend.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,14 +27,35 @@ public interface ServiceRepository extends JpaRepository<Service, Long> {
             @Param("vehicleTypeId") Long vehicleTypeId);
 
     @Query("""
-            SELECT 
-                service.serviceName AS serviceName, 
+            SELECT
+                service.serviceName AS serviceName,
                 COUNT(service) AS totalUsages
-            FROM Service service 
-            JOIN service.servicePrices servicePrice 
+            FROM Service service
+            JOIN service.servicePrices servicePrice
             JOIN servicePrice.washSessions washSession
-            WHERE washSession.status = com.autowashpro.backend.model.enums.WashSessionStatus.PAID
-            GROUP BY service.id
+            WHERE washSession.status IN (
+                com.autowashpro.backend.model.enums.WashSessionStatus.PAID,
+                com.autowashpro.backend.model.enums.WashSessionStatus.IN_PROGRESS,
+                com.autowashpro.backend.model.enums.WashSessionStatus.COMPLETED)
+            AND washSession.startTime >= :startTime
+            AND washSession.startTime <= :endTime
+            GROUP BY service.serviceName, service.id
             """)
-    List<ServiceUsageStats> getServiceUsages();
+    List<ServiceUsageStats> getServiceUsages(@Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime enDateTime);
+
+    @Query("""
+            SELECT
+                service.serviceName AS serviceName,
+                COUNT(service) AS totalUsages
+            FROM Service service
+            JOIN service.servicePrices servicePrice
+            JOIN servicePrice.washSessions washSession
+            WHERE washSession.status IN (
+                com.autowashpro.backend.model.enums.WashSessionStatus.PAID,
+                com.autowashpro.backend.model.enums.WashSessionStatus.IN_PROGRESS,
+                com.autowashpro.backend.model.enums.WashSessionStatus.COMPLETED)
+            GROUP BY service.serviceName, service.id
+            """)
+    List<ServiceUsageStats> getAllServiceUsages();
 }

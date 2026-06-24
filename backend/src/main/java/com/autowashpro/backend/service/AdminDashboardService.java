@@ -2,9 +2,8 @@ package com.autowashpro.backend.service;
 
 import java.math.BigDecimal;
 import java.time.DateTimeException;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.temporal.TemporalAdjusters;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -16,12 +15,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.autowashpro.backend.mapper.BillingMapper;
 import com.autowashpro.backend.model.dto.DashboardSummaryResponse;
+import com.autowashpro.backend.model.dto.PeakHourStats;
 import com.autowashpro.backend.model.dto.RecentTransactionItem;
 import com.autowashpro.backend.model.dto.RevenueDataRequest;
 import com.autowashpro.backend.model.dto.RevenueDataResponse;
 import com.autowashpro.backend.model.dto.ServiceUsageStats;
 import com.autowashpro.backend.model.entity.Billing;
-import com.autowashpro.backend.model.entity.Booking;
 import com.autowashpro.backend.model.enums.BayStatus;
 import com.autowashpro.backend.model.enums.BookingStatus;
 import com.autowashpro.backend.repository.BillingRepository;
@@ -29,6 +28,7 @@ import com.autowashpro.backend.repository.BookingRepository;
 import com.autowashpro.backend.repository.CustomerRepository;
 import com.autowashpro.backend.repository.ServiceRepository;
 import com.autowashpro.backend.repository.WashBayRepository;
+import com.autowashpro.backend.repository.WashSessionRepository;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,24 +42,26 @@ public class AdminDashboardService {
     private final WashBayRepository washBayRepository;
     private final BillingMapper billingMapper;
     private final ServiceRepository serviceRepository;
+    private final WashSessionRepository washSessionRepository;
 
     @Autowired
     public AdminDashboardService(BillingRepository billingRepository, BookingRepository bookingRepository,
             CustomerRepository customerRepository, WashBayRepository washBayRepository,
-            BillingMapper billingMapper, ServiceRepository serviceRepository) {
+            BillingMapper billingMapper, ServiceRepository serviceRepository,
+            WashSessionRepository washSessionRepository) {
         this.billingRepository = billingRepository;
         this.bookingRepository = bookingRepository;
         this.customerRepository = customerRepository;
         this.washBayRepository = washBayRepository;
         this.billingMapper = billingMapper;
         this.serviceRepository = serviceRepository;
+        this.washSessionRepository = washSessionRepository;
     }
 
     @Transactional(readOnly = true)
-    public DashboardSummaryResponse getSummary(String period) {
+    public DashboardSummaryResponse getSummary(RevenueDataRequest request) {
         Long totalRevenue = 0L;
         Long previousRevenue = 0L;
-        ;
         int totalBookings = 0;
         int completedBookings = 0;
         int cancelledBookings = 0;
@@ -68,224 +70,182 @@ public class AdminDashboardService {
         int activeBays = washBayRepository.findByStatus(BayStatus.ACTIVE).size();
         int totalBays = washBayRepository.findAll().size();
 
-        if (period.trim().equalsIgnoreCase("today")) {
-            log.info("AdminDashboardService - start getting today's metrics");
-            LocalDate today = LocalDate.now();
-            totalRevenue = billingRepository.sumRevenueByDate(today).longValue();
-            log.info("AdminDashboardService - today's totalRevenue: {}", totalRevenue);
+        if (request.getStartDate() != null && request.getEndDate() != null) {
+            LocalDate startDate = request.getStartDate();
+            LocalDate endDate = request.getEndDate();
+            log.info("AdminDashboardService - revenue from {} to {}", startDate, endDate);
 
-            previousRevenue = billingRepository.sumRevenueByDate(today.minusDays(1L)).longValue();
-            log.info("AdminDashboardService - yesterday's totalRevenue: {}", previousRevenue);
+            BigDecimal tempTotalRevenue = billingRepository.sumRevenueByPaidDateRange(startDate.atStartOfDay(),
+                    endDate.plusDays(1).atStartOfDay().minusMinutes(1));
+            if (tempTotalRevenue == null) {
+                totalRevenue = 0L;
+            }
+            log.info("AdminDashboardService - totalRevenue: {}", startDate, totalRevenue);
 
-            totalBookings = bookingRepository.findBookingsAccordingToDate(today, today).size();
+            BigDecimal tempPreviousRevenue = billingRepository.sumRevenueByPaidDateRange(startDate.minusDays(1L).atStartOfDay(),
+                    startDate.atStartOfDay().minusMinutes(1));
+            if (tempPreviousRevenue == null) {
+                previousRevenue = 0L;
+            }
+            log.info("AdminDashboardService - previousRevenue: {}", previousRevenue);
+
+            totalBookings = bookingRepository.findBookingsAccordingToDate(startDate, endDate).size();
             log.info("AdminDashboardService - today's totalBookings: {}}", totalBookings);
 
             completedBookings = bookingRepository
-                    .findByStatusAccordingToDate(BookingStatus.COMPLETED, today, today)
+                    .findByStatusAccordingToDate(BookingStatus.COMPLETED, startDate, endDate)
                     .size();
             log.info("AdminDashboardService - today's completedBooking: {}", completedBookings);
 
             cancelledBookings = bookingRepository
-                    .findByStatusAccordingToDate(BookingStatus.CANCELLED, today, today)
+                    .findByStatusAccordingToDate(BookingStatus.CANCELLED, startDate, endDate)
                     .size();
             log.info("AdminDashboardService - today's cancelledBookings: {}", cancelledBookings);
 
             pendingBookings = bookingRepository
-                    .findByStatusAccordingToDate(BookingStatus.CONFIRMED, today, today)
+                    .findByStatusAccordingToDate(BookingStatus.CONFIRMED, startDate, endDate)
                     .size();
             log.info("AdminDasboardService - today's pendingBookings: {}", pendingBookings);
 
-            newCustomers = customerRepository.countNewCustomersBetween(today.atStartOfDay(),
-                    today.plusDays(1L).atStartOfDay());
+            newCustomers = customerRepository.countNewCustomersBetween(startDate.atStartOfDay(),
+                    endDate.plusDays(1L).atStartOfDay());
             log.info("AdminDasboardService - today's newCustomers: {}", newCustomers);
 
             log.info("AdminDasboardService - activeBays: {}", activeBays);
-
             log.info("AdminDasboardService - totalBays: {}", totalBays);
 
-        } else if (period.trim().equalsIgnoreCase("week")) {
-            log.info("AdminDashboardService - start getting week's metrics");
-            LocalDate today = LocalDate.now();
-            LocalDate startOfThisWeek = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-            LocalDate startOfLastWeek = startOfThisWeek.minusWeeks(1L);
-            LocalDate endOfLastWeek = startOfLastWeek.plusDays(6L);
+        } else if (request.getMonth() != null && request.getYear() != 0) {
+            log.info("AdminDashboardService - revenue of {}/{}");
+            LocalDate startDate = LocalDate.of(request.getYear(), request.getMonth().getValue(), 1);
+            LocalDate endDate = startDate.plusMonths(1L).minusDays(1L);
+            log.info("AdminDashboardService - revenue from {} to {}", startDate, endDate);
 
-            BigDecimal tempTotalReveneu = billingRepository
-                    .sumRevenueByPaidDateRange(startOfLastWeek.atStartOfDay(),
-                            today.plusDays(1L).atStartOfDay());
-            if (tempTotalReveneu != null) {
-                totalRevenue = tempTotalReveneu.longValue();
+            BigDecimal tempTotalRevenue = billingRepository.sumRevenueByPaidDateRange(startDate.atStartOfDay(),
+                    endDate.plusDays(1).atStartOfDay().minusMinutes(1));
+            if (tempTotalRevenue == null) {
+                totalRevenue = 0L;
             }
-            log.info("AdminDashboardService - week's totalRevenue: {}", totalRevenue);
-
-            BigDecimal tempPreviousRevenue = billingRepository
-                    .sumRevenueByPaidDateRange(startOfLastWeek.atStartOfDay(),
-                            endOfLastWeek.plusDays(1L).atStartOfDay());
-            if (tempPreviousRevenue != null) {
-                previousRevenue = tempPreviousRevenue.longValue();
+            log.info("AdminDashboardService - totalRevenue: {}", startDate, totalRevenue);
+            
+            BigDecimal tempPreviousRevenue = billingRepository.sumRevenueByPaidDateRange(startDate.minusDays(1L).atStartOfDay(),
+                    startDate.atStartOfDay().minusMinutes(1));
+            if (tempPreviousRevenue == null) {
+                previousRevenue = 0L;
             }
-            log.info("AdminDashboardService - last week's totalRevenue: {}", previousRevenue);
+            log.info("AdminDashboardService - previousRevenue: {}", previousRevenue);
 
-            totalBookings = bookingRepository.findBookingsAccordingToDate(startOfThisWeek, today).size();
-            log.info("AdminDashboardService - week's totalBookings: {}}", totalBookings);
+            totalBookings = bookingRepository.findBookingsAccordingToDate(startDate, endDate).size();
+            log.info("AdminDashboardService - today's totalBookings: {}}", totalBookings);
 
             completedBookings = bookingRepository
-                    .findByStatusAccordingToDate(BookingStatus.COMPLETED, startOfThisWeek, today)
+                    .findByStatusAccordingToDate(BookingStatus.COMPLETED, startDate, endDate)
                     .size();
-            log.info("AdminDashboardService - week's completedBooking: {}", completedBookings);
+            log.info("AdminDashboardService - today's completedBooking: {}", completedBookings);
 
             cancelledBookings = bookingRepository
-                    .findByStatusAccordingToDate(BookingStatus.CANCELLED, startOfThisWeek, today)
+                    .findByStatusAccordingToDate(BookingStatus.CANCELLED, startDate, endDate)
                     .size();
-            log.info("AdminDashboardService - week's cancelledBookings: {}", cancelledBookings);
+            log.info("AdminDashboardService - today's cancelledBookings: {}", cancelledBookings);
 
             pendingBookings = bookingRepository
-                    .findByStatusAccordingToDate(BookingStatus.CONFIRMED, startOfThisWeek, today)
+                    .findByStatusAccordingToDate(BookingStatus.CONFIRMED, startDate, endDate)
                     .size();
-            log.info("AdminDasboardService - week's pendingBookings: {}", pendingBookings);
+            log.info("AdminDasboardService - today's pendingBookings: {}", pendingBookings);
 
-            newCustomers = customerRepository.countNewCustomersBetween(startOfThisWeek.atStartOfDay(),
-                    today.plusDays(1L).atStartOfDay());
-            log.info("AdminDasboardService - week's newCustomers: {}", newCustomers);
+            newCustomers = customerRepository.countNewCustomersBetween(startDate.atStartOfDay(),
+                    endDate.plusDays(1L).atStartOfDay());
+            log.info("AdminDasboardService - today's newCustomers: {}", newCustomers);
 
             log.info("AdminDasboardService - activeBays: {}", activeBays);
-
             log.info("AdminDasboardService - totalBays: {}", totalBays);
-        } else if (period.trim().equalsIgnoreCase("month")) {
-            log.info("AdminDashboardService - start getting month's metrics");
-            LocalDate today = LocalDate.now();
-            LocalDate startOfThisMonth = today.withDayOfMonth(1);
-            LocalDate startOfLastMonth = startOfThisMonth.minusMonths(1L);
-            LocalDate endOfLastMonth = today.withDayOfMonth(1).minusDays(1L);
+        } else if (request.getYear() != 0) {
+            LocalDate startDate = LocalDate.of(request.getYear(), 1, 1);
+            LocalDate endDate = LocalDate.now();
+            log.info("AdminDashboardService - revenue of {}", request.getYear());
+            log.info("AdminDashboardService - revenue from {} to {}", startDate, endDate);
 
-            BigDecimal tempTotalReveneu = billingRepository
-                    .sumRevenueByPaidDateRange(startOfThisMonth.atStartOfDay(),
-                            today.plusDays(1L).atStartOfDay());
-            if (tempTotalReveneu != null) {
-                totalRevenue = tempTotalReveneu.longValue();
+            BigDecimal tempTotalRevenue = billingRepository.sumRevenueByPaidDateRange(startDate.atStartOfDay(),
+                    endDate.plusDays(1).atStartOfDay().minusMinutes(1));
+            if (tempTotalRevenue == null) {
+                totalRevenue = 0L;
             }
-            log.info("AdminDashboardService - week's totalRevenue: {}", totalRevenue);
-
-            BigDecimal tempPreviousRevenue = billingRepository
-                    .sumRevenueByPaidDateRange(startOfLastMonth.atStartOfDay(),
-                            endOfLastMonth.plusDays(1L).atStartOfDay());
-            if (tempPreviousRevenue != null) {
-                previousRevenue = tempPreviousRevenue.longValue();
+            log.info("AdminDashboardService - totalRevenue: {}", startDate, totalRevenue);
+            
+            BigDecimal tempPreviousRevenue = billingRepository.sumRevenueByPaidDateRange(startDate.minusDays(1L).atStartOfDay(),
+                    startDate.atStartOfDay().minusMinutes(1));
+            if (tempPreviousRevenue == null) {
+                previousRevenue = 0L;
             }
-            log.info("AdminDashboardService - last week's totalRevenue: {}", previousRevenue);
+            log.info("AdminDashboardService - previousRevenue: {}", previousRevenue);
 
-            totalBookings = bookingRepository.findBookingsAccordingToDate(startOfThisMonth, today).size();
-            log.info("AdminDashboardService - week's totalBookings: {}}", totalBookings);
+            totalBookings = bookingRepository.findBookingsAccordingToDate(startDate, endDate).size();
+            log.info("AdminDashboardService - today's totalBookings: {}}", totalBookings);
 
             completedBookings = bookingRepository
-                    .findByStatusAccordingToDate(BookingStatus.COMPLETED, startOfThisMonth, today)
+                    .findByStatusAccordingToDate(BookingStatus.COMPLETED, startDate, endDate)
                     .size();
-            log.info("AdminDashboardService - week's completedBooking: {}", completedBookings);
+            log.info("AdminDashboardService - today's completedBooking: {}", completedBookings);
 
             cancelledBookings = bookingRepository
-                    .findByStatusAccordingToDate(BookingStatus.CANCELLED, startOfThisMonth, today)
+                    .findByStatusAccordingToDate(BookingStatus.CANCELLED, startDate, endDate)
                     .size();
-            log.info("AdminDashboardService - week's cancelledBookings: {}", cancelledBookings);
+            log.info("AdminDashboardService - today's cancelledBookings: {}", cancelledBookings);
 
             pendingBookings = bookingRepository
-                    .findByStatusAccordingToDate(BookingStatus.CONFIRMED, startOfThisMonth, today)
+                    .findByStatusAccordingToDate(BookingStatus.CONFIRMED, startDate, endDate)
                     .size();
-            log.info("AdminDasboardService - week's pendingBookings: {}", pendingBookings);
+            log.info("AdminDasboardService - today's pendingBookings: {}", pendingBookings);
 
-            newCustomers = customerRepository.countNewCustomersBetween(startOfThisMonth.atStartOfDay(),
-                    today.plusDays(1L).atStartOfDay());
-            log.info("AdminDasboardService - week's newCustomers: {}", newCustomers);
+            newCustomers = customerRepository.countNewCustomersBetween(startDate.atStartOfDay(),
+                    endDate.plusDays(1L).atStartOfDay());
+            log.info("AdminDasboardService - today's newCustomers: {}", newCustomers);
 
             log.info("AdminDasboardService - activeBays: {}", activeBays);
-
-            log.info("AdminDasboardService - totalBays: {}", totalBays);
-        } else if (period.trim().equalsIgnoreCase("year")) {
-            log.info("AdminDashboardService - start getting year's metrics");
-            LocalDate today = LocalDate.now();
-            LocalDate startOfThisYear = today.withDayOfYear(1);
-            LocalDate startOfLastYear = startOfThisYear.minusYears(1);
-            LocalDate endOfLastYear = today.withDayOfYear(1).minusDays(1L);
-
-            BigDecimal tempTotalReveneu = billingRepository
-                    .sumRevenueByPaidDateRange(startOfThisYear.atStartOfDay(),
-                            today.plusDays(1L).atStartOfDay());
-            if (tempTotalReveneu != null) {
-                totalRevenue = tempTotalReveneu.longValue();
-            }
-            log.info("AdminDashboardService - year's totalRevenue: {}", totalRevenue);
-
-            BigDecimal tempPreviousRevenue = billingRepository
-                    .sumRevenueByPaidDateRange(startOfLastYear.atStartOfDay(),
-                            endOfLastYear.plusDays(1L).atStartOfDay());
-            if (tempPreviousRevenue != null) {
-                previousRevenue = tempPreviousRevenue.longValue();
-            }
-            log.info("AdminDashboardService - last year's totalRevenue: {}", previousRevenue);
-
-            totalBookings = bookingRepository.findBookingsAccordingToDate(startOfThisYear, today).size();
-            log.info("AdminDashboardService - year's totalBookings: {}}", totalBookings);
-
-            completedBookings = bookingRepository
-                    .findByStatusAccordingToDate(BookingStatus.COMPLETED, startOfThisYear, today)
-                    .size();
-            log.info("AdminDashboardService - year's completedBooking: {}", completedBookings);
-
-            cancelledBookings = bookingRepository
-                    .findByStatusAccordingToDate(BookingStatus.CANCELLED, startOfThisYear, today)
-                    .size();
-            log.info("AdminDashboardService - year's cancelledBookings: {}", cancelledBookings);
-
-            pendingBookings = bookingRepository
-                    .findByStatusAccordingToDate(BookingStatus.CONFIRMED, startOfThisYear, today)
-                    .size();
-            log.info("AdminDasboardService - year's pendingBookings: {}", pendingBookings);
-
-            newCustomers = customerRepository.countNewCustomersBetween(startOfThisYear.atStartOfDay(),
-                    today.plusDays(1L).atStartOfDay());
-            log.info("AdminDasboardService - year's newCustomers: {}", newCustomers);
-
-            log.info("AdminDasboardService - activeBays: {}", activeBays);
-
-            log.info("AdminDasboardService - totalBays: {}", totalBays);
-        } else if (period.trim().equalsIgnoreCase("all")) {
-            log.info("AdminDashboardService - start getting all's period");
-
-            BigDecimal tempTotalReveneu = billingRepository.sumRevenue();
-            if (tempTotalReveneu != null) {
-                totalRevenue = tempTotalReveneu.longValue();
-            }
-            log.info("AdminDashboardService - year's totalRevenue: {}", totalRevenue);
-
-            log.info("AdminDashboardService - last year's totalRevenue: {}", previousRevenue);
-
-            List<Booking> allBookings = bookingRepository.findAll();
-
-            totalBookings = allBookings.size();
-            log.info("AdminDashboardService - year's totalBookings: {}}", totalBookings);
-
-            completedBookings = allBookings.stream()
-                    .filter(booking -> booking.getStatus() == BookingStatus.COMPLETED)
-                    .toList().size();
-            log.info("AdminDashboardService - year's completedBooking: {}", completedBookings);
-
-            cancelledBookings = allBookings.stream()
-                    .filter(booking -> booking.getStatus() == BookingStatus.CANCELLED)
-                    .toList().size();
-            log.info("AdminDashboardService - year's cancelledBookings: {}", cancelledBookings);
-
-            pendingBookings = allBookings.stream()
-                    .filter(booking -> booking.getStatus() == BookingStatus.CONFIRMED)
-                    .toList().size();
-            log.info("AdminDasboardService - year's pendingBookings: {}", pendingBookings);
-
-            newCustomers = customerRepository.findAll().size();
-            log.info("AdminDasboardService - year's newCustomers: {}", newCustomers);
-
-            log.info("AdminDasboardService - activeBays: {}", activeBays);
-
             log.info("AdminDasboardService - totalBays: {}", totalBays);
         } else {
-            throw new RuntimeException("There's no such that period");
+            LocalDate startDate = LocalDate.of(2000, 1, 1);
+            LocalDate endDate = LocalDate.now();
+            log.info("AdminDashboardService - revenue when started", request.getYear());
+            log.info("AdminDashboardService - revenue from {} to {}", startDate, endDate);
+
+            BigDecimal tempTotalRevenue = billingRepository.sumRevenueByPaidDateRange(startDate.atStartOfDay(),
+                    endDate.plusDays(1).atStartOfDay().minusMinutes(1));
+            if (tempTotalRevenue == null) {
+                totalRevenue = 0L;
+            }
+            log.info("AdminDashboardService - totalRevenue: {}", startDate, totalRevenue);
+            
+            BigDecimal tempPreviousRevenue = billingRepository.sumRevenueByPaidDateRange(startDate.minusDays(1L).atStartOfDay(),
+                    startDate.atStartOfDay().minusMinutes(1));
+            if (tempPreviousRevenue == null) {
+                previousRevenue = 0L;
+            }
+            log.info("AdminDashboardService - previousRevenue: {}", previousRevenue);
+
+            totalBookings = bookingRepository.findBookingsAccordingToDate(startDate, endDate).size();
+            log.info("AdminDashboardService - today's totalBookings: {}}", totalBookings);
+
+            completedBookings = bookingRepository
+                    .findByStatusAccordingToDate(BookingStatus.COMPLETED, startDate, endDate)
+                    .size();
+            log.info("AdminDashboardService - today's completedBooking: {}", completedBookings);
+
+            cancelledBookings = bookingRepository
+                    .findByStatusAccordingToDate(BookingStatus.CANCELLED, startDate, endDate)
+                    .size();
+            log.info("AdminDashboardService - today's cancelledBookings: {}", cancelledBookings);
+
+            pendingBookings = bookingRepository
+                    .findByStatusAccordingToDate(BookingStatus.CONFIRMED, startDate, endDate)
+                    .size();
+            log.info("AdminDasboardService - today's pendingBookings: {}", pendingBookings);
+
+            newCustomers = customerRepository.countNewCustomersBetween(startDate.atStartOfDay(),
+                    endDate.plusDays(1L).atStartOfDay());
+            log.info("AdminDasboardService - today's newCustomers: {}", newCustomers);
+
+            log.info("AdminDasboardService - activeBays: {}", activeBays);
+            log.info("AdminDasboardService - totalBays: {}", totalBays);
         }
 
         log.info("AdminDasboardService - complete creating response");
@@ -311,7 +271,6 @@ public class AdminDashboardService {
 
     public List<RevenueDataResponse> getRevenueData(RevenueDataRequest request) {
         log.info("AdminDashboardService - getRevenueData()");
-
         log.info("AdminDashboardService - data: {} {} {} {}", request.getStartDate(), request.getEndDate(),
                 request.getMonth(), request.getYear());
 
@@ -327,18 +286,24 @@ public class AdminDashboardService {
 
             billings = billingRepository.findBillingsByStartDateAndEndDate(startDate.atStartOfDay(),
                     endDate.plusDays(1).atStartOfDay());
-        } else if (request.getMonth() != null && request.getYear() != 0){
+        } else if (request.getMonth() != null && request.getYear() != 0) {
             LocalDate startDate = LocalDate.of(request.getYear(), request.getMonth().getValue(), 1);
             LocalDate endDate = startDate.plusMonths(1L).minusDays(1L);
             log.info("AdminDashboardService - get revenue in {}/{}", startDate.getMonth(), startDate.getYear());
             billings = billingRepository.findBillingsByStartDateAndEndDate(startDate.atStartOfDay(),
                     endDate.plusDays(1).atStartOfDay());
+        } else if (request.getYear() != 0) {
+            LocalDate startDate = LocalDate.of(request.getYear(), 1, 1);
+            LocalDateTime endDate = LocalDateTime.now();
+            log.info("AdminDashboardService - get revenue in {}/{}", startDate.getMonth(), startDate.getYear());
+            billings = billingRepository.findBillingsByStartDateAndEndDate(startDate.atStartOfDay(),
+                    endDate);
         } else {
-            throw new IllegalArgumentException("Vui lòng cung cấp startDate/endDate hoặc month/year");
+            billings = billingRepository.findAllPaidBillings();
         }
         revenues = billingMapper.toRevenueDataResponses(billings);
         Map<LocalDate, RevenueDataResponse> revenueMap = new LinkedHashMap<>();
-        for (RevenueDataResponse revenue: revenues) {
+        for (RevenueDataResponse revenue : revenues) {
             if (revenueMap.containsKey(revenue.getDay())) {
                 RevenueDataResponse targetRevenue = revenueMap.get(revenue.getDay());
                 targetRevenue.setRevenue(targetRevenue.getRevenue().add(revenue.getRevenue()));
@@ -348,11 +313,67 @@ public class AdminDashboardService {
                 revenueMap.put(revenue.getDay(), revenue);
             }
         }
-        
+
         return new ArrayList<>(revenueMap.values());
     }
 
-    public List<ServiceUsageStats> getServiceUsagesStats() {
-        return serviceRepository.getServiceUsages();
+    public List<ServiceUsageStats> getServiceUsagesStats(RevenueDataRequest request) {
+        if (request.getStartDate() != null && request.getEndDate() != null) {
+            LocalDate startDate = request.getStartDate();
+            LocalDate endDate = request.getEndDate();
+            log.info("AdminDashboardService - get serviceUsageStats from {} to {}", startDate, endDate);
+            if (endDate.isBefore(startDate)) {
+                throw new DateTimeException("startDate can't be after endDate");
+            }
+            return serviceRepository.getServiceUsages(startDate.atStartOfDay(),
+                    endDate.plusDays(1L).atStartOfDay().minusMinutes(1L));
+
+        } else if (request.getMonth() != null && request.getYear() != 0) {
+            LocalDate startDate = LocalDate.of(request.getYear(), request.getMonth().getValue(), 1);
+            LocalDate endDate = startDate.plusMonths(1L).minusDays(1L);
+            log.info("AdminDashboardService - get serviceUsageStats in {}/{}", startDate.getMonth(),
+                    startDate.getYear());
+            return serviceRepository.getServiceUsages(startDate.atStartOfDay(),
+                    endDate.plusDays(1).atStartOfDay().minusMinutes(1L));
+        } else if (request.getYear() != 0) {
+            LocalDate startDate = LocalDate.of(request.getYear(), 1, 1);
+            LocalDateTime endDate = LocalDateTime.now();
+            log.info("AdminDashboardService - get revenue in {}/{}", startDate.getMonth(), startDate.getYear());
+            return serviceRepository.getServiceUsages(startDate.atStartOfDay(),
+                    endDate);
+        } else {
+            return serviceRepository.getAllServiceUsages();
+        }
+
+    }
+
+    public List<PeakHourStats> getPeakHours(RevenueDataRequest request) {
+        if (request.getStartDate() != null && request.getEndDate() != null) {
+            LocalDate startDate = request.getStartDate();
+            LocalDate endDate = request.getEndDate();
+            log.info("AdminDashboardService - get peakHoursStats from {} to {}", startDate, endDate);
+            if (endDate.isBefore(startDate)) {
+                throw new DateTimeException("startDate can't be after endDate");
+            }
+            return washSessionRepository.getPeakHourStats(startDate.atStartOfDay(),
+                    endDate.plusDays(1L).atStartOfDay().minusMinutes(1L));
+
+        } else if (request.getMonth() != null && request.getYear() != 0) {
+            LocalDate startDate = LocalDate.of(request.getYear(), request.getMonth().getValue(), 1);
+            LocalDate endDate = startDate.plusMonths(1L).minusDays(1L);
+            log.info("AdminDashboardService - get peakHoursStats in {}/{}", startDate.getMonth(),
+                    startDate.getYear());
+            return washSessionRepository.getPeakHourStats(startDate.atStartOfDay(),
+                    endDate.plusDays(1).atStartOfDay().minusMinutes(1L));
+        } else if (request.getYear() != 0) {
+            LocalDate startDate = LocalDate.of(request.getYear(), 1, 1);
+            LocalDateTime endDate = LocalDateTime.now();
+            log.info("AdminDashboardService - get revenue in {}/{}", startDate.getMonth(), startDate.getYear());
+            return washSessionRepository.getPeakHourStats(startDate.atStartOfDay(),
+                    endDate);
+        } else {
+            return washSessionRepository.getAllPeakHourStats();
+        }
+
     }
 }
