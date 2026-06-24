@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.autowashpro.backend.mapper.VoucherMapper;
+import com.autowashpro.backend.model.dto.CustomerVoucherResponse;
 import com.autowashpro.backend.model.dto.ExchangeVoucherRequest;
 import com.autowashpro.backend.model.dto.VoucherResponse;
 import com.autowashpro.backend.service.VoucherService;
@@ -34,7 +35,7 @@ public class VoucherController {
     }
 
     @GetMapping("/api/vouchers")
-    public ResponseEntity<List<VoucherResponse>> findAllVouchers(@AuthenticationPrincipal String email) {
+    public ResponseEntity<List<CustomerVoucherResponse>> findAllVouchers(@AuthenticationPrincipal String email) {
         return ResponseEntity.status(HttpStatus.OK).body(voucherService.getCustomerAllVouchers(email));
     }
 

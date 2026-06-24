@@ -28,8 +28,12 @@ import jakarta.validation.Valid;
 @PreAuthorize("hasRole('ADMIN')")
 public class AdminStaffController {
 
+    private final StaffService service;
+
     @Autowired
-    private StaffService service;
+    public AdminStaffController(StaffService service) {
+        this.service = service;
+    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<StaffAdminResponse>>> findAll(

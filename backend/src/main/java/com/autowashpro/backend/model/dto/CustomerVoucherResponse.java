@@ -1,9 +1,8 @@
 package com.autowashpro.backend.model.dto;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import com.autowashpro.backend.model.enums.RewardType;
+import com.autowashpro.backend.model.enums.VoucherStatus;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,13 +15,11 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-public class VoucherResponse {
-
+public class CustomerVoucherResponse {
+    
     private String voucherCode;
-    private String rewardName;
-    private RewardType discountType;
-    private BigDecimal discountValue;
-    private String customerName;
-    private LocalDateTime issuedAt;
+    private LocalDateTime expiresAt;
+    private RewardResponse reward;
+    private VoucherStatus status;
 
 }

@@ -8,6 +8,7 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import com.autowashpro.backend.model.dto.BillingVoucherResponse;
+import com.autowashpro.backend.model.dto.CustomerVoucherResponse;
 import com.autowashpro.backend.model.dto.VoucherResponse;
 import com.autowashpro.backend.model.entity.Voucher;
 
@@ -22,4 +23,10 @@ public interface VoucherMapper {
     VoucherResponse toVoucherResponse(Voucher voucher);
 
     List<VoucherResponse> toVoucherResponses(List<Voucher> vouchers);
+
+    @Mapping(target = "reward", ignore = true)
+    CustomerVoucherResponse toCustomerVoucherResponse(Voucher voucher);
+
+    List<CustomerVoucherResponse> toCustomerVoucherResponses(List<Voucher> vouchers);
+
 }
