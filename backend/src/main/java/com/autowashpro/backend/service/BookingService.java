@@ -26,6 +26,7 @@ import com.autowashpro.backend.mapper.BookingMapper;
 import com.autowashpro.backend.model.dto.ApplyVoucherToBillingRequest;
 import com.autowashpro.backend.model.dto.BookingDetailResponse;
 import com.autowashpro.backend.model.dto.BookingResponse;
+import com.autowashpro.backend.model.dto.CancelBookingRequest;
 import com.autowashpro.backend.model.dto.CreateBookingRequest;
 import com.autowashpro.backend.model.dto.CreateBookingResponse;
 import com.autowashpro.backend.model.dto.SlotAvailabilityByDateResponse;
@@ -47,6 +48,7 @@ import com.autowashpro.backend.model.entity.WashBay;
 import com.autowashpro.backend.model.entity.WashSession;
 import com.autowashpro.backend.model.enums.BayStatus;
 import com.autowashpro.backend.model.enums.BookingStatus;
+import com.autowashpro.backend.model.enums.PaymentStatus;
 import com.autowashpro.backend.model.enums.PromotionDiscountType;
 import com.autowashpro.backend.model.enums.RewardType;
 import com.autowashpro.backend.model.enums.Role;
@@ -475,6 +477,48 @@ public class BookingService {
         Customer customer = customerRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("Không tìm thấy khách hàng"));
         return bookingMapper.toBookingResponses(bookingRepository.findByCustomerId(customer.getId()));
+    }
+
+    public void cancelCustomerBooking(CancelBookingRequest request) {
+        String bookingCode = request.getBookingCode();
+        String cancelReason = request.getCancelReason();
+        log.info("BookingService - start canceling a booking with bookingCode: {}, reason: {}", bookingCode,
+                cancelReason);
+        Booking booking = bookingRepository.findByBookingCode(bookingCode)
+                .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy mã đặt lịch: " + bookingCode));
+        if (booking.getStatus().equals(BookingStatus.COMPLETED)) {
+            throw new RuntimeException("Không thể hủy lịch đặt đã hoàn thành");
+        } else if (booking.getStatus().equals(BookingStatus.CANCELLED)) {
+            throw new RuntimeException("Không thể hủy lịch đặt đã được hủy");
+        }
+
+        List<AvailableSlot> availableSlots = booking.getAvailableSlots();
+        log.info("BookingService - start destructing booking slots occupied before: {} slots", availableSlots.size());
+        for (AvailableSlot availableSlot : availableSlots) {
+            log.info("BookingService - destruct booking from availableSlot: {}", availableSlot.getId());
+            availableSlot.setBooking(null);
+            availableSlotRepository.save(availableSlot);
+        }
+
+        List<WashSession> washSessions = booking.getWashSessions();
+        log.info("BookingService - start canceling washSessions of booking {}, {} washSessions", bookingCode,
+                washSessions.size());
+        for (WashSession washSession: washSessions) {
+            log.info("BookingService - cancle washSession: {}", washSession.getId());
+            washSession.setStatus(WashSessionStatus.CANCELLED);
+            washSessionRepository.save(washSession);
+        }
+
+        Billing billing = booking.getBilling();
+        log.info("BookngService - start canceling Billing attached to Booking: {}", billing.getId());
+        billing.setPaymentStatus(PaymentStatus.CANCELLED);
+        billingRepository.save(billing);
+
+        log.info("BookingService - start canceling booking: {}", bookingCode);
+        booking.setStatus(BookingStatus.CANCELLED);
+        booking.setCancelReason(cancelReason);
+        log.info("BookingService - complete canceling a booking: {}", bookingCode);
+        bookingRepository.save(booking);
     }
 
 }
