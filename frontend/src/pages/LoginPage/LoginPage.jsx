@@ -12,7 +12,7 @@ export default function LoginPage() {
         const role = user?.role?.toUpperCase();
         if (role === "STAFF") return <Navigate to="/staff" replace />;
         if (role === "ADMIN") return <Navigate to="/admin" replace />;
-        if (role === "CUSTOMER") return <Navigate to="/ca-nhan" replace />;
+        if (role === "CUSTOMER") return <Navigate to="/" replace />;
     }
     return (
         <div className="login-page">

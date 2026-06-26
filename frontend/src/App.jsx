@@ -49,49 +49,51 @@ function MainLayout({ children }) {
 function App() {
   return (
     <Routes>
-      {/* Các trang có Navbar + Footer */}
-      <Route path="/" element={
-        <MainLayout><Home /></MainLayout>
-      } />
-      <Route path="/service" element={
-        <MainLayout><Service /></MainLayout>
-      } />
-      <Route path="/blog" element={
-        <MainLayout><Blog /></MainLayout>
-      } />
-      <Route path="/blog/huong-dan-tay-o-kinh-o-to" element={
-        <MainLayout><BlogDetail /></MainLayout>
-      } />
-      <Route path="/blog/bang-gia-ve-sinh-noi-that-o-to-tai-nha" element={
-        <MainLayout><BlogDetail2 /></MainLayout>
-      } />
-      <Route path="/blog/cach-cham-soc-ngoai-that-o-to-tai-nha" element={
-        <MainLayout><BlogDetail3 /></MainLayout>
-      } />
-      <Route path="/blog/tieu-chi-danh-gia-trung-tam-rua-xe-o-to" element={
-        <MainLayout><BlogDetail4 /></MainLayout>
-      } />
-      <Route path="/blog/cach-cham-soc-noi-that-o-to-tai-nha" element={
-        <MainLayout><BlogDetail5 /></MainLayout>
-      } />
-      <Route path="/login" element={
-        <>
-          <LoginPage />
-          <Footer />
-        </>
-      } />
-      <Route path="/signup" element={
-        <>
-          <RegisterPage />
-          <Footer />
-        </>
-      } />
-      <Route path="/forgotpass" element={
-        <>
-          <ForgotPassPage />
-          <Footer />
-        </>
-      } />
+      {/* Các trang công khai (Guest hoặc Customer) */}
+      <Route element={<ProtectedRoute allowedRoles={["CUSTOMER"]} requireAuth={false} />}>
+        <Route path="/" element={
+          <MainLayout><Home /></MainLayout>
+        } />
+        <Route path="/service" element={
+          <MainLayout><Service /></MainLayout>
+        } />
+        <Route path="/blog" element={
+          <MainLayout><Blog /></MainLayout>
+        } />
+        <Route path="/blog/huong-dan-tay-o-kinh-o-to" element={
+          <MainLayout><BlogDetail /></MainLayout>
+        } />
+        <Route path="/blog/bang-gia-ve-sinh-noi-that-o-to-tai-nha" element={
+          <MainLayout><BlogDetail2 /></MainLayout>
+        } />
+        <Route path="/blog/cach-cham-soc-ngoai-that-o-to-tai-nha" element={
+          <MainLayout><BlogDetail3 /></MainLayout>
+        } />
+        <Route path="/blog/tieu-chi-danh-gia-trung-tam-rua-xe-o-to" element={
+          <MainLayout><BlogDetail4 /></MainLayout>
+        } />
+        <Route path="/blog/cach-cham-soc-noi-that-o-to-tai-nha" element={
+          <MainLayout><BlogDetail5 /></MainLayout>
+        } />
+        <Route path="/login" element={
+          <>
+            <LoginPage />
+            <Footer />
+          </>
+        } />
+        <Route path="/signup" element={
+          <>
+            <RegisterPage />
+            <Footer />
+          </>
+        } />
+        <Route path="/forgotpass" element={
+          <>
+            <ForgotPassPage />
+            <Footer />
+          </>
+        } />
+      </Route>
       {/* Trang Cá nhân (Customer Dashboard) */}
       <Route path="/ca-nhan" element={
         <ProtectedRoute allowedRoles={["CUSTOMER"]}>
