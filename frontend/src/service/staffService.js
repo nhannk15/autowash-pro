@@ -82,11 +82,11 @@ export async function validateVoucher(customerId, billingId, voucherCode) {
     return response.data;
 }
 
-export async function getStaffProfile(id) {
-    const response = await axios.get(`${API}/api/users/${id}`, {
+export async function getStaffProfile() {
+    const response = await axios.get(`${API}/api/staff/info`, {
         withCredentials: true,
     });
-    return response.data.data;
+    return response.data;
 }
 
 export async function updateStaffProfile(id, phoneNumber, avatarUrl) {
