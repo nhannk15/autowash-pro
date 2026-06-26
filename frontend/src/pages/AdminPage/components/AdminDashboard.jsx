@@ -1,80 +1,27 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import dayjs from 'dayjs';
 import {
-    Row, Col, Card, Statistic, Table,
-    Tag, Badge, Alert, Typography, Space, Spin, message, Timeline, Divider, Segmented, Tooltip as AntTooltip,
+    Row, Col, Card, Statistic, Table, DatePicker, Segmented,
+    Tag, Badge, Alert, Typography, Space, Spin, message, Timeline, Divider, Tooltip as AntTooltip,
 } from 'antd';
 import {
-    DollarCircleOutlined, CalendarOutlined, UserAddOutlined, CarOutlined,
-    CrownOutlined, WarningOutlined, BellOutlined, CheckCircleOutlined, UserOutlined
+    DollarCircleOutlined, CalendarOutlined, UserAddOutlined, CarOutlined, UnorderedListOutlined,
+    CrownOutlined, WarningOutlined, BellOutlined, CheckCircleOutlined, UserOutlined, ScheduleOutlined, CalendarFilled
 } from '@ant-design/icons';
 import {
     LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
-
 import {
     getAllBays,
     getUpcomingBookings,
     getTodayBookings,
 } from '../../../service/staffService';
-
-// TODO: Khi backend có API dashboard, import từ adminService thay vì staffService
-// import {
-//     getAdminDashboardSummary,
-//     getRevenueChart,
-//     getServiceDistribution,
-//     getPeakHours,
-//     getRecentTransactions,
-//     getAdminBays,
-//     getAdminTodayBookings,
-//     getAdminUpcomingBookings,
-// } from '../../../service/adminService';
+import {
+    getDashboardSummary, getServiceDistribution, getRevenueChart, getPeakHours, getRecentTransactions
+} from '../../../service/adminService';
 
 const { Title, Text } = Typography;
-
-// ─────────────────────────────────────────────
-// MOCK DATA (fallback khi API chưa có)
-// ─────────────────────────────────────────────
-
-const MOCK_REVENUE_WEEK = [
-    { day: 'T2', revenue: 3400000 },
-    { day: 'T3', revenue: 3800000 },
-    { day: 'T4', revenue: 3300000 },
-    { day: 'T5', revenue: 3900000 },
-    { day: 'T6', revenue: 3700000 },
-    { day: 'T7', revenue: 4200000 },
-    { day: 'CN', revenue: 0 },
-];
-
-const MOCK_SERVICES = [
-    { name: 'Rửa tiêu chuẩn', value: 45, color: '#378ADD' },
-    { name: 'Rửa cao cấp', value: 28, color: '#1D9E75' },
-    { name: 'Dọn nội thất', value: 17, color: '#7F77DD' },
-    { name: 'Rửa khoang máy', value: 10, color: '#EF9F27' },
-];
-
-const MOCK_PEAK_HOURS = [
-    { hour: '7h', count: 2 }, { hour: '8h', count: 7 }, { hour: '9h', count: 9 },
-    { hour: '10h', count: 6 }, { hour: '11h', count: 5 }, { hour: '12h', count: 4 },
-    { hour: '13h', count: 3 }, { hour: '14h', count: 5 }, { hour: '15h', count: 6 },
-    { hour: '16h', count: 5 }, { hour: '17h', count: 8 }, { hour: '18h', count: 7 },
-    { hour: '19h', count: 3 },
-];
-
-const MOCK_TRANSACTIONS = [
-    { id: 1, createdAt: '13:12', customer: { fullName: 'Vũ Minh T.' }, totalAmount: 180000 },
-    { id: 2, createdAt: '12:58', customer: { fullName: 'Đặng Hữu K.' }, totalAmount: 320000 },
-    { id: 3, createdAt: '12:44', customer: { fullName: 'Bùi Thị L.' }, totalAmount: 150000 },
-    { id: 4, createdAt: '12:30', customer: { fullName: 'Mai Quốc H.' }, totalAmount: 450000 },
-    { id: 5, createdAt: '12:15', customer: { fullName: 'Cao Thị M.' }, totalAmount: 180000 },
-];
-
-const MOCK_ALERTS = [
-    { id: 1, type: 'info', title: 'Khách VIP vừa đặt lịch', desc: 'Trần Thị B (Gold) · 13:45 · Dọn nội thất' },
-    { id: 2, type: 'warning', title: '3 voucher sắp hết hạn', desc: 'Hết hạn trong 2 ngày — cần thông báo khách' },
-    { id: 3, type: 'warning', title: 'Khoang 5 đang bảo trì', desc: 'Công suất giảm 17% · Dự kiến xong 14:00' },
-    { id: 4, type: 'error', title: 'Tỉ lệ hủy tăng bất thường', desc: '2 đơn bị hủy sáng nay — cao hơn trung bình' },
-];
 
 // ─────────────────────────────────────────────
 // HELPERS
@@ -134,34 +81,42 @@ const ALERT_ICON = {
 };
 
 // ─────────────────────────────────────────────
-// PERIOD FILTER OPTIONS
-// ─────────────────────────────────────────────
-
-const PERIOD_OPTIONS = [
-    { label: 'Hôm nay', value: 'today' },
-    { label: '7 ngày', value: 'week' },
-    { label: '30 ngày', value: 'month' },
-];
-
-const PERIOD_LABEL = {
-    today: 'hôm nay',
-    week: '7 ngày qua',
-    month: '30 ngày qua',
-};
-
-// ─────────────────────────────────────────────
 // TABLE COLUMNS
 // ─────────────────────────────────────────────
 
 const transactionColumns = [
     {
-        title: 'Thời gian', dataIndex: 'createdAt', width: 80,
-        render: (v) => <Text type="secondary">{v}</Text>,
+        title: 'Thời gian',
+        dataIndex: 'createdAt',
+        width: 90,
+        render: (v) => {
+            if (!v) return '—';
+            const d = new Date(v);
+            const date = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+            const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+            return (
+                <div>
+                    <Text type="secondary" style={{ fontSize: 11 }}>{date}</Text>
+                    <br />
+                    <Text style={{ fontSize: 12 }}>{time}</Text>
+                </div>
+            );
+        },
     },
-    { title: 'Khách', dataIndex: ['customer', 'fullName'] },
     {
-        title: 'Số tiền', dataIndex: 'totalAmount', align: 'right',
-        render: (v) => <Text style={{ color: '#27500A', fontWeight: 500 }}>{formatCurrency(v)}</Text>,
+        title: 'Khách',
+        dataIndex: 'customer', // ← đổi từ ['customer', 'fullName'] thành 'customer'
+        render: (v) => <Text>{v || '—'}</Text>,
+    },
+    {
+        title: 'Số tiền',
+        dataIndex: 'totalAmount',
+        align: 'right',
+        render: (v) => (
+            <Text style={{ color: '#27500A', fontWeight: 500 }}>
+                {formatCurrency(v)}
+            </Text>
+        ),
     },
 ];
 
@@ -176,25 +131,52 @@ export default function AdminDashboard() {
     const [todayBookings, setTodayBookings] = useState([]);
     const [bookings, setBookings] = useState([]);  // upcoming
 
-    // ── States — data từ mock (chart/kpi/transactions/alerts) ──
-    // TODO: Kết nối API khi backend sẵn sàng — thay mock bằng API call
-    const [kpi] = useState({ newCustomersMonth: 12 });
-    const [revenueWeek] = useState(MOCK_REVENUE_WEEK);
-    const [servicesData] = useState(MOCK_SERVICES);
-    const [peakHours] = useState(MOCK_PEAK_HOURS);
-    const [transactions] = useState(MOCK_TRANSACTIONS);
-    const [alerts] = useState(MOCK_ALERTS);
+    const [dashboardData, setDashboardData] = useState([]);
+    const [revenueWeek, setRevenueWeek] = useState([]);
+    const [servicesData, setServicesData] = useState([]);
+    const [peakHours, setPeakHours] = useState([]);
+    const [transactions, setTransactions] = useState([]);
+    const [alerts, setAlerts] = useState([]);
 
     // ── Period filter ──
-    const [period, setPeriod] = useState('today');
+    const [filterMode, setFilterMode] = useState('range');
+    const [dateRange, setDateRange] = useState([dayjs(), dayjs()]);
+    const [monthYear, setMonthYear] = useState(dayjs());
+    const [year, setYear] = useState(dayjs());
 
     // ── Loading states ──
     const [loadingBays, setLoadingBays] = useState(true);
     const [loadingTodayBookings, setLoadingTodayBookings] = useState(true);
     const [loadingUpcomingBookings, setLoadingUpcomingBookings] = useState(true);
 
+    const apiParams = useMemo(() => {
+        if (filterMode === 'range') {
+            return {
+                startDate: dateRange[0].format('YYYY-MM-DD'),
+                endDate: dateRange[1].format('YYYY-MM-DD'),
+            };
+        }
+        if (filterMode === 'month') {
+            return {
+                month: monthYear.format('MMMM').toUpperCase(), // "JUNE"
+                year: monthYear.year(),
+            };
+        }
+        if (filterMode === 'year') return { year: year.year() };
+        return {}; // 'all'
+    }, [filterMode, dateRange, monthYear, year]);
+
+    const apiParamsKey = JSON.stringify(apiParams);
+
+    const filterLabel = useMemo(() => {
+        if (filterMode === 'all') return 'Tất cả';
+        if (filterMode === 'range') return `${dateRange[0].format('DD/MM/YYYY')} – ${dateRange[1].format('DD/MM/YYYY')}`;
+        if (filterMode === 'month') return monthYear.format('MM/YYYY');
+        if (filterMode === 'year') return `Năm ${year.year()}`;
+        return '';
+    }, [filterMode, dateRange, monthYear, year]);
+
     // ── Fetch Bays ──
-    // TODO: Đổi sang /api/admin/dashboard/bays khi backend có API
     useEffect(() => {
         async function fetchBays() {
             try {
@@ -210,7 +192,6 @@ export default function AdminDashboard() {
     }, []);
 
     // ── Fetch Today Bookings ──
-    // TODO: Đổi sang /api/admin/dashboard/today-bookings khi backend có API
     useEffect(() => {
         async function fetchBookings() {
             try {
@@ -226,7 +207,6 @@ export default function AdminDashboard() {
     }, []);
 
     // ── Fetch Upcoming Bookings ──
-    // TODO: Đổi sang /api/admin/dashboard/upcoming-bookings khi backend có API
     useEffect(() => {
         async function fetchUpcomingBookings() {
             try {
@@ -239,6 +219,76 @@ export default function AdminDashboard() {
             }
         }
         fetchUpcomingBookings();
+    }, []);
+
+    useEffect(() => {
+        async function fetchDashboardSummary() {
+            try {
+                const data = await getDashboardSummary(apiParams);
+                setDashboardData(data);
+            } catch (error) {
+                console.error("Failed to fetch dashboard summary", error);
+            }
+        }
+        fetchDashboardSummary();
+    }, [apiParamsKey]);
+
+    useEffect(() => {
+        async function fetchServiceDistribution() {
+            try {
+                const data = await getServiceDistribution(apiParams);
+                const COLORS = ['#378ADD', '#1D9E75', '#7F77DD', '#EF9F27', '#E05C5C', '#52c41a', '#fa8c16'];
+                const total = data.reduce((sum, d) => sum + d.totalUsages, 0);
+                const mapped = data.map((d, i) => ({
+                    name: d.serviceName,
+                    value: total > 0 ? Math.round((d.totalUsages / total) * 100) : 0,
+                    color: COLORS[i % COLORS.length],
+                }));
+                setServicesData(mapped);
+            } catch (error) {
+                console.error("Failed to fetch service distribution", error);
+            }
+        }
+        fetchServiceDistribution();
+    }, [apiParamsKey]);
+
+    useEffect(() => {
+        async function fetchRevenueChart() {
+            try {
+                const data = await getRevenueChart(apiParams);
+                setRevenueWeek(data);
+            } catch (error) {
+                console.error("Failed to fetch revenue chart", error);
+            }
+        }
+        fetchRevenueChart();
+    }, [apiParamsKey]);
+
+    useEffect(() => {
+        async function fetchPeakHours() {
+            try {
+                const data = await getPeakHours(apiParams);
+                setPeakHours(data);
+            } catch (error) {
+                console.error("Failed to fetch peak hours", error);
+            }
+        }
+        fetchPeakHours();
+    }, [apiParamsKey]);
+
+    useEffect(() => {
+        async function fetchTransactions() {
+            try {
+                const data = await getRecentTransactions();
+                const sorted = [...data].sort((a, b) =>
+                    new Date(b.createdAt) - new Date(a.createdAt)
+                );
+                setTransactions(sorted);
+            } catch (error) {
+                console.error("Failed to fetch transactions", error);
+            }
+        }
+        fetchTransactions();
     }, []);
 
     // ── Stats tính từ data thô ──
@@ -290,13 +340,64 @@ export default function AdminDashboard() {
         <div className="staff-dashboard"> {/* dùng chung class với StaffDashboard để thừa kế CSS */}
 
             {/* ── BỘ LỌC THỜI GIAN ── */}
-            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Title level={4} style={{ margin: 0 }}>Tổng quan</Title>
-                <Segmented
-                    options={PERIOD_OPTIONS}
-                    value={period}
-                    onChange={setPeriod}
-                />
+            <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                marginBottom: 24,
+                flexWrap: 'wrap',
+                gap: 12,
+            }}>
+                {/* Góc trái */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <Title level={4} style={{ margin: 0, fontSize: '2rem', fontWeight: 'bold' }}>Tổng quan</Title>
+                    <Text type="secondary" style={{ fontSize: 13 }}>
+                        Dữ liệu:{' '}
+                        <Text strong style={{ fontSize: 13 }}>{filterLabel}</Text>
+                    </Text>
+                </div>
+
+                {/* Góc phải */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+                    <Segmented
+                        options={[
+                            { label: <><UnorderedListOutlined style={{ marginRight: 4 }} />Tất cả</>, value: 'all' },
+                            { label: <><CalendarOutlined style={{ marginRight: 4 }} />Khoảng ngày</>, value: 'range' },
+                            { label: <>Tháng</>, value: 'month' },
+                            { label: <>Năm</>, value: 'year' },
+                        ]}
+                        value={filterMode}
+                        onChange={setFilterMode}
+                    />
+                    <div style={{ minHeight: 32, display: 'flex', alignItems: 'center' }}>
+                        {filterMode === 'range' && (
+                            <DatePicker.RangePicker
+                                value={dateRange}
+                                onChange={(dates) => dates && setDateRange(dates)}
+                                format="DD/MM/YYYY"
+                                allowClear={false}
+                            />
+                        )}
+                        {filterMode === 'month' && (
+                            <DatePicker
+                                picker="month"
+                                value={monthYear}
+                                onChange={(d) => d && setMonthYear(d)}
+                                format="MM/YYYY"
+                                allowClear={false}
+                            />
+                        )}
+                        {filterMode === 'year' && (
+                            <DatePicker
+                                picker="year"
+                                value={year}
+                                onChange={(d) => d && setYear(d)}
+                                format="YYYY"
+                                allowClear={false}
+                            />
+                        )}
+                    </div>
+                </div>
             </div>
 
             <Row gutter={[24, 24]}>
@@ -312,8 +413,8 @@ export default function AdminDashboard() {
                             <Col xs={12} sm={6}>
                                 <Card className="stat-card">
                                     <Statistic
-                                        title={`Doanh thu ${PERIOD_LABEL[period]}`}
-                                        value={stats.revenue}
+                                        title={`Doanh thu`}
+                                        value={dashboardData?.totalRevenue ?? 0}
                                         formatter={(v) => formatCurrency(v)}
                                         prefix={<DollarCircleOutlined className="stat-icon text-gold" />}
                                     />
@@ -322,20 +423,17 @@ export default function AdminDashboard() {
                             <Col xs={12} sm={6}>
                                 <Card className="stat-card">
                                     <Statistic
-                                        title={`Lịch hẹn ${PERIOD_LABEL[period]}`}
-                                        value={stats.todayAppointments}
+                                        title={`Lịch hẹn`}
+                                        value={dashboardData?.totalBookings ?? 0}
                                         prefix={<CalendarOutlined className="stat-icon text-orange" />}
                                     />
-                                    <Text type="secondary" style={{ fontSize: 12 }}>
-                                        {stats.completed} hoàn thành · {stats.pending} chờ
-                                    </Text>
                                 </Card>
                             </Col>
                             <Col xs={12} sm={6}>
                                 <Card className="stat-card">
                                     <Statistic
-                                        title="Khách mới tháng này"
-                                        value={kpi?.newCustomersMonth ?? '—'}
+                                        title={`Khách mới`}
+                                        value={dashboardData?.newCustomers ?? 0}
                                         prefix={<UserAddOutlined className="stat-icon text-blue" />}
                                     />
                                 </Card>
@@ -344,7 +442,7 @@ export default function AdminDashboard() {
                                 <Card className="stat-card">
                                     <Statistic
                                         title="Đã hoàn thành"
-                                        value={stats.completed}
+                                        value={dashboardData?.completedBookings ?? 0}
                                         prefix={<CheckCircleOutlined className="stat-icon text-green" />}
                                     />
                                 </Card>
@@ -356,11 +454,14 @@ export default function AdminDashboard() {
                     <>
                         <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
                             <Col xs={24} lg={15}>
-                                <Card size="small" title={`Doanh thu ${PERIOD_LABEL[period]}`}>
+                                <Card size="small" title={`Doanh thu - ${filterLabel}`}>
                                     <ResponsiveContainer width="100%" height={200}>
                                         <LineChart data={revenueWeek}>
                                             <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
-                                            <XAxis dataKey="day" tick={{ fontSize: 12 }} />
+                                            <XAxis dataKey="day" tick={{ fontSize: 11 }} tickFormatter={(v) => {
+                                                const parts = v.split('-');
+                                                return `${parts[2]}/${parts[1]}`;
+                                            }} />
                                             <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
                                             <Tooltip formatter={(v) => formatCurrency(v)} />
                                             <Line type="monotone" dataKey="revenue" stroke="#378ADD" strokeWidth={2} dot={{ r: 3, fill: '#378ADD' }} activeDot={{ r: 5 }} name="Doanh thu" />
@@ -369,7 +470,7 @@ export default function AdminDashboard() {
                                 </Card>
                             </Col>
                             <Col xs={24} lg={9}>
-                                <Card size="small" title="Tỉ lệ dịch vụ" style={{ height: '100%' }}>
+                                <Card size="small" title={`Tỉ lệ dịch vụ - ${filterLabel}`} style={{ height: '100%' }}>
                                     <ResponsiveContainer width="100%" height={155}>
                                         <PieChart>
                                             <Pie data={servicesData} cx="50%" cy="50%" innerRadius={45} outerRadius={70} dataKey="value" paddingAngle={2}>
@@ -390,11 +491,11 @@ export default function AdminDashboard() {
                             </Col>
                         </Row>
 
-                        <Card size="small" title={`Khung giờ cao điểm — ${PERIOD_LABEL[period]}`} style={{ marginTop: 16 }}>
+                        <Card size="small" title={`Khung giờ cao điểm - ${filterLabel}`} style={{ marginTop: 16 }}>
                             <ResponsiveContainer width="100%" height={130}>
                                 <BarChart data={peakHours} barSize={22}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
-                                    <XAxis dataKey="hour" tick={{ fontSize: 11 }} />
+                                    <XAxis dataKey="hourOfDay" tick={{ fontSize: 11 }} />
                                     <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                                     <Tooltip />
                                     <Bar dataKey="count" name="Lượt xe" fill="#B5D4F4" stroke="#378ADD" strokeWidth={1} radius={[3, 3, 0, 0]} />
@@ -480,47 +581,31 @@ export default function AdminDashboard() {
                         )}
                     </Card>
 
-                    {/* TABLES */}
-                    <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
-                        <Col xs={24} lg={14}>
-                            <Card
-                                title={<Title level={4}>Lịch hẹn sắp tới</Title>}
-                                className="dashboard__timeline-card"
-                            >
-                                {loadingUpcomingBookings ? (
-                                    <div style={{ textAlign: 'center', padding: 20 }}><Spin /></div>
-                                ) : upcoming.length > 0 ? (
-                                    <Timeline
-                                        items={upcoming.map(item => ({
-                                            color: 'blue',
-                                            children: (
-                                                <div className="timeline-item-content" key={item.id}>
-                                                    <Text strong>{item.time}</Text> - <Text strong>{item.customerName}</Text> - <Text strong>{item.brand}</Text>
-                                                    <br />
-                                                    <Text type="secondary">
-                                                        {item.typeName}<Divider type="vertical" />{item.licensePlate}
-                                                    </Text>
-                                                </div>
-                                            )
-                                        }))}
-                                    />
-                                ) : (
-                                    <Text type="secondary">Không có lịch hẹn sắp tới</Text>
-                                )}
-                            </Card>
-                        </Col>
-                        <Col xs={24} lg={10}>
-                            <Card size="small" title="Giao dịch gần đây">
-                                <Table
-                                    dataSource={transactions}
-                                    columns={transactionColumns}
-                                    rowKey="id"
-                                    pagination={false}
-                                    size="small"
-                                />
-                            </Card>
-                        </Col>
-                    </Row>
+                    <Card
+                        title={<Title level={4}>Lịch hẹn sắp tới</Title>}
+                        className="dashboard__timeline-card"
+                    >
+                        {loadingUpcomingBookings ? (
+                            <div style={{ textAlign: 'center', padding: 20 }}><Spin /></div>
+                        ) : upcoming.length > 0 ? (
+                            <Timeline
+                                items={upcoming.map(item => ({
+                                    color: 'blue',
+                                    children: (
+                                        <div className="timeline-item-content" key={item.id}>
+                                            <Text strong>{item.time}</Text> - <Text strong>{item.customerName}</Text> - <Text strong>{item.brand}</Text>
+                                            <br />
+                                            <Text type="secondary">
+                                                {item.typeName}<Divider type="vertical" />{item.licensePlate}
+                                            </Text>
+                                        </div>
+                                    )
+                                }))}
+                            />
+                        ) : (
+                            <Text type="secondary">Không có lịch hẹn sắp tới</Text>
+                        )}
+                    </Card>
                 </Col>
 
                 {/* ── CỘT PHẢI (30%) ── */}
@@ -528,6 +613,7 @@ export default function AdminDashboard() {
                     <Card
                         title={<><BellOutlined style={{ marginRight: 6 }} />Thông báo</>}
                         className="dashboard__notifications-card"
+                        bodyStyle={{ maxHeight: 320, overflowY: 'auto', padding: '12px' }}
                     >
                         <Space direction="vertical" style={{ width: '100%' }} size={8}>
                             {alerts.map((a) => (
@@ -543,8 +629,17 @@ export default function AdminDashboard() {
                             ))}
                         </Space>
                     </Card>
-                </Col>
 
+                    <Card size="small" title="Giao dịch gần đây" style={{ marginTop: 20 }} bodyStyle={{ maxHeight: 280, overflowY: 'auto', padding: '0' }}>
+                        <Table
+                            dataSource={transactions}
+                            columns={transactionColumns}
+                            rowKey="id"
+                            pagination={false}
+                            size="small"
+                        />
+                    </Card>
+                </Col>
             </Row>
         </div>
     );
