@@ -1,5 +1,6 @@
 package com.autowashpro.backend.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -8,10 +9,12 @@ import java.util.TreeMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.autowashpro.backend.config.VnpayConfig;
 import com.autowashpro.backend.exception.BillingNotFoundException;
 import com.autowashpro.backend.model.entity.Billing;
+import com.autowashpro.backend.model.enums.DepositStatus;
 import com.autowashpro.backend.repository.BillingRepository;
 import com.autowashpro.backend.utils.VnpayUtils;
 
@@ -33,16 +36,21 @@ public class VnpayService {
 
     private static final DateTimeFormatter VNPAY_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
+    @Transactional
     public String createPaymentUrl(Long billingId, String orderInfo, HttpServletRequest request) {
 
         Billing billing = billingRepository.findById(billingId)
                 .orElseThrow(() -> new BillingNotFoundException("Không tìm thấy hóa đơn với id: " + billingId));
 
+        BigDecimal bankingAmount = billing.getFinalAmount();
+        if (billing.getDepositStatus().equals(DepositStatus.PENDING)) {
+            bankingAmount = billing.getDepositAmount();
+        }
         Map<String, String> params = new HashMap<>();
         params.put("vnp_Version", vnpayConfig.getVersion());
         params.put("vnp_Command", vnpayConfig.getCommand());
         params.put("vnp_TmnCode", vnpayConfig.getTmnCode());
-        params.put("vnp_Amount", String.valueOf(billing.getFinalAmount().longValue() * 100L));
+        params.put("vnp_Amount", String.valueOf(bankingAmount.longValue() * 100L));
         params.put("vnp_CurrCode", vnpayConfig.getCurrCode());
         params.put("vnp_TxnRef", VnpayUtils.generateTxnRef(billingId));
         params.put("vnp_OrderInfo", orderInfo);

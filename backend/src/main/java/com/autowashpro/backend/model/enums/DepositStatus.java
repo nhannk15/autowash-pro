@@ -1,8 +1,7 @@
 package com.autowashpro.backend.model.enums;
 
-public enum BookingStatus {
+public enum DepositStatus {
     PENDING,
-    CONFIRMED,
     CANCELLED,
-    COMPLETED
+    PAID
 }

@@ -39,4 +39,5 @@ public class CreateBookingResponse {
     private LocalDateTime createdAt;
 
     private String voucherCode;
+    private BigDecimal depositAmount;
 }

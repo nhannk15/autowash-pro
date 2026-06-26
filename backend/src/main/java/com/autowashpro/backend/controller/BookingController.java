@@ -8,7 +8,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -79,6 +78,11 @@ public class BookingController {
     public ResponseEntity<Void> cancleBooking(@RequestBody CancelBookingRequest request) {
         bookingService.cancelCustomerBooking(request);
         return ResponseEntity.status(HttpStatus.OK).body(null);
+    }
+
+    @GetMapping("/api/bookings/pending-deposit")
+    public ResponseEntity<Void> getAllDepositPendingBookings() {
+        return null;
     }
 
 }

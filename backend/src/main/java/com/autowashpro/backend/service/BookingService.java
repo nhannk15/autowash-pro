@@ -72,14 +72,15 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class BookingService {
-
-    private final VoucherRepository voucherRepository;
+    
 
     private static final int SLOT_DURATION = 60;
+    private static final BigDecimal DEPOSIT_PERCENTAGE = new BigDecimal(30L);
 
     @Value("${email.sendbooking}")
     private boolean useEmailService;
 
+    private final VoucherRepository voucherRepository;
     private final CustomerRepository customerRepository;
     private final ServicePriceRepository servicePriceRepository;
     private final AvailableSlotRepository availableSlotRepository;
@@ -259,11 +260,12 @@ public class BookingService {
          */
         Vehicle vehicle = vehicleRepository.findById(createBookingRequest.getVehicleId())
                 .orElseThrow(() -> new RuntimeException("Vehicle not found"));
+        log.info("creatingBooking() - creating PENDING booking");
         Booking booking = Booking
                 .builder()
                 .customer(customer)
                 .vehicle(vehicle)
-                .status(BookingStatus.CONFIRMED)
+                .status(BookingStatus.PENDING)
                 .notes(createBookingRequest.getNotes())
                 .promotion(promotion)
                 .bookingCode(bookingCodeGenerator.generate())
@@ -407,6 +409,7 @@ public class BookingService {
                         .isPresent()
                                 ? createBookingRequest.getVoucherCode()
                                 : null)
+                .depositAmount(totalFinalPrice.multiply(DEPOSIT_PERCENTAGE).divide(new BigDecimal(100L)))
                 .build();
 
         /**
