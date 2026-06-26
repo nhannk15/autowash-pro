@@ -78,7 +78,7 @@ public class BookingService {
     private static final int SLOT_DURATION = 60;
 
     @Value("${email.sendbooking}")
-    private String useEmailService;
+    private boolean useEmailService;
 
     private final CustomerRepository customerRepository;
     private final ServicePriceRepository servicePriceRepository;
@@ -412,7 +412,8 @@ public class BookingService {
         /**
          * Step 11. Generate QR Code and send booking confirmation email.
          */
-        if (useEmailService.equals("yes")) {
+        log.info("EmailService enabled: " + useEmailService);
+        if (useEmailService) {
             byte[] qrCodeBytes = qrCodeGenerator.generateQrCode(savedBooking.getBookingCode());
             emailService.sendBookingSuccessToEmail(customer.getEmail(),
                     savedBooking.getBookingCode(),
