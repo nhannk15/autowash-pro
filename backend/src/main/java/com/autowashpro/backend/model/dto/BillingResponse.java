@@ -23,11 +23,14 @@ public class BillingResponse {
     private BigDecimal originalAmount;
     private BigDecimal discountAmount;
     private BigDecimal finalAmount;
+    private BigDecimal depositAmount;
     private PaymentMethod paymentMethod;
     private PaymentStatus paymentStatus;
     private String transactionId;
     private String referenceCode;
     private LocalDateTime createdAt;
     private Long pointsChange;
+
+    private BookingPromotionResponse bookingPromotionResponse;
 
 }

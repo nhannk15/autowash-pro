@@ -29,5 +29,12 @@ public class BookingResponse {
     private String washBay;
     private BookingStatus status;
     private WashSessionStatus washSessionStatus;
+
+    //--- Final data from Promotion
+    private BookingPromotionResponse promotion;
+
+    //--- Final data from Billing.
+    private BookingBillingResponse billing;
+
     
 }

@@ -18,7 +18,8 @@ import com.autowashpro.backend.model.entity.WashSession;
 import com.autowashpro.backend.model.enums.WashSessionStatus;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, uses = {
-        VehicleMapper.class, CustomerMapper.class, BookingDetailMapper.class })
+        VehicleMapper.class, CustomerMapper.class, BookingDetailMapper.class, PromotionMapper.class,
+        VoucherMapper.class })
 public interface BookingMapper {
     void updateBookingFromRequest(Booking source, @MappingTarget Booking target);
 
@@ -76,5 +77,5 @@ public interface BookingMapper {
         return washSessions.getFirst().getStatus();
     }
 
-    List<BookingResponse> toBookingResponses(List<Booking> bookings); 
+    List<BookingResponse> toBookingResponses(List<Booking> bookings);
 }
