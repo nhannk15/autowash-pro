@@ -23,7 +23,9 @@ jobs:
           cache: maven
 
       - name: Build backend with Maven
-        run: cd backend && ./mvnw compile -q
+        run: |
+          chmod +x backend/mvnw
+          cd backend && ./mvnw compile -q
 
       - name: Notify build failure
         if: failure()
