@@ -32,6 +32,8 @@ import com.autowashpro.backend.model.entity.Promotion;
 import com.autowashpro.backend.model.entity.Service;
 import com.autowashpro.backend.model.entity.Voucher;
 import com.autowashpro.backend.model.entity.WashSession;
+import com.autowashpro.backend.model.enums.BookingStatus;
+import com.autowashpro.backend.model.enums.DepositStatus;
 import com.autowashpro.backend.model.enums.PaymentMethod;
 import com.autowashpro.backend.model.enums.PaymentStatus;
 import com.autowashpro.backend.model.enums.RewardType;
@@ -47,6 +49,8 @@ import com.autowashpro.backend.repository.VoucherRepository;
 @org.springframework.stereotype.Service
 @Slf4j
 public class BillingService {
+
+    private static final BigDecimal DEPOSIT_PERCENTAGE = new BigDecimal(30L);
 
     private final WashSessionRepository washSessionRepository;
     private final BillingRepository billingRepository;
@@ -76,7 +80,7 @@ public class BillingService {
 
     @Transactional
     public Billing createPendingBilling(Long bookingId) {
-        log.info("BillingService - start creating new pendingBilling");
+        log.info("createPendingBilling() - start creating new pendingBilling");
         Booking booking = bookingRepository.findByIdWithDetails(bookingId)
                 .orElseThrow(() -> new BookingNotFoundException(
                         "Không tìm thấy lịch hẹn với id: " + bookingId));
@@ -96,6 +100,8 @@ public class BillingService {
         PaymentMethod paymentMethod = PaymentMethod.CASH;
         PaymentStatus paymentStatus = PaymentStatus.PENDING;
         LocalDateTime paidAt = null;
+        BigDecimal depositAmount = finalAmount.multiply(DEPOSIT_PERCENTAGE).divide(new BigDecimal(100L));
+        finalAmount = finalAmount.subtract(depositAmount);
         Billing newBilling = Billing
                 .builder()
                 .booking(booking)
@@ -106,6 +112,8 @@ public class BillingService {
                 .paymentMethod(paymentMethod)
                 .paymentStatus(paymentStatus)
                 .paidAt(paidAt)
+                .depositAmount(depositAmount)
+                .depositStatus(DepositStatus.PENDING)
                 .build();
         Billing savedBilling = billingRepository.saveAndFlush(newBilling);
         return savedBilling;
@@ -216,12 +224,22 @@ public class BillingService {
         return voucherMapper.toVoucherResponse(savedVoucher);
     }
 
+    @Transactional
     public BillingResponse completeBankingPayment(Map<String, String> params) {
         Long billingId = Long.valueOf(params.get("vnp_TxnRef").split("_")[0]);
         Billing billing = billingRepository.findById(billingId)
                 .orElseThrow(() -> new BillingNotFoundException(
                         "Hóa đơn " + billingId + " không tồn tại"));
+        if (billing.getDepositStatus().equals(DepositStatus.PENDING)) {
+            billing.setDepositStatus(DepositStatus.PAID);
+            Billing savedBilling = billingRepository.save(billing);
 
+            Booking booking = billing.getBooking();
+            booking.setStatus(BookingStatus.CONFIRMED);
+            Booking savedBooking = bookingRepository.save(booking);
+            savedBooking.setStatus(BookingStatus.CONFIRMED);
+            return billingMapper.toBillingResponse(savedBilling);
+        }
         billing.setPaymentStatus(PaymentStatus.PAID);
         billing.setPaymentMethod(PaymentMethod.BANK_TRANSFER);
         billing.setPaidAt(LocalDateTime.now());

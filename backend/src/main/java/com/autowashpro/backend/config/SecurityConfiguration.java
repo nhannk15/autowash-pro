@@ -59,7 +59,7 @@ public class SecurityConfiguration {
                                 "/api/services", "/api/payment/vnpay/**")
                         .permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/staff/**").hasRole("STAFF")
+                        .requestMatchers("/api/staff/**").hasAnyRole("STAFF", "ADMIN")
                         .anyRequest()
                         .authenticated());
         security.csrf((csrf) -> csrf.disable());

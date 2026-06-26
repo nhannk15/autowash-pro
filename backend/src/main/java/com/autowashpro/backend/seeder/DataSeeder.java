@@ -48,4 +48,5 @@ public class DataSeeder implements CommandLineRunner {
  * 13. TimeSlotSeeder.
  * 14. AvailableSlotSeeder.
  * 15. BookingSeeder.
+ * 16. PointTransactionSeeder.
  */

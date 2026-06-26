@@ -3,6 +3,7 @@ package com.autowashpro.backend.repository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -26,6 +27,33 @@ public interface BillingRepository extends JpaRepository<Billing, Long> {
             AND billing.paidAt < :nextDay
             """)
     BigDecimal sumRevenueByPaidDateRange(@Param("startOfDay") LocalDateTime startOfDay,
-                                         @Param("nextDay") LocalDateTime nextDay);
+            @Param("nextDay") LocalDateTime nextDay);
+
+    @Query("""
+            SELECT SUM(billing.finalAmount) FROM Billing billing
+            WHERE billing.paymentStatus = com.autowashpro.backend.model.enums.PaymentStatus.PAID
+            """)
+    BigDecimal sumRevenue();
+
+    @Query("""
+            SELECT billing FROM Billing billing
+            WHERE billing.paymentStatus = com.autowashpro.backend.model.enums.PaymentStatus.PAID
+            ORDER BY billing.paidAt
+            """)
+    List<Billing> getRecentTransactions();
+
+    @Query("""
+            SELECT billing FROM Billing billing
+            WHERE billing.paymentStatus = com.autowashpro.backend.model.enums.PaymentStatus.PAID 
+            AND billing.paidAt >= :startTime AND billing.paidAt <= :endTime
+            """)
+    List<Billing> findBillingsByStartDateAndEndDate(@Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime);
+
+    @Query("""
+            SELECT billing FROM Billing billing
+            WHERE billing.paymentStatus = com.autowashpro.backend.model.enums.PaymentStatus.PAID 
+            """)
+    List<Billing> findAllPaidBillings();
 
 }

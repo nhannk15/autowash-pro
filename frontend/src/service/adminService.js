@@ -2,6 +2,61 @@ import axios from "axios";
 
 const API = import.meta.env.VITE_BACKEND_ABSOLUTE_PATH;
 
+export async function getDashboardSummary({ startDate, endDate, month, year }) {
+    const response = await axios.post(`${API}/api/admin/dashboard/summary`, {
+        startDate,
+        endDate,
+        month,
+        year
+    }, {
+        withCredentials: true,
+    });
+    return response.data;
+}
+
+export async function getServiceDistribution({ startDate, endDate, month, year }) {
+    const response = await axios.post(`${API}/api/admin/dashboard/service-distribution`, {
+        startDate,
+        endDate,
+        month,
+        year
+    }, {
+        withCredentials: true,
+    });
+    return response.data;
+}
+
+export async function getRevenueChart({ startDate, endDate, month, year }) {
+    const response = await axios.post(`${API}/api/admin/dashboard/revenue-chart`, {
+        startDate,
+        endDate,
+        month,
+        year
+    }, {
+        withCredentials: true,
+    });
+    return response.data;
+}
+
+export async function getPeakHours({ startDate, endDate, month, year }) {
+    const response = await axios.post(`${API}/api/admin/dashboard/peak-hours`, {
+        startDate,
+        endDate,
+        month,
+        year
+    }, {
+        withCredentials: true,
+    });
+    return response.data;
+}
+
+export async function getRecentTransactions() {
+    const response = await axios.get(`${API}/api/admin/dashboard/recent-transactions`, {
+        withCredentials: true,
+    });
+    return response.data;
+}
+
 // Lấy danh sách tất cả khách hàng
 export async function getCustomers(params) {
     const response = await axios.get(`${API}/api/admin/customers`, {

@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -79,8 +80,8 @@ class DashboardServiceTest {
         when(washSessionRepository.countByStatusAndDate(WashSessionStatus.PAID, yesterday)).thenReturn(15L);
         when(customerRepository.countByCreatedAtDate(today)).thenReturn(5L);
         when(customerRepository.countByCreatedAtDate(yesterday)).thenReturn(10L);
-        when(pointTransactionRepository.sumPointsIssuedByDate(today)).thenReturn(1200L);
-        when(pointTransactionRepository.sumPointsIssuedByDate(yesterday)).thenReturn(800L);
+        when(pointTransactionRepository.sumPointsIssuedByDate(LocalDateTime.now())).thenReturn(1200L);
+        when(pointTransactionRepository.sumPointsIssuedByDate(LocalDateTime.now().minusDays(1L))).thenReturn(800L);
 
         DashboardMetricsResponse response = dashboardService.getDailyMetrics();
 

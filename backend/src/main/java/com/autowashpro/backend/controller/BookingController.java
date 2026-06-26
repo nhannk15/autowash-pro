@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.autowashpro.backend.model.dto.BookingResponse;
+import com.autowashpro.backend.model.dto.CancelBookingRequest;
 import com.autowashpro.backend.model.dto.CreateBookingRequest;
 import com.autowashpro.backend.model.dto.CreateBookingResponse;
 import com.autowashpro.backend.model.dto.SlotAvailabilityByDateResponse;
@@ -71,6 +72,17 @@ public class BookingController {
     @GetMapping("/api/customer/all-bookings")
     public ResponseEntity<List<BookingResponse>> getCustomerAllBookings(@AuthenticationPrincipal String email) {
         return ResponseEntity.status(HttpStatus.OK).body(bookingService.getCustomerAllBookings(email));
+    }
+
+    @PostMapping("/api/staff/cancel-booking")
+    public ResponseEntity<Void> cancleBooking(@RequestBody CancelBookingRequest request) {
+        bookingService.cancelCustomerBooking(request);
+        return ResponseEntity.status(HttpStatus.OK).body(null);
+    }
+
+    @GetMapping("/api/bookings/pending-deposit")
+    public ResponseEntity<Void> getAllDepositPendingBookings() {
+        return null;
     }
 
 }

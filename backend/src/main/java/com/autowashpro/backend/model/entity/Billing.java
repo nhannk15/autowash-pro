@@ -3,6 +3,7 @@ package com.autowashpro.backend.model.entity;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.autowashpro.backend.model.enums.DepositStatus;
 import com.autowashpro.backend.model.enums.PaymentMethod;
 import com.autowashpro.backend.model.enums.PaymentStatus;
 
@@ -83,9 +84,20 @@ public class Billing {
     @OneToOne(mappedBy = "billing")
     private PointTransaction pointTransaction;
 
+    @Column(name = "deposit_amount", nullable = true)
+    private BigDecimal depositAmount;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "deposit_status", nullable = true)
+    private DepositStatus depositStatus;
+
+    @Column(name = "deposit_expiry", nullable = true)
+    private LocalDateTime depositExpiry;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        depositExpiry = createdAt.plusMinutes(10L);
     }
     /**
      * How to calculate discount_amount

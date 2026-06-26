@@ -4,16 +4,56 @@ on:
   push:
     branches: [develop]
 
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Deploy via SSH
-        id: deploy
-        continue-on-error: false
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: maven
+
+      - name: Build backend with Maven
+        run: |
+          chmod +x backend/mvnw
+          cd backend && ./mvnw compile -q
+
+      - name: Notify build failure
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: 587
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "❌ BUILD FAILED — autowash-pro (${{ github.ref_name }})"
+          to: ${{ secrets.NOTIFICATION_EMAIL }}
+          from: GitHub Actions
+          body: |
+            ❌ Build thất bại — Dừng pipeline, không deploy.
+
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+            Commit message: ${{ github.event.head_commit.message }}
+            Author: ${{ github.event.head_commit.author.name }}
+            Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+  deploy-db:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy MySQL via SSH
+        id: deploy_db
         uses: appleboy/ssh-action@v1
         with:
           host: 3.36.70.151
@@ -24,22 +64,21 @@ jobs:
             git switch develop
             git fetch
             git pull origin develop
-            docker compose down --remove-orphans || true
-            docker compose up -d --build
+            docker compose up -d --build mysql
 
-      - name: Notify deploy failure via email
-        if: steps.deploy.outcome == 'failure'
+      - name: Notify DB deploy failure
+        if: steps.deploy_db.outcome == 'failure'
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.SMTP_SERVER }}
           server_port: 587
           username: ${{ secrets.SMTP_USERNAME }}
           password: ${{ secrets.SMTP_PASSWORD }}
-          subject: "🚨 Deploy FAILED — autowash-pro (${{ github.ref_name }})"
+          subject: "🚨 Deploy DB FAILED — autowash-pro (${{ github.ref_name }})"
           to: ${{ secrets.NOTIFICATION_EMAIL }}
           from: GitHub Actions
           body: |
-            ❌ Deploy thất bại!
+            ❌ Deploy MySQL thất bại — Backend & Frontend không được deploy.
 
             Repository: ${{ github.repository }}
             Branch: ${{ github.ref_name }}
@@ -48,4 +87,81 @@ jobs:
             Author: ${{ github.event.head_commit.author.name }}
             Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
-            Check GitHub Actions to see detailed logs.
+            Kiểm tra logs và fix lỗi, sau đó rerun job "deploy-db" để tiếp tục.
+
+  deploy-backend:
+    needs: deploy-db
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy Backend via SSH
+        id: deploy_backend
+        uses: appleboy/ssh-action@v1
+        with:
+          host: 3.36.70.151
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/autowash-pro
+            docker compose up -d --build backend
+
+      - name: Notify Backend deploy failure
+        if: steps.deploy_backend.outcome == 'failure'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: 587
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "🚨 Deploy Backend FAILED — autowash-pro (${{ github.ref_name }})"
+          to: ${{ secrets.NOTIFICATION_EMAIL }}
+          from: GitHub Actions
+          body: |
+            ❌ Deploy Backend thất bại — Frontend không được deploy.
+
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+            Commit message: ${{ github.event.head_commit.message }}
+            Author: ${{ github.event.head_commit.author.name }}
+            Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            Kiểm tra logs backend, fix lỗi, sau đó rerun job "deploy-backend" để tiếp tục.
+
+  deploy-frontend:
+    needs: deploy-backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy Frontend via SSH
+        id: deploy_frontend
+        uses: appleboy/ssh-action@v1
+        with:
+          host: 3.36.70.151
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/autowash-pro
+            docker compose up -d --build frontend
+
+      - name: Notify Frontend deploy failure
+        if: steps.deploy_frontend.outcome == 'failure'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: 587
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "🚨 Deploy Frontend FAILED — autowash-pro (${{ github.ref_name }})"
+          to: ${{ secrets.NOTIFICATION_EMAIL }}
+          from: GitHub Actions
+          body: |
+            ❌ Deploy Frontend thất bại.
+
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+            Commit message: ${{ github.event.head_commit.message }}
+            Author: ${{ github.event.head_commit.author.name }}
+            Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            Kiểm tra logs frontend, fix lỗi, sau đó rerun job "deploy-frontend".
+

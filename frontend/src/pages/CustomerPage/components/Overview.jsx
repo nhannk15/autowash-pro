@@ -3,7 +3,7 @@ import { Row, Col, Card, Table, Tag, Progress, Button, Empty, Space, Typography,
 import { CalendarOutlined, TrophyOutlined, CrownOutlined, ArrowRightOutlined, GiftOutlined, StarOutlined, WalletOutlined, RiseOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import { getMembershipTier, getUpcomingBooking, getReward, exchangeVoucher } from '../../../service/customerService';
+import { getMembershipTier, getUpcomingBooking, getReward, exchangeVoucher, getVoucher, getRecentActivities } from '../../../service/customerService';
 
 import './Overview.css';
 
@@ -23,6 +23,13 @@ export default function Overview() {
     const [rewards, setRewards] = useState([])
     const [isRewardModalOpen, setIsRewardModalOpen] = useState(false)
     const [exchanging, setExchanging] = useState(false)
+
+    // State cho voucher
+    const [myVouchers, setMyVouchers] = useState([])
+    const [isMyVoucherModalOpen, setIsMyVoucherModalOpen] = useState(false)
+
+    // State cho lịch sử điểm
+    const [recentActivities, setRecentActivities] = useState([])
 
     // hàm xử lí đổi điểm
     // THÊM HÀM NÀY ĐỂ XỬ LÝ ĐỔI ĐIỂM:
@@ -65,13 +72,15 @@ export default function Overview() {
                 // Chỉ hiện loading spinner lần đầu, tránh flicker khi poll
                 if (isFirstLoad) setLoading(true);
 
-                const [bookings, tier] = await Promise.all([
+                const [bookings, tier, activities] = await Promise.all([
                     getUpcomingBooking(),
-                    getMembershipTier()
+                    getMembershipTier(),
+                    getRecentActivities()
                 ]);
                 if (isMounted) {
                     setUpcomingBookings(bookings || []);
                     setTierData(tier);
+                    setRecentActivities(activities || []);
                 }
             } catch (err) {
                 console.error("Lỗi khi tải thông tin dashboard:", err);
@@ -84,8 +93,8 @@ export default function Overview() {
         }
 
         fetchDashboardData();
-        // Tự động cập nhật mỗi 30 giây
-        const intervalId = setInterval(fetchDashboardData, 30000);
+        // Tự động cập nhật mỗi 5 giây
+        const intervalId = setInterval(fetchDashboardData, 5000);
 
         return () => {
             isMounted = false;
@@ -235,84 +244,66 @@ export default function Overview() {
         },
     ];
 
-    // 3. Mockup Bảng hoạt động gần đây
-    const mockActivities = [
-        {
-            key: '1',
-            serviceName: 'Rửa xe ngoại thất cao cấp',
-            date: '15/06/2026 14:30',
-            points: 50,
-            status: 'COMPLETED' // COMPLETED, CANCELLED, PROCESSING
-        },
-        {
-            key: '2',
-            serviceName: 'Vệ sinh nội thất chuyên sâu',
-            date: '10/06/2026 09:00',
-            points: 120,
-            status: 'COMPLETED'
-        },
-        {
-            key: '3',
-            serviceName: 'Khử mùi và diệt khuẩn cabin',
-            date: '01/06/2026 16:15',
-            points: 30,
-            status: 'COMPLETED'
-        },
-        {
-            key: '4',
-            serviceName: 'Phủ Ceramic bảo vệ sơn',
-            date: '25/05/2026 10:30',
-            points: 0,
-            status: 'CANCELLED'
-        }
-    ];
-
-    // Định nghĩa các cột cho Bảng hoạt động gần đây
+    // Định nghĩa các cột cho Bảng lịch sử điểm
     const columns = [
         {
-            title: 'DỊCH VỤ',
-            dataIndex: 'serviceName',
-            key: 'serviceName',
-            render: (text) => <Text strong style={{ color: '#2d3748' }}>{text}</Text>,
-        },
-        {
-            title: 'NGÀY',
-            dataIndex: 'date',
-            key: 'date',
-            render: (text) => <Text type="secondary">{text}</Text>,
-        },
-        {
-            title: 'ĐIỂM CỘNG',
-            dataIndex: 'points',
-            key: 'points',
-            render: (pts) => (
-                <Text strong style={{ color: pts > 0 ? '#52c41a' : '#8c8c8c' }}>
-                    {pts > 0 ? `+${pts}` : '0'}
-                </Text>
-            ),
-        },
-        {
-            title: 'TRẠNG THÁI',
-            dataIndex: 'status',
-            key: 'status',
-            render: (status) => {
+            title: 'HOẠT ĐỘNG',
+            dataIndex: 'transactionType',
+            key: 'transactionType',
+            render: (type) => {
                 let color = 'default';
-                let text = 'Chờ xử lý';
-
-                if (status === 'COMPLETED') {
+                let text = type;
+                if (type === 'EARN') {
                     color = 'success';
-                    text = 'Hoàn thành';
-                } else if (status === 'CANCELLED') {
+                    text = 'Tích điểm';
+                } else if (type === 'REDEEM') {
+                    color = 'warning';
+                    text = 'Đổi voucher';
+                } else if (type === 'EXPIRE') {
                     color = 'error';
-                    text = 'Đã hủy';
-                } else if (status === 'PROCESSING') {
-                    color = 'processing';
-                    text = 'Đang xử lý';
+                    text = 'Điểm hết hạn';
+                } else if (type === 'ADJUST') {
+                    color = 'blue';
+                    text = 'Điều chỉnh';
+                } else if (type === 'BONUS') {
+                    color = 'purple';
+                    text = 'Thưởng';
                 }
-
                 return <Tag color={color} className="status-tag">{text}</Tag>;
-            },
+            }
         },
+        {
+            title: 'CHI TIẾT / MÔ TẢ',
+            key: 'description',
+            render: (_, record) => {
+                if (record.transactionType === 'EARN' && record.services && record.services.length > 0) {
+                    return `Tích điểm dịch vụ: ${record.services.join(', ')}`;
+                } else if (record.transactionType === 'REDEEM' && record.voucherName) {
+                    return `Đổi voucher: ${record.voucherName}`;
+                }
+                return record.description || 'N/A';
+            }
+        },
+        {
+            title: 'THỜI GIAN',
+            dataIndex: 'createdAt',
+            key: 'createdAt',
+            render: (date) => date ? new Date(date).toLocaleString('vi-VN') : '',
+        },
+        {
+            title: 'ĐIỂM GIAO DỊCH',
+            key: 'pointsChange',
+            render: (_, record) => {
+                const isNegative = record.transactionType === 'REDEEM' || record.transactionType === 'EXPIRE';
+                const sign = isNegative ? '-' : '+';
+                const color = isNegative ? '#ef4444' : '#10b981';
+                return (
+                    <Text strong style={{ color }}>
+                        {sign}{record.pointsChange?.toLocaleString()}
+                    </Text>
+                );
+            }
+        }
     ];
 
     return (
@@ -421,22 +412,40 @@ export default function Overview() {
                                         </div>
                                     </div>
 
-                                    <Button
-                                        type="primary"
-                                        icon={<GiftOutlined />}
-                                        onClick={async () => {
-                                            try {
-                                                const data = await getReward();
-                                                setRewards(data.data || []);
-                                                setIsRewardModalOpen(true);
-                                            } catch (error) {
-                                                message.error("Không thể tải danh sách phần thưởng!");
-                                            }
-                                        }}
-                                        className="voucher-btn"
-                                    >
-                                        Đổi voucher
-                                    </Button>
+                                    <div className="points-actions">
+                                        <Button
+                                            type="primary"
+                                            icon={<GiftOutlined />}
+                                            onClick={async () => {
+                                                try {
+                                                    const data = await getReward();
+                                                    setRewards(data.data || []);
+                                                    setIsRewardModalOpen(true);
+                                                } catch (error) {
+                                                    message.error("Không thể tải danh sách phần thưởng!");
+                                                }
+                                            }}
+                                            className="exchange-voucher-btn-custom"
+                                        >
+                                            Đổi voucher
+                                        </Button>
+                                        <Button
+                                            type="default"
+                                            icon={<GiftOutlined />}
+                                            onClick={async () => {
+                                                try {
+                                                    const data = await getVoucher();
+                                                    setMyVouchers(data || []);
+                                                    setIsMyVoucherModalOpen(true);
+                                                } catch (error) {
+                                                    message.error("Không thể tải danh sách voucher!");
+                                                }
+                                            }}
+                                            className="my-voucher-btn-custom"
+                                        >
+                                            Voucher của tôi
+                                        </Button>
+                                    </div>
                                 </>
                             )}
                         </div>
@@ -529,17 +538,18 @@ export default function Overview() {
                 </Col>
             </Row>
 
-            {/* Hàng 2: Bảng hoạt động gần đây */}
+            {/* Hàng 2: Bảng LỊCH SỬ GIAO DỊCH ĐIỂM */}
             <div className="activity-section">
                 <div className="activity-header">
                     <Title level={4} className="activity-title">
-                        <GiftOutlined style={{ marginRight: '8px', color: '#002b7f' }} /> Hoạt động gần đây
+                        <GiftOutlined style={{ marginRight: '8px', color: '#002b7f' }} /> LỊCH SỬ GIAO DỊCH ĐIỂM
                     </Title>
                 </div>
                 <Card className="table-card">
                     <Table
                         columns={columns}
-                        dataSource={mockActivities}
+                        dataSource={recentActivities}
+                        rowKey={(record, index) => record.createdAt + index}
                         pagination={{ pageSize: 5 }}
                         className="custom-table"
                     />
@@ -608,6 +618,76 @@ export default function Overview() {
                                     Đổi điểm
                                 </Button>
                             )
+                        }
+                    ]}
+                />
+            </Modal>
+            <Modal
+                title={<span style={{ color: '#002b7f', fontWeight: 700, fontSize: '18px' }}>DANH SÁCH VOUCHER CỦA BẠN</span>}
+                open={isMyVoucherModalOpen}
+                onCancel={() => setIsMyVoucherModalOpen(false)}
+                footer={null}
+                width={800}
+            >
+                <Table
+                    dataSource={myVouchers}
+                    rowKey="voucherCode"
+                    pagination={{ pageSize: 5 }}
+                    style={{ marginTop: '16px' }}
+                    className="custom-table"
+                    columns={[
+                        {
+                            title: 'MÃ VOUCHER',
+                            dataIndex: 'voucherCode',
+                            key: 'voucherCode',
+                            render: (text) => <Text copyable strong style={{ color: '#002b7f' }}>{text}</Text>
+                        },
+                        {
+                            title: 'TÊN PHẦN THƯỞNG',
+                            dataIndex: ['reward', 'rewardName'],
+                            key: 'rewardName',
+                            render: (text) => <Text strong>{text}</Text>
+                        },
+                        {
+                            title: 'MÔ TẢ',
+                            dataIndex: ['reward', 'description'],
+                            key: 'description',
+                        },
+                        {
+                            title: 'HẠN SỬ DỤNG',
+                            dataIndex: 'expiresAt',
+                            key: 'expiresAt',
+                            render: (date) => {
+                                if (!date) return 'N/A';
+                                const expDate = new Date(date);
+                                const now = new Date();
+                                const diffTime = expDate - now;
+                                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                if (diffDays < 0) {
+                                    return <Tag color="error">Đã hết hạn</Tag>;
+                                }
+                                return <span style={{ fontWeight: '500' }}>{expDate.toLocaleDateString('vi-VN')} ({diffDays} ngày còn lại)</span>;
+                            }
+                        },
+                        {
+                            title: 'TRẠNG THÁI',
+                            dataIndex: 'status',
+                            key: 'status',
+                            render: (status) => {
+                                let color = 'default';
+                                let text = status;
+                                if (status === 'ACTIVE') {
+                                    color = 'success';
+                                    text = 'Chưa sử dụng';
+                                } else if (status === 'USED') {
+                                    color = 'default';
+                                    text = 'Đã sử dụng';
+                                } else if (status === 'EXPIRED') {
+                                    color = 'error';
+                                    text = 'Đã hết hạn';
+                                }
+                                return <Tag color={color}>{text}</Tag>;
+                            }
                         }
                     ]}
                 />

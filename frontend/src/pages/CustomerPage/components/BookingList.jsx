@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { CarOutlined } from '@ant-design/icons';
 import './Booking.css';
-import { message } from 'antd';
-import { getAvailableSlot, getPromotion, getService, getVehicleByCustomer, createBooking, getMembershipTier } from '../../../service/customerService';
+import { message, Select } from 'antd';
+import { getAvailableSlot, getApplicablePromotion as getApplicablePromotionAPI, getService, getVehicleByCustomer, createBooking, getMembershipTier, getVoucher } from '../../../service/customerService';
 function VehicleImage({ src, alt, fallbackIcon }) {
     const [hasError, setHasError] = useState(false);
 
@@ -46,10 +46,12 @@ export default function BookingList() {
 
     // Thông tin khách hàng & khuyến mãi phục vụ tính tiền ở Frontend
     const [customer, setCustomer] = useState(null);
-    const [promotions, setPromotions] = useState([]);
+    const [applicablePromotion, setApplicablePromotion] = useState(null);
+    const [vouchers, setVouchers] = useState([]);
     const [membershipTier, setMembershipTier] = useState();
     const [submitting, setSubmitting] = useState(false);
     const [bookingError, setBookingError] = useState(null);
+    const [selectedVoucher, setSelectedVoucher] = useState(null);
 
     // Danh sách xe của khách hàng từ API thực tế
     const [userVehicles, setUserVehicles] = useState([]);
@@ -75,7 +77,7 @@ export default function BookingList() {
                 if (activeVehicles.length > 0) {
                     setSelectedVehicle(activeVehicles[0]);
                     setSelectedVehicleType(activeVehicles[0].typeName);
-                    setMaxUnlockedStep(prev => Math.max(prev, 2));
+                    setMaxUnlockedStep(2);
                 }
             } catch (err) {
                 setErrorVehicles(err.response?.data.message || err.message || 'không thể tải danh sách xe của bạn');
@@ -124,53 +126,42 @@ export default function BookingList() {
         fetchMembershipTier()
     }, [])
 
-    // Lấy danh sách chương trình khuyến mãi
+    // Lấy chương trình khuyến mãi tự động áp dụng dựa trên thời gian hẹn
     useEffect(() => {
-        const fetchPromotions = async () => {
+        const fetchApplicablePromotion = async () => {
+            if (!selectedDate || !selectedTime) {
+                setApplicablePromotion(null);
+                return;
+            }
             try {
-                const result = await getPromotion()
-                setPromotions(result || []);
+                const dateTimeStr = `${selectedDate}T${selectedTime}:00`;
+                const result = await getApplicablePromotionAPI(dateTimeStr);
+                setApplicablePromotion(result || null);
             } catch (err) {
-                console.error("Failed to fetch promotions:", err);
-                message.warning(err.response?.data.message || err.message || "không thể tải danh sách chương trình khuyến mãi")
+                console.error("Failed to fetch applicable promotion:", err);
+                setApplicablePromotion(null);
             }
         };
-        fetchPromotions();
+        fetchApplicablePromotion();
+    }, [selectedDate, selectedTime]);
+
+    // Lấy danh sách voucher của người dùng
+    useEffect(() => {
+        const fetchVoucher = async () => {
+            try {
+                const result = await getVoucher()
+                setVouchers(result || []);
+            } catch (err) {
+                console.error("Failed to fetch vouchers:", err);
+                message.warning(err.response?.data.message || err.message || "không thể tải danh sách voucher")
+            }
+        };
+        fetchVoucher();
     }, []);
 
     // Tìm chương trình khuyến mãi phù hợp dựa trên ngày đặt lịch và hạng thành viên
     const getApplicablePromotion = () => {
-        if (!selectedDate || !membershipTier || !membershipTier.membershipTierSummaryResponse) return null;
-
-        const tierId = membershipTier.membershipTierSummaryResponse.membershipTierId;
-        const bookingDateTime = new Date(selectedDate + "T00:00:00");
-
-        const applicable = promotions.filter(p => {
-            if (!p.active) return false;
-            if (p.usageCount >= p.maxUsesTotal) return false;
-
-            const startDate = new Date(p.startDate);
-            const endDate = new Date(p.endDate);
-            if (bookingDateTime < startDate || bookingDateTime > endDate) return false;
-
-            const TIER_LEVELS = {
-                'Bronze': 1,
-                'Silver': 2,
-                'Gold': 3,
-                'Platinum': 4
-            };
-            if (p.minTierName) {
-                const requiredLevel = TIER_LEVELS[p.minTierName] || 0;
-                const currentLevel = membershipTier.membershipTierSummaryResponse.tierLevel || 0;
-                if (currentLevel < requiredLevel) return false;
-            }
-            return true;
-        });
-
-        if (applicable.length === 0) return null;
-
-        applicable.sort((a, b) => b.discountValue - a.discountValue);
-        return applicable[0];
+        return applicablePromotion;
     };
 
     // Trạng thái tải API dịch vụ
@@ -362,13 +353,16 @@ export default function BookingList() {
                 selectedVehicleType === 'SEDAN' ? service.priceSedanId : service.priceSuvId
             );
 
+            const appPromo = getApplicablePromotion();
             const payload = {
                 customerId: user ? user.id : 3, // Sử dụng ID của tài khoản đang đăng nhập
                 vehicleId: selectedVehicle ? selectedVehicle.vehicleId : null,
                 timeSlotId: selectedTimeSlotId,
                 bookingDate: selectedDate,
                 servicePriceIds: servicePriceIds,
-                notes: contactInfo.notes
+                notes: contactInfo.notes,
+                promotionId: appPromo ? appPromo.id : null,
+                voucherCode: selectedVoucher ? selectedVoucher.voucherCode : null
             };
 
             await createBooking(payload)
@@ -392,6 +386,7 @@ export default function BookingList() {
         setCurrentStep(1);
         setMaxUnlockedStep(1);
         setIsSuccess(false);
+        setSelectedVoucher(null);
     };
 
     const steps = [
@@ -858,6 +853,49 @@ export default function BookingList() {
                                 </div>
                             </div>
 
+                            {/* ÁP DỤNG VOUCHER */}
+                            <div style={{ backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', paddingTop: '20px', marginBottom: '20px' }}>
+                                <h4 style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0', fontWeight: 'bold' }}>🎟 Áp dụng Voucher</h4>
+                                <Select
+                                    placeholder="Chọn voucher để nhận ưu đãi"
+                                    style={{ width: '100%', marginTop: '8px' }}
+                                    allowClear
+                                    value={selectedVoucher ? selectedVoucher.voucherCode : undefined}
+                                    onChange={(value) => {
+                                        if (!value) {
+                                            setSelectedVoucher(null);
+                                        } else {
+                                            const activeVouchers = vouchers.filter(v => {
+                                                if (v.status !== 'ACTIVE') return false;
+                                                if (!v.expiresAt) return false;
+                                                const expDate = new Date(v.expiresAt);
+                                                const now = new Date();
+                                                return expDate > now;
+                                            });
+                                            const chosen = activeVouchers.find(v => v.voucherCode === value);
+                                            setSelectedVoucher(chosen);
+                                        }
+                                    }}
+                                >
+                                    {vouchers.filter(v => {
+                                        if (v.status !== 'ACTIVE') return false;
+                                        if (!v.expiresAt) return false;
+                                        const expDate = new Date(v.expiresAt);
+                                        const now = new Date();
+                                        return expDate > now;
+                                    }).map(v => {
+                                        const expDate = new Date(v.expiresAt);
+                                        const now = new Date();
+                                        const diffDays = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
+                                        return (
+                                            <Select.Option key={v.voucherCode} value={v.voucherCode}>
+                                                [{v.voucherCode}] {v.reward?.rewardName || 'Voucher'} (Hạn còn {diffDays} ngày)
+                                            </Select.Option>
+                                        );
+                                    })}
+                                </Select>
+                            </div>
+
                             {/* GHI CHÚ / YÊU CẦU THÊM DỜI SANG CỘT TRÁI ĐỂ CỘT PHẢI CỰC KỲ GỌN GÀNG */}
                             <div style={{ backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
                                 <h4 style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0', fontWeight: 'bold' }}>📝 Ghi chú / Yêu cầu thêm</h4>
@@ -891,45 +929,66 @@ export default function BookingList() {
                             {(() => {
                                 const appPromo = getApplicablePromotion();
                                 const originalTotal = calculateTotal();
-                                let discountAmount = 0;
+                                
+                                let promoDiscount = 0;
                                 if (appPromo) {
                                     if (appPromo.discountType === 'PERCENTAGE') {
-                                        discountAmount = originalTotal * (appPromo.discountValue / 100);
+                                        promoDiscount = originalTotal * (appPromo.discountValue / 100);
                                     } else if (appPromo.discountType === 'FIXED_AMOUNT') {
-                                        discountAmount = appPromo.discountValue;
+                                        promoDiscount = appPromo.discountValue;
                                     }
-                                    discountAmount = Math.min(discountAmount, originalTotal);
+                                    promoDiscount = Math.min(promoDiscount, originalTotal);
                                 }
-                                const finalTotal = originalTotal - discountAmount;
+                                const totalAfterPromo = originalTotal - promoDiscount;
 
-                                if (discountAmount > 0) {
-                                    return (
-                                        <div className="sidebar-total-row" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', marginBottom: '16px' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-                                                <span className="sidebar-total-label" style={{ fontSize: '0.9rem' }}>Tổng chi phí gốc</span>
-                                                <span className="sidebar-total-value" style={{ textDecoration: 'line-through', color: '#64748b', fontSize: '1rem' }}>
-                                                    {formatCurrency(originalTotal)}
-                                                </span>
-                                            </div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', borderTop: '1px dashed #e2e8f0', paddingTop: '6px' }}>
-                                                <span className="sidebar-total-label" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.95rem' }}>Sau giảm giá</span>
-                                                <span className="sidebar-total-value" style={{ color: '#ef4444', fontSize: '1.3rem', fontWeight: 'bold' }}>
-                                                    {formatCurrency(finalTotal)}
-                                                </span>
-                                            </div>
-                                            <div style={{ fontSize: '0.8rem', color: '#10b981', fontWeight: '600', marginTop: '2px', backgroundColor: '#ecfdf5', padding: '4px 8px', borderRadius: '4px', width: '100%', textAlign: 'center' }}>
-                                                🎁 Áp dụng: {appPromo.promotionName} (-{formatCurrency(discountAmount)})
-                                            </div>
-                                        </div>
-                                    );
-                                } else {
-                                    return (
-                                        <div className="sidebar-total-row" style={{ marginBottom: '16px' }}>
-                                            <span className="sidebar-total-label">Tổng chi phí</span>
-                                            <span className="sidebar-total-value" style={{ fontSize: '1.25rem' }}>{formatCurrency(originalTotal)}</span>
-                                        </div>
-                                    );
+                                let voucherDiscount = 0;
+                                if (selectedVoucher) {
+                                    const rType = selectedVoucher.reward.rewardType;
+                                    const vVal = selectedVoucher.reward.discountValue;
+                                    if (rType === 'DISCOUNT_FLAT') {
+                                        voucherDiscount = vVal;
+                                    } else if (rType === 'DISCOUNT_PERCENTAGE') {
+                                        voucherDiscount = originalTotal * (vVal / 100);
+                                    } else if (rType === 'FREE_WASH') {
+                                        voucherDiscount = totalAfterPromo;
+                                    }
+                                    voucherDiscount = Math.min(voucherDiscount, totalAfterPromo);
                                 }
+
+                                const finalTotal = totalAfterPromo - voucherDiscount;
+
+                                return (
+                                    <div className="sidebar-total-row" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', marginBottom: '16px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+                                            <span className="sidebar-total-label" style={{ fontSize: '0.9rem' }}>Tổng chi phí gốc</span>
+                                            <span className="sidebar-total-value" style={{ color: '#64748b', fontSize: '1rem' }}>
+                                                {formatCurrency(originalTotal)}
+                                            </span>
+                                        </div>
+                                        {promoDiscount > 0 && (
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', borderTop: '1px dashed #e2e8f0', paddingTop: '6px' }}>
+                                                <span className="sidebar-total-label" style={{ color: '#10b981', fontSize: '0.9rem' }}>Khuyến mãi ({appPromo.promotionName})</span>
+                                                <span className="sidebar-total-value" style={{ color: '#10b981', fontSize: '1rem' }}>
+                                                    -{formatCurrency(promoDiscount)}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {voucherDiscount > 0 && (
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', borderTop: '1px dashed #e2e8f0', paddingTop: '6px' }}>
+                                                <span className="sidebar-total-label" style={{ color: '#faad14', fontSize: '0.9rem' }}>Voucher ({selectedVoucher.reward.rewardName})</span>
+                                                <span className="sidebar-total-value" style={{ color: '#faad14', fontSize: '1rem' }}>
+                                                    -{formatCurrency(voucherDiscount)}
+                                                </span>
+                                            </div>
+                                        )}
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', borderTop: '1px solid #e2e8f0', paddingTop: '6px' }}>
+                                            <span className="sidebar-total-label" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.95rem' }}>Tổng thanh toán</span>
+                                            <span className="sidebar-total-value" style={{ color: '#ef4444', fontSize: '1.3rem', fontWeight: 'bold' }}>
+                                                {formatCurrency(finalTotal)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                );
                             })()}
 
                             {bookingError && (
@@ -1011,42 +1070,58 @@ export default function BookingList() {
                             {(() => {
                                 const appPromo = getApplicablePromotion();
                                 const originalTotal = calculateTotal();
-                                let discountAmount = 0;
+                                
+                                let promoDiscount = 0;
                                 if (appPromo) {
                                     if (appPromo.discountType === 'PERCENTAGE') {
-                                        discountAmount = originalTotal * (appPromo.discountValue / 100);
+                                        promoDiscount = originalTotal * (appPromo.discountValue / 100);
                                     } else if (appPromo.discountType === 'FIXED_AMOUNT') {
-                                        discountAmount = appPromo.discountValue;
+                                        promoDiscount = appPromo.discountValue;
                                     }
-                                    discountAmount = Math.min(discountAmount, originalTotal);
+                                    promoDiscount = Math.min(promoDiscount, originalTotal);
                                 }
-                                const finalTotal = originalTotal - discountAmount;
+                                const totalAfterPromo = originalTotal - promoDiscount;
 
-                                if (discountAmount > 0) {
-                                    return (
-                                        <>
-                                            <div className="success-detail-item" style={{ borderTop: '1px solid #e2e8f0', paddingTop: '8px', marginTop: '4px' }}>
-                                                <span>Giá gốc:</span>
-                                                <span style={{ textDecoration: 'line-through', color: '#64748b' }}>{formatCurrency(originalTotal)}</span>
-                                            </div>
+                                let voucherDiscount = 0;
+                                if (selectedVoucher) {
+                                    const rType = selectedVoucher.reward.rewardType;
+                                    const vVal = selectedVoucher.reward.discountValue;
+                                    if (rType === 'DISCOUNT_FLAT') {
+                                        voucherDiscount = vVal;
+                                    } else if (rType === 'DISCOUNT_PERCENTAGE') {
+                                        voucherDiscount = originalTotal * (vVal / 100);
+                                    } else if (rType === 'FREE_WASH') {
+                                        voucherDiscount = totalAfterPromo;
+                                    }
+                                    voucherDiscount = Math.min(voucherDiscount, totalAfterPromo);
+                                }
+
+                                const finalTotal = totalAfterPromo - voucherDiscount;
+
+                                return (
+                                    <>
+                                        <div className="success-detail-item" style={{ borderTop: '1px solid #e2e8f0', paddingTop: '8px', marginTop: '4px' }}>
+                                            <span>Giá gốc:</span>
+                                            <span style={{ textDecoration: promoDiscount > 0 || voucherDiscount > 0 ? 'line-through' : 'none', color: '#64748b' }}>{formatCurrency(originalTotal)}</span>
+                                        </div>
+                                        {promoDiscount > 0 && (
                                             <div className="success-detail-item">
                                                 <span>Khuyến mãi:</span>
-                                                <span style={{ color: '#10b981' }}>{appPromo.promotionName} (-{formatCurrency(discountAmount)})</span>
+                                                <span style={{ color: '#10b981' }}>{appPromo.promotionName} (-{formatCurrency(promoDiscount)})</span>
                                             </div>
-                                            <div className="success-detail-item" style={{ fontWeight: 'bold', color: '#ef4444' }}>
-                                                <span>Tổng thanh toán:</span>
-                                                <strong>{formatCurrency(finalTotal)}</strong>
+                                        )}
+                                        {voucherDiscount > 0 && (
+                                            <div className="success-detail-item">
+                                                <span>Voucher:</span>
+                                                <span style={{ color: '#faad14' }}>{selectedVoucher.reward.rewardName} (-{formatCurrency(voucherDiscount)})</span>
                                             </div>
-                                        </>
-                                    );
-                                } else {
-                                    return (
-                                        <div className="success-detail-item" style={{ borderTop: '1px solid #e2e8f0', paddingTop: '8px', marginTop: '4px', fontWeight: 'bold' }}>
-                                            <span>Tổng chi phí:</span>
-                                            <strong>{formatCurrency(originalTotal)}</strong>
+                                        )}
+                                        <div className="success-detail-item" style={{ fontWeight: 'bold', color: '#ef4444' }}>
+                                            <span>Tổng thanh toán:</span>
+                                            <strong>{formatCurrency(finalTotal)}</strong>
                                         </div>
-                                    );
-                                }
+                                    </>
+                                );
                             })()}
                         </div>
 

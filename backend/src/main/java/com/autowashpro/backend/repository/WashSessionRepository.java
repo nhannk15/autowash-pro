@@ -8,11 +8,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.autowashpro.backend.model.dto.PeakHourStats;
 import com.autowashpro.backend.model.entity.WashSession;
 import com.autowashpro.backend.model.enums.WashSessionStatus;
 
 public interface WashSessionRepository extends JpaRepository<WashSession, Long> {
-    
+
     List<WashSession> findByBookingId(Long id);
 
     default Long countByStatusAndDate(WashSessionStatus status, LocalDate date) {
@@ -26,7 +27,40 @@ public interface WashSessionRepository extends JpaRepository<WashSession, Long> 
             AND washSession.createdAt < :nextDay
             """)
     Long countByStatusAndCreatedAtRange(@Param("status") WashSessionStatus status,
-                                        @Param("startOfDay") LocalDateTime startOfDay,
-                                        @Param("nextDay") LocalDateTime nextDay);
+            @Param("startOfDay") LocalDateTime startOfDay,
+            @Param("nextDay") LocalDateTime nextDay);
+
+    @Query("""
+            SELECT
+                HOUR(washSession.startTime) AS hourOfDay,
+                COUNT(washSession) AS count
+            FROM WashSession washSession
+            WHERE washSession.status IN (
+                com.autowashpro.backend.model.enums.WashSessionStatus.IN_PROGRESS,
+                com.autowashpro.backend.model.enums.WashSessionStatus.COMPLETED,
+                com.autowashpro.backend.model.enums.WashSessionStatus.PAID
+            )
+            AND washSession.startTime >= :startTime
+            AND washSession.startTime <= :endTime
+            GROUP BY hourOfDay
+            ORDER BY count DESC
+            """)
+    List<PeakHourStats> getPeakHourStats(@Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime enDateTime);
+
+    @Query("""
+            SELECT
+                HOUR(washSession.startTime) AS hourOfDay,
+                COUNT(washSession) AS count
+            FROM WashSession washSession
+            WHERE washSession.status IN (
+                com.autowashpro.backend.model.enums.WashSessionStatus.IN_PROGRESS,
+                com.autowashpro.backend.model.enums.WashSessionStatus.COMPLETED,
+                com.autowashpro.backend.model.enums.WashSessionStatus.PAID
+            )
+            GROUP BY hourOfDay
+            ORDER BY count DESC
+            """)
+    List<PeakHourStats> getAllPeakHourStats();
 
 }
