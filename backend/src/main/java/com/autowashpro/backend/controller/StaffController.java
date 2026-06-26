@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.autowashpro.backend.mapper.StaffMapper;
 import com.autowashpro.backend.model.dto.ApiResponse;
+import com.autowashpro.backend.model.dto.StaffInfoResponse;
 import com.autowashpro.backend.model.entity.Staff;
 import com.autowashpro.backend.service.StaffService;
 
@@ -57,5 +59,10 @@ public class StaffController {
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         service.delete(id);
         return ResponseEntity.ok(ApiResponse.noContent());
+    }
+
+    @GetMapping("/info")
+    public ResponseEntity<StaffInfoResponse> getStaffInfo(@AuthenticationPrincipal String email) {
+        return ResponseEntity.ok().body(service.getCurrentStaffInfo(email));
     }
 }
