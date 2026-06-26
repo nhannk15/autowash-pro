@@ -10,12 +10,12 @@ import org.springframework.stereotype.Component;
 public class DataSeeder implements CommandLineRunner {
 
     private final List<Seeder> seeders;
-    private final BookingSeeder bookingSeeder;
+    private final AvailableSlotSeeder availableSlotSeeder;
 
     @Autowired
-    public DataSeeder(List<Seeder> seeders, BookingSeeder bookingSeeder) {
+    public DataSeeder(List<Seeder> seeders, AvailableSlotSeeder availableSlotSeeder) {
         this.seeders = seeders;
-        this.bookingSeeder = bookingSeeder;
+        this.availableSlotSeeder = availableSlotSeeder;
     }
 
     @Override
@@ -24,7 +24,8 @@ public class DataSeeder implements CommandLineRunner {
         // for (Seeder seeder : seeders) {
         //     seeder.seed();
         // }
-
+        availableSlotSeeder.seedNewSlots();
+        availableSlotSeeder.deleteUnusedSlotsInThePast();
         // 2. Uncomment this for everyday's creating new bookings.
         // bookingSeeder.seed();
     }

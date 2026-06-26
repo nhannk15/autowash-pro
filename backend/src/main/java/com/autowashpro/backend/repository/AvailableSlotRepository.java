@@ -118,4 +118,11 @@ public interface AvailableSlotRepository extends JpaRepository<AvailableSlot, Lo
             @Param("slotsNeeded") int slotsNeeded,
             Pageable pageable);
 
+    @Query("""
+            SELECT availableSlot FROM AvailableSlot availableSlot
+            WHERE availableSlot.booking IS NULL
+            AND availableSlot.slotDate <= :date
+            """)
+    List<AvailableSlot> findSlotsInThePastAndBookingIdIsNull(@Param("date") LocalDate date);
+
 }

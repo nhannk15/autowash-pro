@@ -14,6 +14,7 @@ import com.autowashpro.backend.model.entity.WashBay;
 import com.autowashpro.backend.repository.AvailableSlotRepository;
 import com.autowashpro.backend.repository.TimeSlotRepository;
 import com.autowashpro.backend.repository.WashBayRepository;
+import com.autowashpro.backend.seeder.AvailableSlotSeeder;
 
 @Component
 public class AvailableSlotScheduler {
@@ -21,20 +22,21 @@ public class AvailableSlotScheduler {
     private final AvailableSlotRepository availableSlotRepository;
     private final WashBayRepository washBayRepository;
     private final TimeSlotRepository timeSlotRepository;
+    private final AvailableSlotSeeder availableSlotSeeder;
 
     @Autowired
     public AvailableSlotScheduler(AvailableSlotRepository availableSlotRepository, WashBayRepository washBayRepository,
-            TimeSlotRepository timeSlotRepository) {
+            TimeSlotRepository timeSlotRepository, AvailableSlotSeeder availableSlotSeeder) {
         this.availableSlotRepository = availableSlotRepository;
         this.washBayRepository = washBayRepository;
         this.timeSlotRepository = timeSlotRepository;
+        this.availableSlotSeeder = availableSlotSeeder;
     }
 
     private static final int MAX_WINDOW_DAY = 14;
     private static final int MAX_SLOT_PER_DAY = 14;
     private static final int MAX_NUMBER_OF_BAY = 5;
 
-    @Scheduled(cron = "0 0 0 * * *")
     public void generateNextSlotsForThatNextDay() {
 
         LocalDate thatNextDay = LocalDate.now().plusDays(MAX_WINDOW_DAY);
@@ -54,6 +56,11 @@ public class AvailableSlotScheduler {
             }
         }
 
+    }
+
+    @Scheduled(cron = "0 0 0 * * *")
+    public void generateMoreSlots() {
+        availableSlotSeeder.seedNewSlots();
     }
 
     private List<TimeSlot> getSlotsAccordingToDate(LocalDate date, List<TimeSlot> allSlots) {
