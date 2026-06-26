@@ -11,8 +11,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.autowashpro.backend.exception.AccountExistedException;
 import com.autowashpro.backend.exception.UserNotFoundException;
+import com.autowashpro.backend.mapper.StaffMapper;
 import com.autowashpro.backend.model.dto.CreateStaffRequest;
 import com.autowashpro.backend.model.dto.StaffAdminResponse;
+import com.autowashpro.backend.model.dto.StaffInfoResponse;
 import com.autowashpro.backend.model.dto.UpdateStaffRequest;
 import com.autowashpro.backend.model.entity.Staff;
 import com.autowashpro.backend.model.enums.Role;
@@ -26,14 +28,16 @@ public class StaffService {
     private final StaffRepository repository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final StaffMapper staffMapper;
 
     @Autowired
     public StaffService(StaffRepository repository,
                         UserRepository userRepository,
-                        PasswordEncoder passwordEncoder) {
+                        PasswordEncoder passwordEncoder, StaffMapper staffMapper) {
         this.repository = repository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.staffMapper = staffMapper;
     }
 
     // ==================== Original methods (for StaffController) ====================
@@ -149,5 +153,12 @@ public class StaffService {
         Staff staff = findById(id);
         staff.setActive(true);
         repository.save(staff);
+    }
+
+    @Transactional(readOnly = true)
+    public StaffInfoResponse getCurrentStaffInfo(String email) {
+        Staff staff = repository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Không tìm thấy staff với email: " + email));
+        return staffMapper.toStaffInfoResponse(staff);
     }
 }
