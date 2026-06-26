@@ -13,8 +13,10 @@ import com.autowashpro.backend.mapper.PointTransactionMapper;
 import com.autowashpro.backend.model.dto.AdjustPointsResponse;
 import com.autowashpro.backend.model.dto.RecentTransactionResponse;
 import com.autowashpro.backend.model.entity.Customer;
+import com.autowashpro.backend.model.entity.Notification;
 import com.autowashpro.backend.model.entity.PointTransaction;
 import com.autowashpro.backend.model.entity.Staff;
+import com.autowashpro.backend.model.enums.NotificationType;
 import com.autowashpro.backend.model.enums.TransactionType;
 import com.autowashpro.backend.repository.CustomerRepository;
 import com.autowashpro.backend.repository.PointTransactionRepository;
@@ -30,15 +32,17 @@ public class PointTransactionService {
     private final CustomerRepository customerRepository;
     private final PointTransactionMapper pointTransactionMapper;
     private final StaffRepository staffRepository;
+    private final NotificationService notificationService;
 
     @Autowired
     public PointTransactionService(PointTransactionRepository pointTransactionRepository,
             CustomerRepository customerRepository, PointTransactionMapper pointTransactionMapper,
-            StaffRepository staffRepository) {
+            StaffRepository staffRepository, NotificationService notificationService) {
         this.pointTransactionRepository = pointTransactionRepository;
         this.customerRepository = customerRepository;
         this.pointTransactionMapper = pointTransactionMapper;
         this.staffRepository = staffRepository;
+        this.notificationService = notificationService;
     }
 
     public void evaluatePointTransactionExpiryDate() {
@@ -85,6 +89,10 @@ public class PointTransactionService {
                 .orElseThrow(() -> new UserNotFoundException(
                         "Không tìm thấy nhân viên với email: " + staffEmail));
 
+        if (pointsChange == 0) {
+            throw new IllegalArgumentException("Số điểm thay đổi phải khác 0");
+        }
+
         if (reason == null || reason.isBlank()) {
             throw new IllegalArgumentException("Lý do điều chỉnh không được để trống");
         }
@@ -97,9 +105,13 @@ public class PointTransactionService {
 
         TransactionType transactionType = pointsChange >= 0 ? TransactionType.BONUS : TransactionType.ADJUST;
 
-        customer.setCurrentPoints(customer.getCurrentPoints() + pointsChange);
-        if (pointsChange > 0) {
-            customer.setLifetimePoints(customer.getLifetimePoints() + pointsChange);
+        try {
+            customer.setCurrentPoints(Math.addExact(customer.getCurrentPoints(), pointsChange));
+            if (pointsChange > 0) {
+                customer.setLifetimePoints(Math.addExact(customer.getLifetimePoints(), pointsChange));
+            }
+        } catch (ArithmeticException e) {
+            throw new IllegalArgumentException("Số điểm vượt quá giới hạn lưu trữ cho phép của hệ thống");
         }
         customerRepository.save(customer);
 
@@ -110,8 +122,23 @@ public class PointTransactionService {
                 .pointsChange(pointsChange)
                 .balanceAfter(customer.getCurrentPoints())
                 .description(reason)
+                .expiryDate(pointsChange > 0 ? LocalDate.now().plusMonths(6) : null)
                 .build();
         PointTransaction saved = pointTransactionRepository.save(transaction);
+
+        String actionWord = pointsChange > 0 ? "được cộng" : "bị trừ";
+        String title = "Biến động điểm thưởng";
+        String bodyMessage = String.format("Tài khoản của bạn vừa %s %d điểm. Lý do: %s",
+                actionWord, Math.abs(pointsChange), reason);
+
+        Notification noti = new Notification();
+        noti.setCustomer(customer);
+        noti.setNotificationType(NotificationType.POINTS_ADJUST);
+        noti.setTitle(title);
+        noti.setBody(bodyMessage);
+        noti.setRefId(saved.getId());
+        noti.setRefType("POINT_TRANSACTION");
+        notificationService.createNew(noti);
 
         log.info("Staff {} adjusted {} points for customer {}. Reason: {}. Balance: {}",
                 staff.getFullName(), pointsChange, customer.getFullName(), reason,

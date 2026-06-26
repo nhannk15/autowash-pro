@@ -33,40 +33,45 @@ public class PointTransactionSeeder implements Seeder {
         if (pointTransactionRepository.count() > 0)
             return;
 
-        Customer leThiThuy = customerRepository.findById(1L)
-                .orElseThrow(() -> new RuntimeException("Customer id=1 not found"));
-        Customer nguyenKhacLeNhan = customerRepository.findById(2L)
-                .orElseThrow(() -> new RuntimeException("Customer id=2 not found"));
+        Customer leThiThuy = customerRepository.findByEmail("lethuyavhs@gmail.com")
+                .orElseThrow(() -> new RuntimeException("Customer lethuyavhs@gmail.com not found"));
+        Customer nguyenKhacLeNhan = customerRepository.findByEmail("nhannk2101@gmail.com")
+                .orElseThrow(() -> new RuntimeException("Customer nhannk2101@gmail.com not found"));
         Staff staff = staffRepository.findByEmail("khacbuu@gmail.com")
                 .orElseThrow(() -> new RuntimeException("Staff khacbuu@gmail.com not found"));
 
-        // 1. BONUS +500 for Lê Thị Thúy
+        /*
+         * Seed 2 PointTransaction mẫu để hiển thị trên UI lịch sử giao dịch.
+         *
+         * Lưu ý:
+         * - Dùng email thay vì ID cứng → không phụ thuộc thứ tự insert của seeder khác
+         * - KHÔNG tự ý sửa currentPoints/lifetimePoints của customer.
+         *   Việc cộng/trừ điểm chỉ thực hiện qua API /api/staff/customers/{id}/points
+         *   hoặc khi thanh toán hóa đơn.
+         * - balanceAfter = customer.getCurrentPoints() (snapshot hiện tại, ảo cho demo)
+         */
+
+        // 1. BONUS +500 cho Lê Thị Thúy
         PointTransaction bonus = PointTransaction.builder()
                 .customer(leThiThuy)
                 .staff(staff)
                 .transactionType(TransactionType.BONUS)
                 .pointsChange(500L)
-                .balanceAfter(leThiThuy.getCurrentPoints() + 500)
+                .balanceAfter(leThiThuy.getCurrentPoints())
                 .description("Bù điểm do lỗi hệ thống không tích điểm sau thanh toán")
+                .expiryDate(java.time.LocalDate.now().plusMonths(6))
                 .build();
         pointTransactionRepository.save(bonus);
 
-        leThiThuy.setCurrentPoints(leThiThuy.getCurrentPoints() + 500);
-        leThiThuy.setLifetimePoints(leThiThuy.getLifetimePoints() + 500);
-        customerRepository.save(leThiThuy);
-
-        // 2. ADJUST -200 for Nguyễn Khắc Lê Nhân
+        // 2. ADJUST -200 cho Nguyễn Khắc Lê Nhân
         PointTransaction adjust = PointTransaction.builder()
                 .customer(nguyenKhacLeNhan)
                 .staff(staff)
                 .transactionType(TransactionType.ADJUST)
                 .pointsChange(-200L)
-                .balanceAfter(nguyenKhacLeNhan.getCurrentPoints() - 200)
+                .balanceAfter(nguyenKhacLeNhan.getCurrentPoints())
                 .description("Điều chỉnh trừ điểm khuyến mãi cộng nhầm")
                 .build();
         pointTransactionRepository.save(adjust);
-
-        nguyenKhacLeNhan.setCurrentPoints(nguyenKhacLeNhan.getCurrentPoints() - 200);
-        customerRepository.save(nguyenKhacLeNhan);
     }
 }
