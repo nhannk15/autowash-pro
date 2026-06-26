@@ -1,0 +1,222 @@
+/* ===== Staff ===== */
+
+/* ─── Page wrapper ─── */
+.staff-page {
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* ─── Toolbar ─── */
+.staff-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.staff-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.staff-add-btn {
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    height: 36px;
+    background: #4096ff !important;
+    border: none !important;
+    transition: background 0.2s ease !important;
+}
+
+.staff-add-btn:hover {
+    background: #69b1ff !important;
+}
+
+.staff-toolbar-select {
+    width: 230px !important;
+}
+
+.staff-toolbar-search {
+    width: 220px !important;
+    border-radius: 8px !important;
+}
+
+.staff-toolbar-btn {
+    border-radius: 8px !important;
+    font-weight: 500;
+}
+
+/* ─── Table wrapper ─── */
+.staff-table-wrapper .ant-table {
+    border-radius: 12px !important;
+    overflow: hidden;
+    border: 1px solid #e8e8e8;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.staff-table-wrapper .ant-table-thead > tr > th {
+    background: #fafafa !important;
+    color: #8c8c8c !important;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #e8e8e8 !important;
+}
+
+.staff-table-wrapper .ant-table-tbody > tr > td {
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f5f5f5 !important;
+}
+
+.staff-table-wrapper .ant-table-tbody > tr:hover > td {
+    background: #f7f9ff !important;
+}
+
+.staff-table-wrapper .ant-table-tbody > tr:last-child > td {
+    border-bottom: none !important;
+}
+
+/* Pagination */
+.staff-table-wrapper .ant-pagination {
+    font-family: system-ui, -apple-system, sans-serif;
+    margin: 16px 0 4px !important;
+}
+
+.staff-table-wrapper .ant-pagination-item {
+    border-radius: 8px !important;
+    transition: all 0.2s ease;
+}
+
+.staff-table-wrapper .ant-pagination-item-active {
+    background: #4096ff !important;
+    border-color: #4096ff !important;
+}
+
+.staff-table-wrapper .ant-pagination-item-active a {
+    color: #fff !important;
+}
+
+.staff-table-wrapper .ant-pagination-prev .ant-pagination-item-link,
+.staff-table-wrapper .ant-pagination-next .ant-pagination-item-link {
+    border-radius: 8px !important;
+}
+
+/* ─── Cell renderers ─── */
+.staff-cell-name {
+    font-weight: 500;
+    color: #1a1a2e;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.staff-cell-text {
+    color: #434343;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Status */
+.staff-status-active {
+    color: #52c41a;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+}
+
+.staff-status-locked {
+    color: #ff4d4f;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+}
+
+/* ─── Action buttons ─── */
+.staff-action-btn {
+    border-radius: 6px !important;
+    transition: all 0.2s ease !important;
+}
+
+.staff-action-btn--recover:not([disabled]) {
+    color: #52c41a !important;
+    border-color: #b7eb8f !important;
+}
+
+.staff-action-btn--recover:not([disabled]):hover {
+    background: #f6ffed !important;
+    border-color: #52c41a !important;
+}
+
+.staff-action-btn--recover[disabled] {
+    opacity: 0.35 !important;
+}
+
+/* ─── Add Staff Modal ─── */
+.staff-modal .ant-modal-title {
+    font-family: system-ui, -apple-system, sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    color: #1a1a2e;
+}
+
+.staff-modal .ant-modal-footer .ant-btn {
+    border-radius: 8px !important;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-weight: 500;
+    height: 36px;
+}
+
+.staff-modal .ant-modal-footer .ant-btn-primary {
+    background: #4096ff !important;
+    border: none !important;
+    transition: background 0.2s ease !important;
+}
+
+.staff-modal .ant-modal-footer .ant-btn-primary:hover {
+    background: #69b1ff !important;
+}
+
+/* ─── Form inside modal ─── */
+.staff-form {
+    margin-top: 16px;
+}
+
+.staff-form .ant-form-item-label > label {
+    font-family: system-ui, -apple-system, sans-serif;
+    font-weight: 500;
+    color: #434343;
+}
+
+.staff-form .ant-input,
+.staff-form .ant-input-affix-wrapper,
+.staff-form .ant-picker {
+    border-radius: 8px !important;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    height: 38px;
+}
+
+.staff-form .ant-picker {
+    width: 100%;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+    .staff-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .staff-toolbar-right {
+        flex-direction: column;
+    }
+
+    .staff-toolbar-select,
+    .staff-toolbar-search,
+    .staff-add-btn,
+    .staff-toolbar-btn {
+        width: 100% !important;
+    }
+}
