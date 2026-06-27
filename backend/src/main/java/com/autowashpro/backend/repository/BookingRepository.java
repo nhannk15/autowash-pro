@@ -58,7 +58,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("""
             SELECT booking FROM Booking booking
             WHERE booking.bookingCode = :bookingCode
-            AND booking.status = com.autowashpro.backend.model.enums.BookingStatus.CONFIRMED
             """)
     Optional<Booking> findByBookingCode(String bookingCode);
 

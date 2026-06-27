@@ -161,6 +161,7 @@
     font-size: 13px;
     background: #2f54eb;
     border: none;
+    transform: translateY(-5px);
 }
 
 .bay-card__complete-btn:hover {
@@ -174,6 +175,7 @@
     font-size: 13px;
     background: #52c41a;
     border: none;
+    transform: translateY(-5px);
 }
 
 .bay-card__payment-btn:hover {

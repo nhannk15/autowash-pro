@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
     Steps, Card, Input, Button, Table, Typography,
-    Row, Col, Descriptions, Space, message
+    Row, Col, Descriptions, Space, message, Tag
 } from 'antd';
 import {
     QrcodeOutlined,
@@ -72,7 +72,7 @@ export default function Checkin() {
 
         // Dọn scanner cũ nếu có
         if (scannerRef.current) {
-            scannerRef.current.clear().catch(() => {});
+            scannerRef.current.clear().catch(() => { });
             scannerRef.current = null;
         }
 
@@ -97,7 +97,7 @@ export default function Checkin() {
                 (decodedText) => {
                     setQrCode(decodedText);
                     message.success(`Đã quét: ${decodedText}`);
-                    scanner.clear().catch(() => {});
+                    scanner.clear().catch(() => { });
                     scannerRef.current = null;
                     setCameraOpen(false);
                     setScanning(false);
@@ -114,7 +114,7 @@ export default function Checkin() {
 
     const stopCamera = () => {
         if (scannerRef.current) {
-            scannerRef.current.clear().catch(() => {});
+            scannerRef.current.clear().catch(() => { });
             scannerRef.current = null;
         }
         setCameraOpen(false);
@@ -125,7 +125,7 @@ export default function Checkin() {
     useEffect(() => {
         return () => {
             if (scannerRef.current) {
-                scannerRef.current.clear().catch(() => {});
+                scannerRef.current.clear().catch(() => { });
             }
         };
     }, []);
@@ -190,6 +190,13 @@ export default function Checkin() {
             }));
     };
 
+    // === Billing data helpers ===
+    const getBookingPromotion = (record) => record.promotion || null;
+    const getBookingVoucher = (record) => record.billing?.voucher || null;
+    const getDepositAmount = (record) => Number(record.billing?.depositAmount || 0);
+    const getBillingFinalAmount = (record) => record.billing?.finalAmount != null ? Number(record.billing.finalAmount) : null;
+    const getBillingDiscountAmount = (record) => Number(record.billing?.discountAmount || 0);
+
     const columns = [
         {
             title: 'Phương tiện',
@@ -229,6 +236,9 @@ export default function Checkin() {
 
     const calculateTotal = () => {
         if (!selectedCustomer) return 0;
+        const billingFinal = getBillingFinalAmount(selectedCustomer);
+        if (billingFinal != null) return billingFinal;
+        // Fallback: tính thủ công nếu không có billing data
         const services = getServices(selectedCustomer);
         const promotions = getPromotions(selectedCustomer);
         const subtotal = services.reduce((acc, curr) => acc + curr.price, 0);
@@ -341,6 +351,12 @@ export default function Checkin() {
             {currentStep === 1 && selectedCustomer && (() => {
                 const services = getServices(selectedCustomer);
                 const promotions = getPromotions(selectedCustomer);
+                const bookingPromotion = getBookingPromotion(selectedCustomer);
+                const bookingVoucher = getBookingVoucher(selectedCustomer);
+                const depositAmount = getDepositAmount(selectedCustomer);
+                const billingDiscount = getBillingDiscountAmount(selectedCustomer);
+                const promotionTotalDiscount = promotions.reduce((acc, p) => acc + p.discount, 0);
+                const voucherDiscountAmount = billingDiscount > 0 ? billingDiscount - promotionTotalDiscount : 0;
 
                 return (
                     <Row gutter={[32, 24]}>
@@ -383,16 +399,38 @@ export default function Checkin() {
                                         </ul>
                                     </Descriptions.Item>
                                     <Descriptions.Item label="Khuyến mãi áp dụng">
-                                        {promotions.length > 0 ? (
-                                            <Space direction="vertical" size="small">
+                                        {bookingPromotion ? (
+                                            <Space size="small">
+                                                <Tag style={{ color: '#52c41a', backgroundColor: '#ebffe8ff', fontWeight: 600 }}>{bookingPromotion.promotionName}</Tag>
+                                                <Text style={{ color: '#52c41a', fontWeight: 600 }}>Giảm: {promotionTotalDiscount.toLocaleString('vi-VN')}đ</Text>
+                                            </Space>
+                                        ) : promotions.length > 0 ? (
+                                            <Space size="small">
                                                 {promotions.map(p => (
                                                     <div key={p.id}>
-                                                        <Text strong>{p.name}</Text>
+                                                        <Text strong style={{ color: '#52c41a' }}>{p.name}</Text>
                                                     </div>
                                                 ))}
                                             </Space>
                                         ) : (
-                                            <Text type="secondary">Không có khuyến mãi nào được áp dụng</Text>
+                                            <Text type="secondary">Không có khuyến mãi</Text>
+                                        )}
+                                    </Descriptions.Item>
+                                    <Descriptions.Item label="Voucher">
+                                        {bookingVoucher ? (
+                                            <Space>
+                                                <Tag color="blue" style={{ fontWeight: 600 }}>{bookingVoucher.voucherCode}</Tag>
+                                                <Text strong style={{ color: '#1890ff' }}>{bookingVoucher.rewardName}</Text>
+                                            </Space>
+                                        ) : (
+                                            <Text type="secondary">Không có voucher</Text>
+                                        )}
+                                    </Descriptions.Item>
+                                    <Descriptions.Item label="Tiền cọc">
+                                        {depositAmount > 0 ? (
+                                            <Text strong style={{ color: '#faad14', fontSize: 16 }}>Đã đặt cọc: {depositAmount.toLocaleString('vi-VN')}đ</Text>
+                                        ) : (
+                                            <Text type="secondary">Chưa đặt cọc</Text>
                                         )}
                                     </Descriptions.Item>
                                 </Descriptions>
@@ -430,26 +468,61 @@ export default function Checkin() {
                                         </Row>
                                     ))}
                                 </div>
+                                <Row justify="space-between" align="middle">
+                                    <Col><Text strong style={{ color: '#262626', fontSize: 14 }}>Tổng chi phí dịch vụ</Text></Col>
+                                    <Col><Text strong style={{ color: '#262626', fontSize: 16 }}>{services.reduce((acc, curr) => acc + curr.price, 0).toLocaleString('vi-VN')}đ</Text></Col>
+                                </Row>
 
-                                {promotions.length > 0 && promotions.some(p => p.discount > 0) && (
+                                {/* Khuyến mãi */}
+                                {(bookingPromotion || promotions.length > 0) && promotionTotalDiscount > 0 && (
                                     <>
                                         <div className="invoice-divider" />
                                         <div style={{ marginBottom: '24px' }}>
                                             <Text className="invoice-section-title">Khuyến mãi</Text>
-                                            {promotions.filter(p => p.discount > 0).map(p => (
-                                                <Row justify="space-between" key={p.id} className="invoice-row">
-                                                    <Col><Text style={{ color: '#52c41a' }}>{p.name}</Text></Col>
-                                                    <Col><Text strong style={{ color: '#52c41a' }}>-{p.discount.toLocaleString('vi-VN')} đ</Text></Col>
+                                            {bookingPromotion ? (
+                                                <Row justify="space-between" className="invoice-row">
+                                                    <Col><Text style={{ color: '#52c41a' }}>{bookingPromotion.promotionName}</Text></Col>
+                                                    <Col><Text strong style={{ color: '#52c41a' }}>-{promotionTotalDiscount.toLocaleString('vi-VN')} đ</Text></Col>
                                                 </Row>
-                                            ))}
+                                            ) : (
+                                                promotions.filter(p => p.discount > 0).map(p => (
+                                                    <Row justify="space-between" key={p.id} className="invoice-row">
+                                                        <Col><Text style={{ color: '#52c41a' }}>{p.name}</Text></Col>
+                                                        <Col><Text strong style={{ color: '#52c41a' }}>-{p.discount.toLocaleString('vi-VN')} đ</Text></Col>
+                                                    </Row>
+                                                ))
+                                            )}
+                                        </div>
+                                    </>
+                                )}
+
+                                {/* Voucher */}
+                                {bookingVoucher && voucherDiscountAmount > 0 && (
+                                    <>
+                                        <div className="invoice-divider" />
+                                        <div style={{ marginBottom: '24px' }}>
+                                            <Text className="invoice-section-title">Voucher</Text>
+                                            <Row justify="space-between" className="invoice-row">
+                                                <Col>
+                                                    <Tag color="blue">{bookingVoucher.voucherCode}</Tag>
+                                                    <Text style={{ color: '#1890ff', marginLeft: 5 }}>{bookingVoucher.rewardName}</Text>
+                                                </Col>
+                                                <Col><Text strong style={{ color: '#1890ff' }}>-{voucherDiscountAmount.toLocaleString('vi-VN')} đ</Text></Col>
+                                            </Row>
                                         </div>
                                     </>
                                 )}
 
                                 <div className="invoice-total-box">
-                                    <Row justify="space-between" align="middle">
+                                    {depositAmount > 0 && (
+                                        <Row justify="space-between" align="middle">
+                                            <Col><Text strong style={{ color: '#262626', fontSize: 14 }}>Đã đặt cọc</Text></Col>
+                                            <Col><Text strong style={{ color: '#faad14', fontSize: 16 }}>{depositAmount.toLocaleString('vi-VN')}đ</Text></Col>
+                                        </Row>
+                                    )}
+                                    <Row justify="space-between" align="middle" style={{ marginTop: 16 }}>
                                         <Col><Text className="invoice-total-label">Tổng thanh toán</Text></Col>
-                                        <Col><Title level={2} className="invoice-total-amount">{calculateTotal().toLocaleString('vi-VN')} đ</Title></Col>
+                                        <Col><Title level={2} className="invoice-total-amount">{calculateTotal().toLocaleString('vi-VN')}đ</Title></Col>
                                     </Row>
                                 </div>
 
@@ -466,6 +539,6 @@ export default function Checkin() {
                     </Row>
                 );
             })()}
-        </div>
+        </div >
     );
 }
