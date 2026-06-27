@@ -12,6 +12,7 @@ import com.autowashpro.backend.model.entity.Booking;
 import com.autowashpro.backend.model.enums.BookingStatus;
 import com.autowashpro.backend.repository.BookingRepository;
 import com.autowashpro.backend.service.EmailService;
+import com.autowashpro.backend.utils.QrCodeGenerator;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,11 +22,15 @@ public class BookingReminderScheduler {
 
     private final BookingRepository bookingRepository;
     private final EmailService emailService;
+    private final QrCodeGenerator qrCodeGenerator;
 
     @Autowired
-    public BookingReminderScheduler(BookingRepository bookingRepository, EmailService emailService) {
+    public BookingReminderScheduler(BookingRepository bookingRepository,
+                                     EmailService emailService,
+                                     QrCodeGenerator qrCodeGenerator) {
         this.bookingRepository = bookingRepository;
         this.emailService = emailService;
+        this.qrCodeGenerator = qrCodeGenerator;
     }
 
     @Scheduled(cron = "0 0 8 * * *") // 8:00 AM mỗi ngày
@@ -39,7 +44,8 @@ public class BookingReminderScheduler {
 
         for (Booking booking : bookings) {
             try {
-                emailService.sendBookingReminderEmail(booking);
+                byte[] qrCode = qrCodeGenerator.generateQrCode(booking.getBookingCode());
+                emailService.sendBookingReminderEmail(booking, qrCode);
                 booking.setReminderSent(true);
                 bookingRepository.save(booking);
                 log.info("Reminder sent for bookingId={}, email={}",
@@ -47,7 +53,6 @@ public class BookingReminderScheduler {
             } catch (Exception e) {
                 log.error("Failed to send reminder for bookingId={}, email={}",
                         booking.getId(), booking.getCustomer().getEmail(), e);
-                // Tiếp tục xử lý booking tiếp theo, không throw
             }
         }
     }

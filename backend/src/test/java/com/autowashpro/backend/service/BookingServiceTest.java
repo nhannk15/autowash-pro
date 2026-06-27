@@ -119,7 +119,7 @@ public class BookingServiceTest {
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(bookingService, "useEmailService", "no");
+        ReflectionTestUtils.setField(bookingService, "useEmailService", false);
         tier = new MembershipTier();
         tier.setId(1L);
         tier.setTierName("BRONZE");
@@ -291,7 +291,7 @@ public class BookingServiceTest {
     @Test
     void createBooking_success_emailNotSent_useEmailServiceIsNo() {
         // Arrange
-        ReflectionTestUtils.setField(bookingService, "useEmailService", "no");
+        ReflectionTestUtils.setField(bookingService, "useEmailService", false);
         commonMockStubs();
         when(promotionRepository.findApplicablePromotions(any(), any()))
                 .thenReturn(List.of());
@@ -309,7 +309,7 @@ public class BookingServiceTest {
     @Test
     void createBooking_success_emailSent_useEmailSeriveIsYes() {
         // Arange
-        ReflectionTestUtils.setField(bookingService, "useEmailService", "yes");
+        ReflectionTestUtils.setField(bookingService, "useEmailService", true);
         commonMockStubs();
         when(promotionRepository.findApplicablePromotions(any(), any()))
                 .thenReturn(List.of());

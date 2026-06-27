@@ -270,14 +270,7 @@ public class EmailService {
     }
 
     /**
-     * Gửi email nhắc nhở booking cho khách 1 ngày trước lịch rửa xe (không QR).
-     */
-    public void sendBookingReminderEmail(Booking booking) {
-        sendBookingReminderEmail(booking, null);
-    }
-
-    /**
-     * Gửi email nhắc nhở booking cho khách 1 ngày trước lịch rửa xe (có QR).
+     * Gửi email nhắc nhở booking cho khách 1 ngày trước lịch rửa xe, kèm QR check-in.
      */
     public void sendBookingReminderEmail(Booking booking, byte[] qrCodeImage) {
         try {
@@ -288,12 +281,10 @@ public class EmailService {
             helper.setTo(booking.getCustomer().getEmail());
             helper.setSubject("🔔 Nhắc nhở lịch rửa xe - AutoWash Pro");
 
-            String htmlContent = buildReminderEmailTemplate(booking, qrCodeImage != null);
+            String htmlContent = buildReminderEmailTemplate(booking);
             helper.setText(htmlContent, true);
 
-            if (qrCodeImage != null) {
-                helper.addInline("qrcode-reminder", new ByteArrayResource(qrCodeImage), "image/png");
-            }
+            helper.addInline("qrcode-reminder", new ByteArrayResource(qrCodeImage), "image/png");
 
             mailSender.send(message);
             log.info("Reminder email sent successfully to: {} for booking: {}",
@@ -301,18 +292,13 @@ public class EmailService {
         } catch (Exception e) {
             log.error("Failed to send reminder email to: {} for booking: {}",
                     booking.getCustomer().getEmail(), booking.getBookingCode(), e);
-            throw new RuntimeException("Không thể gửi email nhắc nhở. Vui lòng thử lại sau!");
         }
     }
 
     /**
-     * Template HTML cho email nhắc nhở lịch rửa xe.
+     * Template HTML cho email nhắc nhở lịch rửa xe (luôn kèm QR).
      */
     private String buildReminderEmailTemplate(Booking booking) {
-        return buildReminderEmailTemplate(booking, false);
-    }
-
-    private String buildReminderEmailTemplate(Booking booking, boolean includeQr) {
         AvailableSlot slot = booking.getAvailableSlots().get(0);
 
         StringBuilder services = new StringBuilder();
@@ -321,19 +307,6 @@ public class EmailService {
                 services.append(", ");
             }
             services.append(detail.getServicePrice().getService().getServiceName());
-        }
-
-        String qrSection = "";
-        if (includeQr) {
-            qrSection = """
-                            <!-- QR Code -->
-                            <div style="text-align:center; margin:30px 0; padding:20px; background:#f9faff; border-radius:10px; border:1px solid #e0e4f0;">
-                                <h3 style="color:#0d1b4b; margin:0 0 10px;">📱 Mã QR Check-in</h3>
-                                <p style="color:#555; font-size:14px; margin:0 0 15px;">Đưa mã QR này cho nhân viên khi đến cửa hàng</p>
-                                <img src="cid:qrcode-reminder" alt="QR Code" style="width:200px; height:200px; border:4px solid #fff; border-radius:8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
-                                <p style="color:#999; font-size:12px; margin:12px 0 0;">Mã booking: <strong style="color:#0d1b4b;">#{bookingCode}</strong></p>
-                            </div>
-                """;
         }
 
         return """
@@ -397,6 +370,14 @@ public class EmailService {
                                 </table>
                             </div>
 
+                            <!-- QR Code -->
+                            <div style="text-align:center; margin:30px 0; padding:20px; background:#f9faff; border-radius:10px; border:1px solid #e0e4f0;">
+                                <h3 style="color:#0d1b4b; margin:0 0 10px;">📱 Mã QR Check-in</h3>
+                                <p style="color:#555; font-size:14px; margin:0 0 15px;">Đưa mã QR này cho nhân viên khi đến cửa hàng</p>
+                                <img src="cid:qrcode-reminder" alt="QR Code" style="width:200px; height:200px; border:4px solid #fff; border-radius:8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
+                                <p style="color:#999; font-size:12px; margin:12px 0 0;">Mã booking: <strong style="color:#0d1b4b;">#{bookingCode}</strong></p>
+                            </div>
+
                             <!-- Note -->
                             <div style="border-left:4px solid #0d1b4b; padding:10px 15px; margin:20px 0; background:#f9f9ff;">
                                 <p style="color:#555; font-size:14px; margin:0; line-height:1.8;">
@@ -405,8 +386,6 @@ public class EmailService {
                                     📞 Hotline: <strong>0945692584</strong> nếu cần hỗ trợ.
                                 </p>
                             </div>
-
-                            {qrSection}
                         </div>
 
                         <!-- Footer -->
@@ -428,7 +407,6 @@ public class EmailService {
                 .replace("{bayName}", slot.getWashBay().getName())
                 .replace("{licensePlate}", booking.getVehicle().getLicensePlate())
                 .replace("{vehicleType}", booking.getVehicle().getVehicleType().getTypeName())
-                .replace("{services}", services.toString())
-                .replace("{qrSection}", qrSection);
+                .replace("{services}", services.toString());
     }
 }

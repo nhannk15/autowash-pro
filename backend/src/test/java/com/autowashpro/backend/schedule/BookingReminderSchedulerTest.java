@@ -29,6 +29,7 @@ import com.autowashpro.backend.model.entity.WashBay;
 import com.autowashpro.backend.model.enums.BookingStatus;
 import com.autowashpro.backend.repository.BookingRepository;
 import com.autowashpro.backend.service.EmailService;
+import com.autowashpro.backend.utils.QrCodeGenerator;
 
 @ExtendWith(MockitoExtension.class)
 class BookingReminderSchedulerTest {
@@ -38,6 +39,9 @@ class BookingReminderSchedulerTest {
 
     @Mock
     private EmailService emailService;
+
+    @Mock
+    private QrCodeGenerator qrCodeGenerator;
 
     @InjectMocks
     private BookingReminderScheduler scheduler;
@@ -158,12 +162,14 @@ class BookingReminderSchedulerTest {
         // Arrange
         when(bookingRepository.findBookingsForReminder(any(LocalDate.class), eq(BookingStatus.CONFIRMED)))
                 .thenReturn(bookings);
+        when(qrCodeGenerator.generateQrCode(anyString())).thenReturn(new byte[]{1, 2, 3});
 
         // Act
         scheduler.sendBookingReminders();
 
         // Assert
-        verify(emailService, times(2)).sendBookingReminderEmail(any(Booking.class));
+        verify(qrCodeGenerator, times(2)).generateQrCode(anyString());
+        verify(emailService, times(2)).sendBookingReminderEmail(any(Booking.class), any(byte[].class));
         verify(bookingRepository, times(2)).save(any(Booking.class));
         assertTrue(booking1.isReminderSent());
         assertTrue(booking2.isReminderSent());
@@ -179,7 +185,8 @@ class BookingReminderSchedulerTest {
         scheduler.sendBookingReminders();
 
         // Assert
-        verify(emailService, never()).sendBookingReminderEmail(any(Booking.class));
+        verify(qrCodeGenerator, never()).generateQrCode(anyString());
+        verify(emailService, never()).sendBookingReminderEmail(any(Booking.class), any(byte[].class));
         verify(bookingRepository, never()).save(any(Booking.class));
     }
 
@@ -188,27 +195,28 @@ class BookingReminderSchedulerTest {
         // Arrange
         when(bookingRepository.findBookingsForReminder(any(LocalDate.class), eq(BookingStatus.CONFIRMED)))
                 .thenReturn(bookings);
-
-        doThrow(new RuntimeException("Email sending failed"))
-                .when(emailService).sendBookingReminderEmail(booking1);
+        when(qrCodeGenerator.generateQrCode(booking1.getBookingCode()))
+                .thenThrow(new RuntimeException("QR generation failed"));
+        when(qrCodeGenerator.generateQrCode(booking2.getBookingCode()))
+                .thenReturn(new byte[]{1, 2, 3});
 
         // Act
         scheduler.sendBookingReminders();
 
         // Assert
-        // Booking 1: email failed → reminderSent remains false
+        // Booking 1: QR failed → reminderSent remains false
         assertFalse(booking1.isReminderSent());
-        // Booking 2: email sent successfully → reminderSent becomes true
+        // Booking 2: sent successfully → reminderSent becomes true
         assertTrue(booking2.isReminderSent());
+        verify(emailService, never()).sendBookingReminderEmail(eq(booking1), any(byte[].class));
+        verify(emailService, times(1)).sendBookingReminderEmail(eq(booking2), any(byte[].class));
         verify(bookingRepository, times(1)).save(booking2);
         verify(bookingRepository, never()).save(booking1);
     }
 
     @Test
     void shouldNotResendReminderForAlreadyRemindedBookings() {
-        // Arrange
-        // Simulate that the repository query already filters by reminderSent=false
-        // If a booking has reminderSent=true, it won't be returned by the query
+        // Arrange — repo đã filter reminderSent=false nên không trả về gì
         when(bookingRepository.findBookingsForReminder(any(LocalDate.class), eq(BookingStatus.CONFIRMED)))
                 .thenReturn(List.of());
 
@@ -216,7 +224,8 @@ class BookingReminderSchedulerTest {
         scheduler.sendBookingReminders();
 
         // Assert
-        verify(emailService, never()).sendBookingReminderEmail(any(Booking.class));
+        verify(qrCodeGenerator, never()).generateQrCode(anyString());
+        verify(emailService, never()).sendBookingReminderEmail(any(Booking.class), any(byte[].class));
         verify(bookingRepository, never()).save(any(Booking.class));
     }
 }
