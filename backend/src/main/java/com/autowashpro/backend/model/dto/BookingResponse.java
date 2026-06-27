@@ -35,7 +35,6 @@ public class BookingResponse {
 
     //--- Final data from Billing.
     private BookingBillingResponse billing;
-    private Long billingId;
 
     
 }
