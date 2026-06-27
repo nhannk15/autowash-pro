@@ -54,7 +54,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> getUpcomingBookingsTillNow(
             @Param("today") LocalDate today,
             @Param("cutOffTime") LocalTime cutOffTime);
-    
+
     @Query("""
             SELECT booking FROM Booking booking
             WHERE booking.bookingCode = :bookingCode
@@ -110,4 +110,17 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             """)
     List<Booking> findBookingsAccordingToDate(@Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
+
+    @Query("""
+            SELECT 
+                booking
+            FROM Booking booking
+            JOIN booking.billing billing
+            JOIN booking.customer customer
+            WHERE 
+                customer.id = :customerId
+                AND booking.status = com.autowashpro.backend.model.enums.BookingStatus.PENDING
+                AND billing.depositStatus = com.autowashpro.backend.model.enums.DepositStatus.PENDING
+            """)
+    List<Booking> getPendingDepositBookings(@Param("customerId") Long customerId);
 }
