@@ -21,5 +21,12 @@ public interface VoucherRepository extends JpaRepository<Voucher, Long> {
             ORDER BY voucher.status ASC, voucher.issuedAt ASC
             """)
     List<Voucher> findCustomerActiveVouchers(@Param("email") String email);
+
+    @Query("""
+            SELECT voucher FROM Voucher voucher
+            WHERE voucher.expiresAt < :now
+            AND voucher.status = com.autowashpro.backend.model.enums.VoucherStatus.ACTIVE
+            """)
+    List<Voucher> findAllExpiredVoucher();
     
 }
