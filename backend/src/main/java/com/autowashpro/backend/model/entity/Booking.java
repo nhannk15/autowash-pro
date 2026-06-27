@@ -98,6 +98,10 @@ public class Booking {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "reminder_sent", nullable = false)
+    @Builder.Default
+    private boolean reminderSent = false;
+
     @Column(name = "booking_code", nullable = false)
     private String bookingCode;
 

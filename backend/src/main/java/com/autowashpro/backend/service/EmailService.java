@@ -11,6 +11,9 @@ import org.springframework.stereotype.Service;
 
 import com.autowashpro.backend.model.dto.BookingDetailResponse;
 import com.autowashpro.backend.model.dto.CreateBookingResponse;
+import com.autowashpro.backend.model.entity.Booking;
+import com.autowashpro.backend.model.entity.BookingDetail;
+import com.autowashpro.backend.model.entity.AvailableSlot;
 
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
@@ -264,5 +267,137 @@ public class EmailService {
                 .replace("{totalOriginal}", formattedOriginal)
                 .replace("{totalDiscount}", formattedDiscount)
                 .replace("{totalFinal}", formattedFinal);
+    }
+
+    /**
+     * Gửi email nhắc nhở booking cho khách 1 ngày trước lịch rửa xe.
+     */
+    public void sendBookingReminderEmail(Booking booking) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom("autowashpro.noreply@gmail.com", "AutoWash Pro");
+            helper.setTo(booking.getCustomer().getEmail());
+            helper.setSubject("🔔 Nhắc nhở lịch rửa xe - AutoWash Pro");
+
+            String htmlContent = buildReminderEmailTemplate(booking);
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+            log.info("Reminder email sent successfully to: {} for booking: {}",
+                    booking.getCustomer().getEmail(), booking.getBookingCode());
+        } catch (Exception e) {
+            log.error("Failed to send reminder email to: {} for booking: {}",
+                    booking.getCustomer().getEmail(), booking.getBookingCode(), e);
+            throw new RuntimeException("Không thể gửi email nhắc nhở. Vui lòng thử lại sau!");
+        }
+    }
+
+    /**
+     * Template HTML cho email nhắc nhở lịch rửa xe.
+     */
+    private String buildReminderEmailTemplate(Booking booking) {
+        AvailableSlot slot = booking.getAvailableSlots().get(0);
+
+        StringBuilder services = new StringBuilder();
+        for (BookingDetail detail : booking.getBookingDetails()) {
+            if (!services.isEmpty()) {
+                services.append(", ");
+            }
+            services.append(detail.getServicePrice().getService().getServiceName());
+        }
+
+        return """
+                <!DOCTYPE html>
+                <html>
+
+                <head>
+                    <meta charset="UTF-8">
+                </head>
+
+                <body style="margin:0; padding:0; background-color:#f4f4f4; font-family: Arial, sans-serif;">
+                    <div
+                        style="max-width:600px; margin:30px auto; background-color:#ffffff; border-radius:12px; overflow:hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+
+                        <!-- Header -->
+                        <div style="background: #0d1b4b; padding:30px; text-align:center;">
+                            <h1 style="color:#ffffff; margin:0; font-size:24px;">🚗 AutoWash Pro</h1>
+                            <p style="color:#e8e8ff; margin:8px 0 0; font-size:14px;">Nhắc nhở lịch rửa xe</p>
+                        </div>
+
+                        <!-- Body -->
+                        <div style="padding:30px;">
+                            <p style="color:#333; font-size:16px;">Xin chào <strong>{customerName}</strong>,</p>
+                            <p style="color:#555; font-size:14px; line-height:1.6;">
+                                🔔 Đây là email nhắc nhở lịch rửa xe của bạn vào <strong>ngày mai</strong>.
+                                Vui lòng đến đúng giờ để được phục vụ tốt nhất!
+                            </p>
+
+                            <!-- Booking Info -->
+                            <div style="background:#f0f2f8; border-radius:10px; padding:20px; margin:20px 0;">
+                                <h3 style="color:#0d1b4b; margin:0 0 15px;">📋 Thông tin đặt lịch</h3>
+                                <table style="width:100%; border-collapse:collapse;">
+                                    <tr>
+                                        <td style="color:#555; font-size:14px; padding:6px 0; width:40%;">Mã booking</td>
+                                        <td style="color:#0d1b4b; font-size:14px; font-weight:bold;">#{bookingCode}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="color:#555; font-size:14px; padding:6px 0;">Ngày rửa</td>
+                                        <td style="color:#333; font-size:14px;">{bookingDate}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="color:#555; font-size:14px; padding:6px 0;">Giờ bắt đầu</td>
+                                        <td style="color:#333; font-size:14px;">{startTime} - {endTime}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="color:#555; font-size:14px; padding:6px 0;">Khoang rửa</td>
+                                        <td style="color:#333; font-size:14px;">{bayName}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="color:#555; font-size:14px; padding:6px 0;">Biển số xe</td>
+                                        <td style="color:#333; font-size:14px;">{licensePlate}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="color:#555; font-size:14px; padding:6px 0;">Dòng xe</td>
+                                        <td style="color:#333; font-size:14px;">{vehicleType}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="color:#555; font-size:14px; padding:6px 0;">Dịch vụ</td>
+                                        <td style="color:#333; font-size:14px;">{services}</td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                            <!-- Note -->
+                            <div style="border-left:4px solid #0d1b4b; padding:10px 15px; margin:20px 0; background:#f9f9ff;">
+                                <p style="color:#555; font-size:14px; margin:0; line-height:1.8;">
+                                    📌 Vui lòng có mặt trước <strong>10 phút</strong>.<br>
+                                    ❌ Hủy lịch trước <strong>2 tiếng</strong> để không bị tính phí.<br>
+                                    📞 Hotline: <strong>0945692584</strong> nếu cần hỗ trợ.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div style="background:#f9f9f9; padding:20px; text-align:center; border-top:1px solid #eee;">
+                            <p style="color:#999; font-size:12px; margin:0;">
+                                © 2025 AutoWash Pro. Hotline: 0945692584.
+                            </p>
+                        </div>
+                    </div>
+                </body>
+
+                </html>
+                """
+                .replace("{customerName}", booking.getCustomer().getFullName())
+                .replace("{bookingCode}", booking.getBookingCode())
+                .replace("{bookingDate}", slot.getSlotDate().toString())
+                .replace("{startTime}", slot.getTimeSlot().getStartTime().toString())
+                .replace("{endTime}", slot.getTimeSlot().getEndTime().toString())
+                .replace("{bayName}", slot.getWashBay().getName())
+                .replace("{licensePlate}", booking.getVehicle().getLicensePlate())
+                .replace("{vehicleType}", booking.getVehicle().getVehicleType().getTypeName())
+                .replace("{services}", services.toString());
     }
 }
