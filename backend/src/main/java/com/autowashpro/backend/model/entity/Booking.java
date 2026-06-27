@@ -54,7 +54,8 @@ public class Booking {
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
     @JsonIgnoreProperties("booking")
-    private List<BookingDetail> bookingDetails;
+    @Builder.Default
+    private List<BookingDetail> bookingDetails = new ArrayList<>();
 
     // @Column(name = "scheduled_date_time", nullable = false)
     // private LocalDateTime scheduledDateTime;
@@ -77,7 +78,8 @@ public class Booking {
 
     @OneToMany(mappedBy = "booking")
     @JsonIgnoreProperties("booking")
-    private List<WashSession> washSessions;
+    @Builder.Default
+    private List<WashSession> washSessions = new ArrayList<>();
 
     // @ManyToOne(fetch = FetchType.LAZY)
     // @JoinColumn(name = "bay_id")
@@ -88,7 +90,8 @@ public class Booking {
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
     @JsonIgnoreProperties("booking")
-    private List<AvailableSlot> availableSlots;
+    @Builder.Default
+    private List<AvailableSlot> availableSlots = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "promotion_id")
@@ -97,6 +100,10 @@ public class Booking {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "reminder_sent", nullable = false)
+    @Builder.Default
+    private boolean reminderSent = false;
 
     @Column(name = "booking_code", nullable = false)
     private String bookingCode;

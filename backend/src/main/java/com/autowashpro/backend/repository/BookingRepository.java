@@ -123,4 +123,23 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
                 AND billing.depositStatus = com.autowashpro.backend.model.enums.DepositStatus.PENDING
             """)
     List<Booking> getPendingDepositBookings(@Param("customerId") Long customerId);
+
+    @Query("""
+            SELECT DISTINCT b FROM Booking b
+            JOIN FETCH b.customer
+            JOIN FETCH b.vehicle v
+            JOIN FETCH v.vehicleType
+            JOIN FETCH b.availableSlots a
+            JOIN FETCH a.timeSlot
+            JOIN FETCH a.washBay
+            JOIN FETCH b.bookingDetails bd
+            JOIN FETCH bd.servicePrice sp
+            JOIN FETCH sp.service
+            WHERE a.slotDate = :date
+            AND b.status = :status
+            AND b.reminderSent = false
+            """)
+    List<Booking> findBookingsForReminder(
+            @Param("date") LocalDate date,
+            @Param("status") BookingStatus status);
 }
