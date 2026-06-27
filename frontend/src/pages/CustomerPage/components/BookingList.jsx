@@ -223,8 +223,12 @@ export default function BookingList() {
                             shortDesc: item.description || '',
                             priceSedan: priceSedanItem ? priceSedanItem.price : 0,
                             priceSuv: priceSuvItem ? priceSuvItem.price : 0,
+
                             priceSedanId: priceSedanItem ? priceSedanItem.servicePriceId : null,
                             priceSuvId: priceSuvItem ? priceSuvItem.servicePriceId : null,
+                            // lưu lại ID của bản ghi giá ứng với từng loại xe. Mục đích cuối cùng của chúng là để gửi lên API Backend khi khách hàng bấm Đặt lịch.
+
+
                             duration: item.duration || 0,
                         };
                     });
