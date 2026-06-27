@@ -4,10 +4,6 @@ on:
   push:
     branches: [develop]
 
-concurrency:
-  group: deploy-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -60,11 +56,13 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd /home/ubuntu/autowash-pro
-            git switch develop
-            git fetch
-            git pull origin develop
-            docker compose up -d --build mysql
+            (
+              flock -x 200
+              cd /home/ubuntu/autowash-pro
+              git switch develop
+              git pull origin develop
+              docker compose up -d --build mysql
+            ) 200>/tmp/deploy.lock
 
       - name: Notify DB deploy failure
         if: steps.deploy_db.outcome == 'failure'
@@ -101,8 +99,11 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd /home/ubuntu/autowash-pro
-            docker compose up -d --build backend
+            (
+              flock -x 200
+              cd /home/ubuntu/autowash-pro
+              docker compose up -d --build backend
+            ) 200>/tmp/deploy.lock
 
       - name: Notify Backend deploy failure
         if: steps.deploy_backend.outcome == 'failure'
@@ -139,8 +140,11 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd /home/ubuntu/autowash-pro
-            docker compose up -d --build frontend
+            (
+              flock -x 200
+              cd /home/ubuntu/autowash-pro
+              docker compose up -d --build frontend
+            ) 200>/tmp/deploy.lock
 
       - name: Notify Frontend deploy failure
         if: steps.deploy_frontend.outcome == 'failure'
