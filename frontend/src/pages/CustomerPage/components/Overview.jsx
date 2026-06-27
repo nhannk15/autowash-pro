@@ -3,8 +3,8 @@ import { Row, Col, Card, Table, Tag, Progress, Button, Empty, Space, Typography,
 import { CalendarOutlined, TrophyOutlined, CrownOutlined, ArrowRightOutlined, GiftOutlined, StarOutlined, WalletOutlined, RiseOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import { getMembershipTier, getUpcomingBooking, getReward, exchangeVoucher, getVoucher, getRecentActivities } from '../../../service/customerService';
-
+import { getMembershipTier, getUpcomingBooking, getReward, exchangeVoucher, getVoucher, getRecentActivities, getPendingDeposit } from '../../../service/customerService';
+import axios from 'axios';
 import './Overview.css';
 
 const { Title, Text } = Typography;
@@ -12,6 +12,9 @@ const { Title, Text } = Typography;
 export default function Overview() {
     const { user } = useAuth();
     const navigate = useNavigate();
+
+    //State cho dữ liệu deposit pending
+    const [depositPending, setDepositPending] = useState([])
 
     // State cho dữ liệu từ API
     const [upcomingBookings, setUpcomingBookings] = useState([]);
@@ -62,6 +65,16 @@ export default function Overview() {
             }
         });
     };
+
+    //demo get pending deposit
+
+    useEffect(() => {
+        const fetchDepositPending = async () => {
+            const result = await getPendingDeposit()
+            setDepositPending(result || [])
+        }
+        fetchDepositPending();
+    }, [])
 
     useEffect(() => {
         let isMounted = true;
@@ -305,6 +318,36 @@ export default function Overview() {
             }
         }
     ];
+    const demoColumns = [
+        {
+            title: 'Mã Bill',
+            dataIndex: 'billingId',
+            key: 'billingId',
+        },
+        {
+            title: 'Mã Lịch',
+            dataIndex: 'bookingCode',
+            key: 'bookingCode',
+        },
+        {
+            title: 'Tiền đặt cọc',
+            dataIndex: 'depositAmount',
+            key: 'depositAmount',
+            render: (amount) => `${amount?.toLocaleString()} VND`
+        },
+        {
+            title: 'Hành động',
+            key: 'action',
+            render: (_, record) => (
+                <Button
+                    type="primary"
+                    danger
+                >
+                    Thanh toán
+                </Button>
+            )
+        }
+    ];
 
     return (
         <div className="overview-container">
@@ -312,6 +355,15 @@ export default function Overview() {
             <div className="welcome-banner">
                 <Title level={2} className="welcome-title">Xin chào, {user?.fullname || 'Khách hàng'} 👋</Title>
                 <Text type="secondary" className="welcome-subtitle">Chào mừng bạn quay trở lại. Hãy quản lý lịch đặt và xe của bạn tại đây.</Text>
+            </div>
+            <div style={{ margin: '20px 0', padding: '20px', background: '#fff', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                <h3 style={{ color: '#ef4444', marginBottom: '16px' }}>⚠️ DANH SÁCH LỊCH HẸN CHỜ ĐẶT CỌC (DEMO)</h3>
+                <Table
+                    dataSource={depositPending}
+                    columns={demoColumns}
+                    rowKey="id"
+                    pagination={false}
+                />
             </div>
 
             {/* Hàng 1: Thẻ tóm tắt thông tin */}
