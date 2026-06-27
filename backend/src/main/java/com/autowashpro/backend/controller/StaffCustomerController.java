@@ -1,14 +1,19 @@
 package com.autowashpro.backend.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.autowashpro.backend.model.dto.AdjustPointsRequest;
+import com.autowashpro.backend.model.dto.AdjustPointsResponse;
 import com.autowashpro.backend.model.dto.ApiResponse;
 import com.autowashpro.backend.model.dto.CustomerAdminResponse;
 import com.autowashpro.backend.model.dto.QuickCreateRequest;
@@ -19,23 +24,31 @@ import com.autowashpro.backend.model.entity.VehicleType;
 import com.autowashpro.backend.repository.CustomerRepository;
 import com.autowashpro.backend.repository.VehicleTypeRepository;
 import com.autowashpro.backend.service.CustomerService;
+import com.autowashpro.backend.service.PointTransactionService;
 import com.autowashpro.backend.service.VehicleService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/staff/customers")
 public class StaffCustomerController {
 
-    @Autowired
-    private CustomerService customerService;
+    private final CustomerService customerService;
+    private final VehicleService vehicleService;
+    private final CustomerRepository customerRepository;
+    private final VehicleTypeRepository vehicleTypeRepository;
+    private final PointTransactionService pointTransactionService;
 
     @Autowired
-    private VehicleService vehicleService;
-
-    @Autowired
-    private CustomerRepository customerRepository;
-
-    @Autowired
-    private VehicleTypeRepository vehicleTypeRepository;
+    public StaffCustomerController(CustomerService customerService, VehicleService vehicleService,
+            CustomerRepository customerRepository, VehicleTypeRepository vehicleTypeRepository,
+            PointTransactionService pointTransactionService) {
+        this.customerService = customerService;
+        this.vehicleService = vehicleService;
+        this.customerRepository = customerRepository;
+        this.vehicleTypeRepository = vehicleTypeRepository;
+        this.pointTransactionService = pointTransactionService;
+    }
 
     @GetMapping("/search")
     public ResponseEntity<ApiResponse<CustomerAdminResponse>> searchByPhone(@RequestParam String phone) {
@@ -75,6 +88,18 @@ public class StaffCustomerController {
                 vehicle.getLicensePlate());
 
         return ResponseEntity.ok(ApiResponse.created(response));
+    }
+
+    @PostMapping("/{customerId}/points")
+    public ResponseEntity<ApiResponse<AdjustPointsResponse>> adjustPoints(
+            @PathVariable Long customerId,
+            @Valid @RequestBody AdjustPointsRequest request,
+            @AuthenticationPrincipal String email) {
+
+        AdjustPointsResponse response = pointTransactionService.adjustPoints(
+                customerId, request.getPointsChange(), request.getReason(), email);
+
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(response));
     }
 
 }

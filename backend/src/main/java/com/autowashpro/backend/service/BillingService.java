@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.autowashpro.backend.exception.BillingNotFoundException;
 import com.autowashpro.backend.exception.BookingNotFoundException;
@@ -31,6 +32,8 @@ import com.autowashpro.backend.model.entity.Promotion;
 import com.autowashpro.backend.model.entity.Service;
 import com.autowashpro.backend.model.entity.Voucher;
 import com.autowashpro.backend.model.entity.WashSession;
+import com.autowashpro.backend.model.enums.BookingStatus;
+import com.autowashpro.backend.model.enums.DepositStatus;
 import com.autowashpro.backend.model.enums.PaymentMethod;
 import com.autowashpro.backend.model.enums.PaymentStatus;
 import com.autowashpro.backend.model.enums.RewardType;
@@ -46,6 +49,8 @@ import com.autowashpro.backend.repository.VoucherRepository;
 @org.springframework.stereotype.Service
 @Slf4j
 public class BillingService {
+
+    private static final BigDecimal DEPOSIT_PERCENTAGE = new BigDecimal(30L);
 
     private final WashSessionRepository washSessionRepository;
     private final BillingRepository billingRepository;
@@ -73,34 +78,30 @@ public class BillingService {
         this.promotionService = promotionService;
     }
 
+    @Transactional
     public Billing createPendingBilling(Long bookingId) {
-        Booking booking = bookingRepository.findById(bookingId)
+        log.info("createPendingBilling() - start creating new pendingBilling");
+        Booking booking = bookingRepository.findByIdWithDetails(bookingId)
                 .orElseThrow(() -> new BookingNotFoundException(
                         "Không tìm thấy lịch hẹn với id: " + bookingId));
-
         Voucher voucher = null;
-
         BigDecimal originalAmount = booking.getBookingDetails()
                 .stream()
                 .map(BookingDetail::getPriceAtBooking)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
         BigDecimal discountAmount = booking.getBookingDetails()
                 .stream()
                 .map(BookingDetail::getDiscountAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
         BigDecimal finalAmount = booking.getBookingDetails()
                 .stream()
                 .map(BookingDetail::getFinalPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-
         PaymentMethod paymentMethod = PaymentMethod.CASH;
-
         PaymentStatus paymentStatus = PaymentStatus.PENDING;
-
         LocalDateTime paidAt = null;
-
+        BigDecimal depositAmount = finalAmount.multiply(DEPOSIT_PERCENTAGE).divide(new BigDecimal(100L));
+        finalAmount = finalAmount.subtract(depositAmount);
         Billing newBilling = Billing
                 .builder()
                 .booking(booking)
@@ -111,9 +112,10 @@ public class BillingService {
                 .paymentMethod(paymentMethod)
                 .paymentStatus(paymentStatus)
                 .paidAt(paidAt)
+                .depositAmount(depositAmount)
+                .depositStatus(DepositStatus.PENDING)
                 .build();
-
-        Billing savedBilling = billingRepository.save(newBilling);
+        Billing savedBilling = billingRepository.saveAndFlush(newBilling);
         return savedBilling;
     }
 
@@ -141,12 +143,12 @@ public class BillingService {
             washSessionRepository.save(washSession);
         }
 
-        Billing savedBilling = billingRepository.save(billing);
+        Billing savedBilling = billingRepository.saveAndFlush(billing);
 
         Customer customer = billing.getBooking().getCustomer();
         BigDecimal tempPointsChange = billing.getFinalAmount();
         log.info("pointsChange: {}", tempPointsChange);
-        for (WashSession wassSession: billing.getBooking().getWashSessions()) {
+        for (WashSession wassSession : billing.getBooking().getWashSessions()) {
             Service service = wassSession.getServicePrice().getService();
             log.info("service {} has pointsMultiplier: {}", service.getServiceName(), service.getPointMultiplier());
             tempPointsChange = tempPointsChange.multiply(service.getPointMultiplier());
@@ -180,7 +182,7 @@ public class BillingService {
 
     public VoucherResponse applyVoucherForBilling(ApplyVoucherToBillingRequest request) {
 
-        Customer customer = customerRepository.findById(request.getCustomerId())
+        customerRepository.findById(request.getCustomerId())
                 .orElseThrow(() -> new UserNotFoundException(
                         "Không thể tìm thấy người dùng với id: " + request.getCustomerId()));
 
@@ -195,10 +197,6 @@ public class BillingService {
         Billing billing = billingRepository.findById(request.getBillingId())
                 .orElseThrow(() -> new BillingNotFoundException(
                         "Không thể tìm thấy hóa đơn với id: " + request.getBillingId()));
-
-        if (!billing.getBooking().getCustomer().getEmail().equals(customer.getEmail())) {
-            throw new BillingNotFoundException("Hóa đơn này không thuộc về người dùng: " + customer.getFullName());
-        }
 
         billing.setVoucher(voucher);
         if (voucher.getDiscountType().equals(RewardType.DISCOUNT_FLAT)) {
@@ -226,12 +224,22 @@ public class BillingService {
         return voucherMapper.toVoucherResponse(savedVoucher);
     }
 
+    @Transactional
     public BillingResponse completeBankingPayment(Map<String, String> params) {
         Long billingId = Long.valueOf(params.get("vnp_TxnRef").split("_")[0]);
         Billing billing = billingRepository.findById(billingId)
                 .orElseThrow(() -> new BillingNotFoundException(
                         "Hóa đơn " + billingId + " không tồn tại"));
+        if (billing.getDepositStatus().equals(DepositStatus.PENDING)) {
+            billing.setDepositStatus(DepositStatus.PAID);
+            Billing savedBilling = billingRepository.save(billing);
 
+            Booking booking = billing.getBooking();
+            booking.setStatus(BookingStatus.CONFIRMED);
+            Booking savedBooking = bookingRepository.save(booking);
+            savedBooking.setStatus(BookingStatus.CONFIRMED);
+            return billingMapper.toBillingResponse(savedBilling);
+        }
         billing.setPaymentStatus(PaymentStatus.PAID);
         billing.setPaymentMethod(PaymentMethod.BANK_TRANSFER);
         billing.setPaidAt(LocalDateTime.now());

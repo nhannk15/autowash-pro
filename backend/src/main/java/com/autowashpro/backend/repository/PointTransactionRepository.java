@@ -1,6 +1,7 @@
 package com.autowashpro.backend.repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,7 +14,7 @@ public interface PointTransactionRepository extends JpaRepository<PointTransacti
 
     @Query("""
             SELECT pointTransaction FROM PointTransaction pointTransaction
-            WHERE pointTransaction.transactionType = com.autowashpro.backend.model.enums.TransactionType.EARN
+            WHERE pointTransaction.transactionType IN (com.autowashpro.backend.model.enums.TransactionType.EARN, com.autowashpro.backend.model.enums.TransactionType.BONUS)
             AND pointTransaction.expiryDate <= :today
             """)
     List<PointTransaction> getExpiredAndEarnPointTransactions(@Param("today") LocalDate today);
@@ -21,7 +22,7 @@ public interface PointTransactionRepository extends JpaRepository<PointTransacti
     @Query("""
             SELECT SUM(pointTransaction.pointsChange) FROM PointTransaction pointTransaction
             JOIN pointTransaction.customer customer
-            WHERE pointTransaction.transactionType = com.autowashpro.backend.model.enums.TransactionType.EARN
+            WHERE pointTransaction.transactionType IN (com.autowashpro.backend.model.enums.TransactionType.EARN, com.autowashpro.backend.model.enums.TransactionType.BONUS)
             AND customer.id = :customerId 
             AND pointTransaction.createdAt >= customer.lastReviewDate 
             GROUP BY customer.id
@@ -30,10 +31,10 @@ public interface PointTransactionRepository extends JpaRepository<PointTransacti
 
     @Query("""
             SELECT SUM(pointTransaction.pointsChange) FROM PointTransaction pointTransaction
-            WHERE pointTransaction.transactionType = com.autowashpro.backend.model.enums.TransactionType.EARN
+            WHERE pointTransaction.transactionType IN (com.autowashpro.backend.model.enums.TransactionType.EARN, com.autowashpro.backend.model.enums.TransactionType.BONUS)
             AND pointTransaction.createdAt = :date
             """)
-    Long sumPointsIssuedByDate(@Param("date") LocalDate date);
+    Long sumPointsIssuedByDate(@Param("date") LocalDateTime date);
     List<PointTransaction> findByCustomerIdOrderByCreatedAtDesc(Long customerId);
 
 }

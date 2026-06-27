@@ -1,6 +1,7 @@
 package com.autowashpro.backend.model.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.autowashpro.backend.model.enums.BookingStatus;
@@ -108,6 +109,7 @@ public class Booking {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        bookingDetails = new ArrayList<>();
     }
 
     @PreUpdate

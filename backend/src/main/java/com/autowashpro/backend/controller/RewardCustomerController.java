@@ -18,8 +18,12 @@ import com.autowashpro.backend.service.RewardService;
 @RequestMapping("/api/customer/rewards")
 public class RewardCustomerController {
 
-    @Autowired
     private RewardService service;
+
+    @Autowired
+    public RewardCustomerController(RewardService service) {
+        this.service = service;
+    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<RewardResponse>>> getActiveRewards(@AuthenticationPrincipal User user) {

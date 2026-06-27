@@ -38,7 +38,9 @@ export default function Service() {
             const serviceList = result?.data || [];
 
             if (Array.isArray(serviceList)) {
-                const apiServices = serviceList.map(item => {
+                // Chỉ lấy các dịch vụ đang hoạt động
+                const activeServices = serviceList.filter(item => item.isActive !== false);
+                const apiServices = activeServices.map(item => {
                     const priceSedanItem = item.servicePrices?.find(sp => sp.vehicleType?.typeName === 'SEDAN');
                     const priceSuvItem = item.servicePrices?.find(sp => sp.vehicleType?.typeName === 'SUV');
 

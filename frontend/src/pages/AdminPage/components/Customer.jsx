@@ -8,8 +8,10 @@ import {
     StarOutlined, CarOutlined, ExclamationCircleOutlined, RedoOutlined
 } from '@ant-design/icons';
 import { getCustomers, deleteCustomer, recoverCustomer } from '../../../service/adminService';
+import './Customer.css';
 
 const { confirm } = Modal;
+const { Option } = Select;
 
 export default function Customer() {
     const [loading, setLoading] = useState(false);
@@ -29,14 +31,13 @@ export default function Customer() {
         try {
             const params = {
                 page: pagination.current - 1,
-                size: pagination.pageSize
+                size: pagination.pageSize,
             };
             if (searchName) params.search = searchName;
             if (sortField) params.sort = `${sortField},${sortOrder}`;
 
             const response = await getCustomers(params);
-
-            const pageData = response?.data;         // <-- đây là phần pagination
+            const pageData = response?.data;
             setData(pageData?.content || []);
             setPagination(prev => ({
                 ...prev,
@@ -69,11 +70,7 @@ export default function Customer() {
     };
 
     const handleSortChange = (value) => {
-        if (!value) {
-            setSortField(null);
-            setSortOrder('asc');
-            return;
-        }
+        if (!value) { setSortField(null); setSortOrder('asc'); return; }
         const [field, order] = value.split('_');
         setSortField(field);
         setSortOrder(order);
@@ -92,7 +89,7 @@ export default function Customer() {
                     await recoverCustomer(record.id);
                     notification.success({ message: 'Thành công', description: 'Đã khôi phục khách hàng' });
                     fetchCustomers();
-                } catch (error) {
+                } catch {
                     notification.error({ message: 'Lỗi', description: 'Không thể khôi phục khách hàng' });
                 }
             },
@@ -112,7 +109,7 @@ export default function Customer() {
                     await deleteCustomer(record.id);
                     notification.success({ message: 'Thành công', description: 'Đã xóa khách hàng' });
                     fetchCustomers();
-                } catch (error) {
+                } catch {
                     notification.error({ message: 'Lỗi', description: 'Không thể xóa khách hàng' });
                 }
             },
@@ -128,41 +125,33 @@ export default function Customer() {
             title: 'Họ tên',
             dataIndex: 'fullName',
             key: 'fullName',
-            render: (name) => (
-                <Space>
-                    <span style={{ fontWeight: 500 }}>{name}</span>
-                </Space>
-            ),
-            width: 190
+            render: (name) => <span className="customer-cell-name">{name}</span>,
+            width: 190,
         },
         {
             title: 'Email',
             dataIndex: 'email',
             key: 'email',
-            render: (email) => (
-                <Space size={6}>
-                    <span>{email}</span>
-                </Space>
-            ),
-            width: 220
+            render: (email) => <span className="customer-cell-text">{email || '—'}</span>,
+            width: 220,
         },
         {
             title: 'Số điện thoại',
             dataIndex: 'phoneNumber',
             key: 'phoneNumber',
-            render: (phone) => (
-                <Space size={6}>
-                    <span>{phone || '—'}</span>
-                </Space>
-            ),
-            width: 100
+            render: (phone) => <span className="customer-cell-text">{phone || '—'}</span>,
+            width: 120,
         },
         {
             title: 'Ngày sinh',
             dataIndex: 'dateOfBirth',
             key: 'dateOfBirth',
-            render: (date) => date ? new Date(date).toLocaleDateString('vi-VN') : '—',
-            width: 100
+            render: (date) => (
+                <span className="customer-cell-text">
+                    {date ? new Date(date).toLocaleDateString('vi-VN') : '—'}
+                </span>
+            ),
+            width: 110,
         },
         {
             title: 'Phương tiện',
@@ -170,13 +159,17 @@ export default function Customer() {
             key: 'vehicles',
             render: (vehicles) => {
                 if (!vehicles || vehicles.length === 0) {
-                    return <span style={{ color: '#bfbfbf' }}>Chưa đăng ký</span>;
+                    return <span className="customer-cell-empty">Chưa đăng ký</span>;
                 }
                 return (
                     <Space size={4} wrap>
                         {vehicles.map((v, i) => (
                             <Tooltip key={i} title={`${v.brand} ${v.model} · ${v.licensePlate}`}>
-                                <Tag icon={<CarOutlined />} color="blue" style={{ cursor: 'default' }}>
+                                <Tag
+                                    icon={<CarOutlined />}
+                                    color="blue"
+                                    className="customer-vehicle-tag"
+                                >
                                     {v.brand} - {v.model} - {v.licensePlate}
                                 </Tag>
                             </Tooltip>
@@ -184,7 +177,7 @@ export default function Customer() {
                     </Space>
                 );
             },
-            width: 240
+            width: 260,
         },
         {
             title: 'Hạng thành viên',
@@ -192,21 +185,28 @@ export default function Customer() {
             key: 'tier',
             render: (tier) =>
                 tier
-                    ? <Tag color={getTierColor(tier.currentTierName)}><span style={{ fontWeight: 600 }}>{tier.currentTierName}</span></Tag>
-                    : <span style={{ color: '#bfbfbf' }}>Chưa có</span>,
-            width: 100
+                    ? (
+                        <Tag
+                            color={getTierColor(tier.currentTierName)}
+                            className="customer-tier-tag"
+                        >
+                            {tier.currentTierName}
+                        </Tag>
+                    )
+                    : <span className="customer-cell-empty">Chưa có</span>,
+            width: 130,
         },
         {
             title: 'Điểm tích lũy',
             dataIndex: 'lifetimePoints',
             key: 'lifetimePoints',
             render: (points) => (
-                <Space size={4}>
-                    <StarOutlined style={{ color: '#fadb14' }} />
-                    <span style={{ fontWeight: 500 }}>{(points || 0).toLocaleString()}</span>
-                </Space>
+                <span className="customer-points">
+                    <StarOutlined className="customer-points-icon" />
+                    {(points || 0).toLocaleString()}
+                </span>
             ),
-            width: 100
+            width: 120,
         },
         {
             title: 'Trạng thái',
@@ -216,25 +216,26 @@ export default function Customer() {
                 <Badge
                     status={active ? 'success' : 'error'}
                     text={
-                        <span style={{ color: active ? '#52c41a' : '#ff4d4f', fontWeight: 400 }}>
+                        <span className={active ? 'customer-status-active' : 'customer-status-locked'}>
                             {active ? 'Hoạt động' : 'Bị khóa'}
                         </span>
                     }
                 />
             ),
-            width: 95
+            width: 110,
         },
         {
             title: 'Thao tác',
             key: 'action',
-            width: 110,
+            width: 100,
             render: (_, record) => (
                 <Space size={6}>
                     <Tooltip title="Khôi phục tài khoản">
                         <Button
                             disabled={record.active}
                             size="small"
-                            icon={<RedoOutlined style={{ color: 'green' }} />}
+                            className="customer-action-btn customer-action-btn--recover"
+                            icon={<RedoOutlined />}
                             onClick={() => handleRecover(record)}
                         />
                     </Tooltip>
@@ -242,31 +243,24 @@ export default function Customer() {
                         <Button
                             danger
                             size="small"
+                            className="customer-action-btn"
                             icon={<DeleteOutlined />}
                             onClick={() => handleDelete(record)}
                         />
                     </Tooltip>
                 </Space>
             ),
-            width: 100
         },
     ];
 
     return (
-        <div>
-            {/* Toolbar: Search + Sort — căn phải */}
-            <div style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                gap: 12,
-                marginBottom: 16,
-                flexWrap: 'wrap',
-                alignItems: 'center',
-            }}>
+        <div className="customer-page">
+            {/* ── Toolbar ── */}
+            <div className="customer-toolbar">
                 <Select
                     placeholder="Sắp xếp theo..."
                     allowClear
-                    style={{ width: 240 }}
+                    className="customer-toolbar-select"
                     onChange={handleSortChange}
                 >
                     <Option value="lifetimePoints_desc">Điểm tích lũy: Cao → Thấp</Option>
@@ -276,10 +270,11 @@ export default function Customer() {
                     <Option value="tier_asc">Hạng thành viên: Thấp → Cao</Option>
                     <Option value="tier_desc">Hạng thành viên: Cao → Thấp</Option>
                 </Select>
+
                 <Input
                     placeholder="Tìm theo họ tên..."
                     allowClear
-                    style={{ width: 220 }}
+                    className="customer-toolbar-search"
                     value={searchInput}
                     onChange={(e) => {
                         setSearchInput(e.target.value);
@@ -287,23 +282,29 @@ export default function Customer() {
                     }}
                     onPressEnter={() => handleSearch(searchInput)}
                 />
+
                 <Button
                     type="primary"
                     icon={<SearchOutlined />}
+                    className="customer-toolbar-btn"
                     onClick={() => handleSearch(searchInput)}
                 >
                     Tìm kiếm
                 </Button>
             </div>
 
-            <Table
-                columns={columns}
-                dataSource={data}
-                rowKey="id"
-                pagination={pagination}
-                loading={loading}
-                onChange={handleTableChange}
-            />
+            {/* ── Table ── */}
+            <div className="customer-table-wrapper">
+                <Table
+                    columns={columns}
+                    dataSource={data}
+                    rowKey="id"
+                    pagination={pagination}
+                    loading={loading}
+                    onChange={handleTableChange}
+                    scroll={{ x: 1100 }}
+                />
+            </div>
         </div>
     );
 }

@@ -15,7 +15,9 @@ import com.autowashpro.backend.model.entity.Customer;
 public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
     Optional<Customer> findByEmail(String email);
+
     Optional<Customer> findByPhoneNumber(String phoneNumber);
+
     boolean existsByPhoneNumber(String phoneNumber);
 
     @Query("""
@@ -26,8 +28,8 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
             AND (:tierId IS NULL OR c.tier.id = :tierId)
             """)
     Page<Customer> searchCustomers(@Param("search") String search,
-                                   @Param("tierId") Long tierId,
-                                   Pageable pageable);
+            @Param("tierId") Long tierId,
+            Pageable pageable);
 
     default Long countByCreatedAtDate(LocalDate date) {
         return countByCreatedAtRange(date.atStartOfDay(), date.plusDays(1).atStartOfDay());
@@ -39,6 +41,14 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
             AND customer.createdAt < :nextDay
             """)
     Long countByCreatedAtRange(@Param("startOfDay") LocalDateTime startOfDay,
-                               @Param("nextDay") LocalDateTime nextDay);
+            @Param("nextDay") LocalDateTime nextDay);
 
+    @Query("""
+            SELECT COUNT(customer)
+            FROM Customer customer
+            WHERE customer.createdAt >= :startTime
+            AND customer.createdAt <= :endTime
+            """)
+    int countNewCustomersBetween(@Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime);
 }

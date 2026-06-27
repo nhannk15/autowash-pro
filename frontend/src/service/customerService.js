@@ -22,10 +22,12 @@ export async function getVehicleByCustomer() {
     return response.data
 }
 
-export async function getPromotion() {
-    const response = await axios.get('/api/promotions');
-    return response.data
+
+export async function getApplicablePromotion(bookingDateTime) {
+    const response = await axios.post('/api/promotions/applicable-promotions', { bookingDateTime });
+    return response.data;
 }
+
 export async function getService() {
     const response = await axios.get("/api/services");
     return response.data
@@ -74,4 +76,18 @@ export async function getReward() {
 export async function exchangeVoucher(payload) {
     const response = await axios.post('/api/voucher/exchange', payload);
     return response.data;
+}
+
+export async function getVoucher() {
+    const response = await axios.get('/api/vouchers');
+    return response.data;
+}
+export async function getRecentActivities() {
+    const response = await axios.get('/api/customer/recent-activities')
+    return response.data
+}
+
+export async function getPendingDeposit() {
+    const response = await axios.get('/api/bookings/pending-deposit')
+    return response.data
 }

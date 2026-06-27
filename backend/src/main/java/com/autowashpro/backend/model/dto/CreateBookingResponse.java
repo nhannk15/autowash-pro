@@ -37,4 +37,7 @@ public class CreateBookingResponse {
     private BigDecimal totalFinalPrice;
     private List<BookingDetailResponse> bookingDetails;
     private LocalDateTime createdAt;
+
+    private String voucherCode;
+    private BigDecimal depositAmount;
 }

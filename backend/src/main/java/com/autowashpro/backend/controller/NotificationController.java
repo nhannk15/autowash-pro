@@ -22,11 +22,14 @@ import com.autowashpro.backend.service.NotificationService;
 @RequestMapping("/api/notifications")
 public class NotificationController {
 
-    @Autowired
-    private NotificationService service;
+    private final NotificationService service;
+    private final NotificationMapper mapper;
 
-    @Autowired
-    private NotificationMapper mapper;
+    @Autowired    
+    public NotificationController(NotificationService service, NotificationMapper mapper) {
+        this.service = service;
+        this.mapper = mapper;
+    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<Notification>>> findAll() {

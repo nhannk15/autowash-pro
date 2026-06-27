@@ -6,7 +6,7 @@ import { useAuth } from '../../../context/AuthContext';
 import './Sidebar.css';
 
 export default function Sidebar({ menuItems, children }) {
-    const [collapsed, setCollapsed] = useState(false);
+    const [collapsed, setCollapsed] = useState(true);
     const renderItems = menuItems;
     const navigate = useNavigate();
     const location = useLocation();
