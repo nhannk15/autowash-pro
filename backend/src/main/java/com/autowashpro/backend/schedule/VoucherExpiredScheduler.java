@@ -1,5 +1,6 @@
 package com.autowashpro.backend.schedule;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +26,9 @@ public class VoucherExpiredScheduler {
 
     @Scheduled(cron = "0 * * * * *")
     public void scheduledCheckVoucherExpire() {
-        List<Voucher> expiredVouchers = voucherRepository.findAllExpiredVoucher();
+        log.info("scheduledCheckVoucherExpire() - running...");
+        LocalDateTime now = LocalDateTime.now();
+        List<Voucher> expiredVouchers = voucherRepository.findAllExpiredVoucher(now);
         if (expiredVouchers.size() != 0) {
             for (Voucher voucher: expiredVouchers) {
                 log.info("scheduledCheckVoucherExpire() - Voucher {} has expired.", voucher.getVoucherCode());

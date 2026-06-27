@@ -1,5 +1,6 @@
 package com.autowashpro.backend.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +28,6 @@ public interface VoucherRepository extends JpaRepository<Voucher, Long> {
             WHERE voucher.expiresAt < :now
             AND voucher.status = com.autowashpro.backend.model.enums.VoucherStatus.ACTIVE
             """)
-    List<Voucher> findAllExpiredVoucher();
+    List<Voucher> findAllExpiredVoucher(@Param("now") LocalDateTime nowDateTime);
     
 }
