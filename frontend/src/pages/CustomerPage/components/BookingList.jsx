@@ -6,6 +6,9 @@ import { message, Select } from 'antd';
 import { getAvailableSlot, getApplicablePromotion as getApplicablePromotionAPI, getService, getVehicleByCustomer, createBooking, getMembershipTier, getVoucher } from '../../../service/customerService';
 function VehicleImage({ src, alt, fallbackIcon }) {
     const [hasError, setHasError] = useState(false);
+    // Mục đích: Dùng để ghi nhận xem ảnh của xe có bị lỗi khi tải hay không.
+    // Mặc định là false (chưa có lỗi).
+    // Nếu trong quá trình tải ảnh xảy ra lỗi (link hỏng, ảnh không tồn tại), state này sẽ được cập nhật thành true để component biết và chuyển sang hiển thị biểu tượng dự phòng (fallbackIcon).
 
     if (!src || hasError) {
         return fallbackIcon;
@@ -17,7 +20,13 @@ function VehicleImage({ src, alt, fallbackIcon }) {
             alt={alt}
             className="vehicle-card__image"
             referrerPolicy="no-referrer"
+            //Ý nghĩa: Đây là một thuộc tính bảo mật và quyền riêng tư của thẻ <img> trong HTML5.
+            // Mục đích: Khi trình duyệt gửi yêu cầu tải ảnh từ link src (có thể là link ảnh lưu trên host khác như Google Drive, Firebase, Cloudinary, v.v.), trình duyệt sẽ không gửi kèm thông tin về trang web hiện tại (Header Referer) của bạn tới máy chủ chứa ảnh đó.
             onError={() => setHasError(true)}
+        //Ý nghĩa: Đây là một trình lắng nghe sự kiện (Event Listener) của thẻ <img>, nó sẽ tự động được kích hoạt khi trình duyệt không thể tải được ảnh từ đường dẫn src (ví dụ: lỗi 404 không tìm thấy file, lỗi mất kết nối mạng, hoặc link ảnh bị hỏng).
+        // Mục đích: Khi sự kiện lỗi xảy ra, hàm mũi tên () => setHasError(true) sẽ được chạy để cập nhật state hasError từ false thành true.
+        // Kết quả: Khi hasError trở thành true, component VehicleImage sẽ re-render, rơi vào điều kiện if (!src || hasError) ở dòng 10 và lập tức hiển thị fallbackIcon (biểu tượng xe dự phòng) thay thế cho chiếc ảnh bị lỗi, giúp giao diện không bị hiện biểu tượng "ảnh vỡ" mất thẩm mỹ.
+
         />
     );
 }
@@ -197,10 +206,16 @@ export default function BookingList() {
                 const result = await getService()
                 const serviceList = result?.data || [];
                 if (Array.isArray(serviceList)) {
+                    // kiểm tra serviceList có phải là 1 mảng không và chỉ lấy dịch vụ đang hoạt động
+                    const activeServices = serviceList.filter(item => item.isActive !== false);
                     // Chuẩn hóa cấu trúc dịch vụ tương tự trang Dịch Vụ chính
-                    const formatted = serviceList.map(item => {
+                    const formatted = activeServices.map(item => {
                         const priceSedanItem = item.servicePrices?.find(sp => sp.vehicleType?.typeName === 'SEDAN');
+                        // Dấu ?. trong JavaScript được gọi là toán tử Optional Chaining (Liên kết tùy chọn).
+                        // Khi có dấu ?: Nếu item.servicePrices là null/undefined, JS sẽ dừng lại ngay tại đó, không gọi hàm .find() nữa mà trả về luôn giá trị undefined. Nhờ vậy, chương trình vẫn chạy tiếp bình thường mà không bị lỗi.
                         const priceSuvItem = item.servicePrices?.find(sp => sp.vehicleType?.typeName === 'SUV');
+
+                        // nhiệm vụ chuẩn hóa (format/mapping) lại cấu trúc dữ liệu của từng dịch vụ (item) nhận về từ API Backend thành một đối tượng mới có cấu trúc gọn gàng, đồng nhất để dễ dàng quản lý và hiển thị ở phía Frontend
                         return {
                             id: item.serviceId, // Sử dụng serviceId từ API thực tế
                             name: item.serviceName,
@@ -449,7 +464,7 @@ export default function BookingList() {
                                         onClick={() => {
                                             setSelectedVehicle(vehicle);
                                             setSelectedVehicleType(vehicle.typeName);
-                                            setMaxUnlockedStep(Math.max(maxUnlockedStep, 2));
+                                            setMaxUnlockedStep(2);
                                         }}
                                     >
                                         {/* Hình ảnh xe hoặc Icon phân khúc xe */}
@@ -458,6 +473,8 @@ export default function BookingList() {
                                                 src={vehicle.image}
                                                 alt={`${vehicle.brand} ${vehicle.model}`}
                                                 fallbackIcon={
+                                                    // Thuộc tính fallbackIcon ở dòng 460 được dùng làm ảnh/biểu tượng thay thế dự phòng khi ảnh chính của xe không thể hiển thị được.
+                                                    // Nếu bạn nhìn lên phần định nghĩa component VehicleImage ở đầu file (từ dòng 7 đến dòng 23):
                                                     <div className="vehicle-card__icon-wrapper">
                                                         {isSedan ? <CarOutlined /> : <span style={{ fontSize: '24px' }}>🚙</span>}
                                                     </div>
@@ -506,6 +523,13 @@ export default function BookingList() {
 
             {/* LAYOUT 2 CỘT CHO BƯỚC 2 VÀ BƯỚC 3 */}
             {(currentStep === 2 || currentStep === 3) && (
+                // Step 2 & Step 3 dùng chung Layout 2 cột
+                // Khi người dùng ở Bước 2 (Dịch vụ) và Bước 3 (Thời gian), giao diện lúc này chia làm 2 cột:
+                // Cột bên trái (booking-main-panel): Nội dung thay đổi động tùy theo bước:
+                // Nếu ở Bước 2 (currentStep === 2): Hiện danh sách gói dịch vụ.
+                // Nếu ở Bước 3 (currentStep === 3): Hiện bảng chọn ngày & giờ hẹn.
+                // Cột bên phải (booking-sidebar): Luôn hiển thị bảng Tóm tắt tạm tính (thông tin xe đã chọn, danh sách các dịch vụ đã tick chọn và tổng tiền thanh toán).
+
                 <div className="booking-content-layout">
                     {/* BẢNG CHỌN CHÍNH BÊN TRÁI */}
                     <div className="booking-main-panel">
@@ -929,7 +953,7 @@ export default function BookingList() {
                             {(() => {
                                 const appPromo = getApplicablePromotion();
                                 const originalTotal = calculateTotal();
-                                
+
                                 let promoDiscount = 0;
                                 if (appPromo) {
                                     if (appPromo.discountType === 'PERCENTAGE') {
@@ -1070,7 +1094,7 @@ export default function BookingList() {
                             {(() => {
                                 const appPromo = getApplicablePromotion();
                                 const originalTotal = calculateTotal();
-                                
+
                                 let promoDiscount = 0;
                                 if (appPromo) {
                                     if (appPromo.discountType === 'PERCENTAGE') {
