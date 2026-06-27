@@ -37,8 +37,8 @@ const CountdownCell = ({ expiryTime, onExpire }) => {
     const isExpired = timeLeft === 'Đã hết hạn';
 
     return (
-        <span style={{ 
-            fontWeight: '600', 
+        <span style={{
+            fontWeight: '600',
             color: isExpired ? '#ff4d4f' : '#faad14',
             padding: '2px 6px',
             backgroundColor: isExpired ? '#fff1f0' : '#fffbe6',
@@ -288,9 +288,12 @@ export default function Overview() {
                 <ul style={{ paddingLeft: '16px', margin: 0, fontSize: '12px' }}>
                     {record.bookingDetails?.map((detail, index) => (
                         <li key={index}>
-                            {detail.serviceName} ({detail.finalPrice.toLocaleString()}đ)
+                            {detail.serviceName}
                         </li>
                     ))}
+                    <div style={{ marginTop: '4px', fontSize: '11px', color: '#8c8c8c', fontWeight: '500' }}>
+                        Đã cọc: {(record.billing?.depositAmount || 0).toLocaleString()}đ
+                    </div>
                 </ul>
             ),
         },
@@ -298,10 +301,16 @@ export default function Overview() {
             title: 'TẠM TÍNH (GIÁ CUỐI)',
             key: 'totalPrice',
             render: (_, record) => {
-                const total = record.bookingDetails
-                    ? record.bookingDetails.reduce((sum, d) => sum + d.finalPrice, 0)
-                    : 0;
-                return <Text strong style={{ color: '#52c41a' }}>{total.toLocaleString()} VND</Text>;
+                const finalAmount = record.billing?.finalAmount || 0;
+                const depositAmount = record.billing?.depositAmount || 0;
+                const remaining = Math.max(0, finalAmount - depositAmount);
+                return (
+                    <Space direction="vertical" size={0}>
+                        <Text strong style={{ color: '#52c41a' }}>
+                            {remaining.toLocaleString()} VND
+                        </Text>
+                    </Space>
+                );
             },
         },
         {
@@ -420,9 +429,12 @@ export default function Overview() {
                 <ul style={{ paddingLeft: '16px', margin: 0, fontSize: '12px' }}>
                     {record.bookingDetails?.map((detail, index) => (
                         <li key={index}>
-                            {detail.serviceName} ({detail.finalPrice.toLocaleString()}đ)
+                            {detail.serviceName}
                         </li>
                     ))}
+                    <div style={{ marginTop: '4px', fontSize: '11px', color: '#8c8c8c', fontWeight: '500' }}>
+                        Tạm tính: {(record.billing?.finalAmount || 0).toLocaleString()}đ
+                    </div>
                 </ul>
             ),
         },
@@ -542,7 +554,7 @@ export default function Overview() {
                                     <div className="booking-car">
                                         🚗 Biển số: <strong>{nearestPendingLicensePlate}</strong>
                                     </div>
-                                                                    <div className="booking-deposit" style={{ margin: '4px 0', fontSize: '13px', fontWeight: 'bold', color: '#ff4d4f', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div className="booking-deposit" style={{ margin: '4px 0', fontSize: '13px', fontWeight: 'bold', color: '#ff4d4f', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <span>💵 Tiền cọc: {nearestPendingDeposit.toLocaleString()} VND</span>
                                         <CountdownCell expiryTime={nearestPending?.billing?.depositExpiry} />
                                     </div>
