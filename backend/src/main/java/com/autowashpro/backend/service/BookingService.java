@@ -527,11 +527,11 @@ public class BookingService {
     }
 
     @Transactional(readOnly = true)
-    public List<PendingBookingResponse> getCustomerDepositPendingBookings(String email) {
+    public List<BookingResponse> getCustomerDepositPendingBookings(String email) {
         Customer customer = customerRepository.findByEmail(email)
                         .orElseThrow(() -> new UserNotFoundException("Không tìm thấy khách hàng với email: " + email));
         List<Booking> pendingDepositBookings = bookingRepository.getPendingDepositBookings(customer.getId());
-        return bookingMapper.toPendingBookingResponses(pendingDepositBookings);
+        return bookingMapper.toBookingResponses(pendingDepositBookings);
     }
 }
 
