@@ -119,6 +119,12 @@
     border-radius: 6px;
 }
 
+.payment-deposit-row {
+    padding: 8px 12px;
+    background: #fffbe6;
+    border-radius: 6px;
+}
+
 /* --- Total Box (Stage 1) --- */
 .payment-total-box {
     background-color: #f0f5ff;
@@ -130,14 +136,14 @@
 
 .payment-total-label {
     font-size: 16px;
-    color: #595959;
+    color: #262626;
     font-weight: 600;
     font-family: system-ui, -apple-system, sans-serif;
 }
 
 .payment-total-amount {
     font-size: 28px !important;
-    color: #2f54eb !important;
+    color: #262626 !important;
     font-weight: 700 !important;
     margin: 0 !important;
     font-family: system-ui, -apple-system, sans-serif !important;

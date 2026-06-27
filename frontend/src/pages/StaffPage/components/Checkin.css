@@ -453,14 +453,14 @@
 
 .invoice-total-label {
     font-size: 16px;
-    color: #595959;
+    color: #262626;
     font-weight: 600;
     font-family: system-ui, -apple-system, sans-serif;
 }
 
 .invoice-total-amount {
     font-size: 28px !important;
-    color: #2f54eb !important;
+    color: #262626 !important;
     font-weight: 700 !important;
     margin: 0 !important;
     font-family: system-ui, -apple-system, sans-serif !important;

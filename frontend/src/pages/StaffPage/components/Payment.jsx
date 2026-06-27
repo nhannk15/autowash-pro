@@ -30,25 +30,36 @@ export default function StaffPayment() {
     const bayId = location.state?.bayId || null;
     const bookingId = location.state?.bookingId || null;
 
-    useEffect(() => {
-        async function getBill() {
-            // Cần bookingId hoặc sessionId để fetch bill
-            const id = bookingId;
-            if (!id) return;
-            setLoading(true);
-            try {
-                const response = await getBillByBookingId(id);
-                // API trả về mảng List<BillingResponse>, lấy phần tử đầu tiên
-                const data = Array.isArray(response) ? response[0] : response;
-                setBillData(data);
-            } catch (error) {
-                console.error("Failed to fetch bill", error);
-                message.error('Không thể tải thông tin hóa đơn!');
-            } finally {
-                setLoading(false);
+    const fetchBillData = async () => {
+        const id = bookingId;
+        if (!id) return;
+        setLoading(true);
+        try {
+            const response = await getBillByBookingId(id);
+            const data = Array.isArray(response) ? response[0] : response;
+            setBillData(data);
+
+            // Nếu billData có sẵn voucher thì set vào state
+            const voucherData = data?.booking?.billing?.voucher || data?.billingVoucherResponse;
+            if (voucherData) {
+                setAppliedVoucher({
+                    voucherCode: voucherData.voucherCode,
+                    rewardName: voucherData.rewardName || '-',
+                    discountValue: voucherData.discountValue
+                });
+            } else {
+                setAppliedVoucher(null);
             }
+        } catch (error) {
+            console.error("Failed to fetch bill", error);
+            message.error('Không thể tải thông tin hóa đơn!');
+        } finally {
+            setLoading(false);
         }
-        getBill();
+    };
+
+    useEffect(() => {
+        fetchBillData();
     }, [bookingId]);
 
     // Nếu đang loading
@@ -149,35 +160,39 @@ export default function StaffPayment() {
     // Ghi chú nhân viên
     const staffNote = billData.booking?.notes || billData.session?.note || billData.staffNote || '';
 
-    // Khuyến mãi đã áp dụng từ check-in
-    // FIX: API thực tế trả promotionName + discountAmount nằm trong từng item của
-    // booking.bookingDetails, không có field promotionUsages/promotions ở root.
-    const promotions = billData.booking?.bookingDetails
+    // Khuyến mãi
+    const bookingPromotion = billData.bookingPromotionResponse || billData.booking?.promotion || null;
+    const bookingPromotionDiscountAmount = bookingPromotion ? (
+        services.reduce((acc, s) => acc + (s.price * (Number(bookingPromotion.discountValue || 0) / 100)), 0)
+    ) : 0;
+
+    // Nếu API trả về list trong bookingDetails (fallback)
+    const detailPromotions = billData.booking?.bookingDetails
         ?.filter(s => s.promotionName && Number(s.discountAmount) > 0)
         .map(s => ({
             id: s.servicePriceId,
             name: s.promotionName,
             discountAmount: s.discountAmount
-        }))
-        || billData.promotionUsages
-        || billData.promotions
-        || [];
+        })) || [];
+
+    const depositAmount = Number(billData.depositAmount || billData.booking?.billing?.depositAmount || 0);
 
     // === Tính tiền ===
     const subtotal = billData.originalAmount
         ? Number(billData.originalAmount)
         : services.reduce((acc, s) => acc + s.price, 0);
 
-    const promotionDiscount = billData.discountAmount
+    // Tính tổng khuyến mãi
+    const totalPromotionDiscount = billData.discountAmount && !appliedVoucher
         ? Number(billData.discountAmount)
-        : promotions.reduce((acc, p) => acc + (Number(p.discountAmount) || Number(p.discount) || 0), 0);
+        : (bookingPromotion
+            ? bookingPromotionDiscountAmount
+            : detailPromotions.reduce((acc, p) => acc + (Number(p.discountAmount) || 0), 0));
 
-    // Voucher discount từ API response (đã được backend tính sẵn)
-    const voucherDiscount = appliedVoucher?.discountValue ? Number(appliedVoucher.discountValue) : 0;
+    // Tổng thanh toán (backend đã xử lý, không trừ đúp)
+    const finalTotal = billData.finalAmount != null ? Number(billData.finalAmount) :
+        (subtotal - totalPromotionDiscount - (appliedVoucher?.discountValue ? Number(appliedVoucher.discountValue) : 0) - depositAmount);
 
-    const finalTotal = billData.finalAmount
-        ? Number(billData.finalAmount) - voucherDiscount
-        : subtotal - promotionDiscount - voucherDiscount;
 
     // Áp dụng voucher
     const handleApplyVoucher = async () => {
@@ -191,8 +206,9 @@ export default function StaffPayment() {
             const voucherData = response?.data || response;
 
             if (voucherData) {
-                setAppliedVoucher(voucherData);
-                message.success(`Áp dụng thành công: ${voucherData.name || voucherData.voucherCode || voucherCode}`);
+                message.success(`Áp dụng thành công voucher!`);
+                // Gọi API lại để reload data, vì backend đã update bill
+                await fetchBillData();
             } else {
                 message.error('Mã voucher không hợp lệ hoặc đã hết hạn!');
             }
@@ -201,13 +217,6 @@ export default function StaffPayment() {
             const errorMsg = error.response?.data?.message || 'Mã voucher không hợp lệ hoặc đã hết hạn!';
             message.error(errorMsg);
         }
-    };
-
-    // Xóa voucher
-    const handleRemoveVoucher = () => {
-        setAppliedVoucher(null);
-        setVoucherCode('');
-        message.info('Đã xóa voucher.');
     };
 
     // Chuyển sang bước thanh toán
@@ -298,6 +307,9 @@ export default function StaffPayment() {
                                     <Descriptions.Item label="Số điện thoại">
                                         <Text>{customerPhone}</Text>
                                     </Descriptions.Item>
+                                    <Descriptions.Item label="Email">
+                                        <Text>{customerEmail}</Text>
+                                    </Descriptions.Item>
                                     <Descriptions.Item label="Phương tiện">
                                         <Text strong>{licensePlate}</Text>
                                         <br />
@@ -321,30 +333,37 @@ export default function StaffPayment() {
                                     {services.map(s => (
                                         <Row justify="space-between" key={s.id} className="payment-service-row">
                                             <Col><Text>{s.name}</Text></Col>
-                                            <Col><Text strong>{s.price.toLocaleString('vi-VN')} đ</Text></Col>
+                                            <Col><Text strong>{s.price.toLocaleString('vi-VN')}đ</Text></Col>
                                         </Row>
                                     ))}
                                     <div className="payment-subtotal-row">
                                         <Row justify="space-between">
                                             <Col><Text strong>Tạm tính</Text></Col>
-                                            <Col><Text strong>{subtotal.toLocaleString('vi-VN')} đ</Text></Col>
+                                            <Col><Text strong>{subtotal.toLocaleString('vi-VN')}đ</Text></Col>
                                         </Row>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Khuyến mãi đã áp dụng từ check-in */}
-                            {promotions.length > 0 && (
+                            {/* Khuyến mãi đã áp dụng */}
+                            {(bookingPromotion || detailPromotions.length > 0) && (
                                 <div className="payment-section">
                                     <Text className="payment-section-label">
-                                        <TagOutlined style={{ marginRight: 6 }} /> Khuyến mãi đã áp dụng
+                                        <TagOutlined style={{ marginRight: 6 }} /> Khuyến mãi
                                     </Text>
-                                    {promotions.map((p, idx) => (
-                                        <Row justify="space-between" key={p.id || idx} className="payment-promo-row">
-                                            <Col><Text style={{ color: '#52c41a' }}>{p.name || p.promotionName || 'Khuyến mãi'}</Text></Col>
-                                            <Col><Text strong style={{ color: '#52c41a' }}>-{(Number(p.discountAmount) || Number(p.discount) || 0).toLocaleString('vi-VN')} đ</Text></Col>
+                                    {bookingPromotion ? (
+                                        <Row justify="space-between" className="payment-promo-row">
+                                            <Col><Text style={{ color: '#52c41a' }}>{bookingPromotion.promotionName}</Text></Col>
+                                            <Col><Text strong style={{ color: '#52c41a' }}>-{totalPromotionDiscount.toLocaleString('vi-VN')}đ</Text></Col>
                                         </Row>
-                                    ))}
+                                    ) : (
+                                        detailPromotions.map((p, idx) => (
+                                            <Row justify="space-between" key={p.id || idx} className="payment-promo-row">
+                                                <Col><Text style={{ color: '#52c41a' }}>{p.name || p.promotionName || 'Khuyến mãi'}</Text></Col>
+                                                <Col><Text strong style={{ color: '#52c41a' }}>-{(Number(p.discountAmount) || 0).toLocaleString('vi-VN')}đ</Text></Col>
+                                            </Row>
+                                        ))
+                                    )}
                                 </div>
                             )}
 
@@ -356,21 +375,31 @@ export default function StaffPayment() {
                                     </Text>
                                     <Row justify="space-between" className="payment-voucher-applied-row">
                                         <Col>
-                                            <Tag color="blue">{voucherCode.toUpperCase()}</Tag>
-                                            <Text style={{ color: '#1890ff' }}>{appliedVoucher.rewardName}</Text>
+                                            <Tag style={{ fontWeight: 500 }} color="blue">{appliedVoucher.voucherCode.toUpperCase()}</Tag>
+                                            <Text style={{ color: '#1890ff', marginLeft: 10 }}>{appliedVoucher.rewardName}</Text>
                                         </Col>
-                                        <Col><Text strong style={{ color: '#1890ff' }}>-{voucherDiscount.toLocaleString('vi-VN')} đ</Text></Col>
+                                        <Col><Text strong style={{ color: '#1890ff' }}>-{(appliedVoucher.discountValue ? Number(appliedVoucher.discountValue) : 0).toLocaleString('vi-VN')}đ</Text></Col>
+                                    </Row>
+                                </div>
+                            )}
+
+                            {/* Tiền cọc */}
+                            {depositAmount > 0 && (
+                                <div className="payment-section" style={{ borderTop: '1px solid #f0f0f0', paddingTop: '12px' }}>
+                                    <Row justify="space-between" className="payment-deposit-row">
+                                        <Col><Text strong style={{ color: '#faad14' }}>Đã đặt cọc</Text></Col>
+                                        <Col><Text strong style={{ color: '#faad14' }}>{depositAmount.toLocaleString('vi-VN')}đ</Text></Col>
                                     </Row>
                                 </div>
                             )}
 
                             {/* Tổng cộng */}
-                            <div className="payment-total-box">
+                            <div className="payment-final-total-box">
                                 <Row justify="space-between" align="middle">
-                                    <Col><Text className="payment-total-label">Tổng thanh toán</Text></Col>
+                                    <Col><Text className="payment-final-total-label">Tổng thanh toán</Text></Col>
                                     <Col>
-                                        <Title level={2} className="payment-total-amount">
-                                            {Math.max(0, finalTotal).toLocaleString('vi-VN')} đ
+                                        <Title level={2} className="payment-final-total-amount">
+                                            {Math.max(0, finalTotal).toLocaleString('vi-VN')}đ
                                         </Title>
                                     </Col>
                                 </Row>
@@ -412,7 +441,7 @@ export default function StaffPayment() {
                                 allowClear
                             />
 
-                            {!appliedVoucher ? (
+                            {!appliedVoucher && (
                                 <Button
                                     type="primary"
                                     block
@@ -421,15 +450,6 @@ export default function StaffPayment() {
                                     disabled={!voucherCode.trim()}
                                 >
                                     Áp dụng voucher
-                                </Button>
-                            ) : (
-                                <Button
-                                    block
-                                    danger
-                                    className="voucher-remove-btn"
-                                    onClick={handleRemoveVoucher}
-                                >
-                                    Xóa voucher
                                 </Button>
                             )}
 
@@ -449,8 +469,8 @@ export default function StaffPayment() {
                                 <Row justify="space-between" align="middle">
                                     <Col><Text strong style={{ fontSize: 16 }}>Cần thanh toán</Text></Col>
                                     <Col>
-                                        <Title level={3} style={{ margin: 0, color: '#1890ff' }}>
-                                            {Math.max(0, finalTotal).toLocaleString('vi-VN')} đ
+                                        <Title level={3} style={{ margin: 0, color: '#262626', fontWeight: 700 }}>
+                                            {Math.max(0, finalTotal).toLocaleString('vi-VN')}đ
                                         </Title>
                                     </Col>
                                 </Row>
@@ -495,7 +515,7 @@ export default function StaffPayment() {
                             {/* Khách hàng */}
                             <Descriptions bordered column={1} size="small" className="payment-descriptions" style={{ marginBottom: 24 }}>
                                 <Descriptions.Item label="Khách hàng">
-                                    <Text strong>{customerName}</Text> — {customerPhone}
+                                    <Text strong>{customerName}</Text> - {customerPhone} - {customerEmail}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Phương tiện">
                                     <Text strong>{licensePlate}</Text>
@@ -509,28 +529,50 @@ export default function StaffPayment() {
                                 {services.map(s => (
                                     <Row justify="space-between" key={s.id} className="payment-service-row">
                                         <Col><Text>{s.name}</Text></Col>
-                                        <Col><Text strong>{s.price.toLocaleString('vi-VN')} đ</Text></Col>
+                                        <Col><Text strong>{s.price.toLocaleString('vi-VN')}đ</Text></Col>
                                     </Row>
                                 ))}
+                                <div className="payment-subtotal-row">
+                                    <Row justify="space-between">
+                                        <Col><Text strong>Tạm tính</Text></Col>
+                                        <Col><Text strong>{subtotal.toLocaleString('vi-VN')}đ</Text></Col>
+                                    </Row>
+                                </div>
                             </div>
 
-                            {/* Giảm giá */}
-                            {(promotions.length > 0 || appliedVoucher) && (
+                            {/* Giảm giá & Deposit */}
+                            {(bookingPromotion || detailPromotions.length > 0 || appliedVoucher || depositAmount > 0) && (
                                 <div className="payment-discount-section">
-                                    <Text className="payment-section-label" style={{ marginBottom: 12, display: 'block' }}>Giảm giá</Text>
-                                    {promotions.map((p, idx) => (
-                                        <Row justify="space-between" key={p.id || idx} className="payment-promo-row">
-                                            <Col><Text style={{ color: '#52c41a' }}>{p.name || p.promotionName || 'Khuyến mãi'}</Text></Col>
-                                            <Col><Text strong style={{ color: '#52c41a' }}>-{(Number(p.discountAmount) || Number(p.discount) || 0).toLocaleString('vi-VN')} đ</Text></Col>
-                                        </Row>
-                                    ))}
-                                    {appliedVoucher && (
+                                    <Text className="payment-section-label" style={{ marginBottom: 12, display: 'block' }}>Giảm giá & Cọc</Text>
+
+                                    {bookingPromotion ? (
                                         <Row justify="space-between" className="payment-promo-row">
+                                            <Col><Text style={{ color: '#52c41a' }}>{bookingPromotion.promotionName}</Text></Col>
+                                            <Col><Text strong style={{ color: '#52c41a' }}>-{totalPromotionDiscount.toLocaleString('vi-VN')}đ</Text></Col>
+                                        </Row>
+                                    ) : (
+                                        detailPromotions.map((p, idx) => (
+                                            <Row justify="space-between" key={p.id || idx} className="payment-promo-row">
+                                                <Col><Text strong style={{ color: '#52c41a' }}>{p.name || p.promotionName || 'Khuyến mãi'}</Text></Col>
+                                                <Col><Text strong style={{ color: '#52c41a' }}>-{(Number(p.discountAmount) || 0).toLocaleString('vi-VN')}đ</Text></Col>
+                                            </Row>
+                                        ))
+                                    )}
+
+                                    {appliedVoucher && (
+                                        <Row justify="space-between" className="payment-voucher-applied-row">
                                             <Col>
-                                                <Tag color="blue" style={{ marginRight: 4 }}>{voucherCode.toUpperCase()}</Tag>
-                                                <Text style={{ color: '#1890ff' }}>{appliedVoucher.rewardName}</Text>
+                                                <Tag color="blue" style={{ marginRight: 4, fontWeight: 500 }}>{appliedVoucher.voucherCode}</Tag>
+                                                <Text strong style={{ color: '#1890ff' }}>{appliedVoucher.rewardName || 'Giảm giá Voucher'}</Text>
                                             </Col>
-                                            <Col><Text strong style={{ color: '#1890ff' }}>-{voucherDiscount.toLocaleString('vi-VN')} đ</Text></Col>
+                                            <Col><Text strong style={{ color: '#1890ff' }}>-{(appliedVoucher.discountValue ? Number(appliedVoucher.discountValue) : 0).toLocaleString('vi-VN')}đ</Text></Col>
+                                        </Row>
+                                    )}
+
+                                    {depositAmount > 0 && (
+                                        <Row justify="space-between" className="payment-deposit-row" style={{ marginTop: 8 }}>
+                                            <Col><Text strong style={{ color: '#faad14' }}>Đã đặt cọc</Text></Col>
+                                            <Col><Text strong style={{ color: '#faad14' }}>{depositAmount.toLocaleString('vi-VN')}đ</Text></Col>
                                         </Row>
                                     )}
                                 </div>
@@ -542,7 +584,7 @@ export default function StaffPayment() {
                                     <Col><Text className="payment-final-total-label">TỔNG THANH TOÁN</Text></Col>
                                     <Col>
                                         <Title level={2} className="payment-final-total-amount">
-                                            {Math.max(0, finalTotal).toLocaleString('vi-VN')} đ
+                                            {Math.max(0, finalTotal).toLocaleString('vi-VN')}đ
                                         </Title>
                                     </Col>
                                 </Row>
@@ -586,8 +628,8 @@ export default function StaffPayment() {
 
                                             <div className="qr-amount-display">
                                                 <Text type="secondary">Số tiền cần thanh toán</Text>
-                                                <Title level={3} style={{ margin: '4px 0 0', color: '#1890ff' }}>
-                                                    {Math.max(0, finalTotal).toLocaleString('vi-VN')} đ
+                                                <Title level={3} style={{ margin: '4px 0 0', color: '#52c41a', fontWeight: 700 }}>
+                                                    {Math.max(0, finalTotal).toLocaleString('vi-VN')}đ
                                                 </Title>
                                             </div>
 
@@ -618,8 +660,8 @@ export default function StaffPayment() {
 
                                             <div className="qr-amount-display">
                                                 <Text type="secondary">Số tiền cần thu</Text>
-                                                <Title level={3} style={{ margin: '4px 0 0', color: '#52c41a' }}>
-                                                    {Math.max(0, finalTotal).toLocaleString('vi-VN')} đ
+                                                <Title level={3} style={{ margin: '4px 0 0', color: '#52c41a', fontWeight: 700 }}>
+                                                    {Math.max(0, finalTotal).toLocaleString('vi-VN')}đ
                                                 </Title>
                                             </div>
 
@@ -644,7 +686,7 @@ export default function StaffPayment() {
                                 <Result
                                     status="success"
                                     title="Thanh toán thành công!"
-                                    subTitle={`Hóa đơn ${billId} — ${Math.max(0, finalTotal).toLocaleString('vi-VN')} đ`}
+                                    subTitle={`Hóa đơn ${billId} — ${Math.max(0, finalTotal).toLocaleString('vi-VN')}đ`}
                                     extra={
                                         <Text type="secondary">
                                             {bayId ? 'Đang chuyển đến Dashboard...' : 'Đang chuyển đến lịch sử...'}
