@@ -18,7 +18,6 @@ import com.autowashpro.backend.model.dto.BookingResponse;
 import com.autowashpro.backend.model.dto.CancelBookingRequest;
 import com.autowashpro.backend.model.dto.CreateBookingRequest;
 import com.autowashpro.backend.model.dto.CreateBookingResponse;
-import com.autowashpro.backend.model.dto.PendingBookingResponse;
 import com.autowashpro.backend.model.dto.SlotAvailabilityByDateResponse;
 import com.autowashpro.backend.model.dto.UpcomingBookingResponse;
 import com.autowashpro.backend.service.BookingService;

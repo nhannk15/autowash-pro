@@ -62,4 +62,10 @@ public class MembershipTier {
     @OneToMany(mappedBy = "membershipTier")
     @JsonIgnoreProperties({ "membershipTier", "service", "staff" })
     private List<Promotion> promotions;
+
+    @Column(name = "min_cancel_hours", nullable = true)
+    private Long minCancelHours;
+
+    @Column(name = "percentage_refund", nullable = true)
+    private BigDecimal percentageRefund;
 }
