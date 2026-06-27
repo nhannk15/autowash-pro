@@ -29,6 +29,7 @@ import com.autowashpro.backend.model.dto.BookingResponse;
 import com.autowashpro.backend.model.dto.CancelBookingRequest;
 import com.autowashpro.backend.model.dto.CreateBookingRequest;
 import com.autowashpro.backend.model.dto.CreateBookingResponse;
+import com.autowashpro.backend.model.dto.PendingBookingResponse;
 import com.autowashpro.backend.model.dto.SlotAvailabilityByDateResponse;
 import com.autowashpro.backend.model.dto.TimeSlotAvailabilityResponse;
 import com.autowashpro.backend.model.dto.UpcomingBookingResponse;
@@ -525,6 +526,13 @@ public class BookingService {
         bookingRepository.save(booking);
     }
 
+    @Transactional(readOnly = true)
+    public List<PendingBookingResponse> getCustomerDepositPendingBookings(String email) {
+        Customer customer = customerRepository.findByEmail(email)
+                        .orElseThrow(() -> new UserNotFoundException("Không tìm thấy khách hàng với email: " + email));
+        List<Booking> pendingDepositBookings = bookingRepository.getPendingDepositBookings(customer.getId());
+        return bookingMapper.toPendingBookingResponses(pendingDepositBookings);
+    }
 }
 
 /**

@@ -11,6 +11,7 @@ import org.mapstruct.Named;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import com.autowashpro.backend.model.dto.BookingResponse;
+import com.autowashpro.backend.model.dto.PendingBookingResponse;
 import com.autowashpro.backend.model.dto.UpcomingBookingResponse;
 import com.autowashpro.backend.model.entity.AvailableSlot;
 import com.autowashpro.backend.model.entity.Booking;
@@ -78,4 +79,11 @@ public interface BookingMapper {
     }
 
     List<BookingResponse> toBookingResponses(List<Booking> bookings);
+
+    @Mapping(target = "slotDate", source = "availableSlots", qualifiedByName = "toSlotDate")
+    @Mapping(target = "startTime", source = "availableSlots", qualifiedByName = "toStartTime")
+    @Mapping(target = "endTime", source = "availableSlots", qualifiedByName = "toEndTime")
+    @Mapping(target = "billingId", source = "billing.id")
+    PendingBookingResponse toPendingBookingResponse(Booking booking);
+    List<PendingBookingResponse> toPendingBookingResponses(List<Booking> bookings);
 }
