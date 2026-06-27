@@ -11,9 +11,9 @@ import org.springframework.stereotype.Service;
 
 import com.autowashpro.backend.model.dto.BookingDetailResponse;
 import com.autowashpro.backend.model.dto.CreateBookingResponse;
+import com.autowashpro.backend.model.entity.AvailableSlot;
 import com.autowashpro.backend.model.entity.Booking;
 import com.autowashpro.backend.model.entity.BookingDetail;
-import com.autowashpro.backend.model.entity.AvailableSlot;
 
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
@@ -292,6 +292,7 @@ public class EmailService {
         } catch (Exception e) {
             log.error("Failed to send reminder email to: {} for booking: {}",
                     booking.getCustomer().getEmail(), booking.getBookingCode(), e);
+            throw new RuntimeException("Không thể gửi email nhắc nhở. Vui lòng thử lại sau!");
         }
     }
 
