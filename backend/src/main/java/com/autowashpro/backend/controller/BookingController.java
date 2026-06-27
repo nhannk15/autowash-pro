@@ -82,7 +82,7 @@ public class BookingController {
     }
 
     @GetMapping("/api/bookings/pending-deposit")
-    public ResponseEntity<List<PendingBookingResponse>> getAllDepositPendingBookings(@AuthenticationPrincipal String email) {
+    public ResponseEntity<List<BookingResponse>> getAllDepositPendingBookings(@AuthenticationPrincipal String email) {
         return ResponseEntity.ok().body(bookingService.getCustomerDepositPendingBookings(email));
     }
 

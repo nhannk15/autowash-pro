@@ -60,6 +60,7 @@ public interface BookingMapper {
     @Mapping(target = "endTime", source = "availableSlots", qualifiedByName = "toEndTime")
     @Mapping(target = "washBay", source = "washSessions", qualifiedByName = "toWashBayName")
     @Mapping(target = "washSessionStatus", source = "washSessions", qualifiedByName = "toWashSessionStatus")
+    @Mapping(target = "billingId", source = "billing.id")
     BookingResponse toBookingResponse(Booking booking);
 
     @Named("toWashBayName")
