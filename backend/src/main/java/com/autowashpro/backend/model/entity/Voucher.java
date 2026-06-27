@@ -42,7 +42,7 @@ public class Voucher {
     private String voucherCode;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reward_id")
+    @JoinColumn(name = "reward_id", nullable = true)
     @JsonIgnoreProperties({"service"})
     private Reward reward;
 
