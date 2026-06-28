@@ -2,14 +2,18 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Row, Col, Card, Statistic, Button,
-    Timeline, Tag, Typography, Badge, message, Spin, Divider, Tooltip
+    Timeline, Tag, Typography, Badge, message, Spin, Divider, Tooltip,
+    Modal, Form, Input, Select, DatePicker
 } from 'antd';
 import {
     CarOutlined, DollarCircleOutlined, CheckCircleOutlined, ScanOutlined,
     CalendarOutlined, UserAddOutlined, ArrowRightOutlined, BellOutlined, UserOutlined,
     CreditCardOutlined
 } from '@ant-design/icons';
-import { getAllBays, getUpcomingBookings, getTodayBookings, completeSession } from '../../../service/staffService';
+import {
+    getAllBays, getUpcomingBookings, getTodayBookings, completeSession,
+    createWalkInCustomer, getVehicleTypes, getServices, getAvailableSlots, createBooking, confirmBooking
+} from '../../../service/staffService';
 import './StaffDashboard.css';
 
 const { Title, Text } = Typography;
@@ -39,6 +43,12 @@ export default function StaffDashboard() {
     const [loadingBays, setLoadingBays] = useState(true);
     const [loadingTodayBookings, setLoadingTodayBookings] = useState(true);
     const [loadingUpcomingBookings, setLoadingUpcomingBookings] = useState(true);
+
+    const [isWalkInModalVisible, setIsWalkInModalVisible] = useState(false);
+    const [submittingWalkIn, setSubmittingWalkIn] = useState(false);
+    const [walkInForm] = Form.useForm();
+    const [vehicleTypes, setVehicleTypes] = useState([]);
+    const [servicesList, setServicesList] = useState([]);
 
     const fetchBays = useCallback(async () => {
         try {
@@ -90,7 +100,7 @@ export default function StaffDashboard() {
     // === Tính stats tự động từ data đã fetch ===
     const stats = useMemo(() => {
         const activeCars = bays.filter(bay => getCurrentSession(bay)?.status === 'IN_PROGRESS').length;
-        const completed = todayBookings.filter(booking => booking.washSessionStatus === 'PAID').length;
+        const completed = todayBookings.filter(booking => booking.washSessionStatus === 'PAID' || booking.washSessionStatus === 'COMPLETED').length;
         const todayAppointments = todayBookings.length;
         // Doanh thu: tính sau khi có billing data, tạm để 0
         const revenue = todayBookings.reduce((total, booking) => total + getBookingRevenue(booking), 0);
@@ -204,6 +214,103 @@ export default function StaffDashboard() {
             case 'MAINTENANCE': return 'Bảo trì';
             case 'INACTIVE': return 'Không hoạt động';
             default: return '';
+        }
+    };
+
+    const handleWalkinCustomer = async () => {
+        setIsWalkInModalVisible(true);
+        walkInForm.resetFields();
+        if (vehicleTypes.length === 0) {
+            try {
+                const types = await getVehicleTypes();
+                setVehicleTypes(types);
+            } catch (err) { console.error(err); }
+        }
+        if (servicesList.length === 0) {
+            try {
+                const svcs = await getServices();
+                setServicesList(svcs.data || []);
+            } catch (err) { console.error(err); }
+        }
+    }
+
+    const handleWalkInSubmit = async (values) => {
+        try {
+            setSubmittingWalkIn(true);
+            
+            // 1. Map Services to ServicePriceIds
+            const servicePriceIds = values.services.map(svcId => {
+                const svc = servicesList.find(s => s.serviceId === svcId);
+                const priceItem = svc?.servicePrices?.find(p => p.vehicleType.id === values.vehicleTypeId);
+                return priceItem ? priceItem.servicePriceId : null;
+            }).filter(id => id != null);
+
+            if (servicePriceIds.length === 0) {
+                message.error("Vui lòng chọn ít nhất 1 dịch vụ hợp lệ cho loại xe này!");
+                setSubmittingWalkIn(false);
+                return;
+            }
+
+            // 2. Create WalkIn Customer
+            const customerRes = await createWalkInCustomer(
+                values.fullName,
+                values.phoneNumber,
+                values.email || "",
+                values.dateOfBirth ? values.dateOfBirth.format('YYYY-MM-DD') : null,
+                values.vehicleTypeId,
+                values.licensePlate,
+                values.brand || "",
+                values.model || "",
+                values.color || ""
+            );
+            
+            const cData = customerRes.data || customerRes;
+            const customerId = cData.customerId;
+            const vehicleId = cData.vehicleId;
+
+            // 3. Fetch available slots for today
+            const todayStr = new Date().toISOString().split('T')[0];
+            const slotsRes = await getAvailableSlots(todayStr);
+            const slotData = slotsRes.data || slotsRes;
+            const availableSlots = (slotData.timeSlotAvailabilityResponses || []).filter(s => s.available || s.isAvailable);
+            
+            if (availableSlots.length === 0) {
+                message.error("Hôm nay đã hết khung giờ trống! Đã tạo hồ sơ khách nhưng chưa thể check-in.");
+                setIsWalkInModalVisible(false);
+                setSubmittingWalkIn(false);
+                return;
+            }
+            
+            const timeSlotId = availableSlots[0].timeSlotId;
+
+            // 4. Create Booking
+            const bookingReq = {
+                customerId,
+                vehicleId,
+                timeSlotId,
+                bookingDate: todayStr,
+                servicePriceIds,
+                notes: "Khách vãng lai"
+            };
+            const bookingRes = await createBooking(bookingReq);
+            const bData = bookingRes.data || bookingRes;
+            const bookingId = bData.id;
+
+            // 5. Checkin (Confirm Booking)
+            await confirmBooking(bookingId);
+            
+            message.success("Tạo khách vãng lai và check-in thành công!");
+            setIsWalkInModalVisible(false);
+            
+            // Refresh dashboard
+            fetchBays();
+            fetchTodayBookings();
+            fetchUpcomingBookings();
+        } catch (error) {
+            console.error("Failed to process walk-in", error);
+            message.error(error.response?.data?.message || 'Có lỗi xảy ra khi tiếp nhận khách vãng lai!');
+        } finally {
+            setSubmittingWalkIn(false);
         }
     };
 
@@ -417,6 +524,7 @@ export default function StaffDashboard() {
                                     icon={<UserAddOutlined />}
                                     className="action-btn action-btn--walkin"
                                     block
+                                    onClick={handleWalkinCustomer}
                                 >
                                     Khách vãng lai
                                 </Button>
@@ -474,6 +582,73 @@ export default function StaffDashboard() {
                     </Card>
                 </Col>
             </Row>
+
+            {/* Modal Khách Vãng Lai */}
+            <Modal
+                title={<Title level={4} style={{ margin: 0 }}>Tiếp nhận Khách vãng lai</Title>}
+                open={isWalkInModalVisible}
+                onCancel={() => setIsWalkInModalVisible(false)}
+                onOk={() => walkInForm.submit()}
+                confirmLoading={submittingWalkIn}
+                okText="Tạo & Check-in"
+                cancelText="Hủy"
+                width={700}
+                centered
+                maskClosable={false}
+            >
+                <div style={{ marginTop: 16 }}>
+                    <Form form={walkInForm} layout="vertical" onFinish={handleWalkInSubmit}>
+                        <Row gutter={24}>
+                            <Col span={12}>
+                                <Divider orientation="left" plain>Thông tin Khách hàng</Divider>
+                                <Form.Item name="fullName" label="Họ tên" rules={[
+                                    { required: true, message: 'Vui lòng nhập họ tên' },
+                                    { min: 2, message: 'Họ tên phải có ít nhất 2 ký tự' }
+                                ]}>
+                                    <Input placeholder="Ví dụ: Nguyễn Văn A" />
+                                </Form.Item>
+                                <Form.Item name="phoneNumber" label="Số điện thoại" rules={[
+                                    { required: true, message: 'Vui lòng nhập số điện thoại' },
+                                    { pattern: /^(0[3|5|7|8|9])+([0-9]{8})$/, message: 'Số điện thoại không hợp lệ (Ví dụ: 0987654321)' }
+                                ]}>
+                                    <Input placeholder="Ví dụ: 0987654321" />
+                                </Form.Item>
+                                <Form.Item name="email" label="Email" rules={[
+                                    { required: true, message: 'Vui lòng nhập email' },
+                                    { type: 'email', message: 'Email không đúng định dạng' }
+                                ]}>
+                                    <Input placeholder="Ví dụ: email@example.com" />
+                                </Form.Item>
+                            </Col>
+                            
+                            <Col span={12}>
+                                <Divider orientation="left" plain>Thông tin Xe & Dịch vụ</Divider>
+                                <Form.Item name="licensePlate" label="Biển số xe" rules={[
+                                    { required: true, message: 'Vui lòng nhập biển số xe' },
+                                    { min: 5, message: 'Biển số xe không hợp lệ' }
+                                ]}>
+                                    <Input placeholder="Ví dụ: 30A-123.45" />
+                                </Form.Item>
+                                <Form.Item name="vehicleTypeId" label="Loại xe" rules={[{ required: true, message: 'Vui lòng chọn loại xe' }]}>
+                                    <Select placeholder="Chọn loại xe">
+                                        {vehicleTypes.map(vt => (
+                                            <Select.Option key={vt.id} value={vt.id}>{vt.typeName}</Select.Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
+                                
+                                <Form.Item name="services" label="Dịch vụ yêu cầu" rules={[{ required: true, message: 'Vui lòng chọn dịch vụ' }]}>
+                                    <Select mode="multiple" placeholder="Chọn dịch vụ" optionFilterProp="children">
+                                        {servicesList.map(svc => (
+                                            <Select.Option key={svc.serviceId} value={svc.serviceId}>{svc.serviceName}</Select.Option>
+                                        ))}
+                                    </Select>
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                    </Form>
+                </div>
+            </Modal>
         </div>
     );
 }
