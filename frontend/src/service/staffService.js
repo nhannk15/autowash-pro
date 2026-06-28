@@ -23,6 +23,24 @@ export async function getTodayBookings() {
     return response.data;
 }
 
+export async function createWalkInCustomer(fullName, phoneNumber, email, dateOfBirth, vehicleTypeId, licensePlate, brand, model, color) {
+    const response = await axios.post(`${API}/api/staff/customers/quick-create`,
+        {
+            fullName,
+            phoneNumber,
+            email,
+            dateOfBirth,
+            vehicleTypeId,
+            licensePlate,
+            brand,
+            model,
+            color
+        },
+        { withCredentials: true }
+    );
+    return response.data;
+}
+
 export async function completeSession(bookingId) {
     const response = await axios.post(`${API}/api/staff/wash-sessions/complete`,
         { bookingId },
@@ -63,7 +81,10 @@ export async function confirmPaymentByCash(billingId) {
 }
 
 export async function confirmPaymentByBank(billingId) {
-    const response = await axios.post(`${API}/api/billings/complete/bank`, billingId, {
+    const response = await axios.post(`${API}/api/payment/vnpay/create`, {
+        billingId,
+        orderInfo: `Thanh toán tổng chi phí`
+    }, {
         withCredentials: true,
         headers: { 'Content-Type': 'application/json' }
     });
@@ -95,5 +116,34 @@ export async function updateStaffProfile(id, phoneNumber, avatarUrl) {
         { phoneNumber, avatarUrl },
         { withCredentials: true }
     );
+    return response.data;
+}
+
+export async function getVehicleTypes() {
+    const response = await axios.get(`${API}/api/vehicle-types`, {
+        withCredentials: true,
+    });
+    return response.data;
+}
+
+export async function getServices() {
+    const response = await axios.get(`${API}/api/services`, {
+        withCredentials: true,
+    });
+    return response.data;
+}
+
+export async function getAvailableSlots(date) {
+    const response = await axios.get(`${API}/api/bookings/available-slots`, {
+        params: { date },
+        withCredentials: true,
+    });
+    return response.data;
+}
+
+export async function createBooking(data) {
+    const response = await axios.post(`${API}/api/bookings`, data, {
+        withCredentials: true,
+    });
     return response.data;
 }

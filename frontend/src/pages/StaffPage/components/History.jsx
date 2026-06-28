@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Row, Col, Card, Flex, Space, Table, Button, Input, Tooltip, Typography, Spin } from "antd";
+import { Row, Col, Card, Flex, Space, Table, Button, Input, Tooltip, Typography, Spin, Tag, Modal, Descriptions, Divider } from "antd";
 import {
     DollarCircleOutlined,
     CarOutlined,
@@ -9,7 +9,7 @@ import {
 import { getTodayBookings } from "../../../service/staffService";
 import "./History.css";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 const formatCurrency = (value) =>
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value || 0);
@@ -17,9 +17,16 @@ const formatCurrency = (value) =>
 // Tính doanh thu của 1 booking — dùng chung cho cả cột "Giá tiền" và stats "Tổng doanh thu"
 // để tránh viết trùng logic ở 2 nơi (dễ lệch nhau nếu sau này sửa 1 chỗ mà quên chỗ kia)
 const getBookingRevenue = (record) => {
-    if (record.washSessionStatus !== 'PAID') return 0;
     return (record.bookingDetails || []).reduce(
         (sum, d) => sum + Number(d.finalPrice || 0),
+        0
+    );
+};
+
+// Lấy tổng giảm giá từ Khuyến mãi (đã được lưu trong bookingDetails)
+const getPromotionDiscount = (record) => {
+    return (record.bookingDetails || []).reduce(
+        (sum, d) => sum + Number(d.discountAmount || 0),
         0
     );
 };
@@ -29,6 +36,7 @@ export default function History() {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchText, setSearchText] = useState('');
+    const [selectedHistory, setSelectedHistory] = useState(null);
 
     useEffect(() => {
         async function fetchBooking() {
@@ -44,9 +52,9 @@ export default function History() {
         fetchBooking();
     }, []);
 
-    // === Filter chỉ lấy booking đã COMPLETED ===
+    // === Filter chỉ lấy booking có WashSession đã COMPLETED hoặc PAID ===
     const completedData = useMemo(() => {
-        let result = data.filter(b => b.status === 'COMPLETED');
+        let result = data.filter(b => b.washSessionStatus === 'COMPLETED' || b.washSessionStatus === 'PAID');
 
         // Filter theo biển số xe
         if (searchText.trim()) {
@@ -62,22 +70,15 @@ export default function History() {
     // === Stats tự đếm từ data ===
     const stats = useMemo(() => {
         const totalServiced = completedData.length;
-        const totalRevenue = completedData.reduce((sum, b) => sum + getBookingRevenue(b), 0);
+        // Chỉ cộng doanh thu nếu booking đã ở trạng thái PAID
+        const totalRevenue = completedData.reduce((sum, b) => {
+            const isPaid = b.washSessionStatus === 'PAID' || b.status === 'PAID';
+            return isPaid ? sum + getBookingRevenue(b) : sum;
+        }, 0);
         return { totalServiced, totalRevenue };
     }, [completedData]);
 
     const columns = [
-        {
-            title: 'Thời gian',
-            key: 'time',
-            render: (_, record) => {
-                // Lấy endTime từ washSession hoặc updatedAt từ booking
-                const session = record.washSessions?.[0];
-                const time = session?.endTime || record.updatedAt || record.createdAt;
-                if (!time) return 'N/A';
-                return new Date(time).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-            }
-        },
         {
             title: 'Thông tin xe',
             key: 'carInfo',
@@ -99,22 +100,55 @@ export default function History() {
             title: 'Dịch vụ',
             key: 'service',
             render: (_, record) => {
-                const services = record.bookingDetails?.map(d => d.servicePrice?.service?.name).filter(Boolean);
-                return services?.join(', ') || 'N/A';
+                const services = record.bookingDetails?.map(d => d.serviceName).filter(Boolean);
+                if (!services || services.length === 0) return 'N/A';
+
+                return (
+                    <Space size={[4, 4]} wrap>
+                        {services.map((service, index) => (
+                            <Tag color="blue" key={index} style={{ margin: 0 }}>
+                                {service}
+                            </Tag>
+                        ))}
+                    </Space>
+                );
+            }
+        },
+        {
+            title: 'Thời gian kết thúc',
+            key: 'time',
+            render: (_, record) => {
+                return record?.endTime?.substring(0, 5) || 'N/A';
             }
         },
         {
             title: 'Giá tiền',
             key: 'price',
-            render: (_, record) => formatCurrency(getBookingRevenue(record))
+            render: (_, record) => (<Text strong>{formatCurrency(getBookingRevenue(record))}</Text>)
+        },
+        {
+            title: 'Trạng thái',
+            key: 'paymentStatus',
+            render: (_, record) => {
+                const isPaid = record.washSessionStatus === 'PAID' || record.status === 'PAID';
+                return (
+                    <Tag
+                        color={isPaid ? 'success' : 'warning'}
+                        bordered={false}
+                        style={{ fontWeight: 500, borderRadius: '6px', padding: '2px 8px' }}
+                    >
+                        {isPaid ? 'Đã thanh toán' : 'Chưa thanh toán'}
+                    </Tag>
+                );
+            }
         },
         {
             title: 'Thao tác',
             key: 'action',
-            render: () => (
+            render: (_, record) => (
                 <Space size="small">
                     <Tooltip title="Xem chi tiết">
-                        <Button type="primary" icon={<EyeOutlined />} ghost size="small">
+                        <Button type="primary" icon={<EyeOutlined />} ghost size="small" onClick={() => setSelectedHistory(record)}>
                             Chi tiết
                         </Button>
                     </Tooltip>
@@ -188,6 +222,112 @@ export default function History() {
                     />
                 )}
             </Card>
+
+            {/* Modal Chi Tiết History */}
+            <Modal
+                title={<Title level={4} style={{ margin: 0 }}>Chi tiết Lịch sử Thanh toán</Title>}
+                open={!!selectedHistory}
+                onCancel={() => setSelectedHistory(null)}
+                footer={[
+                    <Button key="close" onClick={() => setSelectedHistory(null)}>
+                        Đóng
+                    </Button>
+                ]}
+                width={700}
+                centered
+            >
+                {selectedHistory && (() => {
+                    const promoDiscount = getPromotionDiscount(selectedHistory);
+                    const totalDiscount = Number(selectedHistory.billing?.discountAmount || 0);
+                    const voucherDiscount = Math.max(0, totalDiscount - promoDiscount);
+
+                    return (
+                        <div style={{ marginTop: 24 }}>
+                            <Descriptions bordered column={2} size="small">
+                                <Descriptions.Item label="Mã đặt lịch" span={2}>
+                                    <Text strong>{selectedHistory.bookingCode}</Text>
+                                </Descriptions.Item>
+
+                                <Descriptions.Item label="Khách hàng">
+                                    {selectedHistory.customer?.fullName || 'N/A'}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Số điện thoại">
+                                    {selectedHistory.customer?.phoneNumber || 'N/A'}
+                                </Descriptions.Item>
+
+                                <Descriptions.Item label="Biển số">
+                                    <Text>{selectedHistory.vehicle?.licensePlate || 'N/A'}</Text>
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Loại xe">
+                                    {selectedHistory.vehicle?.brand} {selectedHistory.vehicle?.model}
+                                </Descriptions.Item>
+
+                                <Descriptions.Item label="Thời gian kết thúc" span={2}>
+                                    <Text strong >
+                                        {selectedHistory.endTime?.substring(0, 5)} {selectedHistory.slotDate}
+                                    </Text>
+                                </Descriptions.Item>
+                            </Descriptions>
+
+                            <Divider orientation="left" plain>Thông tin Thanh toán</Divider>
+
+                            <Descriptions bordered column={1} size="small" style={{ marginBottom: 16 }}>
+                                <Descriptions.Item label="Tổng tiền dịch vụ (Gốc)">
+                                    <Text>{formatCurrency(selectedHistory.billing?.originalAmount || getBookingRevenue(selectedHistory))}</Text>
+                                </Descriptions.Item>
+
+                                {selectedHistory.promotion && (
+                                    <Descriptions.Item label="Khuyến mãi">
+                                        <Text style={{ color: '#52c41a', fontWeight: 500 }}>{selectedHistory.promotion.promotionName}</Text>
+                                        {promoDiscount > 0 && (
+                                            <Text style={{ color: '#52c41a', marginLeft: 8 }}>(-{formatCurrency(promoDiscount)})</Text>
+                                        )}
+                                    </Descriptions.Item>
+                                )}
+
+                                {selectedHistory.billing?.voucher && (
+                                    <Descriptions.Item label="Voucher áp dụng">
+                                        <Tag color="blue" style={{ margin: 0 }}>{selectedHistory.billing.voucher.voucherCode}</Tag>
+                                        {voucherDiscount > 0 && (
+                                            <Text style={{ color: '#1677ff', marginLeft: 8, fontWeight: 500 }}>-{formatCurrency(voucherDiscount)}</Text>
+                                        )}
+                                    </Descriptions.Item>
+                                )}
+
+                                {selectedHistory.billing?.depositAmount > 0 && (
+                                    <Descriptions.Item label="Đã đặt cọc">
+                                        <Text style={{ color: '#faad14' }}>{formatCurrency(selectedHistory.billing.depositAmount)}</Text>
+                                    </Descriptions.Item>
+                                )}
+
+                                <Descriptions.Item label="Hình thức thanh toán">
+                                    <Text>
+                                        {selectedHistory.billing?.paymentMethod === 'CASH' ? 'Tiền mặt' : 'Chuyển khoản'}
+                                    </Text>
+                                </Descriptions.Item>
+
+                                <Descriptions.Item label="Thực thu (Khách đã thanh toán)">
+                                    <Text strong style={{ fontSize: 16 }}>
+                                        {formatCurrency(selectedHistory.billing?.finalAmount || getBookingRevenue(selectedHistory))}
+                                    </Text>
+                                </Descriptions.Item>
+                            </Descriptions>
+
+                            <Divider orientation="left" plain>Danh sách dịch vụ</Divider>
+                            <ul>
+                                {selectedHistory.bookingDetails?.map((d, idx) => (
+                                    <div key={idx} style={{ marginBottom: 8 }}>
+                                        <Text strong>- {d.serviceName}</Text>
+                                        <span style={{ float: 'right', fontWeight: 500 }}>
+                                            {formatCurrency(d.priceAtBooking)}
+                                        </span>
+                                    </div>
+                                ))}
+                            </ul>
+                        </div>
+                    );
+                })()}
+            </Modal>
         </div>
     )
 }
