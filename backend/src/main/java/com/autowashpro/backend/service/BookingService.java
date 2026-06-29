@@ -105,6 +105,7 @@ public class BookingService {
     private final BillingService billingService;
     private final BillingRepository billingRepository;
     private final RewardRepository rewardRepository;
+    private final NotificationService notificationService;
 
     @Autowired
     public BookingService(CustomerRepository customerRepository, ServicePriceRepository servicePriceRepository,
@@ -116,7 +117,7 @@ public class BookingService {
             EmailService emailService,
             UserRepository userRepository, PromotionService promotionService, BillingService billingService,
             BillingRepository billingRepository, VoucherRepository voucherRepository,
-            VoucherCodeGenerator voucherCodeGenerator, RewardRepository rewardRepository) {
+            VoucherCodeGenerator voucherCodeGenerator, RewardRepository rewardRepository, NotificationService notificationService) {
         this.customerRepository = customerRepository;
         this.servicePriceRepository = servicePriceRepository;
         this.availableSlotRepository = availableSlotRepository;
@@ -137,6 +138,7 @@ public class BookingService {
         this.billingRepository = billingRepository;
         this.voucherRepository = voucherRepository;
         this.rewardRepository = rewardRepository;
+        this.notificationService = notificationService;
     }
 
     public SlotAvailabilityByDateResponse getAvailableTimeSlots(LocalDate date) {

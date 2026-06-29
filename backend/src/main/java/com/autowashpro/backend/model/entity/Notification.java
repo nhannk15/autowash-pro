@@ -18,10 +18,12 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -56,7 +58,7 @@ public class Notification {
     private String refType;
 
     @Column(name = "is_read", nullable = false)
-    private boolean isRead = false;
+    private boolean isRead;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

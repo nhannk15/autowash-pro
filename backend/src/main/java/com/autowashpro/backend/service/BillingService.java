@@ -61,12 +61,14 @@ public class BillingService {
     private final VoucherMapper voucherMapper;
     private final PointTransactionRepository pointTransactionRepository;
     private final PromotionService promotionService;
+    private final NotificationService notificationService;
 
     @Autowired
     public BillingService(BillingRepository billingRepository, BookingRepository bookingRepository,
             BillingMapper billingMapper, WashSessionRepository washSessionRepository,
             VoucherRepository voucherRepository, CustomerRepository customerRepository, VoucherMapper voucherMapper,
-            PointTransactionRepository pointTransactionRepository, PromotionService promotionService) {
+            PointTransactionRepository pointTransactionRepository, PromotionService promotionService,
+            NotificationService notificationService) {
         this.billingRepository = billingRepository;
         this.bookingRepository = bookingRepository;
         this.billingMapper = billingMapper;
@@ -76,6 +78,7 @@ public class BillingService {
         this.voucherMapper = voucherMapper;
         this.pointTransactionRepository = pointTransactionRepository;
         this.promotionService = promotionService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -183,6 +186,8 @@ public class BillingService {
 
         Promotion promotion = billing.getBooking().getPromotion();
         promotionService.commitPromotionUsage(promotion == null ? null : promotion.getId(), billingId);
+
+        notificationService.createPointEarnNotification(newPointTransaction);
         return billingResponse;
     }
 
@@ -207,12 +212,15 @@ public class BillingService {
                 billing.getId());
         billing.setVoucher(voucher);
         if (voucher.getDiscountType().equals(RewardType.DISCOUNT_FLAT)) {
-            log.info("applyVoucherForBilling() - billingId {}'s finalAmount {}", billing.getId(), billing.getFinalAmount());
+            log.info("applyVoucherForBilling() - billingId {}'s finalAmount {}", billing.getId(),
+                    billing.getFinalAmount());
             billing.setDiscountAmount(billing.getDiscountAmount().add(voucher.getDiscountValue()));
             billing.setFinalAmount(billing.getFinalAmount().subtract(voucher.getDiscountValue()));
 
-            log.info("applyVoucherForBilling() - billingId {}'s discountAmount {}", billing.getId(), billing.getDiscountAmount());
-            log.info("applyVoucherForBilling() - billingId {}'s finalAmount {}", billing.getId(), billing.getFinalAmount());
+            log.info("applyVoucherForBilling() - billingId {}'s discountAmount {}", billing.getId(),
+                    billing.getDiscountAmount());
+            log.info("applyVoucherForBilling() - billingId {}'s finalAmount {}", billing.getId(),
+                    billing.getFinalAmount());
         } else if (voucher.getDiscountType().equals(RewardType.DISCOUNT_PERCENTAGE)) {
             BigDecimal discountValue = billing.getOriginalAmount()
                     .multiply(voucher.getDiscountValue()
@@ -256,6 +264,8 @@ public class BillingService {
             booking.setStatus(BookingStatus.CONFIRMED);
             Booking savedBooking = bookingRepository.save(booking);
             savedBooking.setStatus(BookingStatus.CONFIRMED);
+
+            notificationService.createBookingConfirmedNotification(savedBooking);
             return billingMapper.toBillingResponse(savedBilling);
         }
         billing.setPaymentStatus(PaymentStatus.PAID);
@@ -293,6 +303,8 @@ public class BillingService {
 
         Promotion promotion = billing.getBooking().getPromotion();
         promotionService.commitPromotionUsage(promotion == null ? null : promotion.getId(), billingId);
+
+        notificationService.createPointEarnNotification(newPointTransaction);
         return billingResponse;
     }
 

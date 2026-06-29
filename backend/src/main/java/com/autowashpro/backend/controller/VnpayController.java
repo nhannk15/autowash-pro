@@ -55,7 +55,10 @@ public class VnpayController {
     public void handleReturn(HttpServletRequest request, HttpServletResponse response) throws IOException {
         Map<String, String> params = extractParams(request);
         billingService.completeBankingPayment(params);
-        response.sendRedirect(frontendBaseUrl);
+        String vnpTxnRef = params.get("vnp_TxnRef");
+        String vnpTransactionStatus = params.get("vnp_TransactionStatus");
+        String billingId = vnpTxnRef.substring(0, vnpTxnRef.indexOf("_"));
+        response.sendRedirect(frontendBaseUrl + "?" + "status=" + vnpTransactionStatus + "&billing=" + billingId);
     }
 
     private Map<String, String> extractParams(HttpServletRequest request) {

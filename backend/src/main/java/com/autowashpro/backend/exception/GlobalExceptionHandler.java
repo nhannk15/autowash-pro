@@ -174,14 +174,14 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(AccountExistedException.class)
     public ResponseEntity<ErrorResponse> handleAccountExisted(AccountExistedException ex, WebRequest request) {
-        ErrorResponse error = createErrorResponse(HttpStatus.CONFLICT, ex.getClass().getSimpleName(), ex.getMessage(), request);
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+        ErrorResponse error = createErrorResponse(HttpStatus.BAD_REQUEST, ex.getClass().getSimpleName(), ex.getMessage(), request);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException ex, WebRequest request) {
-        ErrorResponse error = createErrorResponse(HttpStatus.NOT_FOUND, ex.getClass().getSimpleName(), ex.getMessage(), request);
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        ErrorResponse error = createErrorResponse(HttpStatus.BAD_REQUEST, ex.getClass().getSimpleName(), ex.getMessage(), request);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     @ExceptionHandler(WrongPasswordException.class)
@@ -192,8 +192,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex, WebRequest request) {
-        ErrorResponse error = createErrorResponse(HttpStatus.NOT_FOUND, "RESOURCE NOT FOUND", ex.getMessage(), request);
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        ErrorResponse error = createErrorResponse(HttpStatus.BAD_REQUEST, "RESOURCE NOT FOUND", ex.getMessage(), request);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     @ExceptionHandler(Exception.class)
@@ -207,6 +207,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(VoucherException.class)
     public ResponseEntity<ErrorResponse> handleVoucherException(VoucherException ex, WebRequest request) {
         ErrorResponse error = createErrorResponse(HttpStatus.BAD_REQUEST, ex.getClass().getSimpleName(), ex.getMessage(), request);
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    /**
+     * Notification Exceptions
+     * @param ex
+     * @param request
+     * @return
+     */
+    @ExceptionHandler(NotificationException.class)
+    public ResponseEntity<ErrorResponse> handleNotificationException(NotificationException ex, WebRequest request) {
+        ErrorResponse error = createErrorResponse(HttpStatus.BAD_REQUEST, ex.getClass().getSimpleName(), ex.getMessage(), request);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 }

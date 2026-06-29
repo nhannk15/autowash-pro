@@ -11,6 +11,7 @@ import com.autowashpro.backend.model.entity.Customer;
 import com.autowashpro.backend.model.entity.MembershipTier;
 import com.autowashpro.backend.repository.CustomerRepository;
 import com.autowashpro.backend.repository.MembershipTierRepository;
+import com.autowashpro.backend.service.NotificationService;
 import com.autowashpro.backend.service.PointTransactionService;
 
 @Component
@@ -19,13 +20,15 @@ public class TierReviewScheduler implements TaskScheduler {
     private final CustomerRepository customerRepository;
     private final PointTransactionService pointTransactionService;
     private final MembershipTierRepository membershipTierRepository;
+    private final NotificationService notificationService;
 
     @Autowired
     public TierReviewScheduler(CustomerRepository customerRepository, PointTransactionService pointTransactionService,
-            MembershipTierRepository membershipTierRepository) {
+            MembershipTierRepository membershipTierRepository, NotificationService notificationService) {
         this.customerRepository = customerRepository;
         this.pointTransactionService = pointTransactionService;
         this.membershipTierRepository = membershipTierRepository;
+        this.notificationService = notificationService;
     }
 
     @Scheduled(cron = "0 0 0 1 1,4,7,10 *")
@@ -55,6 +58,7 @@ public class TierReviewScheduler implements TaskScheduler {
                         }
                     }
                     customer.setTier(nextTier);
+                    notificationService.createTierChangeNotification(customer, customerMembershipTier, nextTier);
                 }
             } else if (totalPointsEarned >= customerMembershipTier.getMinPointsToMaintain()) {
                 // --- Do nothing
@@ -65,6 +69,7 @@ public class TierReviewScheduler implements TaskScheduler {
                     MembershipTier nextTier = membershipTierRepository
                             .findByTierLevel(customerMembershipTier.getTierLevel() - 1).get();
                     customer.setTier(nextTier);
+                    notificationService.createTierChangeNotification(customer, customerMembershipTier, nextTier);
                 }
             }
             customer.setLastReviewDate(LocalDate.now());
