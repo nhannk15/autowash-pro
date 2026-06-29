@@ -62,6 +62,8 @@ public class PointTransactionService {
                 customer.setCurrentPoints(0L);
             }
             customerRepository.save(customer);
+
+            notificationService.createPointExpiryNotification(pointTransaction);
         }
     }
 
