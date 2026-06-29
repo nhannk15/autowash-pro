@@ -1,27 +1,52 @@
-name: Deploy to EC2
+name: Build & Deploy
 
 on:
   push:
     branches: [develop]
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v4
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v5
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          java-version: "21"
-          distribution: "temurin"
-          cache: maven
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Build backend with Maven
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & push Backend image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
-          chmod +x backend/mvnw
-          cd backend && ./mvnw compile -q
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:backend-$IMAGE_TAG \
+                       -t $ECR_REGISTRY/$ECR_REPOSITORY:backend-latest \
+                       ./backend
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:backend-$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:backend-latest
+
+      - name: Build & push Frontend image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:frontend-$IMAGE_TAG \
+                       -t $ECR_REGISTRY/$ECR_REPOSITORY:frontend-latest \
+                       ./frontend
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:frontend-$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:frontend-latest
 
       - name: Notify build failure
         if: failure()
@@ -31,11 +56,11 @@ jobs:
           server_port: 587
           username: ${{ secrets.SMTP_USERNAME }}
           password: ${{ secrets.SMTP_PASSWORD }}
-          subject: "❌ BUILD FAILED — autowash-pro (${{ github.ref_name }})"
+          subject: "❌ BUILD FAILED ❌ autowash-pro (${{ github.ref_name }})"
           to: ${{ secrets.NOTIFICATION_EMAIL }}
           from: GitHub Actions
           body: |
-            ❌ Build thất bại — Dừng pipeline, không deploy.
+            ❌ Build thất bại ❌ Dừng pipeline, không deploy.
 
             Repository: ${{ github.repository }}
             Branch: ${{ github.ref_name }}
@@ -44,128 +69,62 @@ jobs:
             Author: ${{ github.event.head_commit.author.name }}
             Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
-  deploy-db:
-    needs: build
+  deploy:
+    needs: build-and-push
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy MySQL via SSH
-        id: deploy_db
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Deploy to EC2
         uses: appleboy/ssh-action@v1
         with:
-          host: 3.36.70.151
-          username: ubuntu
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            (
-              flock -x 200
-              cd /home/ubuntu/autowash-pro
-              git switch develop
-              git pull origin develop
-              docker compose up -d --build mysql
-            ) 200>/tmp/deploy.lock
+            cd /home/${{ secrets.EC2_USER }}/autowash-pro
+            ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
+            ECR_REPO=${{ secrets.ECR_REPOSITORY }}
 
-      - name: Notify DB deploy failure
-        if: steps.deploy_db.outcome == 'failure'
+            # Login to ECR
+            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin $ECR_REGISTRY
+
+            # Pull latest pre-built images (build trên GitHub Actions, RAM dư)
+            docker pull $ECR_REGISTRY/$ECR_REPO:backend-latest
+            docker pull $ECR_REGISTRY/$ECR_REPO:frontend-latest
+
+            # Tag để docker-compose tìm đúng image (không rebuild trên EC2)
+            docker tag $ECR_REGISTRY/$ECR_REPO:backend-latest autowash-pro_backend:latest 2>/dev/null || true
+            docker tag $ECR_REGISTRY/$ECR_REPO:frontend-latest autowash-pro_frontend:latest 2>/dev/null || true
+
+            # Restart services (không build, chỉ dùng image đã pull)
+            docker compose up -d --no-build --remove-orphans
+
+      - name: Notify deploy failure
+        if: failure()
         uses: dawidd6/action-send-mail@v4
         with:
           server_address: ${{ secrets.SMTP_SERVER }}
           server_port: 587
           username: ${{ secrets.SMTP_USERNAME }}
           password: ${{ secrets.SMTP_PASSWORD }}
-          subject: "🚨 Deploy DB FAILED — autowash-pro (${{ github.ref_name }})"
+          subject: "❌ DEPLOY FAILED ❌ autowash-pro (${{ github.ref_name }})"
           to: ${{ secrets.NOTIFICATION_EMAIL }}
           from: GitHub Actions
           body: |
-            ❌ Deploy MySQL thất bại — Backend & Frontend không được deploy.
+            ❌ Deploy thất bại ❌
 
             Repository: ${{ github.repository }}
             Branch: ${{ github.ref_name }}
             Commit: ${{ github.sha }}
-            Commit message: ${{ github.event.head_commit.message }}
-            Author: ${{ github.event.head_commit.author.name }}
             Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
-            Kiểm tra logs và fix lỗi, sau đó rerun job "deploy-db" để tiếp tục.
-
-  deploy-backend:
-    needs: deploy-db
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy Backend via SSH
-        id: deploy_backend
-        uses: appleboy/ssh-action@v1
-        with:
-          host: 3.36.70.151
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            (
-              flock -x 200
-              cd /home/ubuntu/autowash-pro
-              docker compose up -d --build backend
-            ) 200>/tmp/deploy.lock
-
-      - name: Notify Backend deploy failure
-        if: steps.deploy_backend.outcome == 'failure'
-        uses: dawidd6/action-send-mail@v4
-        with:
-          server_address: ${{ secrets.SMTP_SERVER }}
-          server_port: 587
-          username: ${{ secrets.SMTP_USERNAME }}
-          password: ${{ secrets.SMTP_PASSWORD }}
-          subject: "🚨 Deploy Backend FAILED — autowash-pro (${{ github.ref_name }})"
-          to: ${{ secrets.NOTIFICATION_EMAIL }}
-          from: GitHub Actions
-          body: |
-            ❌ Deploy Backend thất bại — Frontend không được deploy.
-
-            Repository: ${{ github.repository }}
-            Branch: ${{ github.ref_name }}
-            Commit: ${{ github.sha }}
-            Commit message: ${{ github.event.head_commit.message }}
-            Author: ${{ github.event.head_commit.author.name }}
-            Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-
-            Kiểm tra logs backend, fix lỗi, sau đó rerun job "deploy-backend" để tiếp tục.
-
-  deploy-frontend:
-    needs: deploy-backend
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy Frontend via SSH
-        id: deploy_frontend
-        uses: appleboy/ssh-action@v1
-        with:
-          host: 3.36.70.151
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            (
-              flock -x 200
-              cd /home/ubuntu/autowash-pro
-              docker compose up -d --build frontend
-            ) 200>/tmp/deploy.lock
-
-      - name: Notify Frontend deploy failure
-        if: steps.deploy_frontend.outcome == 'failure'
-        uses: dawidd6/action-send-mail@v4
-        with:
-          server_address: ${{ secrets.SMTP_SERVER }}
-          server_port: 587
-          username: ${{ secrets.SMTP_USERNAME }}
-          password: ${{ secrets.SMTP_PASSWORD }}
-          subject: "🚨 Deploy Frontend FAILED — autowash-pro (${{ github.ref_name }})"
-          to: ${{ secrets.NOTIFICATION_EMAIL }}
-          from: GitHub Actions
-          body: |
-            ❌ Deploy Frontend thất bại.
-
-            Repository: ${{ github.repository }}
-            Branch: ${{ github.ref_name }}
-            Commit: ${{ github.sha }}
-            Commit message: ${{ github.event.head_commit.message }}
-            Author: ${{ github.event.head_commit.author.name }}
-            Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-
-            Kiểm tra logs frontend, fix lỗi, sau đó rerun job "deploy-frontend".
 
