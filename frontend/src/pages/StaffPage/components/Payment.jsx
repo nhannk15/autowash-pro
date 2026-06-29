@@ -175,23 +175,28 @@ export default function StaffPayment() {
             discountAmount: s.discountAmount
         })) || [];
 
+    // === Tính tiền ===
+    // 1. Tổng gốc
+    const subtotal = Number(billData.originalAmount || 0) || services.reduce((acc, s) => acc + s.price, 0);
+
+    // 2. Tổng giảm giá (từ backend, đã bao gồm cả Promotion và Voucher)
+    const totalDiscountAmount = Number(billData.discountAmount || 0);
+
+    // Tính nhẩm phần giảm của Promotion (để show UI tách biệt)
+    const totalPromotionDiscount = bookingPromotion
+        ? bookingPromotionDiscountAmount
+        : detailPromotions.reduce((acc, p) => acc + (Number(p.discountAmount) || 0), 0);
+
+    // Phần giảm thực tế của Voucher (vì Backend lưu gộp vào discountAmount)
+    const actualVoucherDiscount = Math.max(0, totalDiscountAmount - totalPromotionDiscount);
+
+    // 3. Tiền cọc
     const depositAmount = Number(billData.depositAmount || billData.booking?.billing?.depositAmount || 0);
 
-    // === Tính tiền ===
-    const subtotal = billData.originalAmount
-        ? Number(billData.originalAmount)
-        : services.reduce((acc, s) => acc + s.price, 0);
-
-    // Tính tổng khuyến mãi
-    const totalPromotionDiscount = billData.discountAmount && !appliedVoucher
-        ? Number(billData.discountAmount)
-        : (bookingPromotion
-            ? bookingPromotionDiscountAmount
-            : detailPromotions.reduce((acc, p) => acc + (Number(p.discountAmount) || 0), 0));
-
-    // Tổng thanh toán (backend đã xử lý, không trừ đúp)
-    const finalTotal = billData.finalAmount != null ? Number(billData.finalAmount) :
-        (subtotal - totalPromotionDiscount - (appliedVoucher?.discountValue ? Number(appliedVoucher.discountValue) : 0) - depositAmount);
+    // 4. Tổng cần thanh toán (backend đã xử lý công thức: Gốc - Tổng giảm - Cọc)
+    const finalTotal = billData.finalAmount != null
+        ? Number(billData.finalAmount)
+        : Math.max(0, subtotal - totalDiscountAmount - depositAmount);
 
 
     // Áp dụng voucher
@@ -236,25 +241,29 @@ export default function StaffPayment() {
         try {
             if (paymentMethod === 'CASH') {
                 await confirmPaymentByCash(billId);
+
+                setIsPaymentReceived(true);
+                message.success('Đã thu tiền mặt thành công!');
+                setConfirming(false);
+
+                setTimeout(() => {
+                    // Quay về Dashboard với paidBayId và paidBookingId để giải phóng bay & update UI
+                    if (bayId) {
+                        navigate('/staff/dashboard', { state: { paidBayId: bayId, paidBookingId: bookingId } });
+                    } else {
+                        navigate('/staff/history');
+                    }
+                }, 2000);
             } else {
-                await confirmPaymentByBank(billId);
-            }
-
-            setIsPaymentReceived(true);
-            message.success(paymentMethod === 'CASH' ? 'Đã thu tiền mặt thành công!' : 'Thanh toán QR thành công!');
-
-            // Tắt loading ngay khi đã xác nhận xong, tránh treo nút trong lúc
-            // hiển thị màn hình Result và chờ chuyển trang.
-            setConfirming(false);
-
-            setTimeout(() => {
-                // Quay về Dashboard với paidBayId và paidBookingId để giải phóng bay & update UI
-                if (bayId) {
-                    navigate('/staff/dashboard', { state: { paidBayId: bayId, paidBookingId: bookingId } });
+                const response = await confirmPaymentByBank(billId);
+                // staffService đã return response.data, nên ở đây response chính là object chứa paymentUrl
+                if (response && response.paymentUrl) {
+                    window.location.href = response.paymentUrl;
                 } else {
-                    navigate('/staff/history');
+                    message.error("Không nhận được link thanh toán từ hệ thống!");
+                    setConfirming(false);
                 }
-            }, 2500);
+            }
         } catch (error) {
             console.error("Failed to confirm payment", error);
             const errorMsg = error.response?.data?.message || 'Lỗi khi cập nhật trạng thái thanh toán!';
@@ -565,7 +574,7 @@ export default function StaffPayment() {
                                                 <Tag color="blue" style={{ marginRight: 4, fontWeight: 500 }}>{appliedVoucher.voucherCode}</Tag>
                                                 <Text strong style={{ color: '#1890ff' }}>{appliedVoucher.rewardName || 'Giảm giá Voucher'}</Text>
                                             </Col>
-                                            <Col><Text strong style={{ color: '#1890ff' }}>-{(appliedVoucher.discountValue ? Number(appliedVoucher.discountValue) : 0).toLocaleString('vi-VN')}đ</Text></Col>
+                                            <Col><Text strong style={{ color: '#1890ff' }}>-{actualVoucherDiscount.toLocaleString('vi-VN')}đ</Text></Col>
                                         </Row>
                                     )}
 
@@ -618,14 +627,8 @@ export default function StaffPayment() {
                                     {paymentMethod === 'QR' ? (
                                         <>
                                             <Text type="secondary" style={{ marginBottom: 24, display: 'block' }}>
-                                                Khách hàng quét mã QR bên dưới để thanh toán
+                                                Khách hàng quét mã QR để thanh toán
                                             </Text>
-
-                                            {/* QR Code placeholder */}
-                                            <div className="qr-code-placeholder">
-                                                <QrcodeOutlined style={{ fontSize: 120, color: '#262626' }} />
-                                            </div>
-
                                             <div className="qr-amount-display">
                                                 <Text type="secondary">Số tiền cần thanh toán</Text>
                                                 <Title level={3} style={{ margin: '4px 0 0', color: '#52c41a', fontWeight: 700 }}>
@@ -637,15 +640,16 @@ export default function StaffPayment() {
                                                 Hệ thống sẽ tự động xác nhận khi nhận được thanh toán
                                             </Text>
 
-                                            {/* Nút giả lập QR */}
                                             <Button
-                                                type="dashed"
+                                                type="primary"
                                                 block
-                                                className="simulate-payment-btn"
+                                                size="large"
+                                                icon={<QrcodeOutlined />}
+                                                style={{ background: '#1890ff', borderColor: '#1890ff', marginTop: 16 }}
                                                 onClick={handlePayment}
                                                 loading={confirming}
                                             >
-                                                <CheckCircleOutlined /> Giả lập: Đã nhận chuyển khoản
+                                                Mở trang thanh toán VNPay
                                             </Button>
                                         </>
                                     ) : (

@@ -97,11 +97,16 @@ public class BillingService {
                 .stream()
                 .map(BookingDetail::getFinalPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         PaymentMethod paymentMethod = PaymentMethod.CASH;
         PaymentStatus paymentStatus = PaymentStatus.PENDING;
         LocalDateTime paidAt = null;
+
+        log.info("createPendingBilling() - finalAmount before deposit: {}", finalAmount);
         BigDecimal depositAmount = finalAmount.multiply(DEPOSIT_PERCENTAGE).divide(new BigDecimal(100L));
+        log.info("createPendingBilling() - depositAmount: {}", depositAmount);
         finalAmount = finalAmount.subtract(depositAmount);
+        log.info("createPendingBilling() - finalAmount after deposit: {}", finalAmount);
         Billing newBilling = Billing
                 .builder()
                 .booking(booking)
@@ -119,6 +124,7 @@ public class BillingService {
         return savedBilling;
     }
 
+    @Transactional
     public List<BillingResponse> getAllBillingAccordingToListOfBookingIds(List<Long> bookingIds) {
         List<Billing> billings = new ArrayList<>();
         for (Long bookingId : bookingIds) {
@@ -181,7 +187,6 @@ public class BillingService {
     }
 
     public VoucherResponse applyVoucherForBilling(ApplyVoucherToBillingRequest request) {
-
         customerRepository.findById(request.getCustomerId())
                 .orElseThrow(() -> new UserNotFoundException(
                         "Không thể tìm thấy người dùng với id: " + request.getCustomerId()));
@@ -198,10 +203,16 @@ public class BillingService {
                 .orElseThrow(() -> new BillingNotFoundException(
                         "Không thể tìm thấy hóa đơn với id: " + request.getBillingId()));
 
+        log.info("applyVoucherForBilling() - start applying voucher {} for billingId: {}", voucher.getVoucherCode(),
+                billing.getId());
         billing.setVoucher(voucher);
         if (voucher.getDiscountType().equals(RewardType.DISCOUNT_FLAT)) {
+            log.info("applyVoucherForBilling() - billingId {}'s finalAmount {}", billing.getId(), billing.getFinalAmount());
             billing.setDiscountAmount(billing.getDiscountAmount().add(voucher.getDiscountValue()));
             billing.setFinalAmount(billing.getFinalAmount().subtract(voucher.getDiscountValue()));
+
+            log.info("applyVoucherForBilling() - billingId {}'s discountAmount {}", billing.getId(), billing.getDiscountAmount());
+            log.info("applyVoucherForBilling() - billingId {}'s finalAmount {}", billing.getId(), billing.getFinalAmount());
         } else if (voucher.getDiscountType().equals(RewardType.DISCOUNT_PERCENTAGE)) {
             BigDecimal discountValue = billing.getOriginalAmount()
                     .multiply(voucher.getDiscountValue()
@@ -226,6 +237,13 @@ public class BillingService {
 
     @Transactional
     public BillingResponse completeBankingPayment(Map<String, String> params) {
+        for (String param : params.keySet()) {
+            log.info("completeBankingPayment() - keyValue: {} - {}", param, params.get(param));
+        }
+        String vnpTransactionStatus = params.get("vnp_TransactionStatus");
+        if (!vnpTransactionStatus.equals("00")) {
+            return null;
+        }
         Long billingId = Long.valueOf(params.get("vnp_TxnRef").split("_")[0]);
         Billing billing = billingRepository.findById(billingId)
                 .orElseThrow(() -> new BillingNotFoundException(

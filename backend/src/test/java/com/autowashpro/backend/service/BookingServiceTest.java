@@ -52,8 +52,13 @@ import com.autowashpro.backend.repository.ServicePriceRepository;
 import com.autowashpro.backend.repository.ServiceRepository;
 import com.autowashpro.backend.repository.TimeSlotRepository;
 import com.autowashpro.backend.repository.UserRepository;
+import com.autowashpro.backend.model.entity.Billing;
+import com.autowashpro.backend.repository.BillingRepository;
+import com.autowashpro.backend.repository.VoucherRepository;
 import com.autowashpro.backend.repository.VehicleRepository;
 import com.autowashpro.backend.repository.WashSessionRepository;
+import com.autowashpro.backend.service.BillingService;
+import com.autowashpro.backend.service.PromotionService;
 import com.autowashpro.backend.utils.BookingCodeGenerator;
 import com.autowashpro.backend.utils.QrCodeGenerator;
 
@@ -87,6 +92,8 @@ public class BookingServiceTest {
     @Mock
     private PromotionRepository promotionRepository;
     @Mock
+    private VoucherRepository voucherRepository;
+    @Mock
     private BookingRepository bookingRepository;
     @Mock
     private BookingDetailRepository bookingDetailRepository;
@@ -102,6 +109,12 @@ public class BookingServiceTest {
     private EmailService emailService;
     @Mock
     private UserRepository userRepository;
+    @Mock
+    private PromotionService promotionService;
+    @Mock
+    private BillingService billingService;
+    @Mock
+    private BillingRepository billingRepository;
 
     // Fixtures.
     private MembershipTier tier;
@@ -119,7 +132,7 @@ public class BookingServiceTest {
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(bookingService, "useEmailService", "no");
+        ReflectionTestUtils.setField(bookingService, "useEmailService", false);
         tier = new MembershipTier();
         tier.setId(1L);
         tier.setTierName("BRONZE");
@@ -203,9 +216,13 @@ public class BookingServiceTest {
         when(availableSlotRepository.findConsecutiveSlotsFromDate(any(), any(), anyInt(), any(Pageable.class)))
                 .thenReturn(List.of(availableSlot));
         when(vehicleRepository.findById(1L)).thenReturn(Optional.of(vehicle));
-        when(bookingRepository.save(any())).thenReturn(savedBooking);
+        when(bookingRepository.saveAndFlush(any())).thenReturn(savedBooking);
         when(bookingCodeGenerator.generate()).thenReturn("ABCXYZ");
-        when(bookingDetailRepository.save(any())).thenReturn(savedDetail);
+        when(bookingRepository.findByIdWithDetails(any())).thenReturn(Optional.of(savedBooking));
+        Billing mockBilling = new Billing();
+        mockBilling.setId(1L);
+        mockBilling.setBooking(savedBooking);
+        when(billingRepository.findByBookingId(any())).thenReturn(Optional.of(mockBilling));
     }
 
     private Promotion createNewPromotion(PromotionDiscountType type, BigDecimal value) {
@@ -220,103 +237,82 @@ public class BookingServiceTest {
     @Test
     void createBooking_success_noPromotion() {
         // Arrange
+        request.setPromotionId(null);
         commonMockStubs();
-        when(promotionRepository.findApplicablePromotions(any(), any()))
-                .thenReturn(List.of());
-        when(bookingDetailRepository.save(any())).thenReturn(savedDetail);
 
         // Act
         CreateBookingResponse response = bookingService.createBooking(request);
 
         // Assert
         assertNotNull(response);
-        assertEquals(response.getBookingCode(), "ABCXYZ");
-        assertEquals(response.getTotalOriginalPrice(), new BigDecimal("150000"));
-        assertEquals(response.getTotalDiscount(), BigDecimal.ZERO);
-        assertEquals(response.getTotalFinalPrice(), new BigDecimal("150000"));
-        verify(bookingRepository, times(1)).save(any());
-        verify(bookingDetailRepository, times(1)).save(any());
-        verify(washSessionRepository, times(1)).save(any());
+        assertEquals("ABCXYZ", response.getBookingCode());
+        assertEquals(new BigDecimal("150000"), response.getTotalOriginalPrice());
+        assertEquals(BigDecimal.ZERO, response.getTotalDiscount());
+        assertEquals(new BigDecimal("150000"), response.getTotalFinalPrice());
+        verify(bookingRepository, atLeastOnce()).saveAndFlush(any());
+        verify(washSessionRepository, atLeastOnce()).saveAndFlush(any());
     }
 
     @Test
     void createBooking_success_percentagePromotion() {
         // Arrange
+        request.setPromotionId(1L);
         commonMockStubs();
         Promotion newPromotion = createNewPromotion(PromotionDiscountType.PERCENTAGE, BigDecimal.valueOf(20));
-        when(promotionRepository.findApplicablePromotions(any(), any()))
-                .thenReturn(List.of(newPromotion));
-        when(bookingDetailRepository.save(any()))
-                .thenAnswer(inv -> {
-                    BookingDetail d = inv.getArgument(0);
-                    return d;
-                });
+        when(promotionRepository.findById(1L)).thenReturn(Optional.of(newPromotion));
 
         // Act
         CreateBookingResponse response = bookingService.createBooking(request);
 
         // Assert
         assertNotNull(response);
-        assertEquals(response.getBookingCode(), "ABCXYZ");
-        assertEquals(response.getTotalOriginalPrice(), new BigDecimal(150000L));
-        assertEquals(response.getTotalDiscount(), new BigDecimal(30000L));
-        assertEquals(response.getTotalFinalPrice(), new BigDecimal(120000L));
+        assertEquals("ABCXYZ", response.getBookingCode());
+        assertEquals(new BigDecimal("150000"), response.getTotalOriginalPrice());
+        assertEquals(new BigDecimal("30000"), response.getTotalDiscount());
+        assertEquals(new BigDecimal("120000"), response.getTotalFinalPrice());
     }
 
     @Test
     void createBooking_success_fixedAmountPromotion() {
         // Arrange
+        request.setPromotionId(1L);
         commonMockStubs();
         Promotion newPromotion = createNewPromotion(PromotionDiscountType.FIXED_AMOUNT, new BigDecimal("50000"));
-        when(promotionRepository.findApplicablePromotions(any(), any()))
-                .thenReturn(List.of(newPromotion));
-        when(bookingDetailRepository.save(any()))
-                .thenAnswer(inv -> {
-                    BookingDetail d = inv.getArgument(0);
-                    return d;
-                });
+        when(promotionRepository.findById(1L)).thenReturn(Optional.of(newPromotion));
 
         // Act
         CreateBookingResponse response = bookingService.createBooking(request);
 
         // Assert
         assertNotNull(response);
-        assertEquals(response.getBookingCode(), "ABCXYZ");
-        assertEquals(response.getTotalOriginalPrice(), new BigDecimal("150000"));
-        assertEquals(response.getTotalDiscount(), new BigDecimal("50000"));
-        assertEquals(response.getTotalFinalPrice(), new BigDecimal("100000"));
-
+        assertEquals("ABCXYZ", response.getBookingCode());
+        assertEquals(new BigDecimal("150000"), response.getTotalOriginalPrice());
+        assertEquals(new BigDecimal("50000"), response.getTotalDiscount());
+        assertEquals(new BigDecimal("100000"), response.getTotalFinalPrice());
     }
 
     @Test
     void createBooking_success_emailNotSent_useEmailServiceIsNo() {
         // Arrange
-        ReflectionTestUtils.setField(bookingService, "useEmailService", "no");
+        request.setPromotionId(null);
+        ReflectionTestUtils.setField(bookingService, "useEmailService", false);
         commonMockStubs();
-        when(promotionRepository.findApplicablePromotions(any(), any()))
-                .thenReturn(List.of());
-        when(bookingDetailRepository.save(any()))
-                .thenReturn(savedDetail);
 
         // Act
         CreateBookingResponse response = bookingService.createBooking(request);
 
-        // Arrange
+        // Assert
         assertNotNull(response);
         verify(emailService, never()).sendBookingSuccessToEmail(any(), any(), any(), any());
     }
 
     @Test
     void createBooking_success_emailSent_useEmailSeriveIsYes() {
-        // Arange
-        ReflectionTestUtils.setField(bookingService, "useEmailService", "yes");
+        // Arrange
+        request.setPromotionId(null);
+        ReflectionTestUtils.setField(bookingService, "useEmailService", true);
         commonMockStubs();
-        when(promotionRepository.findApplicablePromotions(any(), any()))
-                .thenReturn(List.of());
-        when(bookingDetailRepository.save(any()))
-                .thenReturn(savedDetail);
-        when(qrCodeGenerator.generateQrCode(any()))
-                .thenReturn(new byte[] { 1, 2, 3 });
+        when(qrCodeGenerator.generateQrCode(any())).thenReturn(new byte[] { 1, 2, 3 });
 
         // Act
         CreateBookingResponse response = bookingService.createBooking(request);

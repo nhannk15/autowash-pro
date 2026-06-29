@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.argThat;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -80,8 +81,8 @@ class DashboardServiceTest {
         when(washSessionRepository.countByStatusAndDate(WashSessionStatus.PAID, yesterday)).thenReturn(15L);
         when(customerRepository.countByCreatedAtDate(today)).thenReturn(5L);
         when(customerRepository.countByCreatedAtDate(yesterday)).thenReturn(10L);
-        when(pointTransactionRepository.sumPointsIssuedByDate(LocalDateTime.now())).thenReturn(1200L);
-        when(pointTransactionRepository.sumPointsIssuedByDate(LocalDateTime.now().minusDays(1L))).thenReturn(800L);
+        when(pointTransactionRepository.sumPointsIssuedByDate(argThat(dt -> dt != null && dt.toLocalDate().equals(today)))).thenReturn(1200L);
+        when(pointTransactionRepository.sumPointsIssuedByDate(argThat(dt -> dt != null && dt.toLocalDate().equals(yesterday)))).thenReturn(800L);
 
         DashboardMetricsResponse response = dashboardService.getDailyMetrics();
 

@@ -36,37 +36,37 @@ public class Reward {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "reward_name", nullable = false)
+    @Column(name = "reward_name", nullable = true)
     private String rewardName;
 
     @Column(name = "reward_type", nullable = false)
     @Enumerated(EnumType.STRING)
     private RewardType rewardType;
 
-    @Column(name = "point_cost", nullable = false)
+    @Column(name = "point_cost", nullable = true)
     private Long pointCost;
 
-    @Column(name = "discount_value", nullable = false)
+    @Column(name = "discount_value", nullable = true)
     private BigDecimal discountValue;
 
     @Column(name = "validity_days", nullable = false)
     private Integer validityDays;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "service_price_id")
+    @JoinColumn(name = "service_price_id", nullable = true)
     @JsonIgnoreProperties({"rewards", "bookingDetails"})
     private ServicePrice servicePrice;
 
     @Column(name = "description", nullable = true)
     private String description;
 
-    @Column(name = "active", nullable = false)
+    @Column(name = "active", nullable = true)
     private boolean active;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = true)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
+    @Column(name = "updated_at", nullable = true)
     private LocalDateTime updatedAt;
 
     @PrePersist

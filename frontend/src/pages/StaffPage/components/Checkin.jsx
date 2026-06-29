@@ -5,7 +5,7 @@ import {
 } from 'antd';
 import {
     QrcodeOutlined,
-    UserOutlined, CheckCircleOutlined, ArrowLeftOutlined,
+    UserOutlined, SendOutlined, ArrowLeftOutlined,
     IdcardOutlined, ScanOutlined, InfoCircleOutlined, EditOutlined,
     CameraOutlined, CloseCircleOutlined
 } from '@ant-design/icons';
@@ -228,7 +228,7 @@ export default function Checkin() {
             key: 'action',
             render: (_, record) => (
                 <Button type="primary" shape="round" onClick={() => handleSelectCustomer(record)}>
-                    Tiếp theo <CheckCircleOutlined />
+                    Tiếp theo <SendOutlined />
                 </Button>
             )
         }
