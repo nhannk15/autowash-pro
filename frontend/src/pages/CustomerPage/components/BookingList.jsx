@@ -1016,7 +1016,7 @@ export default function BookingList() {
                                     if (rType === 'DISCOUNT_FLAT') {
                                         voucherDiscount = vVal;
                                     } else if (rType === 'DISCOUNT_PERCENTAGE') {
-                                        voucherDiscount = originalTotal * (vVal / 100);
+                                        voucherDiscount = totalAfterPromo * (vVal / 100);
                                     } else if (rType === 'FREE_WASH') {
                                         voucherDiscount = totalAfterPromo;
                                     }
