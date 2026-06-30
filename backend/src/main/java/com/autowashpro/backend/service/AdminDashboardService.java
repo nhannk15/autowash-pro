@@ -5,6 +5,7 @@ import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,18 +15,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.autowashpro.backend.mapper.BillingMapper;
+import com.autowashpro.backend.mapper.PromotionUsageMapper;
 import com.autowashpro.backend.model.dto.DashboardSummaryResponse;
 import com.autowashpro.backend.model.dto.PeakHourStats;
+import com.autowashpro.backend.model.dto.PromotionUsageStats;
 import com.autowashpro.backend.model.dto.RecentTransactionItem;
 import com.autowashpro.backend.model.dto.RevenueDataRequest;
 import com.autowashpro.backend.model.dto.RevenueDataResponse;
 import com.autowashpro.backend.model.dto.ServiceUsageStats;
 import com.autowashpro.backend.model.entity.Billing;
+import com.autowashpro.backend.model.entity.PromotionUsage;
 import com.autowashpro.backend.model.enums.BayStatus;
 import com.autowashpro.backend.model.enums.BookingStatus;
 import com.autowashpro.backend.repository.BillingRepository;
 import com.autowashpro.backend.repository.BookingRepository;
 import com.autowashpro.backend.repository.CustomerRepository;
+import com.autowashpro.backend.repository.PromotionUsageRepository;
 import com.autowashpro.backend.repository.ServiceRepository;
 import com.autowashpro.backend.repository.WashBayRepository;
 import com.autowashpro.backend.repository.WashSessionRepository;
@@ -43,12 +48,15 @@ public class AdminDashboardService {
     private final BillingMapper billingMapper;
     private final ServiceRepository serviceRepository;
     private final WashSessionRepository washSessionRepository;
+    private final PromotionUsageRepository promotionUsageRepository;
+    private final PromotionUsageMapper promotionUsageMapper;
 
     @Autowired
     public AdminDashboardService(BillingRepository billingRepository, BookingRepository bookingRepository,
             CustomerRepository customerRepository, WashBayRepository washBayRepository,
             BillingMapper billingMapper, ServiceRepository serviceRepository,
-            WashSessionRepository washSessionRepository) {
+            WashSessionRepository washSessionRepository, PromotionUsageRepository promotionUsageRepository,
+            PromotionUsageMapper promotionUsageMapper) {
         this.billingRepository = billingRepository;
         this.bookingRepository = bookingRepository;
         this.customerRepository = customerRepository;
@@ -56,6 +64,8 @@ public class AdminDashboardService {
         this.billingMapper = billingMapper;
         this.serviceRepository = serviceRepository;
         this.washSessionRepository = washSessionRepository;
+        this.promotionUsageRepository = promotionUsageRepository;
+        this.promotionUsageMapper = promotionUsageMapper;
     }
 
     @Transactional(readOnly = true)
@@ -79,13 +89,18 @@ public class AdminDashboardService {
                     endDate.plusDays(1).atStartOfDay().minusMinutes(1));
             if (tempTotalRevenue == null) {
                 totalRevenue = 0L;
+            } else {
+                totalRevenue = tempTotalRevenue.longValue();
             }
-            log.info("AdminDashboardService - totalRevenue: {}", startDate, totalRevenue);
+            log.info("AdminDashboardService - totalRevenue: {}", totalRevenue);
 
-            BigDecimal tempPreviousRevenue = billingRepository.sumRevenueByPaidDateRange(startDate.minusDays(1L).atStartOfDay(),
+            BigDecimal tempPreviousRevenue = billingRepository.sumRevenueByPaidDateRange(
+                    startDate.minusDays(1L).atStartOfDay(),
                     startDate.atStartOfDay().minusMinutes(1));
             if (tempPreviousRevenue == null) {
                 previousRevenue = 0L;
+            } else {
+                previousRevenue = tempPreviousRevenue.longValue();
             }
             log.info("AdminDashboardService - previousRevenue: {}", previousRevenue);
 
@@ -115,7 +130,7 @@ public class AdminDashboardService {
             log.info("AdminDasboardService - totalBays: {}", totalBays);
 
         } else if (request.getMonth() != null && request.getYear() != 0) {
-            log.info("AdminDashboardService - revenue of {}/{}");
+            log.info("AdminDashboardService - revenue of {}/{}", request.getMonth(), request.getYear());
             LocalDate startDate = LocalDate.of(request.getYear(), request.getMonth().getValue(), 1);
             LocalDate endDate = startDate.plusMonths(1L).minusDays(1L);
             log.info("AdminDashboardService - revenue from {} to {}", startDate, endDate);
@@ -124,13 +139,18 @@ public class AdminDashboardService {
                     endDate.plusDays(1).atStartOfDay().minusMinutes(1));
             if (tempTotalRevenue == null) {
                 totalRevenue = 0L;
+            } else {
+                totalRevenue = tempTotalRevenue.longValue();
             }
-            log.info("AdminDashboardService - totalRevenue: {}", startDate, totalRevenue);
-            
-            BigDecimal tempPreviousRevenue = billingRepository.sumRevenueByPaidDateRange(startDate.minusDays(1L).atStartOfDay(),
+            log.info("AdminDashboardService - totalRevenue: {}", totalRevenue);
+
+            BigDecimal tempPreviousRevenue = billingRepository.sumRevenueByPaidDateRange(
+                    startDate.minusDays(1L).atStartOfDay(),
                     startDate.atStartOfDay().minusMinutes(1));
             if (tempPreviousRevenue == null) {
                 previousRevenue = 0L;
+            } else {
+                previousRevenue = tempPreviousRevenue.longValue();
             }
             log.info("AdminDashboardService - previousRevenue: {}", previousRevenue);
 
@@ -168,13 +188,18 @@ public class AdminDashboardService {
                     endDate.plusDays(1).atStartOfDay().minusMinutes(1));
             if (tempTotalRevenue == null) {
                 totalRevenue = 0L;
+            } else {
+                totalRevenue = tempTotalRevenue.longValue();
             }
             log.info("AdminDashboardService - totalRevenue: {}", startDate, totalRevenue);
-            
-            BigDecimal tempPreviousRevenue = billingRepository.sumRevenueByPaidDateRange(startDate.minusDays(1L).atStartOfDay(),
+
+            BigDecimal tempPreviousRevenue = billingRepository.sumRevenueByPaidDateRange(
+                    startDate.minusDays(1L).atStartOfDay(),
                     startDate.atStartOfDay().minusMinutes(1));
             if (tempPreviousRevenue == null) {
                 previousRevenue = 0L;
+            } else {
+                previousRevenue = tempPreviousRevenue.longValue();
             }
             log.info("AdminDashboardService - previousRevenue: {}", previousRevenue);
 
@@ -212,13 +237,18 @@ public class AdminDashboardService {
                     endDate.plusDays(1).atStartOfDay().minusMinutes(1));
             if (tempTotalRevenue == null) {
                 totalRevenue = 0L;
+            } else {
+                totalRevenue = tempTotalRevenue.longValue();
             }
             log.info("AdminDashboardService - totalRevenue: {}", startDate, totalRevenue);
-            
-            BigDecimal tempPreviousRevenue = billingRepository.sumRevenueByPaidDateRange(startDate.minusDays(1L).atStartOfDay(),
+
+            BigDecimal tempPreviousRevenue = billingRepository.sumRevenueByPaidDateRange(
+                    startDate.minusDays(1L).atStartOfDay(),
                     startDate.atStartOfDay().minusMinutes(1));
             if (tempPreviousRevenue == null) {
                 previousRevenue = 0L;
+            } else {
+                previousRevenue = tempPreviousRevenue.longValue();
             }
             log.info("AdminDashboardService - previousRevenue: {}", previousRevenue);
 
@@ -376,4 +406,79 @@ public class AdminDashboardService {
         }
 
     }
+
+    public List<PromotionUsageStats> getPromotionUsageStats(RevenueDataRequest request) {
+
+        if (request.getStartDate() != null && request.getEndDate() != null) {
+            log.info("getPromotionUsageStats() - find all promotion usages from {} to {}.", request.getStartDate(),
+                    request.getEndDate());
+
+            LocalDateTime startTime = request.getStartDate().atStartOfDay();
+            LocalDateTime endTime = request.getEndDate().plusDays(1L).atStartOfDay().minusMinutes(1L);
+
+            List<PromotionUsage> promotionUsages = promotionUsageRepository.findFromStartTimeToEndTime(startTime,
+                    endTime);
+            return promotionUsageMapper.toPromotionUsageStatss(promotionUsages);
+        } else if (request.getMonth() != null && request.getYear() != 0) {
+            log.info("getPromotionUsageStats() - find all promotion usages in {}/{}.", request.getMonth().getValue(),
+                    request.getYear());
+
+            LocalDateTime startTime = LocalDate.of(request.getYear(), request.getMonth(), 1).atStartOfDay();
+            LocalDateTime endTime = LocalDate.of(request.getYear(), request.getMonth(), 1).plusMonths(1L).atStartOfDay()
+                    .minusMinutes(1L);
+
+            List<PromotionUsage> promotionUsages = promotionUsageRepository.findFromStartTimeToEndTime(startTime,
+                    endTime);
+            return promotionUsageMapper.toPromotionUsageStatss(promotionUsages);
+        } else if (request.getYear() != 0) {
+            log.info("getPromotionUsageStats() - find all promotion usages in {}.",request.getYear());
+
+            LocalDateTime startTime = LocalDateTime.of(request.getYear(), 1, 1, 0, 0, 0);
+            LocalDateTime endTime = startTime.plusYears(1L).minusMinutes(1L);
+
+            List<PromotionUsage> promotionUsages = promotionUsageRepository.findFromStartTimeToEndTime(startTime, endTime);
+            return promotionUsageMapper.toPromotionUsageStatss(promotionUsages);
+        } else {
+            List<PromotionUsage> promotionUsages = promotionUsageRepository.findAll();
+            return promotionUsageMapper.toPromotionUsageStatss(promotionUsages);
+        }
+
+    }
+
+    public HashMap<String, Long> countPromotionUsage(RevenueDataRequest request) {
+        long usageCount = 0;
+
+        if (request.getStartDate() != null && request.getEndDate() != null) {
+            log.info("getPromotionUsageStats() - find all promotion usages from {} to {}.", request.getStartDate(),
+                    request.getEndDate());
+
+            LocalDateTime startTime = request.getStartDate().atStartOfDay();
+            LocalDateTime endTime = request.getEndDate().plusDays(1L).atStartOfDay().minusMinutes(1L);
+
+            usageCount = promotionUsageRepository.countFromStartTimeToEndTime(startTime, endTime);
+        } else if (request.getMonth() != null && request.getYear() != 0) {
+            log.info("getPromotionUsageStats() - find all promotion usages in {}/{}.", request.getMonth().getValue(),
+                    request.getYear());
+
+            LocalDateTime startTime = LocalDate.of(request.getYear(), request.getMonth(), 1).atStartOfDay();
+            LocalDateTime endTime = LocalDate.of(request.getYear(), request.getMonth(), 1).plusMonths(1L).atStartOfDay()
+                    .minusMinutes(1L);
+
+            usageCount = promotionUsageRepository.countFromStartTimeToEndTime(startTime, endTime);
+        } else if (request.getYear() != 0) {
+            log.info("getPromotionUsageStats() - find all promotion usages in {}.",request.getYear());
+
+            LocalDateTime startTime = LocalDateTime.of(request.getYear(), 1, 1, 0, 0, 0);
+            LocalDateTime endTime = startTime.plusYears(1L).minusMinutes(1L);
+
+            usageCount = promotionUsageRepository.countFromStartTimeToEndTime(startTime, endTime);
+        } else {
+            usageCount = promotionUsageRepository.count();
+        }
+
+        HashMap<String, Long> mapResponse = new HashMap<>();
+        mapResponse.put("totalUsageCount", usageCount);
+        return mapResponse;
+    }
+    
 }

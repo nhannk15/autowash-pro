@@ -70,7 +70,7 @@ public class NotificationService {
                 .customer(customer)
                 .notificationType(notificationType)
                 .title("Thông báo lịch hẹn.")
-                .body(String.format("Hạng thành viên của bạn thay đổi từ {} thành {}", oldTier.getTierName(),
+                .body(String.format("Hạng thành viên của bạn thay đổi từ %s thành %s", oldTier.getTierName(),
                         newTier.getTierName()))
                 .refId(newTier.getId())
                 .refType("MEMBERSHIP_TIER")

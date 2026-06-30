@@ -1,5 +1,7 @@
 package com.autowashpro.backend.controller;
 
+import com.autowashpro.backend.service.PromotionUsageService;
+import java.util.HashMap;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.autowashpro.backend.model.dto.DashboardSummaryResponse;
 import com.autowashpro.backend.model.dto.PeakHourStats;
+import com.autowashpro.backend.model.dto.PromotionUsageStats;
 import com.autowashpro.backend.model.dto.RecentTransactionItem;
 import com.autowashpro.backend.model.dto.RevenueDataRequest;
 import com.autowashpro.backend.model.dto.RevenueDataResponse;
@@ -20,11 +23,13 @@ import com.autowashpro.backend.service.AdminDashboardService;
 @RestController
 public class AdminDashboardController {
     
+    private final PromotionUsageService promotionUsageService;
     private final AdminDashboardService adminDashboardService;
     
     @Autowired
-    public AdminDashboardController(AdminDashboardService adminDashboardService) {
+    public AdminDashboardController(AdminDashboardService adminDashboardService, PromotionUsageService promotionUsageService) {
         this.adminDashboardService = adminDashboardService;
+        this.promotionUsageService = promotionUsageService;
     }
 
     @GetMapping("/api/admin/dashboard/recent-transactions")
@@ -50,5 +55,15 @@ public class AdminDashboardController {
     @PostMapping("/api/admin/dashboard/peak-hours")
     public ResponseEntity<List<PeakHourStats>> getPeakHours(@RequestBody RevenueDataRequest request) {
         return ResponseEntity.ok().body(adminDashboardService.getPeakHours(request));
+    }
+
+    @PostMapping("/api/admin/dashboard/promotion-usages")
+    public ResponseEntity<List<PromotionUsageStats>> getPromotionsUsage(@RequestBody RevenueDataRequest request) {
+        return ResponseEntity.ok().body(adminDashboardService.getPromotionUsageStats(request));
+    }
+
+    @PostMapping("/api/admin/dashboard/promotion-usage-count")
+    public ResponseEntity<HashMap<String, Long>> getPromotionUsageCount(RevenueDataRequest request) {
+        return ResponseEntity.ok().body(adminDashboardService.countPromotionUsage(request));
     }
 }

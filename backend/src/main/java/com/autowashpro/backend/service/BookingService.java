@@ -374,27 +374,28 @@ public class BookingService {
         LocalDateTime startDateTime = bookingDay.atTime(startTimeSlot.getStartTime());
         LocalDateTime endDateTime = startDateTime.plusMinutes(totalDuration);
 
-        if (voucherRepository.findByVoucherCode(createBookingRequest.getVoucherCode()).isPresent()) {
-            Voucher voucher = voucherRepository.findByVoucherCode(createBookingRequest.getVoucherCode())
-                    .get();
-            log.info("BookingService - voucher found", voucher.getReward().getRewardName());
-            log.info("BookingService - totalDiscount before apply voucher: {}", totalDiscount);
-            log.info("BookingService - totalFinal before apply voucher: {}", totalFinalPrice);
-            if (voucher.getDiscountType().equals(RewardType.DISCOUNT_FLAT)) {
-                totalDiscount = totalDiscount.add(voucher.getDiscountValue());
-                totalFinalPrice = totalFinalPrice.subtract(voucher.getDiscountValue());
-            } else if (voucher.getDiscountType().equals(RewardType.DISCOUNT_PERCENTAGE)) {
-                BigDecimal discountAmount = totalOriginalPrice
-                        .multiply(voucher.getDiscountValue().divide(BigDecimal.valueOf(100L)));
-                totalDiscount = totalDiscount.add(discountAmount);
-                totalFinalPrice = totalFinalPrice.subtract(discountAmount);
-            } else if (voucher.getDiscountType().equals(RewardType.FREE_WASH)) {
-                totalDiscount = totalOriginalPrice;
-                totalFinalPrice = BigDecimal.ZERO;
-            }
-            log.info("BookingService - totalDiscount after apply voucher: {}", totalDiscount);
-            log.info("BookingService - totalFinal after apply voucher: {}", totalFinalPrice);
-        }
+        // if (voucherRepository.findByVoucherCode(createBookingRequest.getVoucherCode()).isPresent()) {
+        //     Voucher voucher = voucherRepository.findByVoucherCode(createBookingRequest.getVoucherCode())
+        //             .get();
+        //     log.info("BookingService - voucher found", voucher.getReward().getRewardName());
+        //     log.info("BookingService - totalDiscount before apply voucher: {}", totalDiscount);
+        //     log.info("BookingService - totalFinal before apply voucher: {}", totalFinalPrice);
+        //     if (voucher.getDiscountType().equals(RewardType.DISCOUNT_FLAT)) {
+        //         totalDiscount = totalDiscount.add(voucher.getDiscountValue());
+        //         totalFinalPrice = totalFinalPrice.subtract(voucher.getDiscountValue());
+        //     } else if (voucher.getDiscountType().equals(RewardType.DISCOUNT_PERCENTAGE)) {
+        //         //--- I fixed here, totalOriginalPrice --> totalFinalPrice
+        //         BigDecimal discountAmount = totalFinalPrice
+        //                 .multiply(voucher.getDiscountValue().divide(BigDecimal.valueOf(100L)));
+        //         totalDiscount = totalDiscount.add(discountAmount);
+        //         totalFinalPrice = totalFinalPrice.subtract(discountAmount);
+        //     } else if (voucher.getDiscountType().equals(RewardType.FREE_WASH)) {
+        //         totalDiscount = totalOriginalPrice;
+        //         totalFinalPrice = BigDecimal.ZERO;
+        //     }
+        //     log.info("BookingService - totalDiscount after apply voucher: {}", totalDiscount);
+        //     log.info("BookingService - totalFinal after apply voucher: {}", totalFinalPrice);
+        // }
 
         CreateBookingResponse bookingResponse = CreateBookingResponse.builder()
                 .id(savedBooking.getId())
@@ -439,7 +440,8 @@ public class BookingService {
         savedBooking = bookingRepository.findByIdWithDetails(savedBooking.getId())
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
-        billingService.createPendingBilling(savedBooking.getId());
+        billingService.createPendingBilling(savedBooking.getId(), totalOriginalPrice, totalDiscount, totalFinalPrice);
+        
         Billing savedBilling = billingRepository.findByBookingId(savedBooking.getId()).get();
         if (voucherRepository.findByVoucherCode(createBookingRequest.getVoucherCode()).isPresent()) {
             ApplyVoucherToBillingRequest request = ApplyVoucherToBillingRequest
