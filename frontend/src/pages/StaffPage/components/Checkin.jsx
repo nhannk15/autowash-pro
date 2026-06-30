@@ -49,8 +49,6 @@ export default function Checkin() {
 
     const handleConfirm = async () => {
         try {
-            // staffId và bayId để backend tự lấy từ JWT và bookingId
-            // Chỉ truyền bookingId và staffNote
             await confirmBooking(selectedCustomer.id, staffNote);
             message.success('Đã xác nhận check-in! Bắt đầu dịch vụ.');
             navigate('/staff/dashboard');
@@ -60,23 +58,17 @@ export default function Checkin() {
         }
     };
 
-    // ===== Camera Scanner (Html5QrcodeScanner) =====
-    const startCamera = () => {
-        setCameraOpen(true);
-    };
+    // ===== Camera Scanner =====
+    const startCamera = () => setCameraOpen(true);
 
     useEffect(() => {
         if (!cameraOpen || !scannerContainerRef.current) return;
 
-        const container = scannerContainerRef.current;
-
-        // Dọn scanner cũ nếu có
         if (scannerRef.current) {
             scannerRef.current.clear().catch(() => { });
             scannerRef.current = null;
         }
 
-        // Đợi 1 tick để DOM thực sự sẵn sàng
         const id = requestAnimationFrame(() => {
             const scanner = new Html5QrcodeScanner(
                 'qr-camera-reader',
@@ -87,7 +79,7 @@ export default function Checkin() {
                     showTorchButtonIfSupported: true,
                     rememberLastUsedCamera: true,
                 },
-                /* verbose= */ false
+                false
             );
 
             scannerRef.current = scanner;
@@ -130,20 +122,17 @@ export default function Checkin() {
         };
     }, []);
 
-    // Hàm search tách riêng để dùng được từ camera callback
     const doSearch = async (code) => {
         if (!code) {
             message.warning('Vui lòng quét mã QR hoặc nhập mã đặt lịch!');
             return;
         }
-
         try {
             const response = await searchBookingByQR(code);
             const data = Array.isArray(response) ? response
                 : Array.isArray(response?.data) ? response.data
                     : response ? [response] : [];
             setSearchResults(data);
-
             if (data.length === 0) {
                 message.info('Không tìm thấy thông tin đặt lịch cho mã QR này.');
             }
@@ -154,48 +143,35 @@ export default function Checkin() {
     };
 
     // === Helper: Trích xuất dữ liệu từ booking record ===
-    const getCustomerName = (record) => record.customer?.fullName || 'N/A';
-    const getCustomerPhone = (record) => record.customer?.phoneNumber || 'N/A';
-    const getCustomerEmail = (record) => record.customer?.email || '';
+    const getCustomerName = (r) => r.customer?.fullName || 'N/A';
+    const getCustomerPhone = (r) => r.customer?.phoneNumber || 'N/A';
+    const getCustomerEmail = (r) => r.customer?.email || '';
+    const getLicensePlate = (r) => r.vehicle?.licensePlate || 'N/A';
+    const getVehicleModel = (r) => `${r.vehicle?.brand || ''} ${r.vehicle?.model || ''}`.trim() || 'N/A';
+    const getVehicleType = (r) => r.vehicle?.typeName || '';
+    const getBayName = (r) => r.washBay || 'Chưa phân khoang';
 
-    // FIX: vehicle response dùng trực tiếp các field flat, không có nested vehicleType
-    const getLicensePlate = (record) => record.vehicle?.licensePlate || 'N/A';
-    const getVehicleModel = (record) => {
-        const v = record.vehicle;
-        return `${v?.brand || ''} ${v?.model || ''}`.trim() || 'N/A';
-    };
-    const getVehicleType = (record) => record.vehicle?.typeName || '';
-
-    // FIX: washBay là string trực tiếp, không phải nested object
-    const getBayName = (record) => record.washBay || 'Chưa phân khoang';
-
-    // FIX: bookingDetails dùng field flat: serviceName, priceAtBooking
-    const getServices = (record) => {
-        return (record.bookingDetails || []).map((d, idx) => ({
+    const getServices = (record) =>
+        (record.bookingDetails || []).map((d, idx) => ({
             id: d.servicePriceId || idx,
             name: d.serviceName || 'Dịch vụ',
             price: Number(d.priceAtBooking || 0),
         }));
-    };
 
-    // FIX: promotion là flat field promotionName + discountAmount, không có nested object
-    // Không còn nguy cơ trùng promotion
-    const getPromotions = (record) => {
-        return (record.bookingDetails || [])
+    const getPromotions = (record) =>
+        (record.bookingDetails || [])
             .filter(d => d.promotionName)
             .map((d, idx) => ({
                 id: idx,
                 name: d.promotionName,
                 discount: Number(d.discountAmount || 0),
             }));
-    };
 
-    // === Billing data helpers ===
-    const getBookingPromotion = (record) => record.promotion || null;
-    const getBookingVoucher = (record) => record.billing?.voucher || null;
-    const getDepositAmount = (record) => Number(record.billing?.depositAmount || 0);
-    const getBillingFinalAmount = (record) => record.billing?.finalAmount != null ? Number(record.billing.finalAmount) : null;
-    const getBillingDiscountAmount = (record) => Number(record.billing?.discountAmount || 0);
+    const getBookingPromotion = (r) => r.promotion || null;
+    const getBookingVoucher = (r) => r.billing?.voucher || null;
+    const getDepositAmount = (r) => Number(r.billing?.depositAmount || 0);
+    const getBillingFinalAmount = (r) => r.billing?.finalAmount != null ? Number(r.billing.finalAmount) : null;
+    const getBillingDiscountAmount = (r) => Number(r.billing?.discountAmount || 0);
 
     const columns = [
         {
@@ -206,22 +182,22 @@ export default function Checkin() {
                     <Text className="vehicle-plate">{getLicensePlate(record)}</Text>
                     <Text className="vehicle-model">{getVehicleModel(record)}</Text>
                 </div>
-            )
+            ),
         },
         {
             title: 'Tên khách hàng',
             key: 'name',
-            render: (_, record) => <Text strong>{getCustomerName(record)}</Text>
+            render: (_, record) => <Text strong>{getCustomerName(record)}</Text>,
         },
         {
             title: 'Số điện thoại',
             key: 'phone',
-            render: (_, record) => <Text>{getCustomerPhone(record)}</Text>
+            render: (_, record) => <Text>{getCustomerPhone(record)}</Text>,
         },
         {
             title: 'Email',
             key: 'email',
-            render: (_, record) => <Text>{getCustomerEmail(record)}</Text>
+            render: (_, record) => <Text>{getCustomerEmail(record)}</Text>,
         },
         {
             title: 'Thao tác',
@@ -230,19 +206,18 @@ export default function Checkin() {
                 <Button type="primary" shape="round" onClick={() => handleSelectCustomer(record)}>
                     Tiếp theo <SendOutlined />
                 </Button>
-            )
-        }
+            ),
+        },
     ];
 
     const calculateTotal = () => {
         if (!selectedCustomer) return 0;
         const billingFinal = getBillingFinalAmount(selectedCustomer);
         if (billingFinal != null) return billingFinal;
-        // Fallback: tính thủ công nếu không có billing data
         const services = getServices(selectedCustomer);
         const promotions = getPromotions(selectedCustomer);
-        const subtotal = services.reduce((acc, curr) => acc + curr.price, 0);
-        const discount = promotions.reduce((acc, curr) => acc + curr.discount, 0);
+        const subtotal = services.reduce((acc, s) => acc + s.price, 0);
+        const discount = promotions.reduce((acc, p) => acc + p.discount, 0);
         return subtotal - discount;
     };
 
@@ -250,7 +225,7 @@ export default function Checkin() {
         <div className="checkin-container">
             <div className="checkin-header">
                 <Title level={2} className="checkin-title">
-                    <ScanOutlined style={{ color: '#1890ff', marginRight: '12px' }} />
+                    <ScanOutlined className="checkin-title-icon" />
                     Check-in
                 </Title>
             </div>
@@ -260,14 +235,14 @@ export default function Checkin() {
                 className="checkin-steps"
                 items={[
                     { title: 'Quét mã QR', icon: <QrcodeOutlined /> },
-                    { title: 'Xác nhận Dịch vụ', icon: <IdcardOutlined /> }
+                    { title: 'Xác nhận Dịch vụ', icon: <IdcardOutlined /> },
                 ]}
             />
 
-            {/* GIAI ĐOẠN 1: Quét QR + Kết quả gộp chung 1 card */}
+            {/* GIAI ĐOẠN 1: Quét QR */}
             {currentStep === 0 && (
                 <Card
-                    title={<span style={{ fontSize: 18 }}><QrcodeOutlined style={{ marginRight: 8 }} /> Quét Mã QR Đặt Lịch</span>}
+                    title={<span><QrcodeOutlined style={{ marginRight: 8 }} /> Quét Mã QR Đặt Lịch</span>}
                     className="checkin-card qr-scan-card"
                 >
                     <div className="qr-scan-area">
@@ -300,7 +275,6 @@ export default function Checkin() {
                         <div className="qr-action-buttons">
                             {!cameraOpen ? (
                                 <Button
-                                    type="default"
                                     className="camera-btn"
                                     icon={<CameraOutlined />}
                                     onClick={startCamera}
@@ -309,7 +283,6 @@ export default function Checkin() {
                                 </Button>
                             ) : (
                                 <Button
-                                    type="default"
                                     danger
                                     className="camera-btn camera-btn-close"
                                     icon={<CloseCircleOutlined />}
@@ -320,7 +293,6 @@ export default function Checkin() {
                             )}
                         </div>
 
-                        {/* Camera Scanner Preview */}
                         {cameraOpen && (
                             <div className="camera-scanner-wrapper" ref={scannerContainerRef}>
                                 <div id="qr-camera-reader" className="camera-reader" />
@@ -329,12 +301,14 @@ export default function Checkin() {
 
                         <div className="qr-scan-hint">
                             <InfoCircleOutlined />
-                            <Text>Nhân viên click vào ô input, sau đó quét mã QR. Nội dung sẽ tự động được điền và tra cứu khi nhấn Enter.</Text>
+                            <Text>
+                                Nhân viên click vào ô input, sau đó quét mã QR.
+                                Nội dung sẽ tự động được điền và tra cứu khi nhấn Enter.
+                            </Text>
                         </div>
                     </div>
 
-                    {/* Bảng kết quả tra cứu ngay bên dưới */}
-                    <div style={{ padding: 24 }}>
+                    <div className="search-results-wrapper">
                         <Table
                             columns={columns}
                             dataSource={searchResults}
@@ -347,7 +321,7 @@ export default function Checkin() {
                 </Card>
             )}
 
-            {/* GIAI ĐOẠN 2 */}
+            {/* GIAI ĐOẠN 2: Xác nhận dịch vụ */}
             {currentStep === 1 && selectedCustomer && (() => {
                 const services = getServices(selectedCustomer);
                 const promotions = getPromotions(selectedCustomer);
@@ -363,7 +337,7 @@ export default function Checkin() {
                         <Col xs={24} lg={16}>
                             <Card
                                 className="checkin-card customer-info-card"
-                                title={<span style={{ fontSize: 18, fontWeight: 600 }}><UserOutlined style={{ marginRight: 8 }} /> Hồ Sơ Dịch Vụ</span>}
+                                title={<span><UserOutlined style={{ marginRight: 8 }} /> Hồ Sơ Dịch Vụ</span>}
                                 extra={
                                     <Button type="text" className="back-btn" onClick={() => setCurrentStep(0)}>
                                         <ArrowLeftOutlined /> Quay lại
@@ -401,15 +375,15 @@ export default function Checkin() {
                                     <Descriptions.Item label="Khuyến mãi áp dụng">
                                         {bookingPromotion ? (
                                             <Space size="small">
-                                                <Tag style={{ color: '#52c41a', backgroundColor: '#ebffe8ff', fontWeight: 600 }}>{bookingPromotion.promotionName}</Tag>
-                                                <Text style={{ color: '#52c41a', fontWeight: 600 }}>Giảm: {promotionTotalDiscount.toLocaleString('vi-VN')}đ</Text>
+                                                <Tag className="promotion-tag">{bookingPromotion.promotionName}</Tag>
+                                                <Text className="text-promotion">
+                                                    Giảm: {promotionTotalDiscount.toLocaleString('vi-VN')}đ
+                                                </Text>
                                             </Space>
                                         ) : promotions.length > 0 ? (
                                             <Space size="small">
                                                 {promotions.map(p => (
-                                                    <div key={p.id}>
-                                                        <Text strong style={{ color: '#52c41a' }}>{p.name}</Text>
-                                                    </div>
+                                                    <Text key={p.id} strong className="text-promotion">{p.name}</Text>
                                                 ))}
                                             </Space>
                                         ) : (
@@ -419,8 +393,8 @@ export default function Checkin() {
                                     <Descriptions.Item label="Voucher">
                                         {bookingVoucher ? (
                                             <Space>
-                                                <Tag color="blue" style={{ fontWeight: 600 }}>{bookingVoucher.voucherCode}</Tag>
-                                                <Text strong style={{ color: '#1890ff' }}>{bookingVoucher.rewardName}</Text>
+                                                <Tag color="blue" className="text-voucher">{bookingVoucher.voucherCode}</Tag>
+                                                <Text strong className="text-voucher">{bookingVoucher.rewardName}</Text>
                                             </Space>
                                         ) : (
                                             <Text type="secondary">Không có voucher</Text>
@@ -428,7 +402,9 @@ export default function Checkin() {
                                     </Descriptions.Item>
                                     <Descriptions.Item label="Tiền cọc">
                                         {depositAmount > 0 ? (
-                                            <Text strong style={{ color: '#faad14', fontSize: 16 }}>Đã đặt cọc: {depositAmount.toLocaleString('vi-VN')}đ</Text>
+                                            <Text className="text-deposit">
+                                                Đã đặt cọc: {depositAmount.toLocaleString('vi-VN')}đ
+                                            </Text>
                                         ) : (
                                             <Text type="secondary">Chưa đặt cọc</Text>
                                         )}
@@ -456,39 +432,44 @@ export default function Checkin() {
                         {/* Hóa Đơn Tạm Tính */}
                         <Col xs={24} lg={8}>
                             <Card
-                                title={<span style={{ fontSize: 18, fontWeight: 600 }}>Hóa Đơn Tạm Tính</span>}
+                                title="Hóa Đơn Tạm Tính"
                                 className="invoice-card"
                             >
-                                <div style={{ marginBottom: '24px' }}>
+                                <div className="invoice-services-block">
                                     <Text className="invoice-section-title">Chi phí dịch vụ</Text>
                                     {services.map(s => (
                                         <Row justify="space-between" key={s.id} className="invoice-row">
-                                            <Col><Text strong style={{ color: '#262626' }}>{s.name}</Text></Col>
+                                            <Col><Text strong className="invoice-row-label">{s.name}</Text></Col>
                                             <Col><Text strong>{s.price.toLocaleString('vi-VN')} đ</Text></Col>
                                         </Row>
                                     ))}
                                 </div>
+
                                 <Row justify="space-between" align="middle">
-                                    <Col><Text strong style={{ color: '#262626', fontSize: 14 }}>Tổng chi phí dịch vụ</Text></Col>
-                                    <Col><Text strong style={{ color: '#262626', fontSize: 16 }}>{services.reduce((acc, curr) => acc + curr.price, 0).toLocaleString('vi-VN')}đ</Text></Col>
+                                    <Col><Text className="invoice-row-label">Tổng chi phí dịch vụ</Text></Col>
+                                    <Col>
+                                        <Text className="invoice-row-value">
+                                            {services.reduce((acc, s) => acc + s.price, 0).toLocaleString('vi-VN')}đ
+                                        </Text>
+                                    </Col>
                                 </Row>
 
                                 {/* Khuyến mãi */}
                                 {(bookingPromotion || promotions.length > 0) && promotionTotalDiscount > 0 && (
                                     <>
                                         <div className="invoice-divider" />
-                                        <div style={{ marginBottom: '24px' }}>
+                                        <div className="invoice-promotion-block">
                                             <Text className="invoice-section-title">Khuyến mãi</Text>
                                             {bookingPromotion ? (
                                                 <Row justify="space-between" className="invoice-row">
-                                                    <Col><Text style={{ color: '#52c41a' }}>{bookingPromotion.promotionName}</Text></Col>
-                                                    <Col><Text strong style={{ color: '#52c41a' }}>-{promotionTotalDiscount.toLocaleString('vi-VN')} đ</Text></Col>
+                                                    <Col><Text className="invoice-promotion-text">{bookingPromotion.promotionName}</Text></Col>
+                                                    <Col><Text strong className="invoice-promotion-text">-{promotionTotalDiscount.toLocaleString('vi-VN')} đ</Text></Col>
                                                 </Row>
                                             ) : (
                                                 promotions.filter(p => p.discount > 0).map(p => (
                                                     <Row justify="space-between" key={p.id} className="invoice-row">
-                                                        <Col><Text style={{ color: '#52c41a' }}>{p.name}</Text></Col>
-                                                        <Col><Text strong style={{ color: '#52c41a' }}>-{p.discount.toLocaleString('vi-VN')} đ</Text></Col>
+                                                        <Col><Text className="invoice-promotion-text">{p.name}</Text></Col>
+                                                        <Col><Text strong className="invoice-promotion-text">-{p.discount.toLocaleString('vi-VN')} đ</Text></Col>
                                                     </Row>
                                                 ))
                                             )}
@@ -500,14 +481,14 @@ export default function Checkin() {
                                 {bookingVoucher && voucherDiscountAmount > 0 && (
                                     <>
                                         <div className="invoice-divider" />
-                                        <div style={{ marginBottom: '24px' }}>
+                                        <div className="invoice-voucher-block">
                                             <Text className="invoice-section-title">Voucher</Text>
                                             <Row justify="space-between" className="invoice-row">
                                                 <Col>
                                                     <Tag color="blue">{bookingVoucher.voucherCode}</Tag>
-                                                    <Text style={{ color: '#1890ff', marginLeft: 5 }}>{bookingVoucher.rewardName}</Text>
+                                                    <Text className="invoice-voucher-text">{bookingVoucher.rewardName}</Text>
                                                 </Col>
-                                                <Col><Text strong style={{ color: '#1890ff' }}>-{voucherDiscountAmount.toLocaleString('vi-VN')} đ</Text></Col>
+                                                <Col><Text strong className="invoice-voucher-text">-{voucherDiscountAmount.toLocaleString('vi-VN')} đ</Text></Col>
                                             </Row>
                                         </div>
                                     </>
@@ -515,14 +496,18 @@ export default function Checkin() {
 
                                 <div className="invoice-total-box">
                                     {depositAmount > 0 && (
-                                        <Row justify="space-between" align="middle">
-                                            <Col><Text strong style={{ color: '#262626', fontSize: 14 }}>Đã đặt cọc</Text></Col>
-                                            <Col><Text strong style={{ color: '#faad14', fontSize: 16 }}>{depositAmount.toLocaleString('vi-VN')}đ</Text></Col>
+                                        <Row justify="space-between" align="middle" className="invoice-deposit-row">
+                                            <Col><Text className="invoice-deposit-label">Đã đặt cọc</Text></Col>
+                                            <Col><Text className="invoice-deposit-value">{depositAmount.toLocaleString('vi-VN')}đ</Text></Col>
                                         </Row>
                                     )}
-                                    <Row justify="space-between" align="middle" style={{ marginTop: 16 }}>
+                                    <Row justify="space-between" align="middle">
                                         <Col><Text className="invoice-total-label">Tổng thanh toán</Text></Col>
-                                        <Col><Title level={2} className="invoice-total-amount">{calculateTotal().toLocaleString('vi-VN')}đ</Title></Col>
+                                        <Col>
+                                            <Title level={2} className="invoice-total-amount">
+                                                {calculateTotal().toLocaleString('vi-VN')}đ
+                                            </Title>
+                                        </Col>
                                     </Row>
                                 </div>
 
@@ -539,6 +524,6 @@ export default function Checkin() {
                     </Row>
                 );
             })()}
-        </div >
+        </div>
     );
 }
