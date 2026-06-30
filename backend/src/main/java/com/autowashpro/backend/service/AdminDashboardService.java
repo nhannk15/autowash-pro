@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.autowashpro.backend.mapper.BillingMapper;
 import com.autowashpro.backend.mapper.PromotionUsageMapper;
 import com.autowashpro.backend.model.dto.DashboardSummaryResponse;
+import com.autowashpro.backend.model.dto.DeductionChartItem;
 import com.autowashpro.backend.model.dto.PeakHourStats;
 import com.autowashpro.backend.model.dto.PromotionUsageStats;
 import com.autowashpro.backend.model.dto.RecentTransactionItem;
@@ -449,7 +450,7 @@ public class AdminDashboardService {
         long usageCount = 0;
 
         if (request.getStartDate() != null && request.getEndDate() != null) {
-            log.info("getPromotionUsageStats() - find all promotion usages from {} to {}.", request.getStartDate(),
+            log.info("countPromotionUsage() - find all promotion usages from {} to {}.", request.getStartDate(),
                     request.getEndDate());
 
             LocalDateTime startTime = request.getStartDate().atStartOfDay();
@@ -457,7 +458,7 @@ public class AdminDashboardService {
 
             usageCount = promotionUsageRepository.countFromStartTimeToEndTime(startTime, endTime);
         } else if (request.getMonth() != null && request.getYear() != 0) {
-            log.info("getPromotionUsageStats() - find all promotion usages in {}/{}.", request.getMonth().getValue(),
+            log.info("countPromotionUsage() - find all promotion usages in {}/{}.", request.getMonth().getValue(),
                     request.getYear());
 
             LocalDateTime startTime = LocalDate.of(request.getYear(), request.getMonth(), 1).atStartOfDay();
@@ -466,7 +467,7 @@ public class AdminDashboardService {
 
             usageCount = promotionUsageRepository.countFromStartTimeToEndTime(startTime, endTime);
         } else if (request.getYear() != 0) {
-            log.info("getPromotionUsageStats() - find all promotion usages in {}.",request.getYear());
+            log.info("countPromotionUsage() - find all promotion usages in {}.",request.getYear());
 
             LocalDateTime startTime = LocalDateTime.of(request.getYear(), 1, 1, 0, 0, 0);
             LocalDateTime endTime = startTime.plusYears(1L).minusMinutes(1L);
@@ -479,6 +480,35 @@ public class AdminDashboardService {
         HashMap<String, Long> mapResponse = new HashMap<>();
         mapResponse.put("totalUsageCount", usageCount);
         return mapResponse;
+    }
+
+    public List<DeductionChartItem> getPromotionDeductionChartItems(RevenueDataRequest request) {
+        
+        if (request.getStartDate() != null && request.getEndDate() != null) {
+            log.info("getPromotionUsageStats() - find all promotion usages from {} to {}.", request.getStartDate(),
+                    request.getEndDate());
+
+            LocalDateTime startTime = request.getStartDate().atStartOfDay();
+            LocalDateTime endTime = request.getEndDate().plusDays(1L).atStartOfDay().minusMinutes(1L);
+
+        } else if (request.getMonth() != null && request.getYear() != 0) {
+            log.info("getPromotionUsageStats() - find all promotion usages in {}/{}.", request.getMonth().getValue(),
+                    request.getYear());
+
+            LocalDateTime startTime = LocalDate.of(request.getYear(), request.getMonth(), 1).atStartOfDay();
+            LocalDateTime endTime = LocalDate.of(request.getYear(), request.getMonth(), 1).plusMonths(1L).atStartOfDay()
+                    .minusMinutes(1L);
+
+        } else if (request.getYear() != 0) {
+            log.info("getPromotionUsageStats() - find all promotion usages in {}.",request.getYear());
+
+            LocalDateTime startTime = LocalDateTime.of(request.getYear(), 1, 1, 0, 0, 0);
+            LocalDateTime endTime = startTime.plusYears(1L).minusMinutes(1L);
+
+        } else {
+        }
+
+        return null;
     }
     
 }

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.autowashpro.backend.model.dto.DashboardSummaryResponse;
+import com.autowashpro.backend.model.dto.DeductionChartItem;
 import com.autowashpro.backend.model.dto.PeakHourStats;
 import com.autowashpro.backend.model.dto.PromotionUsageStats;
 import com.autowashpro.backend.model.dto.RecentTransactionItem;
@@ -63,7 +64,12 @@ public class AdminDashboardController {
     }
 
     @PostMapping("/api/admin/dashboard/promotion-usage-count")
-    public ResponseEntity<HashMap<String, Long>> getPromotionUsageCount(RevenueDataRequest request) {
+    public ResponseEntity<HashMap<String, Long>> getPromotionUsageCount(@RequestBody RevenueDataRequest request) {
         return ResponseEntity.ok().body(adminDashboardService.countPromotionUsage(request));
+    }
+
+    @PostMapping("/api/admin/dashboard/deduction-chart")
+    public ResponseEntity<List<DeductionChartItem>> getDeductionChartItems(@RequestBody RevenueDataRequest request) {
+        return ResponseEntity.ok().body(adminDashboardService.getPromotionDeductionChartItems(request));
     }
 }
