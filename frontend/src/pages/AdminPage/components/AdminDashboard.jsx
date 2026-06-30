@@ -8,11 +8,12 @@ import {
 import {
     DollarCircleOutlined, CalendarOutlined, UserAddOutlined, CarOutlined,
     UnorderedListOutlined, CrownOutlined, WarningOutlined, BellOutlined,
-    CheckCircleOutlined, UserOutlined,
+    CheckCircleOutlined, UserOutlined, FallOutlined,
+    ArrowUpOutlined, ArrowDownOutlined,
 } from '@ant-design/icons';
 import {
     LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
-    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+    XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
 import {
     getAllBays, getUpcomingBookings, getTodayBookings,
@@ -20,6 +21,7 @@ import {
 import {
     getDashboardSummary, getServiceDistribution, getRevenueChart,
     getPeakHours, getRecentTransactions,
+    getDeductionChart, getPromotionPerformance, getDeductionSummary,
 } from '../../../service/adminService';
 import './AdminDashboard.css';
 
@@ -98,6 +100,11 @@ export default function AdminDashboard() {
     const [transactions, setTransactions] = useState([]);
     const [alerts, setAlerts] = useState([]);
 
+    // ── Doanh thu khấu trừ states ──
+    const [deductionChart, setDeductionChart] = useState([]);
+    const [promotionPerformance, setPromotionPerformance] = useState([]);
+    const [deductionSummary, setDeductionSummary] = useState(null);
+
     const [filterMode, setFilterMode] = useState('range');
     const [dateRange, setDateRange] = useState([dayjs(), dayjs()]);
     const [monthYear, setMonthYear] = useState(dayjs());
@@ -160,6 +167,23 @@ export default function AdminDashboard() {
             setTransactions([...data].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
         }).catch(console.error);
     }, []);
+
+    // ── Fetch dữ liệu khấu trừ (reactive theo filter) ──
+    useEffect(() => { getDeductionChart(apiParams).then(setDeductionChart).catch(console.error); }, [apiParamsKey]);
+    useEffect(() => { getPromotionPerformance(apiParams).then(setPromotionPerformance).catch(console.error); }, [apiParamsKey]);
+    useEffect(() => { getDeductionSummary(apiParams).then(setDeductionSummary).catch(console.error); }, [apiParamsKey]);
+
+    // Tính breakdown cho PieChart từ dữ liệu summary (màu do FE quản lý)
+    const deductionBreakdown = useMemo(() => {
+        if (!deductionSummary) return [];
+        const { totalFinalRevenue = 0, totalPromotionDiscount = 0, totalVoucherDiscount = 0 } = deductionSummary;
+        if (totalFinalRevenue === 0 && totalPromotionDiscount === 0 && totalVoucherDiscount === 0) return [];
+        return [
+            { name: 'Doanh thu thực', value: totalFinalRevenue, color: '#378ADD' },
+            { name: 'Khấu trừ KM', value: totalPromotionDiscount, color: '#fa8c16' },
+            { name: 'Khấu trừ Voucher', value: totalVoucherDiscount, color: '#7F77DD' },
+        ].filter(item => item.value > 0);
+    }, [deductionSummary]);
 
     // Computed stats
     const stats = useMemo(() => {
@@ -246,12 +270,12 @@ export default function AdminDashboard() {
                 {/* ── Cột trái (70%) ── */}
                 <Col xs={24} lg={17}>
 
-                    {/* KPI Cards */}
+                    {/* KPI Cards – 5 cột */}
                     {loadingTodayBookings ? (
                         <div className="admin-dashboard__loading-center"><Spin size="large" /></div>
                     ) : (
                         <Row gutter={[16, 16]} className="dashboard__stats-row">
-                            <Col xs={12} sm={6}>
+                            <Col xs={12} sm={8} lg={5}>
                                 <Card className="stat-card">
                                     <Statistic
                                         title="Doanh thu"
@@ -259,9 +283,37 @@ export default function AdminDashboard() {
                                         formatter={(v) => formatCurrency(v)}
                                         prefix={<DollarCircleOutlined className="stat-icon text-gold" />}
                                     />
+                                    {(() => {
+                                        const current = dashboardData?.totalRevenue ?? 0;
+                                        const previous = dashboardData?.previousRevenue ?? 0;
+                                        if (previous === 0 && current === 0) return null;
+                                        if (previous === 0) return (
+                                            <div className="stat-card__trend stat-card__trend--up">
+                                                <ArrowUpOutlined /> Mới
+                                            </div>
+                                        );
+                                        const pct = ((current - previous) / previous * 100).toFixed(1);
+                                        const isUp = current >= previous;
+                                        return (
+                                            <div className={`stat-card__trend stat-card__trend--${isUp ? 'up' : 'down'}`}>
+                                                {isUp ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
+                                                {' '}{isUp ? '+' : ''}{pct}% so với kỳ trước
+                                            </div>
+                                        );
+                                    })()}
                                 </Card>
                             </Col>
-                            <Col xs={12} sm={6}>
+                            <Col xs={12} sm={8} lg={5}>
+                                <Card className="stat-card">
+                                    <Statistic
+                                        title="Tổng khấu trừ"
+                                        value={deductionSummary?.totalDiscount ?? 0}
+                                        formatter={(v) => formatCurrency(v)}
+                                        prefix={<FallOutlined className="stat-icon text-red" />}
+                                    />
+                                </Card>
+                            </Col>
+                            <Col xs={12} sm={8} lg={5}>
                                 <Card className="stat-card">
                                     <Statistic
                                         title="Lịch hẹn"
@@ -270,7 +322,7 @@ export default function AdminDashboard() {
                                     />
                                 </Card>
                             </Col>
-                            <Col xs={12} sm={6}>
+                            <Col xs={12} sm={8} lg={5}>
                                 <Card className="stat-card">
                                     <Statistic
                                         title="Khách mới"
@@ -279,7 +331,7 @@ export default function AdminDashboard() {
                                     />
                                 </Card>
                             </Col>
-                            <Col xs={12} sm={6}>
+                            <Col xs={12} sm={8} lg={4}>
                                 <Card className="stat-card">
                                     <Statistic
                                         title="Đã hoàn thành"
@@ -340,6 +392,118 @@ export default function AdminDashboard() {
                             </BarChart>
                         </ResponsiveContainer>
                     </Card>
+
+                    {/* ── BIỂU ĐỒ DOANH THU KHẤU TRỪ ── */}
+
+                    {/* Stacked BarChart: Doanh thu thực vs Khấu trừ */}
+                    <Card size="small" title={`Doanh thu & Khấu trừ - ${filterLabel}`} className="admin-dashboard__chart-card admin-dashboard__deduction-chart">
+                        {deductionChart.length > 0 ? (
+                            <ResponsiveContainer width="100%" height={220}>
+                                <BarChart data={deductionChart} barSize={20}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
+                                    <XAxis
+                                        dataKey="day"
+                                        tick={{ fontSize: 11 }}
+                                        tickFormatter={(v) => { const p = v.split('-'); return `${p[2]}/${p[1]}`; }}
+                                    />
+                                    <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
+                                    <Tooltip formatter={(v) => formatCurrency(v)} />
+                                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                                    <Bar dataKey="finalRevenue" stackId="revenue" name="Doanh thu thực" fill="#378ADD" radius={[0, 0, 0, 0]} />
+                                    <Bar dataKey="promotionDiscount" stackId="revenue" name="KM khấu trừ" fill="#fa8c16" radius={[0, 0, 0, 0]} />
+                                    <Bar dataKey="voucherDiscount" stackId="revenue" name="Voucher khấu trừ" fill="#7F77DD" radius={[3, 3, 0, 0]} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="admin-dashboard__empty-chart">
+                                <Text type="secondary">Chưa có dữ liệu khấu trừ</Text>
+                            </div>
+                        )}
+                    </Card>
+
+                    {/* Row: Top Khuyến mãi + Cơ cấu khấu trừ */}
+                    <Row gutter={[16, 16]} className="admin-dashboard__deduction-row">
+                        {/* Horizontal BarChart – Top khuyến mãi hiệu quả */}
+                        <Col xs={24} lg={14}>
+                            <Card size="small" title={`Top khuyến mãi hiệu quả - ${filterLabel}`} className="admin-dashboard__chart-card admin-dashboard__chart-card--full-height">
+                                {promotionPerformance.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height={Math.max(180, promotionPerformance.length * 40)}>
+                                        <BarChart data={promotionPerformance} layout="vertical" barSize={16} margin={{ left: 20 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
+                                            <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
+                                            <YAxis
+                                                dataKey="promotionName"
+                                                type="category"
+                                                tick={{ fontSize: 11 }}
+                                                width={120}
+                                            />
+                                            <Tooltip
+                                                formatter={(v, name) => {
+                                                    if (name === 'Tổng khấu trừ') return formatCurrency(v);
+                                                    return v;
+                                                }}
+                                                labelFormatter={(label) => label}
+                                            />
+                                            <Bar dataKey="totalDiscountAmount" name="Tổng khấu trừ" fill="#E05C5C" radius={[0, 4, 4, 0]}>
+                                                {promotionPerformance.map((entry, i) => (
+                                                    <Cell key={i} fill={['#E05C5C', '#fa8c16', '#7F77DD', '#1D9E75', '#378ADD', '#52c41a', '#faad14'][i % 7]} />
+                                                ))}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div className="admin-dashboard__empty-chart">
+                                        <Text type="secondary">Chưa có dữ liệu khuyến mãi</Text>
+                                    </div>
+                                )}
+                            </Card>
+                        </Col>
+
+                        {/* Donut PieChart – Cơ cấu doanh thu & khấu trừ */}
+                        <Col xs={24} lg={10}>
+                            <Card size="small" title={`Cơ cấu doanh thu - ${filterLabel}`} className="admin-dashboard__chart-card admin-dashboard__chart-card--full-height">
+                                {deductionBreakdown.length > 0 ? (
+                                    <>
+                                        <ResponsiveContainer width="100%" height={160}>
+                                            <PieChart>
+                                                <Pie
+                                                    data={deductionBreakdown}
+                                                    cx="50%"
+                                                    cy="50%"
+                                                    innerRadius={45}
+                                                    outerRadius={70}
+                                                    dataKey="value"
+                                                    paddingAngle={2}
+                                                >
+                                                    {deductionBreakdown.map((entry, i) => (
+                                                        <Cell key={i} fill={entry.color} />
+                                                    ))}
+                                                </Pie>
+                                                <Tooltip formatter={(v) => formatCurrency(v)} />
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                        <div className="admin-dashboard__pie-legend">
+                                            {deductionBreakdown.map((item) => (
+                                                <span key={item.name} className="admin-dashboard__pie-legend-item">
+                                                    <span className="admin-dashboard__pie-dot" style={{ background: item.color }} />
+                                                    {item.name}: {formatCurrency(item.value)}
+                                                </span>
+                                            ))}
+                                        </div>
+                                        {deductionSummary?.discountRate != null && (
+                                            <div className="admin-dashboard__discount-rate">
+                                                Tỷ lệ khấu trừ: <Text strong className="admin-dashboard__discount-rate-value">{deductionSummary.discountRate.toFixed(1)}%</Text>
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <div className="admin-dashboard__empty-chart">
+                                        <Text type="secondary">Chưa có dữ liệu</Text>
+                                    </div>
+                                )}
+                            </Card>
+                        </Col>
+                    </Row>
 
                     {/* Bay status */}
                     <Card

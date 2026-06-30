@@ -171,6 +171,7 @@ public class PromotionService {
                 .maxUsesPerCustomer(request.getMaxUsesPerCustomer())
                 .usageCount(request.getUsageCount())
                 .staff(staff)
+                .active(true)
                 .build();
 
         promotionMapper.updatePromotionFromRequest(newPromotion, promotion);

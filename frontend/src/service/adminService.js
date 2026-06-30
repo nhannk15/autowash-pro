@@ -57,6 +57,30 @@ export async function getRecentTransactions() {
     return response.data;
 }
 
+// Biểu đồ doanh thu khấu trừ theo ngày (Stacked BarChart)
+export async function getDeductionChart({ startDate, endDate, month, year }) {
+    const response = await axios.post(`${API}/api/admin/dashboard/deduction-chart`, {
+        startDate, endDate, month, year
+    }, { withCredentials: true });
+    return response.data;
+}
+
+// Xếp hạng hiệu quả khuyến mãi (Horizontal BarChart)
+export async function getPromotionPerformance({ startDate, endDate, month, year }) {
+    const response = await axios.post(`${API}/api/admin/dashboard/promotion-performance`, {
+        startDate, endDate, month, year
+    }, { withCredentials: true });
+    return response.data;
+}
+
+// Tổng hợp khấu trừ: tổng quan + breakdown cho PieChart
+export async function getDeductionSummary({ startDate, endDate, month, year }) {
+    const response = await axios.post(`${API}/api/admin/dashboard/deduction-summary`, {
+        startDate, endDate, month, year
+    }, { withCredentials: true });
+    return response.data;
+}
+
 // Lấy danh sách tất cả khách hàng
 export async function getCustomers(params) {
     const response = await axios.get(`${API}/api/admin/customers`, {

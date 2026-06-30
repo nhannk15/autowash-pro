@@ -104,6 +104,25 @@
 .text-green  { color: #52c41a; }
 .text-gold   { color: #faad14; }
 
+/* ─── Revenue trend badge ─── */
+.stat-card__trend {
+    margin-top: 6px;
+    font-size: 12px;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.stat-card__trend--up {
+    color: #52c41a;
+}
+
+.stat-card__trend--down {
+    color: #e05c5c;
+}
+
 /* ─── Charts row ─── */
 .admin-dashboard__charts-row {
     margin-bottom: 16px;
@@ -454,6 +473,48 @@
     padding: 40px 0;
 }
 
+/* ─── KPI: Tổng khấu trừ ─── */
+.text-red { color: #e05c5c; }
+
+/* ─── Deduction Stacked BarChart ─── */
+.admin-dashboard__deduction-chart {
+    margin-bottom: 16px;
+}
+
+/* ─── Deduction Row: Top KM + Pie ─── */
+.admin-dashboard__deduction-row {
+    margin-bottom: 16px;
+}
+
+/* ─── Empty chart placeholder ─── */
+.admin-dashboard__empty-chart {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 160px;
+    color: #bfbfbf;
+    font-style: italic;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+}
+
+/* ─── Discount rate badge ─── */
+.admin-dashboard__discount-rate {
+    text-align: center;
+    margin-top: 8px;
+    padding: 6px 12px;
+    background: #fafafa;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #595959;
+}
+
+.admin-dashboard__discount-rate-value {
+    color: #e05c5c !important;
+    font-size: 15px;
+}
+
 /* ─── Responsive ─── */
 @media (max-width: 992px) {
     .admin-dashboard__chart-card--full-height {
@@ -481,5 +542,10 @@
     .admin-dashboard .ant-segmented {
         font-size: 12px;
         width: 100%;
+    }
+
+    .admin-dashboard__deduction-row .ant-col {
+        flex: 0 0 100%;
+        max-width: 100%;
     }
 }
