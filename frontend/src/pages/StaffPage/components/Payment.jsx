@@ -29,8 +29,30 @@ export default function StaffPayment() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const bayId = location.state?.bayId || sessionStorage.getItem('pendingVnpayBayId') || null;
-    const bookingId = location.state?.bookingId || sessionStorage.getItem('pendingVnpayBookingId') || null;
+    // Dùng URLSearchParams để kiểm tra xem có phải vừa đi từ VNPay về không
+    const searchParams = new URLSearchParams(location.search);
+    const isReturningFromVnpay = searchParams.has('status');
+
+    // Khởi tạo state bằng location.state (đi từ Dashboard) HOẶC sessionStorage (đi từ VNPay)
+    const [bayId] = useState(() => {
+        if (location.state?.bayId) return location.state.bayId;
+        if (isReturningFromVnpay) return sessionStorage.getItem('pendingVnpayBayId');
+        return null;
+    });
+
+    const [bookingId] = useState(() => {
+        if (location.state?.bookingId) return location.state.bookingId;
+        if (isReturningFromVnpay) return sessionStorage.getItem('pendingVnpayBookingId');
+        return null;
+    });
+
+    // Sau khi component mount và đã lấy được ID vào state, dọn dẹp luôn sessionStorage để không bị lưu rác vĩnh viễn
+    useEffect(() => {
+        if (isReturningFromVnpay) {
+            sessionStorage.removeItem('pendingVnpayBayId');
+            sessionStorage.removeItem('pendingVnpayBookingId');
+        }
+    }, [isReturningFromVnpay]);
 
     const fetchBillData = async () => {
         if (!bookingId) return;
@@ -75,8 +97,6 @@ export default function StaffPayment() {
             setCurrentStep(1);
             setIsPaymentReceived(true);
             setTimeout(() => {
-                sessionStorage.removeItem('pendingVnpayBayId');
-                sessionStorage.removeItem('pendingVnpayBookingId');
                 navigate(
                     bayId ? '/staff/dashboard' : '/staff/history',
                     bayId ? { state: { paidBayId: bayId, paidBookingId: bookingId } } : undefined

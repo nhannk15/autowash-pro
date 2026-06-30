@@ -23,8 +23,13 @@ const getCurrentSession = (bay) => bay.currentSession || null;
 
 const getBookingRevenue = (record) => {
     if (record.washSessionStatus !== 'PAID') return 0;
+    if (record.billing?.finalAmount != null) {
+        const final = Number(record.billing.finalAmount);
+        const deposit = Number(record.billing.depositAmount || 0);
+        return final + deposit;
+    }
     return (record.bookingDetails || []).reduce(
-        (sum, d) => sum + Number(d.finalPrice || 0), 0
+        (sum, d) => sum + Number(d.finalPrice || d.priceAtBooking || 0), 0
     );
 };
 
