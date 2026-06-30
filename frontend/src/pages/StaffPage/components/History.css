@@ -1,8 +1,14 @@
 /* ===== History ===== */
 
+/* --- Stats Row --- */
+.dashboard__stats-row {
+    margin-bottom: 24px;
+}
+
 .stat-card {
     transition: all 0.2s ease;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    border-radius: 16px !important;
 }
 
 .stat-card:hover {
@@ -10,18 +16,102 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
 }
 
+/* --- Stat Card Content --- */
+.stat-card__icon-wrapper {
+    padding: 16px;
+    border-radius: 16px;
+    display: flex;
+}
+
+.stat-card__icon-wrapper--blue {
+    background-color: #e6f7ff;
+}
+
+.stat-card__icon-wrapper--green {
+    background-color: #f6ffed;
+}
+
+.stat-card__icon--blue {
+    font-size: 28px;
+    color: #1890ff;
+}
+
+.stat-card__icon--green {
+    font-size: 28px;
+    color: #52c41a;
+}
+
+.stat-card__label {
+    color: #8c8c8c;
+    font-size: 14px;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+.stat-card__value {
+    font-size: 28px;
+    font-weight: 600;
+    color: #262626;
+    line-height: 1;
+}
+
+/* --- History Card --- */
 .history-card {
     transition: all 0.2s ease;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
     border-radius: 12px !important;
     border: 1px solid #e8e8e8;
+    margin-top: 24px;
 }
 
 .history-card:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
 }
 
-/* Table Header */
+/* --- History Card Header --- */
+.history-card__header {
+    margin-bottom: 20px;
+}
+
+.history-card__title {
+    margin: 0 !important;
+}
+
+/* --- Search Control --- */
+.history-search-input {
+    width: 250px;
+    border-radius: 6px;
+}
+
+/* --- Loading State --- */
+.history-loading {
+    text-align: center;
+    padding: 40px;
+}
+
+/* --- Car Info Cell --- */
+.car-info__plate {
+    font-weight: 500;
+}
+
+.car-info__brand {
+    font-size: 12px;
+    color: #8c8c8c;
+}
+
+/* --- Customer Cell --- */
+.customer-name {
+    font-weight: 500;
+}
+
+/* --- Status Tag --- */
+.history-status-tag {
+    font-weight: 500;
+    border-radius: 6px;
+    padding: 2px 8px;
+}
+
+/* --- Table Header --- */
 .ant-table-thead > tr > th {
     background: #fafafa !important;
     color: #8c8c8c !important;
@@ -33,7 +123,7 @@
     border-bottom: 1px solid #e8e8e8 !important;
 }
 
-/* Table */
+/* --- Table --- */
 .ant-table {
     border-radius: 12px !important;
     overflow: hidden;
@@ -43,7 +133,51 @@
     font-family: system-ui, -apple-system, sans-serif;
 }
 
-/* Pagination */
+/* --- Modal --- */
+.history-modal__body {
+    margin-top: 24px;
+}
+
+.history-modal__service-item {
+    margin-bottom: 8px;
+}
+
+.history-modal__service-price {
+    float: right;
+    font-weight: 500;
+}
+
+.history-modal__originalAmount-text{
+    font-weight: 500;
+}
+
+.history-modal__promotion-text {
+    color: #52c41a;
+    font-weight: 500;
+}
+
+.history-modal__promotion-discount {
+    color: #52c41a;
+    font-weight: 500;
+    margin-left: 8px;
+}
+
+.history-modal__voucher-discount {
+    color: #1677ff;
+    margin-left: 8px;
+    font-weight: 500;
+}
+
+.history-modal__deposit-text {
+    color: #faad14;
+    font-weight: 500;
+}
+
+.history-modal__final-amount {
+    font-size: 16px;
+}
+
+/* --- Pagination --- */
 .custom-pagination-btn {
     border-radius: 8px !important;
     transition: all 0.2s ease;

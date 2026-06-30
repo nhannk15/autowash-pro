@@ -1,8 +1,14 @@
 /* ===== Queue ===== */
 
+/* --- Stats Row --- */
+.dashboard__stats-row {
+    margin-bottom: 24px;
+}
+
 .stat-card {
     transition: all 0.2s ease;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    border-radius: 16px !important;
 }
 
 .stat-card:hover {
@@ -10,18 +16,100 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
 }
 
+/* --- Stat Card Content --- */
+.stat-card__icon-wrapper {
+    padding: 16px;
+    border-radius: 16px;
+    display: flex;
+}
+
+.stat-card__icon-wrapper--orange {
+    background-color: #fff7e6;
+}
+
+.stat-card__icon-wrapper--blue {
+    background-color: #e6f7ff;
+}
+
+.stat-card__icon-wrapper--green {
+    background-color: #f6ffed;
+}
+
+.stat-card__icon--orange {
+    font-size: 28px;
+    color: #fa8c16;
+}
+
+.stat-card__icon--blue {
+    font-size: 28px;
+    color: #1890ff;
+}
+
+.stat-card__icon--green {
+    font-size: 28px;
+    color: #52c41a;
+}
+
+.stat-card__label {
+    color: #8c8c8c;
+    font-size: 14px;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+.stat-card__value {
+    font-size: 28px;
+    font-weight: 600;
+    color: #262626;
+    line-height: 1;
+}
+
+/* --- Queue Card --- */
 .queue-card {
     transition: all 0.2s ease;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
     border-radius: 12px !important;
     border: 1px solid #e8e8e8;
+    margin-top: 24px;
 }
 
 .queue-card:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
 }
 
-/* Table Header */
+/* --- Queue Card Header --- */
+.queue-card__header {
+    margin-bottom: 20px;
+}
+
+.queue-card__title {
+    margin: 0 !important;
+}
+
+/* --- Search & Filter Controls --- */
+.queue-search-input {
+    width: 250px;
+    border-radius: 6px;
+}
+
+.queue-filter-select {
+    width: 160px;
+}
+
+/* --- Loading State --- */
+.queue-loading {
+    text-align: center;
+    padding: 40px;
+}
+
+/* --- Status Tag --- */
+.queue-status-tag {
+    font-weight: 500;
+    border-radius: 6px;
+    padding: 2px 8px;
+}
+
+/* --- Table Header --- */
 .ant-table-thead > tr > th {
     background: #fafafa !important;
     color: #8c8c8c !important;
@@ -33,7 +121,7 @@
     border-bottom: 1px solid #e8e8e8 !important;
 }
 
-/* Table */
+/* --- Table --- */
 .ant-table {
     border-radius: 12px !important;
     overflow: hidden;
@@ -43,7 +131,32 @@
     font-family: system-ui, -apple-system, sans-serif;
 }
 
-/* Pagination */
+/* --- Car Info Cell --- */
+.car-info__plate {
+    font-weight: 500;
+}
+
+.car-info__brand {
+    font-size: 12px;
+    color: #8c8c8c;
+}
+
+/* --- Customer Cell --- */
+.customer-name {
+    font-weight: 500;
+}
+
+/* --- Modal --- */
+.queue-modal__service-item {
+    margin-bottom: 8px;
+}
+
+.queue-modal__service-price {
+    float: right;
+    font-weight: 500;
+}
+
+/* --- Pagination --- */
 .custom-pagination-btn {
     border-radius: 8px !important;
     transition: all 0.2s ease;
