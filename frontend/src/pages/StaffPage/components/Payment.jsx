@@ -26,9 +26,9 @@ export default function StaffPayment() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Nhận data từ Dashboard
-    const bayId = location.state?.bayId || null;
-    const bookingId = location.state?.bookingId || null;
+    // Nhận data từ Dashboard hoặc từ sessionStorage (nếu vừa bị redirect từ VNPay về)
+    const bayId = location.state?.bayId || sessionStorage.getItem('pendingVnpayBayId') || null;
+    const bookingId = location.state?.bookingId || sessionStorage.getItem('pendingVnpayBookingId') || null;
 
     const fetchBillData = async () => {
         const id = bookingId;
@@ -61,6 +61,43 @@ export default function StaffPayment() {
     useEffect(() => {
         fetchBillData();
     }, [bookingId]);
+
+    // Xử lý kết quả trả về từ VNPay
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const status = params.get('status');
+        const billing = params.get('billing');
+
+        if (status) {
+            if (status === '00') {
+                message.success(`Thanh toán VNPay thành công (Hóa đơn: ${billing || 'Không rõ'})!`);
+                setCurrentStep(1); // Chuyển sang bước 2 để thấy màn hình Result
+                setIsPaymentReceived(true);
+                
+                // Tự động redirect về dashboard giống như cash payment
+                setTimeout(() => {
+                    sessionStorage.removeItem('pendingVnpayBayId');
+                    sessionStorage.removeItem('pendingVnpayBookingId');
+                    if (bayId) {
+                        navigate('/staff/dashboard', { state: { paidBayId: bayId, paidBookingId: bookingId } });
+                    } else {
+                        navigate('/staff/history');
+                    }
+                }, 2000);
+            } else {
+                message.error(`Thanh toán VNPay thất bại hoặc đã bị hủy!`);
+                // KHÔNG xóa sessionStorage ở đây để màn hình Payment vẫn giữ lại hóa đơn cho nhân viên thử lại
+            }
+
+            // Xóa query param để không hiện lại khi F5
+            params.delete('status');
+            params.delete('billing');
+            const newSearch = params.toString();
+            navigate(`${location.pathname}${newSearch ? `?${newSearch}` : ''}`, { replace: true, state: location.state });
+        }
+    }, [location.search, navigate, location.pathname, location.state, bayId, bookingId]);
+
+
 
     // Nếu đang loading
     if (loading) {
@@ -256,6 +293,10 @@ export default function StaffPayment() {
                 }, 2000);
             } else {
                 const response = await confirmPaymentByBank(billId);
+                // Lưu tạm bayId và bookingId để khi VNPay redirect về còn biết đường mà load data
+                if (bayId) sessionStorage.setItem('pendingVnpayBayId', bayId);
+                if (bookingId) sessionStorage.setItem('pendingVnpayBookingId', bookingId);
+
                 // staffService đã return response.data, nên ở đây response chính là object chứa paymentUrl
                 if (response && response.paymentUrl) {
                     window.location.href = response.paymentUrl;
@@ -387,7 +428,7 @@ export default function StaffPayment() {
                                             <Tag style={{ fontWeight: 500 }} color="blue">{appliedVoucher.voucherCode.toUpperCase()}</Tag>
                                             <Text style={{ color: '#1890ff', marginLeft: 10 }}>{appliedVoucher.rewardName}</Text>
                                         </Col>
-                                        <Col><Text strong style={{ color: '#1890ff' }}>-{(appliedVoucher.discountValue ? Number(appliedVoucher.discountValue) : 0).toLocaleString('vi-VN')}đ</Text></Col>
+                                        <Col><Text strong style={{ color: '#1890ff' }}>-{actualVoucherDiscount.toLocaleString('vi-VN')}đ</Text></Col>
                                     </Row>
                                 </div>
                             )}
