@@ -39,7 +39,13 @@ export async function getAvailableSlot(selectedDate) {
 }
 
 export async function createBooking(payload) {
-    await axios.post("/api/bookings", payload);
+    const response = await axios.post("/api/bookings", payload);
+    return response.data;
+}
+
+export async function createVNPayPayment(payload) {
+    const response = await axios.post("/api/payment/vnpay/create", payload);
+    return response.data;
 }
 
 // MyCar.jsx sử dụng
