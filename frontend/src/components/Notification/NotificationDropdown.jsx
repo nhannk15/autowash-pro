@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     getAllNotifications,
     getUnreadNotifications,
@@ -73,11 +74,15 @@ function TypeBadge({ type }) {
     );
 }
 
-function NotificationItem({ notification, onRead }) {
+function NotificationItem({ notification, onRead, onClose }) {
+    const navigate = useNavigate();
+
     const handleClick = () => {
         if (!notification.isRead) {
             onRead(notification.id);
         }
+        onClose();
+        navigate('/ca-nhan/tong-quan');
     };
 
     return (
@@ -104,7 +109,7 @@ function NotificationItem({ notification, onRead }) {
     );
 }
 
-function NotificationList({ notifications, loading, onRead }) {
+function NotificationList({ notifications, loading, onRead, onClose }) {
     if (loading) {
         return (
             <div className="notif-loading">
@@ -130,7 +135,7 @@ function NotificationList({ notifications, loading, onRead }) {
                 <>
                     <div className="notif-group-label">Hôm nay</div>
                     {groups.today.map((n) => (
-                        <NotificationItem key={n.id} notification={n} onRead={onRead} />
+                        <NotificationItem key={n.id} notification={n} onRead={onRead} onClose={onClose} />
                     ))}
                 </>
             )}
@@ -138,7 +143,7 @@ function NotificationList({ notifications, loading, onRead }) {
                 <>
                     <div className="notif-group-label">Trước đó</div>
                     {groups.older.map((n) => (
-                        <NotificationItem key={n.id} notification={n} onRead={onRead} />
+                        <NotificationItem key={n.id} notification={n} onRead={onRead} onClose={onClose} />
                     ))}
                 </>
             )}
@@ -160,6 +165,7 @@ function BellIcon() {
 const POLLING_INTERVAL = 5000; // 5 giây
 
 export default function NotificationDropdown() {
+    const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('all'); // 'all' | 'unread'
     const [notifications, setNotifications] = useState([]);
@@ -255,6 +261,12 @@ export default function NotificationDropdown() {
         }
     }, [unreadCount]);
 
+    // ── Đóng dropdown ──
+    const handleClose = useCallback(() => {
+        setIsOpen(false);
+        setIsExpanded(false);
+    }, []);
+
     // ── Toggle dropdown ──
     const handleBellClick = () => {
         setIsOpen((prev) => !prev);
@@ -342,6 +354,7 @@ export default function NotificationDropdown() {
                             notifications={notifications}
                             loading={loading}
                             onRead={handleMarkRead}
+                            onClose={handleClose}
                         />
                     </div>
 
