@@ -91,3 +91,30 @@ export async function getPendingDeposit() {
     const response = await axios.get('/api/bookings/pending-deposit')
     return response.data
 }
+
+// ── Notification APIs ──────────────────────────────────────────────────────
+
+export async function getAllNotifications() {
+    const response = await axios.get('/api/notifications');
+    return response.data;
+}
+
+export async function getUnreadNotifications() {
+    const response = await axios.get('/api/notifications/unread');
+    return response.data;
+}
+
+export async function getUnreadCount() {
+    const response = await axios.get('/api/notifications/unread-count');
+    return response.data; // { unreadsCount: number }
+}
+
+export async function markNotificationRead(notificationId) {
+    const response = await axios.put(`/api/notifications/${notificationId}/read`);
+    return response.data;
+}
+
+export async function markAllNotificationsRead() {
+    const response = await axios.put('/api/notifications/read-all');
+    return response.data;
+}

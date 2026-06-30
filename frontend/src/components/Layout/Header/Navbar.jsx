@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../context/AuthContext'
 import { MenuOutlined, CloseOutlined } from '@ant-design/icons'
+import NotificationDropdown from '../../Notification/NotificationDropdown'
 import './Navbar.css'
 
 export default function NavBar() {
@@ -99,6 +100,11 @@ export default function NavBar() {
 
                 <div className="navbar__auth">
                     {user ? (
+                        <>
+                        {/* Bell thông báo - chỉ dành cho CUSTOMER */}
+                        {user?.role?.toUpperCase() === 'CUSTOMER' && (
+                            <NotificationDropdown />
+                        )}
                         <div className="navbar__profile-container" ref={dropdownRef}>
                             <div
                                 className="navbar__profile-trigger"
@@ -147,6 +153,7 @@ export default function NavBar() {
                                 </div>
                             ))}
                         </div>
+                        </>
                     ) : (
                         <div className="navbar__auth-desktop" style={{ display: 'flex', gap: '5px' }}>
                             <NavLink to="/login" className="navbar__btn navbar__btn--login">Login</NavLink>
