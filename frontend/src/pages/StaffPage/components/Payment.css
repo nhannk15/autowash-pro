@@ -8,6 +8,11 @@
     font-family: system-ui, -apple-system, sans-serif;
 }
 
+.payment-container--centered {
+    text-align: center;
+    padding: 100px 0;
+}
+
 /* --- Header --- */
 .payment-header {
     display: flex;
@@ -21,6 +26,11 @@
     font-family: system-ui, -apple-system, sans-serif !important;
     font-weight: 700 !important;
     color: #1a1a2e !important;
+}
+
+.payment-title-icon {
+    color: #1890ff;
+    margin-right: 12px;
 }
 
 /* --- Steps --- */
@@ -49,9 +59,29 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
+/* --- Empty State --- */
+.payment-empty-card {
+    text-align: center;
+    padding: 60px 0;
+}
+
+.payment-empty-title {
+    font-size: 16px;
+}
+
+.payment-empty-btn {
+    border-radius: 8px;
+    font-weight: 600;
+}
+
 /* --- Sections --- */
 .payment-section {
     margin-bottom: 24px;
+}
+
+.payment-section--with-border {
+    border-top: 1px solid #f0f0f0;
+    padding-top: 12px;
 }
 
 .payment-section-label {
@@ -63,6 +93,12 @@
     font-family: system-ui, -apple-system, sans-serif;
     display: block;
     margin-bottom: 12px;
+}
+
+/* --- Card Titles --- */
+.payment-card-title {
+    font-size: 18px;
+    font-weight: 600;
 }
 
 /* --- Descriptions --- */
@@ -113,16 +149,36 @@
     margin-bottom: 8px;
 }
 
+.payment-promo-text {
+    color: #52c41a;
+}
+
 .payment-voucher-applied-row {
     padding: 8px 12px;
     background: #f0f5ff;
     border-radius: 6px;
 }
 
+.payment-voucher-text {
+    color: #1890ff;
+    margin-left: 10px;
+}
+
+.payment-voucher-amount {
+    color: #1890ff;
+    font-weight: 600;
+}
+
 .payment-deposit-row {
     padding: 8px 12px;
     background: #fffbe6;
     border-radius: 6px;
+    margin-top: 8px;
+}
+
+.payment-deposit-text {
+    color: #faad14;
+    font-weight: 600;
 }
 
 /* --- Total Box (Stage 1) --- */
@@ -165,6 +221,11 @@
     border-bottom: 1px solid #e8e8e8;
 }
 
+.voucher-helper-text {
+    display: block;
+    margin-bottom: 16px;
+}
+
 .voucher-input {
     height: 44px;
     font-size: 15px;
@@ -201,10 +262,8 @@
     font-family: system-ui, -apple-system, sans-serif;
 }
 
-.voucher-demo-hint {
-    margin-top: 16px;
-    padding-top: 16px;
-    border-top: 1px dashed #e8e8e8;
+.voucher-applied-text {
+    color: #52c41a;
 }
 
 /* --- Payment Action Card --- */
@@ -216,6 +275,16 @@
     margin-bottom: 16px;
     padding-bottom: 16px;
     border-bottom: 1px solid #e8e8e8;
+}
+
+.payment-action-total-label {
+    font-size: 16px;
+}
+
+.payment-action-total-value {
+    margin: 0 !important;
+    color: #262626 !important;
+    font-weight: 700 !important;
 }
 
 .payment-proceed-btn {
@@ -288,6 +357,29 @@
     align-items: center;
 }
 
+.qr-payment-title {
+    margin-bottom: 16px;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* --- Payment Method Toggle --- */
+.payment-method-group {
+    width: 100%;
+    margin-bottom: 24px;
+    display: flex;
+}
+
+.payment-method-btn {
+    flex: 1;
+    text-align: center;
+}
+
+/* --- QR Section --- */
+.qr-helper-text {
+    margin-bottom: 24px;
+    display: block;
+}
+
 .qr-code-placeholder {
     width: 240px;
     height: 240px;
@@ -300,6 +392,16 @@
     margin-bottom: 20px;
 }
 
+.qr-code-placeholder--cash {
+    background: #f6ffed;
+    border-color: #b7eb8f;
+}
+
+.qr-cash-icon {
+    font-size: 120px;
+    color: #52c41a;
+}
+
 .qr-amount-display {
     padding: 16px 32px;
     background: #f0f5ff;
@@ -308,20 +410,28 @@
     text-align: center;
 }
 
-.simulate-payment-btn {
-    margin-top: 24px;
-    height: 44px;
-    font-size: 14px;
-    border-radius: 8px;
-    font-family: system-ui, -apple-system, sans-serif;
-    color: #52c41a;
-    border-color: #52c41a;
+.qr-amount-value {
+    margin: 4px 0 0 !important;
+    color: #52c41a !important;
+    font-weight: 700 !important;
 }
 
-.simulate-payment-btn:hover {
-    color: #73d13d !important;
-    border-color: #73d13d !important;
-    background: #f6ffed !important;
+.qr-system-note {
+    font-size: 13px;
+    margin-top: 16px;
+    display: block;
+    text-align: center;
+}
+
+.qr-vnpay-btn {
+    background: #1890ff !important;
+    border-color: #1890ff !important;
+    margin-top: 16px;
+}
+
+.cash-confirm-btn {
+    background: #52c41a !important;
+    border-color: #52c41a !important;
 }
 
 /* --- Back Button --- */
@@ -336,6 +446,7 @@
     .payment-container {
         padding: 12px;
     }
+
     .payment-steps {
         padding: 0 16px;
     }
