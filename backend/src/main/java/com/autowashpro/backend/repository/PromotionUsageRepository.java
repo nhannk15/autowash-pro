@@ -19,19 +19,18 @@ public interface PromotionUsageRepository extends JpaRepository<PromotionUsage, 
                 promotionUsage.usedAt >= :startTime
             AND promotionUsage.usedAt <= :endTime
             """)
-    List<PromotionUsage> findFromStartTimeToEndTime(@Param("startDate") LocalDateTime startTime,
+    List<PromotionUsage> findFromStartTimeToEndTime(@Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime);
 
     @Query("""
             SELECT
-                COUNT(promotionUsage.discountAmount)
+                COUNT(promotionUsage.id)
             FROM PromotionUsage promotionUsage
             WHERE
                 promotionUsage.usedAt >= :startTime
             AND promotionUsage.usedAt <= :endTime
-            GROUP BY promotionUsage.discountAmount
             """)
-    long countFromStartTimeToEndTime(@Param("startDate") LocalDateTime startTime,
+    long countFromStartTimeToEndTime(@Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime);
 
 }
