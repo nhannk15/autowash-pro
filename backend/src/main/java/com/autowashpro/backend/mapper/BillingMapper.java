@@ -1,5 +1,6 @@
 package com.autowashpro.backend.mapper;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,6 +26,7 @@ public interface BillingMapper {
     @Mapping(target = "billingVoucherResponse", source = "voucher")
     @Mapping(target = "pointsChange", ignore = true)
     @Mapping(target = "bookingPromotionResponse", source = "booking.promotion")
+    @Mapping(target = "finalAmount", expression = "java(calculateFinalAmount(billing))")
     BillingResponse toBillingResponse(Billing billing);
 
     List<BillingResponse> toBillingResponses(List<Billing> billings);
@@ -47,6 +49,10 @@ public interface BillingMapper {
     @Named("toDate")
     default LocalDate toDate(LocalDateTime paidAt) {
         return paidAt.toLocalDate();
+    }
+
+    default BigDecimal calculateFinalAmount(Billing billing) {
+        return billing.getFinalAmount().subtract(billing.getDepositAmount());
     }
 
 }

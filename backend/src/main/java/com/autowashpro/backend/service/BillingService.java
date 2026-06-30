@@ -25,8 +25,8 @@ import com.autowashpro.backend.model.dto.BillingResponse;
 import com.autowashpro.backend.model.dto.VoucherResponse;
 import com.autowashpro.backend.model.entity.Billing;
 import com.autowashpro.backend.model.entity.Booking;
-import com.autowashpro.backend.model.entity.BookingDetail;
 import com.autowashpro.backend.model.entity.Customer;
+import com.autowashpro.backend.model.entity.MembershipTier;
 import com.autowashpro.backend.model.entity.PointTransaction;
 import com.autowashpro.backend.model.entity.Promotion;
 import com.autowashpro.backend.model.entity.Service;
@@ -82,24 +82,12 @@ public class BillingService {
     }
 
     @Transactional
-    public Billing createPendingBilling(Long bookingId) {
+    public Billing createPendingBilling(Long bookingId, BigDecimal originalAmount, BigDecimal discountAmount, BigDecimal finalAmount) {
         log.info("createPendingBilling() - start creating new pendingBilling");
         Booking booking = bookingRepository.findByIdWithDetails(bookingId)
                 .orElseThrow(() -> new BookingNotFoundException(
                         "Không tìm thấy lịch hẹn với id: " + bookingId));
         Voucher voucher = null;
-        BigDecimal originalAmount = booking.getBookingDetails()
-                .stream()
-                .map(BookingDetail::getPriceAtBooking)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal discountAmount = booking.getBookingDetails()
-                .stream()
-                .map(BookingDetail::getDiscountAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal finalAmount = booking.getBookingDetails()
-                .stream()
-                .map(BookingDetail::getFinalPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         PaymentMethod paymentMethod = PaymentMethod.CASH;
         PaymentStatus paymentStatus = PaymentStatus.PENDING;
@@ -124,6 +112,10 @@ public class BillingService {
                 .depositStatus(DepositStatus.PENDING)
                 .build();
         Billing savedBilling = billingRepository.saveAndFlush(newBilling);
+        log.info("createPendingBilling() - originalAmount after saving: {}", originalAmount);
+        log.info("createPendingBilling() - depositAmount after saving: {}", depositAmount);
+        log.info("createPendingBilling() - discountAmount after saving: {}", discountAmount);
+        log.info("createPendingBilling() - finalAmount after saving: {}", finalAmount);
         return savedBilling;
     }
 
@@ -155,8 +147,10 @@ public class BillingService {
         Billing savedBilling = billingRepository.saveAndFlush(billing);
 
         Customer customer = billing.getBooking().getCustomer();
+        MembershipTier customerTier = customer.getTier();
         BigDecimal tempPointsChange = billing.getFinalAmount();
         log.info("pointsChange: {}", tempPointsChange);
+
         for (WashSession wassSession : billing.getBooking().getWashSessions()) {
             Service service = wassSession.getServicePrice().getService();
             log.info("service {} has pointsMultiplier: {}", service.getServiceName(), service.getPointMultiplier());
@@ -164,6 +158,10 @@ public class BillingService {
         }
         Long pointsChange = tempPointsChange.divide(BigDecimal.valueOf(1000L)).longValue();
         log.info("pointsChange after getting services: {}", pointsChange);
+
+        pointsChange = pointsChange * customerTier.getPointEarnRate().longValue();
+        log.info("pointsChange after applying membershipTier points earn rate: {}", pointsChange);
+
         customer.setCurrentPoints(customer.getCurrentPoints() + pointsChange);
         customer.setLifetimePoints(customer.getLifetimePoints() + pointsChange);
 
@@ -222,20 +220,23 @@ public class BillingService {
             log.info("applyVoucherForBilling() - billingId {}'s finalAmount {}", billing.getId(),
                     billing.getFinalAmount());
         } else if (voucher.getDiscountType().equals(RewardType.DISCOUNT_PERCENTAGE)) {
-            BigDecimal discountValue = billing.getOriginalAmount()
+            BigDecimal voucherDiscountValue = billing.getFinalAmount()
                     .multiply(voucher.getDiscountValue()
-                            .divide(BigDecimal.valueOf(100L)))
-                    .add(billing.getDiscountAmount());
-            billing.setDiscountAmount(discountValue);
+                            .divide(BigDecimal.valueOf(100L)));
+            log.info("applyVoucherForBilling() - applying PERCENTAGE voucher with discount: {}", voucherDiscountValue);
+            billing.setDiscountAmount(billing.getDiscountAmount().add(voucherDiscountValue));
 
-            BigDecimal finalAmount = billing.getOriginalAmount()
-                    .subtract(discountValue);
+            BigDecimal finalAmount = billing.getFinalAmount().subtract(voucherDiscountValue);
             billing.setFinalAmount(finalAmount);
         } else if (voucher.getDiscountType().equals(RewardType.FREE_WASH)) {
             billing.setDiscountAmount(billing.getOriginalAmount());
             billing.setFinalAmount(BigDecimal.ZERO);
         }
-        billingRepository.save(billing);
+        Billing savedBilling = billingRepository.save(billing);
+        log.info("applyVoucherForBilling() - originalAmount: {}", savedBilling.getOriginalAmount());
+        log.info("applyVoucherForBilling() - depositAmount: {}", savedBilling.getDepositAmount());
+        log.info("applyVoucherForBilling() - totalDiscount: {}", savedBilling.getDiscountAmount());
+        log.info("applyVoucherForBilling() - finalAmount: {}", savedBilling.getFinalAmount());
 
         voucher.setStatus(VoucherStatus.USED);
         voucher.setIssuedAt(LocalDateTime.now());
@@ -280,7 +281,22 @@ public class BillingService {
         Billing savedBilling = billingRepository.save(billing);
 
         Customer customer = billing.getBooking().getCustomer();
+        MembershipTier customerTier = customer.getTier();
+        BigDecimal tempPointsChange = billing.getFinalAmount();
+
+        for (WashSession washSession: billing.getBooking().getWashSessions()) {
+            Service service = washSession.getServicePrice().getService();
+            log.info("service {} has pointsMultiplier: {}", service.getServiceName(), service.getPointMultiplier());
+            tempPointsChange = tempPointsChange.multiply(service.getPointMultiplier());
+        }
+        
         Long pointsChange = billing.getFinalAmount().divide(BigDecimal.valueOf(1000L)).longValue();
+
+        log.info("pointsChange after getting services: {}", pointsChange);
+
+        pointsChange = pointsChange * customerTier.getPointEarnRate().longValue();
+        
+        log.info("pointsChange after applying membershipTier points earn rate: {}", pointsChange);
         customer.setCurrentPoints(customer.getCurrentPoints() + pointsChange);
         customer.setLifetimePoints(customer.getLifetimePoints() + pointsChange);
 
