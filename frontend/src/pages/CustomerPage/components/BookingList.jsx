@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { CarOutlined } from '@ant-design/icons';
 import './Booking.css';
 import { message, Select } from 'antd';
-import { getAvailableSlot, getApplicablePromotion as getApplicablePromotionAPI, getService, getVehicleByCustomer, createBooking, getMembershipTier, getVoucher } from '../../../service/customerService';
+import { getAvailableSlot, getApplicablePromotion as getApplicablePromotionAPI, getService, getVehicleByCustomer, createBooking, getMembershipTier, getVoucher, createVNPayPayment, getPendingDeposit } from '../../../service/customerService';
 function VehicleImage({ src, alt, fallbackIcon }) {
     const [hasError, setHasError] = useState(false);
     // Mục đích: Dùng để ghi nhận xem ảnh của xe có bị lỗi khi tải hay không.
@@ -33,11 +34,13 @@ function VehicleImage({ src, alt, fallbackIcon }) {
 
 export default function BookingList() {
     const { user } = useAuth();
+    const navigate = useNavigate();
 
     // Các trạng thái của Wizard
     const [currentStep, setCurrentStep] = useState(1);
     const [maxUnlockedStep, setMaxUnlockedStep] = useState(1);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [createdBooking, setCreatedBooking] = useState(null);
 
     // Dữ liệu lựa chọn đặt lịch
     const [selectedVehicleType, setSelectedVehicleType] = useState(null); // 'SEDAN' hoặc 'SUV'
@@ -384,13 +387,50 @@ export default function BookingList() {
                 voucherCode: selectedVoucher ? selectedVoucher.voucherCode : null
             };
 
-            await createBooking(payload)
+            const newBooking = await createBooking(payload);
+
+            // Mẹo: Gọi getPendingDeposit để lấy thông tin hóa đơn (có chứa billingId) của lịch hẹn vừa tạo
+            try {
+                const pendingList = await getPendingDeposit();
+                const matchedBooking = pendingList.find(b => b.bookingCode === newBooking.bookingCode);
+                if (matchedBooking) {
+                    setCreatedBooking(matchedBooking);
+                } else {
+                    setCreatedBooking(newBooking);
+                }
+            } catch (err) {
+                console.error("Không thể lấy thông tin thanh toán đặt cọc", err);
+                setCreatedBooking(newBooking);
+            }
 
             setIsSuccess(true);
         } catch (err) {
             setBookingError(err.response?.data?.message || err.message || "Đã xảy ra lỗi khi tạo lịch đặt.")
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const handlePayDeposit = async (booking) => {
+        try {
+            const billingId = booking.billing?.id || booking.billingId;
+            if (!billingId) {
+                message.error("Không tìm thấy thông tin hóa đơn đặt cọc!");
+                return;
+            }
+            message.loading({ content: 'Đang tạo link thanh toán...', key: 'vnpay' });
+            const response = await createVNPayPayment({
+                billingId: billingId,
+                orderInfo: `Dat coc lich hen ${booking.bookingCode}`
+            });
+            if (response && response.paymentUrl) {
+                window.location.href = response.paymentUrl;
+            } else {
+                message.error({ content: "Không nhận được link thanh toán từ hệ thống!", key: 'vnpay' });
+            }
+        } catch (error) {
+            console.error("Lỗi khi thanh toán đặt cọc:", error);
+            message.error({ content: error.response?.data?.message || "Không thể khởi tạo thanh toán VNPay!", key: 'vnpay' });
         }
     };
 
@@ -968,6 +1008,8 @@ export default function BookingList() {
                                     promoDiscount = Math.min(promoDiscount, originalTotal);
                                 }
                                 const totalAfterPromo = originalTotal - promoDiscount;
+                                const depositAmount = totalAfterPromo * 0.3;
+                                const remainingBeforeVoucher = totalAfterPromo - depositAmount;
 
                                 let voucherDiscount = 0;
                                 if (selectedVoucher) {
@@ -976,14 +1018,14 @@ export default function BookingList() {
                                     if (rType === 'DISCOUNT_FLAT') {
                                         voucherDiscount = vVal;
                                     } else if (rType === 'DISCOUNT_PERCENTAGE') {
-                                        voucherDiscount = originalTotal * (vVal / 100);
+                                        voucherDiscount = remainingBeforeVoucher * (vVal / 100);
                                     } else if (rType === 'FREE_WASH') {
-                                        voucherDiscount = totalAfterPromo;
+                                        voucherDiscount = remainingBeforeVoucher;
                                     }
-                                    voucherDiscount = Math.min(voucherDiscount, totalAfterPromo);
+                                    voucherDiscount = Math.min(voucherDiscount, remainingBeforeVoucher);
                                 }
 
-                                const finalTotal = totalAfterPromo - voucherDiscount;
+                                const finalTotal = remainingBeforeVoucher - voucherDiscount;
 
                                 return (
                                     <div className="sidebar-total-row" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', marginBottom: '16px' }}>
@@ -1109,6 +1151,8 @@ export default function BookingList() {
                                     promoDiscount = Math.min(promoDiscount, originalTotal);
                                 }
                                 const totalAfterPromo = originalTotal - promoDiscount;
+                                const depositAmount = totalAfterPromo * 0.3;
+                                const remainingBeforeVoucher = totalAfterPromo - depositAmount;
 
                                 let voucherDiscount = 0;
                                 if (selectedVoucher) {
@@ -1117,14 +1161,14 @@ export default function BookingList() {
                                     if (rType === 'DISCOUNT_FLAT') {
                                         voucherDiscount = vVal;
                                     } else if (rType === 'DISCOUNT_PERCENTAGE') {
-                                        voucherDiscount = originalTotal * (vVal / 100);
+                                        voucherDiscount = remainingBeforeVoucher * (vVal / 100);
                                     } else if (rType === 'FREE_WASH') {
-                                        voucherDiscount = totalAfterPromo;
+                                        voucherDiscount = remainingBeforeVoucher;
                                     }
-                                    voucherDiscount = Math.min(voucherDiscount, totalAfterPromo);
+                                    voucherDiscount = Math.min(voucherDiscount, remainingBeforeVoucher);
                                 }
 
-                                const finalTotal = totalAfterPromo - voucherDiscount;
+                                const finalTotal = remainingBeforeVoucher - voucherDiscount;
 
                                 return (
                                     <>
@@ -1153,9 +1197,56 @@ export default function BookingList() {
                             })()}
                         </div>
 
-                        <button className="btn-success-home" onClick={handleResetBooking}>
-                            ĐÓNG
-                        </button>
+                        {createdBooking && createdBooking.billing && createdBooking.billing.depositAmount > 0 && (
+                            <div style={{ marginTop: '12px', padding: '12px', backgroundColor: '#fff2f0', border: '1px solid #ffccc7', borderRadius: '8px', textAlign: 'center' }}>
+                                <div style={{ color: '#cf1322', fontWeight: 'bold', fontSize: '15px', marginBottom: '8px' }}>
+                                    ⚠️ Vui lòng thanh toán cọc để hệ thống giữ chỗ cho bạn.
+                                </div>
+                                <div style={{ fontSize: '14px', marginBottom: '16px' }}>
+                                    Số tiền cần cọc: <strong style={{ color: '#cf1322', fontSize: '18px' }}>
+                                        {(() => {
+                                            const appPromo = getApplicablePromotion();
+                                            const originalTotal = calculateTotal();
+                                            let promoDiscount = 0;
+                                            if (appPromo) {
+                                                promoDiscount = appPromo.discountType === 'PERCENTAGE' ? originalTotal * (appPromo.discountValue / 100) : appPromo.discountValue;
+                                                promoDiscount = Math.min(promoDiscount, originalTotal);
+                                            }
+                                            const totalAfterPromo = originalTotal - promoDiscount;
+                                            const depositAmount = totalAfterPromo * 0.3;
+                                            return depositAmount.toLocaleString();
+                                        })()} VND
+                                    </strong>
+                                </div>
+                                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                                    <button
+                                        type="button"
+                                        style={{ backgroundColor: '#1890ff', color: 'white', border: 'none', padding: '10px 12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', flex: 1, transition: 'all 0.3s' }}
+                                        onClick={() => handlePayDeposit(createdBooking)}
+                                    >
+                                        THANH TOÁN VNPay NGAY
+                                    </button>
+                                    <button
+                                        type="button"
+                                        style={{ backgroundColor: '#f0f0f0', color: '#595959', border: '1px solid #d9d9d9', padding: '10px 12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', flex: 1, transition: 'all 0.3s' }}
+                                        onClick={() => {
+                                            handleResetBooking();
+                                            navigate('/ca-nhan/tong-quan');
+                                        }}
+                                    >
+                                        ĐỂ SAU (VỀ TRANG CHỦ)
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                        {(!createdBooking || !createdBooking.billing || createdBooking.billing.depositAmount <= 0) && (
+                            <button className="btn-success-home" onClick={() => {
+                                handleResetBooking();
+                                navigate('/ca-nhan/tong-quan');
+                            }}>
+                                ĐÓNG (VỀ TRANG CHỦ)
+                            </button>
+                        )}
                     </div>
                 </div>
             )}
