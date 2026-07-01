@@ -72,4 +72,5 @@ public class AdminDashboardController {
     public ResponseEntity<List<DeductionChartItem>> getDeductionChartItems(@RequestBody RevenueDataRequest request) {
         return ResponseEntity.ok().body(adminDashboardService.getPromotionDeductionChartItems(request));
     }
+    
 }
