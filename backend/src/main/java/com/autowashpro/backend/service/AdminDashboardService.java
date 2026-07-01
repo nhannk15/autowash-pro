@@ -21,6 +21,7 @@ import com.autowashpro.backend.mapper.PromotionUsageMapper;
 import com.autowashpro.backend.model.dto.DashboardSummaryResponse;
 import com.autowashpro.backend.model.dto.DeductionChartItem;
 import com.autowashpro.backend.model.dto.PeakHourStats;
+import com.autowashpro.backend.model.dto.PromotionPerformanceItem;
 import com.autowashpro.backend.model.dto.PromotionUsageStats;
 import com.autowashpro.backend.model.dto.RecentTransactionItem;
 import com.autowashpro.backend.model.dto.RevenueDataRequest;
@@ -704,6 +705,33 @@ public class AdminDashboardService {
                 .orderCount(orderCount)
                 .build();
         return deductionChartItem;
+    }
+
+    @Transactional(readOnly = true)
+    public List<PromotionPerformanceItem> getPromotionPerformance(RevenueDataRequest request) {
+        
+        LocalDate startDate = request.getStartDate();
+        LocalDate endDate = request.getEndDate();
+        Month month = request.getMonth();
+        int year = request.getYear();
+
+        if (startDate != null && endDate != null) {
+            LocalDateTime startTime = startDate.atStartOfDay();
+            LocalDateTime endTime = startDate.atTime(23, 59, 59);
+            return promotionUsageRepository.getPerformanceItems(startTime, endTime);
+        } else if (month != null && year != 0) {
+            LocalDateTime startTime = LocalDateTime.of(year, month.getValue(), 1, 0, 0, 0);
+            LocalDateTime endTime = startTime.plusMonths(1L).minusSeconds(1L);
+            return promotionUsageRepository.getPerformanceItems(startTime, endTime);
+        } else if (year != 0) {
+            LocalDateTime startTime = LocalDateTime.of(year, 1, 1, 0, 0, 0);
+            LocalDateTime endTime = startTime.plusYears(1L).minusSeconds(1L);
+            return promotionUsageRepository.getPerformanceItems(startTime, endTime);
+        } else if (year == 0) {
+            return promotionUsageRepository.getPerformanceItemsAtTheVeryFirst();
+        } else {
+            return List.of();
+        }
     }
 
 }

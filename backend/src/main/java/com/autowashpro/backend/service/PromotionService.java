@@ -255,11 +255,22 @@ public class PromotionService {
                 promotionRepository.save(promotion);
             }
 
+            BigDecimal discountAmount = BigDecimal.ZERO;
+            if (promotion == null) {
+                //--- Do nothing.
+            } else if (promotion.getDiscountType().equals(PromotionDiscountType.FIXED_AMOUNT)) {
+                discountAmount = promotion.getDiscountValue();
+            } else if (promotion.getDiscountType().equals(PromotionDiscountType.PERCENTAGE)) {
+                discountAmount = billing.getOriginalAmount().multiply(promotion.getDiscountValue()).divide(new BigDecimal(100L));
+            } else if (promotion.getDiscountType().equals(PromotionDiscountType.FREE_SERVICE)) {
+                discountAmount = billing.getOriginalAmount();
+            }
+
             PromotionUsage promotionUsage = PromotionUsage
                     .builder()
                     .promotion(promotion)
                     .billing(billing)
-                    .discountAmount(promotion == null ? BigDecimal.ZERO : promotion.getDiscountValue())
+                    .discountAmount(discountAmount)
                     .build();
             promotionUsageRepository.save(promotionUsage);
         }
