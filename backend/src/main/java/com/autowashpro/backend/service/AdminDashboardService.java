@@ -4,11 +4,13 @@ import java.math.BigDecimal;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,9 +27,15 @@ import com.autowashpro.backend.model.dto.RevenueDataRequest;
 import com.autowashpro.backend.model.dto.RevenueDataResponse;
 import com.autowashpro.backend.model.dto.ServiceUsageStats;
 import com.autowashpro.backend.model.entity.Billing;
+import com.autowashpro.backend.model.entity.Promotion;
 import com.autowashpro.backend.model.entity.PromotionUsage;
+import com.autowashpro.backend.model.entity.Voucher;
 import com.autowashpro.backend.model.enums.BayStatus;
 import com.autowashpro.backend.model.enums.BookingStatus;
+import com.autowashpro.backend.model.enums.DepositStatus;
+import com.autowashpro.backend.model.enums.PaymentStatus;
+import com.autowashpro.backend.model.enums.PromotionDiscountType;
+import com.autowashpro.backend.model.enums.RewardType;
 import com.autowashpro.backend.repository.BillingRepository;
 import com.autowashpro.backend.repository.BookingRepository;
 import com.autowashpro.backend.repository.CustomerRepository;
@@ -432,12 +440,13 @@ public class AdminDashboardService {
                     endTime);
             return promotionUsageMapper.toPromotionUsageStatss(promotionUsages);
         } else if (request.getYear() != 0) {
-            log.info("getPromotionUsageStats() - find all promotion usages in {}.",request.getYear());
+            log.info("getPromotionUsageStats() - find all promotion usages in {}.", request.getYear());
 
             LocalDateTime startTime = LocalDateTime.of(request.getYear(), 1, 1, 0, 0, 0);
             LocalDateTime endTime = startTime.plusYears(1L).minusMinutes(1L);
 
-            List<PromotionUsage> promotionUsages = promotionUsageRepository.findFromStartTimeToEndTime(startTime, endTime);
+            List<PromotionUsage> promotionUsages = promotionUsageRepository.findFromStartTimeToEndTime(startTime,
+                    endTime);
             return promotionUsageMapper.toPromotionUsageStatss(promotionUsages);
         } else {
             List<PromotionUsage> promotionUsages = promotionUsageRepository.findAll();
@@ -467,7 +476,7 @@ public class AdminDashboardService {
 
             usageCount = promotionUsageRepository.countFromStartTimeToEndTime(startTime, endTime);
         } else if (request.getYear() != 0) {
-            log.info("countPromotionUsage() - find all promotion usages in {}.",request.getYear());
+            log.info("countPromotionUsage() - find all promotion usages in {}.", request.getYear());
 
             LocalDateTime startTime = LocalDateTime.of(request.getYear(), 1, 1, 0, 0, 0);
             LocalDateTime endTime = startTime.plusYears(1L).minusMinutes(1L);
@@ -482,33 +491,219 @@ public class AdminDashboardService {
         return mapResponse;
     }
 
+    @Transactional
     public List<DeductionChartItem> getPromotionDeductionChartItems(RevenueDataRequest request) {
-        
+
         if (request.getStartDate() != null && request.getEndDate() != null) {
             log.info("getPromotionUsageStats() - find all promotion usages from {} to {}.", request.getStartDate(),
                     request.getEndDate());
+            List<DeductionChartItem> result = new ArrayList<>();
 
-            LocalDateTime startTime = request.getStartDate().atStartOfDay();
-            LocalDateTime endTime = request.getEndDate().plusDays(1L).atStartOfDay().minusMinutes(1L);
+            LocalDate startDate = request.getStartDate();
+            LocalDate endDate = request.getEndDate();
+
+            while (!startDate.isAfter(endDate)) {
+                LocalDateTime startTime = startDate.atStartOfDay();
+                LocalDateTime endTime = startDate.atTime(23, 59, 59);
+                List<Billing> billings = billingRepository.findBillingsByStartDateAndEndDate(startTime, endTime);
+                DeductionChartItem deductionChartItem = calculateDeduction(billings);
+                deductionChartItem.setDay(startDate);
+                result.add(deductionChartItem);
+
+                startDate = startDate.plusDays(1L);
+
+            }
+            return result;
 
         } else if (request.getMonth() != null && request.getYear() != 0) {
             log.info("getPromotionUsageStats() - find all promotion usages in {}/{}.", request.getMonth().getValue(),
                     request.getYear());
 
-            LocalDateTime startTime = LocalDate.of(request.getYear(), request.getMonth(), 1).atStartOfDay();
-            LocalDateTime endTime = LocalDate.of(request.getYear(), request.getMonth(), 1).plusMonths(1L).atStartOfDay()
-                    .minusMinutes(1L);
+            List<DeductionChartItem> result = new ArrayList<>();
+
+            Month month = request.getMonth();
+            int year = request.getYear();
+
+            LocalDate startDate = LocalDate.of(year, month.getValue(), 1);
+            LocalDate endDate = startDate.plusMonths(1L).minusDays(1L);
+
+            while (!startDate.isAfter(endDate)) {
+                LocalDateTime startTime = startDate.atStartOfDay();
+                LocalDateTime endTime = startDate.atTime(23, 59, 59);
+                List<Billing> billings = billingRepository.findBillingsByStartDateAndEndDate(startTime, endTime);
+                DeductionChartItem deductionChartItem = calculateDeduction(billings);
+                deductionChartItem.setDay(startDate);
+                result.add(deductionChartItem);
+
+                startDate = startDate.plusDays(1L);
+
+            }
+
+            return result;
 
         } else if (request.getYear() != 0) {
-            log.info("getPromotionUsageStats() - find all promotion usages in {}.",request.getYear());
+            log.info("getPromotionUsageStats() - find all promotion usages in {}.", request.getYear());
 
-            LocalDateTime startTime = LocalDateTime.of(request.getYear(), 1, 1, 0, 0, 0);
-            LocalDateTime endTime = startTime.plusYears(1L).minusMinutes(1L);
+            List<DeductionChartItem> result = new ArrayList<>();
+
+            int year = request.getYear();
+
+            LocalDate startDate = LocalDate.of(year, 1, 1);
+            LocalDate endDate = startDate.plusYears(1L).minusDays(1L);
+
+            while (!startDate.isAfter(endDate)) {
+                LocalDateTime startTime = startDate.atStartOfDay();
+                LocalDateTime endTime = startDate.atTime(23, 59, 59);
+                List<Billing> billings = billingRepository.findBillingsByStartDateAndEndDate(startTime, endTime);
+                DeductionChartItem deductionChartItem = calculateDeduction(billings);
+                deductionChartItem.setDay(startDate);
+                result.add(deductionChartItem);
+
+                startDate = startDate.plusDays(1L);
+
+            }
+
+            return result;
 
         } else {
-        }
+            List<DeductionChartItem> result = new ArrayList<>();
 
-        return null;
+            Optional<Billing> minBilling = billingRepository.findMinBilling();
+            if (minBilling.isEmpty()) {
+                return List.of();
+            } else {
+                LocalDateTime paidAt = minBilling.get().getPaidAt();
+                LocalDateTime depositPaidAt = minBilling.get().getDepositPaidAt();
+                LocalDate startDate = LocalDate.now();
+                if (paidAt != null) {
+                    startDate = paidAt.toLocalDate();
+                } else if (depositPaidAt != null) {
+                    startDate = depositPaidAt.toLocalDate();
+                }
+
+                LocalDate endDate = LocalDate.now();
+
+                while (!startDate.isAfter(endDate)) {
+                    LocalDateTime startTime = startDate.atStartOfDay();
+                    LocalDateTime endTime = startDate.atTime(23, 59, 59);
+                    List<Billing> billings = billingRepository.findBillingsByStartDateAndEndDate(startTime, endTime);
+                    DeductionChartItem deductionChartItem = calculateDeduction(billings);
+                    deductionChartItem.setDay(startDate);
+                    result.add(deductionChartItem);
+
+                    startDate = startDate.plusDays(1L);
+
+                }
+
+                return result;
+            }
+
+        }
     }
-    
+
+    private DeductionChartItem calculateDeduction(List<Billing> billings) {
+        BigDecimal originalRevenue = billings
+                .stream()
+                .map((billing) -> {
+                    if (billing.getDepositStatus().equals(DepositStatus.PAID) && billing.getPaymentStatus().equals(PaymentStatus.CANCELLED)) {
+                        return billing.getDepositAmount();
+                    } else {
+                        return billing.getOriginalAmount();
+                    }
+                })
+                .reduce(BigDecimal::add)
+                .orElse(BigDecimal.ZERO);
+
+        BigDecimal finalRevenue = billings
+                .stream()
+                .map((billing) -> {
+                    if (billing.getDepositStatus().equals(DepositStatus.PAID) && billing.getPaymentStatus().equals(PaymentStatus.CANCELLED)) {
+                        return billing.getDepositAmount();
+                    } else if (billing.getDepositStatus().equals(DepositStatus.PAID) && billing.getPaymentStatus().equals(PaymentStatus.PENDING)) {
+                        return billing.getDepositAmount();
+                    } else {
+                        return billing.getFinalAmount().add(billing.getDepositAmount());
+                    }
+                })
+                .reduce(BigDecimal::add)
+                .orElse(BigDecimal.ZERO);
+
+        BigDecimal promotionDiscount = billings
+                .stream()
+                .map((billing) -> {
+                    Promotion promotion = billing.getBooking().getPromotion();
+                    if (promotion == null) {
+                        return BigDecimal.ZERO;
+                    } else if (promotion.getDiscountType().equals(PromotionDiscountType.FIXED_AMOUNT)) {
+                        return promotion.getDiscountValue();
+                    } else if (promotion.getDiscountType().equals(PromotionDiscountType.PERCENTAGE)) {
+                        return billing.getOriginalAmount().multiply(promotion.getDiscountValue())
+                                .divide(new BigDecimal(100L));
+                    } else {
+                        return BigDecimal.ZERO;
+                    }
+                })
+                .reduce(BigDecimal::add)
+                .orElse(BigDecimal.ZERO);
+
+        BigDecimal voucherDiscount = billings
+                .stream()
+                .map((billing) -> {
+                    Voucher voucher = billing.getVoucher();
+                    if (voucher == null) {
+                        return BigDecimal.ZERO;
+                    } else if (voucher.getDiscountType().equals(RewardType.DISCOUNT_FLAT)) {
+                        return voucher.getDiscountValue();
+                    } else if (voucher.getDiscountType().equals(RewardType.DISCOUNT_PERCENTAGE)) {
+                        Promotion promotion = billing.getBooking().getPromotion();
+                        if (promotion == null) {
+                            BigDecimal tempFinalAmount = billing.getOriginalAmount()
+                                    .subtract(billing.getDepositAmount());
+                            return tempFinalAmount.multiply(voucher.getDiscountValue())
+                                    .divide(new BigDecimal(100L));
+
+                        } else if (promotion.getDiscountType().equals(PromotionDiscountType.FIXED_AMOUNT)) {
+                            BigDecimal tempFinalAmount = billing.getOriginalAmount()
+                                    .subtract(promotion.getDiscountValue());
+                            return tempFinalAmount.multiply(voucher.getDiscountValue())
+                                    .divide(new BigDecimal(100L));
+
+                        } else if (promotion.getDiscountType().equals(PromotionDiscountType.PERCENTAGE)) {
+                            BigDecimal tempFinalAmount = billing.getOriginalAmount()
+                                    .multiply(promotion.getDiscountValue()).divide(new BigDecimal(100L));
+                            return tempFinalAmount.multiply(voucher.getDiscountValue())
+                                    .divide(new BigDecimal(100L));
+
+                        } else {
+                            return BigDecimal.ZERO;
+                        }
+                    } else {
+                        return BigDecimal.ZERO;
+                    }
+
+                })
+                .reduce(BigDecimal::add)
+                .orElse(BigDecimal.ZERO);
+
+        BigDecimal totalDiscount = billings
+                .stream()
+                .map(Billing::getDiscountAmount)
+                .reduce(BigDecimal::add)
+                .orElse(BigDecimal.ZERO);
+
+        long orderCount = billings.size();
+
+        DeductionChartItem deductionChartItem = DeductionChartItem
+                .builder()
+                .day(null)
+                .originalRevenue(originalRevenue)
+                .finalRevenue(finalRevenue)
+                .promotionDiscount(promotionDiscount)
+                .voucherDiscount(voucherDiscount)
+                .totalDiscount(totalDiscount)
+                .orderCount(orderCount)
+                .build();
+        return deductionChartItem;
+    }
+
 }

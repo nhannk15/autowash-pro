@@ -117,7 +117,8 @@ public class BookingService {
             EmailService emailService,
             UserRepository userRepository, PromotionService promotionService, BillingService billingService,
             BillingRepository billingRepository, VoucherRepository voucherRepository,
-            VoucherCodeGenerator voucherCodeGenerator, RewardRepository rewardRepository, NotificationService notificationService) {
+            VoucherCodeGenerator voucherCodeGenerator, RewardRepository rewardRepository,
+            NotificationService notificationService) {
         this.customerRepository = customerRepository;
         this.servicePriceRepository = servicePriceRepository;
         this.availableSlotRepository = availableSlotRepository;
@@ -374,27 +375,36 @@ public class BookingService {
         LocalDateTime startDateTime = bookingDay.atTime(startTimeSlot.getStartTime());
         LocalDateTime endDateTime = startDateTime.plusMinutes(totalDuration);
 
-        // if (voucherRepository.findByVoucherCode(createBookingRequest.getVoucherCode()).isPresent()) {
-        //     Voucher voucher = voucherRepository.findByVoucherCode(createBookingRequest.getVoucherCode())
-        //             .get();
-        //     log.info("BookingService - voucher found", voucher.getReward().getRewardName());
-        //     log.info("BookingService - totalDiscount before apply voucher: {}", totalDiscount);
-        //     log.info("BookingService - totalFinal before apply voucher: {}", totalFinalPrice);
-        //     if (voucher.getDiscountType().equals(RewardType.DISCOUNT_FLAT)) {
-        //         totalDiscount = totalDiscount.add(voucher.getDiscountValue());
-        //         totalFinalPrice = totalFinalPrice.subtract(voucher.getDiscountValue());
-        //     } else if (voucher.getDiscountType().equals(RewardType.DISCOUNT_PERCENTAGE)) {
-        //         //--- I fixed here, totalOriginalPrice --> totalFinalPrice
-        //         BigDecimal discountAmount = totalFinalPrice
-        //                 .multiply(voucher.getDiscountValue().divide(BigDecimal.valueOf(100L)));
-        //         totalDiscount = totalDiscount.add(discountAmount);
-        //         totalFinalPrice = totalFinalPrice.subtract(discountAmount);
-        //     } else if (voucher.getDiscountType().equals(RewardType.FREE_WASH)) {
-        //         totalDiscount = totalOriginalPrice;
-        //         totalFinalPrice = BigDecimal.ZERO;
-        //     }
-        //     log.info("BookingService - totalDiscount after apply voucher: {}", totalDiscount);
-        //     log.info("BookingService - totalFinal after apply voucher: {}", totalFinalPrice);
+        // if
+        // (voucherRepository.findByVoucherCode(createBookingRequest.getVoucherCode()).isPresent())
+        // {
+        // Voucher voucher =
+        // voucherRepository.findByVoucherCode(createBookingRequest.getVoucherCode())
+        // .get();
+        // log.info("BookingService - voucher found",
+        // voucher.getReward().getRewardName());
+        // log.info("BookingService - totalDiscount before apply voucher: {}",
+        // totalDiscount);
+        // log.info("BookingService - totalFinal before apply voucher: {}",
+        // totalFinalPrice);
+        // if (voucher.getDiscountType().equals(RewardType.DISCOUNT_FLAT)) {
+        // totalDiscount = totalDiscount.add(voucher.getDiscountValue());
+        // totalFinalPrice = totalFinalPrice.subtract(voucher.getDiscountValue());
+        // } else if (voucher.getDiscountType().equals(RewardType.DISCOUNT_PERCENTAGE))
+        // {
+        // //--- I fixed here, totalOriginalPrice --> totalFinalPrice
+        // BigDecimal discountAmount = totalFinalPrice
+        // .multiply(voucher.getDiscountValue().divide(BigDecimal.valueOf(100L)));
+        // totalDiscount = totalDiscount.add(discountAmount);
+        // totalFinalPrice = totalFinalPrice.subtract(discountAmount);
+        // } else if (voucher.getDiscountType().equals(RewardType.FREE_WASH)) {
+        // totalDiscount = totalOriginalPrice;
+        // totalFinalPrice = BigDecimal.ZERO;
+        // }
+        // log.info("BookingService - totalDiscount after apply voucher: {}",
+        // totalDiscount);
+        // log.info("BookingService - totalFinal after apply voucher: {}",
+        // totalFinalPrice);
         // }
 
         CreateBookingResponse bookingResponse = CreateBookingResponse.builder()
@@ -441,7 +451,7 @@ public class BookingService {
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
         billingService.createPendingBilling(savedBooking.getId(), totalOriginalPrice, totalDiscount, totalFinalPrice);
-        
+
         Billing savedBilling = billingRepository.findByBookingId(savedBooking.getId()).get();
         if (voucherRepository.findByVoucherCode(createBookingRequest.getVoucherCode()).isPresent()) {
             ApplyVoucherToBillingRequest request = ApplyVoucherToBillingRequest
@@ -503,7 +513,7 @@ public class BookingService {
 
         log.info("BookingService - start canceling a booking with bookingCode: {}, reason: {}", bookingCode,
                 cancelReason);
-        Booking booking = bookingRepository.findByBookingCode(bookingCode)
+        Booking booking = bookingRepository.findByBookingCodeForCanceling(bookingCode)
                 .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy mã đặt lịch: " + bookingCode));
         if (booking.getStatus().equals(BookingStatus.COMPLETED)) {
             throw new RuntimeException("Không thể hủy lịch đặt đã hoàn thành");
@@ -558,24 +568,25 @@ public class BookingService {
         List<AvailableSlot> availableSlots = booking.getAvailableSlots();
         log.info("BookingService - start destructing booking slots occupied before: {} slots", availableSlots.size());
         for (AvailableSlot availableSlot : availableSlots) {
-        log.info("BookingService - destruct booking from availableSlot: {}",
-        availableSlot.getId());
-        availableSlot.setBooking(null);
-        availableSlotRepository.save(availableSlot);
+            log.info("BookingService - destruct booking from availableSlot: {}",
+                    availableSlot.getId());
+            availableSlot.setBooking(null);
+            availableSlotRepository.save(availableSlot);
         }
 
         List<WashSession> washSessions = booking.getWashSessions();
         log.info("BookingService - start canceling washSessions of booking {}, {} washSessions", bookingCode,
-        washSessions.size());
-        for (WashSession washSession: washSessions) {
-        log.info("BookingService - cancle washSession: {}", washSession.getId());
-        washSession.setStatus(WashSessionStatus.CANCELLED);
-        washSessionRepository.save(washSession);
+                washSessions.size());
+        for (WashSession washSession : washSessions) {
+            log.info("BookingService - cancle washSession: {}", washSession.getId());
+            washSession.setStatus(WashSessionStatus.CANCELLED);
+            washSessionRepository.save(washSession);
         }
 
         log.info("BookngService - start canceling Billing attached to Booking: {}",
-        billing.getId());
+                billing.getId());
         billing.setPaymentStatus(PaymentStatus.CANCELLED);
+        billing.setFinalAmount(BigDecimal.ZERO);
         billingRepository.save(billing);
 
         log.info("BookingService - start canceling booking: {}", bookingCode);
@@ -583,6 +594,8 @@ public class BookingService {
         booking.setCancelReason(cancelReason);
         log.info("BookingService - complete canceling a booking: {}", bookingCode);
         bookingRepository.save(booking);
+
+        
     }
 
     @Transactional(readOnly = true)

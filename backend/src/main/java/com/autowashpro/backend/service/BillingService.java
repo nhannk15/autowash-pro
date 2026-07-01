@@ -143,7 +143,7 @@ public class BillingService {
             washSession.setStatus(WashSessionStatus.PAID);
             washSessionRepository.save(washSession);
         }
-
+        
         Billing savedBilling = billingRepository.saveAndFlush(billing);
 
         Customer customer = billing.getBooking().getCustomer();
@@ -259,6 +259,7 @@ public class BillingService {
                         "Hóa đơn " + billingId + " không tồn tại"));
         if (billing.getDepositStatus().equals(DepositStatus.PENDING)) {
             billing.setDepositStatus(DepositStatus.PAID);
+            billing.setDepositPaidAt(LocalDateTime.now());
             Billing savedBilling = billingRepository.save(billing);
 
             Booking booking = billing.getBooking();
