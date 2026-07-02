@@ -197,12 +197,12 @@ public class AdminDashboardService {
             log.info("AdminDasboardService - totalBays: {}", totalBays);
         } else if (request.getYear() != 0) {
             LocalDate startDate = LocalDate.of(request.getYear(), 1, 1);
-            LocalDate endDate = LocalDate.now();
+            LocalDate endDate = LocalDate.of(request.getYear(), 12, 12);
             log.info("AdminDashboardService - revenue of {}", request.getYear());
             log.info("AdminDashboardService - revenue from {} to {}", startDate, endDate);
 
             BigDecimal tempTotalRevenue = billingRepository.sumRevenueByPaidDateRange(startDate.atStartOfDay(),
-                    endDate.plusDays(1).atStartOfDay().minusMinutes(1));
+                    endDate.atTime(23, 59, 59));
             if (tempTotalRevenue == null) {
                 totalRevenue = 0L;
             } else {
@@ -211,8 +211,8 @@ public class AdminDashboardService {
             log.info("AdminDashboardService - totalRevenue: {}", startDate, totalRevenue);
 
             BigDecimal tempPreviousRevenue = billingRepository.sumRevenueByPaidDateRange(
-                    startDate.minusDays(1L).atStartOfDay(),
-                    startDate.atStartOfDay().minusMinutes(1));
+                    startDate.minusYears(1L).atStartOfDay(),
+                    endDate.minusYears(1L).atTime(23, 59, 59));
             if (tempPreviousRevenue == null) {
                 previousRevenue = 0L;
             } else {
