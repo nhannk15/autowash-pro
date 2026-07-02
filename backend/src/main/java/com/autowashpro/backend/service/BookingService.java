@@ -197,11 +197,11 @@ public class BookingService {
                 .orElseThrow(() -> new SlotInavailabilityException("Không tìm thấy slot phù hợp"));
 
         if (bookingDay.equals(now)) {
-            LocalTime minStartTime = LocalTime.now().plusMinutes(15L);
-            if (startTimeSlot.getStartTime().isBefore(minStartTime)) {
-                throw new SlotInavailabilityException(
-                        "Giờ đặt lịch phải trước thời điểm hiện tại ít nhất 15 phút");
-            }
+            // LocalTime minStartTime = LocalTime.now().plusMinutes(15L);
+            // if (startTimeSlot.getStartTime().isBefore(minStartTime)) {
+            //     throw new SlotInavailabilityException(
+            //             "Giờ đặt lịch phải trước thời điểm hiện tại ít nhất 15 phút");
+            // }
         }
         long dayBeetween = ChronoUnit.DAYS.between(now, bookingDay);
         if (bookingWindowDays < dayBeetween) {

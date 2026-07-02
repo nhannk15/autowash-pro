@@ -161,14 +161,15 @@ public class AdminDashboardService {
             log.info("AdminDashboardService - totalRevenue: {}", totalRevenue);
 
             BigDecimal tempPreviousRevenue = billingRepository.sumRevenueByPaidDateRange(
-                    startDate.minusDays(1L).atStartOfDay(),
-                    startDate.atStartOfDay().minusMinutes(1));
+                    startDate.minusMonths(1L).atStartOfDay(),
+                    endDate.minusMonths(1L).atTime(23, 59, 59));
             if (tempPreviousRevenue == null) {
                 previousRevenue = 0L;
             } else {
                 previousRevenue = tempPreviousRevenue.longValue();
             }
-            log.info("AdminDashboardService - previousRevenue: {}", previousRevenue);
+            log.info("AdminDashboardService - previousRevenue from {} to {}: {}", startDate.atStartOfDay(),
+                    endDate.atTime(23, 59, 59), previousRevenue);
 
             totalBookings = bookingRepository.findBookingsAccordingToDate(startDate, endDate).size();
             log.info("AdminDashboardService - today's totalBookings: {}}", totalBookings);
@@ -315,6 +316,7 @@ public class AdminDashboardService {
         return billingMapper.toRecentTransactionItems(billingRepository.getRecentTransactions());
     }
 
+    @Transactional(readOnly = true)
     public List<RevenueDataResponse> getRevenueData(RevenueDataRequest request) {
         log.info("AdminDashboardService - getRevenueData()");
         log.info("AdminDashboardService - data: {} {} {} {}", request.getStartDate(), request.getEndDate(),
@@ -762,7 +764,7 @@ public class AdminDashboardService {
 
         if (startDate != null && endDate != null) {
             LocalDateTime startTime = startDate.atStartOfDay();
-            LocalDateTime endTime = startDate.atTime(23, 59, 59);
+            LocalDateTime endTime = endDate.atTime(23, 59, 59);
 
             List<Billing> billings = billingRepository.findBillingsByStartDateAndEndDate(startTime, endTime);
             deductionSummaryResponse = calculateDeductionSummaryResponse(billings);
@@ -786,7 +788,6 @@ public class AdminDashboardService {
             long totalVoucherUsages = voucherRepository.countUsedVouchersFromStartTimeToEndTime(startTime, endTime);
             deductionSummaryResponse.setTotalVoucherUsages(totalVoucherUsages);
 
-            return deductionSummaryResponse;
         } else if (year != 0) {
             LocalDateTime startTime = LocalDateTime.of(year, 1, 1, 0, 0, 0);
             LocalDateTime endTime = startTime.plusYears(1L).minusSeconds(1L);
@@ -889,7 +890,10 @@ public class AdminDashboardService {
 
                         } else if (promotion.getDiscountType().equals(PromotionDiscountType.PERCENTAGE)) {
                             BigDecimal tempFinalAmount = billing.getOriginalAmount()
-                                    .multiply(promotion.getDiscountValue()).divide(new BigDecimal(100L));
+                                    .multiply(new BigDecimal(100L).subtract(promotion.getDiscountValue()))
+                                    .divide(new BigDecimal(100L))
+                                    .subtract(billing.getDepositAmount());
+                            log.info("calculateDeductionSummaryResponse() - tempFinalAmount: {}", tempFinalAmount);
                             return tempFinalAmount.multiply(voucher.getDiscountValue())
                                     .divide(new BigDecimal(100L));
 
@@ -903,7 +907,8 @@ public class AdminDashboardService {
                 .reduce(BigDecimal::add)
                 .orElse(BigDecimal.ZERO);
 
-        BigDecimal discountRate = totalDiscount.multiply(new BigDecimal(100L)).divide(totalOriginalRevenue, 2, RoundingMode.HALF_UP);
+        BigDecimal discountRate = totalDiscount.multiply(new BigDecimal(100L)).divide(totalOriginalRevenue, 2,
+                RoundingMode.HALF_UP);
 
         long totalPromotionUsages = 0;
 

@@ -27,7 +27,7 @@ public interface BillingRepository extends JpaRepository<Billing, Long> {
                     AND billing.paidAt >= :startOfDay
                     AND billing.paidAt < :nextDay)
             OR (billing.depositStatus = com.autowashpro.backend.model.enums.DepositStatus.PAID
-                AND billing.depositPaidAt >= :startTime AND billing.depositPaidAt <= :endTime)
+                AND billing.depositPaidAt >= :startOfDay AND billing.depositPaidAt <= :nextDay)
             """)
     BigDecimal sumRevenueByPaidDateRange(@Param("startOfDay") LocalDateTime startOfDay,
             @Param("nextDay") LocalDateTime nextDay);
