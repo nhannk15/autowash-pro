@@ -27,6 +27,7 @@ export async function getApplicablePromotion(bookingDateTime) {
     const response = await axios.post('/api/promotions/applicable-promotions', { bookingDateTime });
     return response.data;
 }
+
 export async function getService() {
     const response = await axios.get("/api/services");
     return response.data
@@ -38,7 +39,13 @@ export async function getAvailableSlot(selectedDate) {
 }
 
 export async function createBooking(payload) {
-    await axios.post("/api/bookings", payload);
+    const response = await axios.post("/api/bookings", payload);
+    return response.data;
+}
+
+export async function createVNPayPayment(payload) {
+    const response = await axios.post("/api/payment/vnpay/create", payload);
+    return response.data;
 }
 
 // MyCar.jsx sử dụng
@@ -84,4 +91,36 @@ export async function getVoucher() {
 export async function getRecentActivities() {
     const response = await axios.get('/api/customer/recent-activities')
     return response.data
+}
+
+export async function getPendingDeposit() {
+    const response = await axios.get('/api/bookings/pending-deposit')
+    return response.data
+}
+
+// ── Notification APIs ──────────────────────────────────────────────────────
+
+export async function getAllNotifications() {
+    const response = await axios.get('/api/notifications');
+    return response.data;
+}
+
+export async function getUnreadNotifications() {
+    const response = await axios.get('/api/notifications/unread');
+    return response.data;
+}
+
+export async function getUnreadCount() {
+    const response = await axios.get('/api/notifications/unread-count');
+    return response.data; // { unreadsCount: number }
+}
+
+export async function markNotificationRead(notificationId) {
+    const response = await axios.put(`/api/notifications/${notificationId}/read`);
+    return response.data;
+}
+
+export async function markAllNotificationsRead() {
+    const response = await axios.put('/api/notifications/read-all');
+    return response.data;
 }

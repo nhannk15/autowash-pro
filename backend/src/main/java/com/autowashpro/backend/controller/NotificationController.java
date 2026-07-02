@@ -1,61 +1,67 @@
 package com.autowashpro.backend.controller;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.autowashpro.backend.mapper.NotificationMapper;
 import com.autowashpro.backend.model.dto.ApiResponse;
+import com.autowashpro.backend.model.dto.NotificationResponse;
 import com.autowashpro.backend.model.entity.Notification;
 import com.autowashpro.backend.service.NotificationService;
 
 @RestController
-@RequestMapping("/api/notifications")
 public class NotificationController {
 
-    private final NotificationService service;
-    private final NotificationMapper mapper;
+    private final NotificationService notificationService;
+    private final NotificationMapper notificationMapper;
 
     @Autowired    
-    public NotificationController(NotificationService service, NotificationMapper mapper) {
-        this.service = service;
-        this.mapper = mapper;
+    public NotificationController(NotificationService notificationService, NotificationMapper notificationMapper) {
+        this.notificationService = notificationService;
+        this.notificationMapper = notificationMapper;
     }
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<List<Notification>>> findAll() {
-        return ResponseEntity.ok(ApiResponse.success(service.findAll()));
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Notification>> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.success(service.findById(id)));
-    }
-
-    @PostMapping
+    @PostMapping("/api/notifications")
     public ResponseEntity<ApiResponse<Notification>> create(@RequestBody Notification notification) {
-        return ResponseEntity.ok(ApiResponse.created(service.createNew(notification)));
+        return ResponseEntity.ok(ApiResponse.created(notificationService.createNew(notification)));
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<ApiResponse<Notification>> update(@RequestBody Notification notification, @PathVariable Long id) {
-        Notification target = service.findById(id);
-        mapper.updateNotificationFromRequest(notification, target);
-        return ResponseEntity.ok(ApiResponse.success(service.update(target)));
+    //---
+
+    @GetMapping("/api/notifications")
+    public ResponseEntity<List<NotificationResponse>> getNotifications(@AuthenticationPrincipal String email) {
+        return ResponseEntity.ok().body(notificationService.getCustomerAllNotifications(email));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
-        service.delete(id);
-        return ResponseEntity.ok(ApiResponse.noContent());
+    @GetMapping("/api/notifications/unread-count")
+    public ResponseEntity<HashMap<String, Integer>> getUnreadNotificationsCount(@AuthenticationPrincipal String email) {
+        return ResponseEntity.ok().body(notificationService.getCustomerUnreadNotificationsCount(email));
     }
+
+    @GetMapping("/api/notifications/unread")
+    public ResponseEntity<List<NotificationResponse>> getUnreadNotifications(@AuthenticationPrincipal String email) {
+        return ResponseEntity.ok().body(notificationService.getCustomerUnreadNotifications(email));
+    }
+
+
+    @PutMapping("/api/notifications/{notificationId}/read")
+    public ResponseEntity<NotificationResponse> markNotificationAsRead(@PathVariable Long notificationId) {
+        return ResponseEntity.ok().body(notificationService.markAsRead(notificationId));
+    }
+
+    @PutMapping("/api/notifications/read-all")
+    public ResponseEntity<List<NotificationResponse>> markAllNotificationsAsRead(@AuthenticationPrincipal String email) {
+        return ResponseEntity.ok().body(notificationService.markAllAsRead(email));
+    }
+
 }

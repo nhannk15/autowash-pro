@@ -23,6 +23,11 @@
     color: #1a1a2e !important;
 }
 
+.checkin-title-icon {
+    color: #1890ff;
+    margin-right: 12px;
+}
+
 /* --- Steps --- */
 .checkin-steps {
     margin-bottom: 28px;
@@ -58,6 +63,7 @@
 .qr-scan-card .ant-card-head-title {
     font-family: system-ui, -apple-system, sans-serif;
     font-weight: 600;
+    font-size: 18px;
 }
 
 .qr-scan-card .ant-card-body {
@@ -225,24 +231,16 @@
     background: #000;
 }
 
-/* Video feed */
 .camera-reader video {
     width: 100% !important;
     border-radius: 0;
     display: block;
 }
 
-/* Scanning region (qrbox highlight) */
-.camera-reader #qr-camera-reader__scan_region {
-    position: relative;
-}
-
 .camera-reader #qr-camera-reader__scan_region img {
-    /* QR box corner guides */
     opacity: 0.9;
 }
 
-/* Dashboard (camera select + file input) */
 .camera-reader #qr-camera-reader__dashboard {
     padding: 12px 16px;
     background: rgba(0, 0, 0, 0.8);
@@ -292,7 +290,6 @@
     background: rgba(255, 255, 255, 0.2);
 }
 
-/* Permission/status message */
 .camera-reader #qr-camera-reader__header_message {
     color: rgba(255, 255, 255, 0.5);
     font-size: 14px;
@@ -301,7 +298,11 @@
     font-family: system-ui, -apple-system, sans-serif;
 }
 
-/* --- Bảng kết quả --- */
+/* --- Bảng kết quả tra cứu --- */
+.search-results-wrapper {
+    padding: 24px;
+}
+
 .search-table {
     border-radius: 12px;
     overflow: hidden;
@@ -327,6 +328,11 @@
 
 .customer-info-card .ant-card-head {
     border-bottom: 1px solid #e8e8e8;
+}
+
+.customer-info-card .ant-card-head-title {
+    font-size: 18px;
+    font-weight: 600;
 }
 
 .customer-info-card .ant-descriptions-item-label {
@@ -364,6 +370,23 @@
     color: #8c8c8c;
 }
 
+/* Promotion / Voucher text colors */
+.text-promotion {
+    color: #52c41a;
+    font-weight: 600;
+}
+
+.text-voucher {
+    color: #1890ff;
+    font-weight: 600;
+}
+
+.text-deposit {
+    color: #faad14;
+    font-size: 16px;
+    font-weight: 600;
+}
+
 .service-list {
     margin: 0;
     padding-left: 20px;
@@ -378,6 +401,12 @@
     font-size: 14px;
     padding: 4px 8px;
     border-radius: 4px;
+}
+
+.promotion-tag {
+    color: #52c41a;
+    background-color: #ebffe8ff;
+    font-weight: 600;
 }
 
 /* --- Staff Notes --- */
@@ -418,6 +447,7 @@
     color: #fff !important;
     font-family: system-ui, -apple-system, sans-serif;
     font-weight: 600;
+    font-size: 18px;
 }
 
 .invoice-card .ant-card-body {
@@ -433,9 +463,42 @@
     font-family: system-ui, -apple-system, sans-serif;
 }
 
+.invoice-services-block {
+    margin-bottom: 24px;
+}
+
 .invoice-row {
     margin-top: 16px;
     font-size: 15px;
+}
+
+.invoice-row-label {
+    color: #262626;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.invoice-row-value {
+    color: #262626;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.invoice-promotion-block {
+    margin-bottom: 24px;
+}
+
+.invoice-promotion-text {
+    color: #52c41a;
+}
+
+.invoice-voucher-block {
+    margin-bottom: 24px;
+}
+
+.invoice-voucher-text {
+    color: #1890ff;
+    margin-left: 5px;
 }
 
 .invoice-divider {
@@ -451,16 +514,32 @@
     margin-top: 24px;
 }
 
+.invoice-deposit-row {
+    margin-bottom: 16px;
+}
+
+.invoice-deposit-label {
+    color: #262626;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.invoice-deposit-value {
+    color: #faad14;
+    font-size: 16px;
+    font-weight: 600;
+}
+
 .invoice-total-label {
     font-size: 16px;
-    color: #595959;
+    color: #262626;
     font-weight: 600;
     font-family: system-ui, -apple-system, sans-serif;
 }
 
 .invoice-total-amount {
     font-size: 28px !important;
-    color: #2f54eb !important;
+    color: #262626 !important;
     font-weight: 700 !important;
     margin: 0 !important;
     font-family: system-ui, -apple-system, sans-serif !important;
@@ -497,13 +576,16 @@
     .checkin-container {
         padding: 12px;
     }
+
     .checkin-steps {
         padding: 0 16px;
     }
+
     .qr-scan-area {
         padding: 32px 20px;
         min-height: 260px;
     }
+
     .qr-input-wrapper {
         max-width: 100%;
     }

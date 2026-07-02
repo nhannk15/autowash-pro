@@ -3,21 +3,68 @@ import { Row, Col, Card, Table, Tag, Progress, Button, Empty, Space, Typography,
 import { CalendarOutlined, TrophyOutlined, CrownOutlined, ArrowRightOutlined, GiftOutlined, StarOutlined, WalletOutlined, RiseOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import { getMembershipTier, getUpcomingBooking, getReward, exchangeVoucher, getVoucher, getRecentActivities } from '../../../service/customerService';
-
+import { getMembershipTier, getUpcomingBooking, getReward, exchangeVoucher, getVoucher, getRecentActivities, getPendingDeposit } from '../../../service/customerService';
+import axios from 'axios';
 import './Overview.css';
 
 const { Title, Text } = Typography;
 
+const CountdownCell = ({ expiryTime, onExpire }) => {
+    const [timeLeft, setTimeLeft] = useState('');
+
+    useEffect(() => {
+        if (!expiryTime) return;
+
+        const updateTimer = () => {
+            const difference = new Date(expiryTime) - new Date();
+            if (difference <= 0) {
+                setTimeLeft('Đã hết hạn');
+                if (onExpire) onExpire();
+                return;
+            }
+
+            const minutes = Math.floor(difference / 1000 / 60);
+            const seconds = Math.floor((difference / 1000) % 60);
+            setTimeLeft(`${minutes}p ${seconds}s`);
+        };
+
+        updateTimer();
+        const timerId = setInterval(updateTimer, 1000);
+
+        return () => clearInterval(timerId);
+    }, [expiryTime, onExpire]);
+
+    const isExpired = timeLeft === 'Đã hết hạn';
+
+    return (
+        <span style={{
+            fontWeight: '600',
+            color: isExpired ? '#ff4d4f' : '#faad14',
+            padding: '2px 6px',
+            backgroundColor: isExpired ? '#fff1f0' : '#fffbe6',
+            borderRadius: '4px',
+            border: `1px solid ${isExpired ? '#ffccc7' : '#ffe58f'}`,
+            whiteSpace: 'nowrap'
+        }}>
+            {timeLeft}
+        </span>
+    );
+};
+
+
 export default function Overview() {
     const { user } = useAuth();
     const navigate = useNavigate();
+
+    //State cho dữ liệu deposit pending
+    const [depositPending, setDepositPending] = useState([])
 
     // State cho dữ liệu từ API
     const [upcomingBookings, setUpcomingBookings] = useState([]);
     const [tierData, setTierData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isPendingModalOpen, setIsPendingModalOpen] = useState(false);
 
     // State cho reward
     const [rewards, setRewards] = useState([])
@@ -63,6 +110,28 @@ export default function Overview() {
         });
     };
 
+    const handlePayDeposit = async (booking) => {
+        try {
+            const billingId = booking.billing?.id || booking.billingId;
+            if (!billingId) {
+                message.error("Không tìm thấy thông tin hóa đơn đặt cọc!");
+                return;
+            }
+            const response = await axios.post("/api/payment/vnpay/create", {
+                billingId: billingId,
+                orderInfo: `Dat coc lich hen ${booking.bookingCode}`
+            });
+            if (response.data && response.data.paymentUrl) {
+                window.location.href = response.data.paymentUrl;
+            } else {
+                message.error("Không nhận được link thanh toán từ hệ thống!");
+            }
+        } catch (error) {
+            console.error("Lỗi khi thanh toán đặt cọc:", error);
+            message.error(error.response?.data?.message || "Không thể khởi tạo thanh toán VNPay!");
+        }
+    };
+
     useEffect(() => {
         let isMounted = true;
         let isFirstLoad = true;
@@ -72,15 +141,17 @@ export default function Overview() {
                 // Chỉ hiện loading spinner lần đầu, tránh flicker khi poll
                 if (isFirstLoad) setLoading(true);
 
-                const [bookings, tier, activities] = await Promise.all([
+                const [bookings, tier, activities, pending] = await Promise.all([
                     getUpcomingBooking(),
                     getMembershipTier(),
-                    getRecentActivities()
+                    getRecentActivities(),
+                    getPendingDeposit()
                 ]);
                 if (isMounted) {
                     setUpcomingBookings(bookings || []);
                     setTierData(tier);
                     setRecentActivities(activities || []);
+                    setDepositPending(pending || []);
                 }
             } catch (err) {
                 console.error("Lỗi khi tải thông tin dashboard:", err);
@@ -119,6 +190,24 @@ export default function Overview() {
         ? nearestBooking.startTime.substring(0, 5)
         : '';
     const nearestBookingLicensePlate = nearestBooking?.vehicle?.licensePlate || 'N/A';
+
+    // Lịch đặt chờ cọc gần nhất
+    const nearestPending = depositPending.length > 0 ? depositPending[0] : null;
+    // Số lượng lịch chờ cọc khác
+    const otherPendingCount = depositPending.length > 1 ? depositPending.length - 1 : 0;
+
+    // Chi tiết lịch đặt chờ cọc gần nhất
+    const nearestPendingServiceName = nearestPending?.bookingDetails
+        ? nearestPending.bookingDetails.map(d => d.serviceName).join(', ')
+        : 'Chưa chọn dịch vụ';
+    const nearestPendingDate = nearestPending?.slotDate
+        ? nearestPending.slotDate.split('-').reverse().join('/')
+        : '';
+    const nearestPendingTime = nearestPending?.startTime
+        ? nearestPending.startTime.substring(0, 5)
+        : '';
+    const nearestPendingLicensePlate = nearestPending?.vehicle?.licensePlate || 'N/A';
+    const nearestPendingDeposit = nearestPending?.billing?.depositAmount || 0;
 
     // Điểm tích lũy & hạng thành viên từ API
     const currentPoints = tierData?.customerCurrentPoints || 0;
@@ -199,9 +288,12 @@ export default function Overview() {
                 <ul style={{ paddingLeft: '16px', margin: 0, fontSize: '12px' }}>
                     {record.bookingDetails?.map((detail, index) => (
                         <li key={index}>
-                            {detail.serviceName} ({detail.finalPrice.toLocaleString()}đ)
+                            {detail.serviceName}
                         </li>
                     ))}
+                    <div style={{ marginTop: '4px', fontSize: '11px', color: '#8c8c8c', fontWeight: '500' }}>
+                        Đã cọc: {(record.billing?.depositAmount || 0).toLocaleString()}đ
+                    </div>
                 </ul>
             ),
         },
@@ -209,10 +301,16 @@ export default function Overview() {
             title: 'TẠM TÍNH (GIÁ CUỐI)',
             key: 'totalPrice',
             render: (_, record) => {
-                const total = record.bookingDetails
-                    ? record.bookingDetails.reduce((sum, d) => sum + d.finalPrice, 0)
-                    : 0;
-                return <Text strong style={{ color: '#52c41a' }}>{total.toLocaleString()} VND</Text>;
+                const finalAmount = record.billing?.finalAmount || 0;
+                const depositAmount = record.billing?.depositAmount || 0;
+                const remaining = Math.max(0, finalAmount - depositAmount);
+                return (
+                    <Space direction="vertical" size={0}>
+                        <Text strong style={{ color: '#52c41a' }}>
+                            {remaining.toLocaleString()} VND
+                        </Text>
+                    </Space>
+                );
             },
         },
         {
@@ -305,6 +403,75 @@ export default function Overview() {
             }
         }
     ];
+    const pendingTableColumns = [
+        {
+            title: 'MÃ ĐẶT LỊCH',
+            dataIndex: 'bookingCode',
+            key: 'bookingCode',
+            render: (text) => <Text strong style={{ color: '#002b7f' }}>{text}</Text>,
+        },
+        {
+            title: 'GIỜ HẸN',
+            dataIndex: 'startTime',
+            key: 'startTime',
+            render: (time) => time ? time.substring(0, 5) : '',
+        },
+        {
+            title: 'NGÀY HẸN',
+            dataIndex: 'slotDate',
+            key: 'slotDate',
+            render: (date) => date ? date.split('-').reverse().join('/') : '',
+        },
+        {
+            title: 'DỊCH VỤ',
+            key: 'services',
+            render: (_, record) => (
+                <ul style={{ paddingLeft: '16px', margin: 0, fontSize: '12px' }}>
+                    {record.bookingDetails?.map((detail, index) => (
+                        <li key={index}>
+                            {detail.serviceName}
+                        </li>
+                    ))}
+                    <div style={{ marginTop: '4px', fontSize: '11px', color: '#8c8c8c', fontWeight: '500' }}>
+                        Tạm tính: {(record.billing?.finalAmount || 0).toLocaleString()}đ
+                    </div>
+                </ul>
+            ),
+        },
+        {
+            title: 'TIỀN ĐẶT CỌC',
+            key: 'depositAmount',
+            render: (_, record) => {
+                const deposit = record.billing?.depositAmount || 0;
+                return <Text strong style={{ color: '#ff4d4f' }}>{deposit.toLocaleString()} VND</Text>;
+            },
+        },
+        {
+            title: 'HẾT HẠN TRONG',
+            key: 'depositExpiry',
+            render: (_, record) => (
+                <CountdownCell expiryTime={record.billing?.depositExpiry} />
+            ),
+        },
+        {
+            title: 'HÀNH ĐỘNG',
+            key: 'action',
+            render: (_, record) => {
+                const isExpired = record.billing?.depositExpiry ? new Date(record.billing.depositExpiry) <= new Date() : false;
+                return (
+                    <Button
+                        type="primary"
+                        danger
+                        size="small"
+                        disabled={isExpired}
+                        onClick={() => handlePayDeposit(record)}
+                    >
+                        Thanh toán
+                    </Button>
+                );
+            },
+        },
+    ];
 
     return (
         <div className="overview-container">
@@ -317,7 +484,7 @@ export default function Overview() {
             {/* Hàng 1: Thẻ tóm tắt thông tin */}
             <Row gutter={[24, 24]} className="summary-row">
                 {/* Cột 1: Lịch đặt sắp tới */}
-                <Col xs={24} md={8}>
+                <Col xs={24} sm={12} xl={6}>
                     <Card className="dashboard-card upcoming-card" hoverable>
                         <Space className="card-header">
                             <CalendarOutlined className="card-icon icon-blue" />
@@ -366,8 +533,70 @@ export default function Overview() {
                     </Card>
                 </Col>
 
-                {/* Cột 2: Điểm tích lũy (Lifetime + Current) */}
-                <Col xs={24} md={8}>
+                {/* Cột 2: Lịch chờ đặt cọc */}
+                <Col xs={24} sm={12} xl={6}>
+                    <Card className="dashboard-card pending-card" hoverable>
+                        <Space className="card-header">
+                            <WalletOutlined className="card-icon icon-red" />
+                            <Text className="card-title">LỊCH CHỜ ĐẶT CỌC</Text>
+                        </Space>
+                        <div className="card-body">
+                            {loading ? (
+                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100px' }}>
+                                    <Spin size="small" />
+                                </div>
+                            ) : nearestPending ? (
+                                <div className="booking-info">
+                                    <div className="booking-service">{nearestPendingServiceName}</div>
+                                    <div className="booking-detail">
+                                        📅 {nearestPendingDate} | 🕒 {nearestPendingTime}
+                                    </div>
+                                    <div className="booking-car">
+                                        🚗 Biển số: <strong>{nearestPendingLicensePlate}</strong>
+                                    </div>
+                                    <div className="booking-deposit" style={{ margin: '4px 0', fontSize: '13px', fontWeight: 'bold', color: '#ff4d4f', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span>💵 Tiền cọc: {nearestPendingDeposit.toLocaleString()} VND</span>
+                                        <CountdownCell expiryTime={nearestPending?.billing?.depositExpiry} />
+                                    </div>
+                                    {otherPendingCount > 0 && (
+                                        <div className="other-bookings-alert">
+                                            <Badge status="warning" text={`Bạn có thêm ${otherPendingCount} lịch chờ cọc khác`} />
+                                        </div>
+                                    )}
+                                    <Space style={{ width: '100%', marginTop: '8px' }} direction="vertical" size={8}>
+                                        <Button
+                                            type="primary"
+                                            danger
+                                            block
+                                            style={{ height: '36px', fontWeight: '600', borderRadius: '6px' }}
+                                            disabled={nearestPending?.billing?.depositExpiry ? new Date(nearestPending.billing.depositExpiry) <= new Date() : false}
+                                            onClick={() => handlePayDeposit(nearestPending)}
+                                        >
+                                            Đặt cọc ngay
+                                        </Button>
+                                        <Button
+                                            type="default"
+                                            block
+                                            style={{ height: '36px', fontWeight: '600', borderRadius: '6px', borderColor: '#d9d9d9', color: '#595959' }}
+                                            onClick={() => setIsPendingModalOpen(true)}
+                                        >
+                                            Xem tất cả ({depositPending.length})
+                                        </Button>
+                                    </Space>
+                                </div>
+                            ) : (
+                                <Empty
+                                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                    description="Bạn không có lịch chờ cọc"
+                                    className="compact-empty"
+                                />
+                            )}
+                        </div>
+                    </Card>
+                </Col>
+
+                {/* Cột 3: Điểm tích lũy (Lifetime + Current) */}
+                <Col xs={24} sm={12} xl={6}>
                     <Card className="dashboard-card points-card" hoverable>
                         <Space className="card-header">
                             <TrophyOutlined className="card-icon icon-gold" />
@@ -452,8 +681,8 @@ export default function Overview() {
                     </Card>
                 </Col>
 
-                {/* Cột 3: Hạng thành viên + Delta Point */}
-                <Col xs={24} md={8}>
+                {/* Cột 4: Hạng thành viên + Delta Point */}
+                <Col xs={24} sm={12} xl={6}>
                     <Card className="dashboard-card tier-card" hoverable>
                         <Space className="card-header">
                             <CrownOutlined className="card-icon icon-silver" />
@@ -572,6 +801,24 @@ export default function Overview() {
                     className="custom-table"
                     style={{ marginTop: '16px' }}
                     locale={{ emptyText: <Empty description="Bạn không có lịch đặt sắp tới" /> }}
+                />
+            </Modal>
+            {/* Modal hiển thị danh sách tất cả các lịch đặt chờ cọc */}
+            <Modal
+                title={<span style={{ color: '#002b7f', fontWeight: 700, fontSize: '18px' }}>DANH SÁCH LỊCH CHỜ ĐẶT CỌC</span>}
+                open={isPendingModalOpen}
+                onCancel={() => setIsPendingModalOpen(false)}
+                footer={null}
+                width={950}
+            >
+                <Table
+                    columns={pendingTableColumns}
+                    dataSource={depositPending}
+                    rowKey="id"
+                    pagination={{ pageSize: 5 }}
+                    className="custom-table"
+                    style={{ marginTop: '16px' }}
+                    locale={{ emptyText: <Empty description="Bạn không có lịch chờ cọc" /> }}
                 />
             </Modal>
             <Modal

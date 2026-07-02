@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import {
     Steps, Card, Input, Button, Typography,
-    Row, Col, Descriptions, Space, message, Result, Tag, Empty, Spin, Radio, Divider
+    Row, Col, Descriptions, Space, message, Result, Tag, Empty, Spin, Radio, Divider,
 } from 'antd';
 import {
     CreditCardOutlined, CheckCircleOutlined, ArrowLeftOutlined,
     GiftOutlined, QrcodeOutlined, DollarOutlined,
-    UserOutlined, CarOutlined, TagOutlined, MoneyCollectOutlined
+    UserOutlined, CarOutlined, TagOutlined, MoneyCollectOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { getBillByBookingId, validateVoucher, confirmPaymentByCash, confirmPaymentByBank } from '../../../service/staffService';
+import {
+    getBillByBookingId, validateVoucher,
+    confirmPaymentByCash, confirmPaymentByBank,
+} from '../../../service/staffService';
 import './Payment.css';
 
 const { Title, Text } = Typography;
@@ -19,62 +22,125 @@ export default function StaffPayment() {
     const [voucherCode, setVoucherCode] = useState('');
     const [appliedVoucher, setAppliedVoucher] = useState(null);
     const [isPaymentReceived, setIsPaymentReceived] = useState(false);
-    const [paymentMethod, setPaymentMethod] = useState('QR'); // 'QR' hoặc 'CASH'
+    const [paymentMethod, setPaymentMethod] = useState('QR');
     const [billData, setBillData] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [confirming, setConfirming] = useState(false); // loading riêng cho lúc xác nhận thanh toán
+    const [confirming, setConfirming] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Nhận data từ Dashboard
-    const bayId = location.state?.bayId || null;
-    const bookingId = location.state?.bookingId || null;
+    // Dùng URLSearchParams để kiểm tra xem có phải vừa đi từ VNPay về không
+    const searchParams = new URLSearchParams(location.search);
+    const isReturningFromVnpay = searchParams.has('status');
+
+    // Khởi tạo state bằng location.state (đi từ Dashboard) HOẶC sessionStorage (đi từ VNPay)
+    const [bayId] = useState(() => {
+        if (location.state?.bayId) return location.state.bayId;
+        if (isReturningFromVnpay) return sessionStorage.getItem('pendingVnpayBayId');
+        return null;
+    });
+
+    const [bookingId] = useState(() => {
+        if (location.state?.bookingId) return location.state.bookingId;
+        if (isReturningFromVnpay) return sessionStorage.getItem('pendingVnpayBookingId');
+        return null;
+    });
+
+    // Sau khi component mount và đã lấy được ID vào state, dọn dẹp luôn sessionStorage để không bị lưu rác vĩnh viễn
+    useEffect(() => {
+        if (isReturningFromVnpay) {
+            sessionStorage.removeItem('pendingVnpayBayId');
+            sessionStorage.removeItem('pendingVnpayBookingId');
+        }
+    }, [isReturningFromVnpay]);
+
+    const fetchBillData = async () => {
+        if (!bookingId) return;
+        setLoading(true);
+        try {
+            const response = await getBillByBookingId(bookingId);
+            const data = Array.isArray(response) ? response[0] : response;
+            setBillData(data);
+
+            const voucherData = data?.booking?.billing?.voucher || data?.billingVoucherResponse;
+            if (voucherData) {
+                setAppliedVoucher({
+                    voucherCode: voucherData.voucherCode,
+                    rewardName: voucherData.rewardName || '-',
+                    discountValue: voucherData.discountValue,
+                });
+            } else {
+                setAppliedVoucher(null);
+            }
+        } catch (error) {
+            console.error('Failed to fetch bill', error);
+            message.error('Không thể tải thông tin hóa đơn!');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        async function getBill() {
-            // Cần bookingId hoặc sessionId để fetch bill
-            const id = bookingId;
-            if (!id) return;
-            setLoading(true);
-            try {
-                const response = await getBillByBookingId(id);
-                // API trả về mảng List<BillingResponse>, lấy phần tử đầu tiên
-                const data = Array.isArray(response) ? response[0] : response;
-                setBillData(data);
-            } catch (error) {
-                console.error("Failed to fetch bill", error);
-                message.error('Không thể tải thông tin hóa đơn!');
-            } finally {
-                setLoading(false);
-            }
-        }
-        getBill();
+        fetchBillData();
     }, [bookingId]);
 
-    // Nếu đang loading
+    // Xử lý kết quả trả về từ VNPay
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const status = params.get('status');
+        const billing = params.get('billing');
+
+        if (!status) return;
+
+        if (status === '00') {
+            message.success(`Thanh toán VNPay thành công (Hóa đơn: ${billing || 'Không rõ'})!`);
+            setCurrentStep(1);
+            setIsPaymentReceived(true);
+            setTimeout(() => {
+                navigate(
+                    bayId ? '/staff/dashboard' : '/staff/history',
+                    bayId ? { state: { paidBayId: bayId, paidBookingId: bookingId } } : undefined
+                );
+            }, 2000);
+        } else {
+            message.error('Thanh toán VNPay thất bại hoặc đã bị hủy!');
+        }
+
+        params.delete('status');
+        params.delete('billing');
+        const newSearch = params.toString();
+        navigate(
+            `${location.pathname}${newSearch ? `?${newSearch}` : ''}`,
+            { replace: true, state: location.state }
+        );
+    }, [location.search]);
+
+    // === Loading state ===
     if (loading) {
         return (
-            <div className="payment-container" style={{ textAlign: 'center', padding: '100px 0' }}>
+            <div className="payment-container payment-container--centered">
                 <Spin size="large" tip="Đang tải hóa đơn..." />
             </div>
         );
     }
 
-    // Nếu không có data (truy cập trực tiếp từ sidebar) → hiển empty state
+    // === No bill data (direct access) ===
     if (!billData) {
         return (
             <div className="payment-container">
                 <div className="payment-header">
                     <Title level={2} className="payment-title">
-                        <CreditCardOutlined style={{ color: '#1890ff', marginRight: '12px' }} />
+                        <CreditCardOutlined className="payment-title-icon" />
                         Thanh Toán
                     </Title>
                 </div>
-                <Card className="payment-card" style={{ textAlign: 'center', padding: '60px 0' }}>
+                <Card className="payment-card payment-empty-card">
                     <Empty
                         description={
                             <Space direction="vertical" size="small">
-                                <Text strong style={{ fontSize: 16 }}>Chưa có hóa đơn nào được chọn</Text>
+                                <Text strong className="payment-empty-title">
+                                    Chưa có hóa đơn nào được chọn
+                                </Text>
                                 <Text type="secondary">
                                     Vui lòng quay lại Dashboard và bấm nút "Thanh toán" trên khoang đã hoàn thành dịch vụ.
                                 </Text>
@@ -84,8 +150,8 @@ export default function StaffPayment() {
                         <Button
                             type="primary"
                             size="large"
+                            className="payment-empty-btn"
                             onClick={() => navigate('/staff/dashboard')}
-                            style={{ borderRadius: 8, fontWeight: 600 }}
                         >
                             Quay lại Dashboard
                         </Button>
@@ -95,22 +161,18 @@ export default function StaffPayment() {
         );
     }
 
-    // === Trích xuất dữ liệu từ billData (mapping từ API response) ===
-    // Thông tin khách hàng
+    // === Trích xuất dữ liệu từ billData ===
     const customer = billData.booking?.customer || billData.session?.customer || billData.customer || {};
     const customerName = customer.fullName || customer.name || 'Khách vãng lai';
     const customerPhone = customer.phoneNumber || customer.phone || 'N/A';
     const customerEmail = customer.email || '';
 
-    // Thông tin xe
     const vehicle = billData.booking?.vehicle || billData.session?.vehicle || billData.vehicle || {};
     const licensePlate = vehicle.licensePlate || 'N/A';
     const vehicleModel = `${vehicle.brand || ''} ${vehicle.model || ''}`.trim() || 'N/A';
 
-    // Thông tin khoang
     const bayName = billData.booking?.washBay || billData.session?.bay?.name || billData.bay || 'N/A';
 
-    // Thông tin dịch vụ - từ billData.booking.bookingDetails
     const services = [];
     if (billData.booking?.bookingDetails) {
         billData.booking.bookingDetails.forEach(s => {
@@ -136,120 +198,90 @@ export default function StaffPayment() {
         });
     }
 
-    // Thời gian check-in
     const checkinTime = billData.booking?.startTime
         ? new Date(`1970-01-01T${billData.booking.startTime}Z`).toLocaleTimeString('vi-VN')
-        : (billData.session?.startTime
+        : billData.session?.startTime
             ? new Date(billData.session.startTime).toLocaleString('vi-VN')
-            : (billData.checkinTime || 'N/A'));
+            : (billData.checkinTime || 'N/A');
 
-    // Mã hóa đơn
     const billId = billData.billingId || billData.id || 'N/A';
-
-    // Ghi chú nhân viên
     const staffNote = billData.booking?.notes || billData.session?.note || billData.staffNote || '';
 
-    // Khuyến mãi đã áp dụng từ check-in
-    // FIX: API thực tế trả promotionName + discountAmount nằm trong từng item của
-    // booking.bookingDetails, không có field promotionUsages/promotions ở root.
-    const promotions = billData.booking?.bookingDetails
+    const bookingPromotion = billData.bookingPromotionResponse || billData.booking?.promotion || null;
+    const bookingPromotionDiscountAmount = bookingPromotion
+        ? services.reduce((acc, s) => acc + (s.price * (Number(bookingPromotion.discountValue || 0) / 100)), 0)
+        : 0;
+
+    const detailPromotions = billData.booking?.bookingDetails
         ?.filter(s => s.promotionName && Number(s.discountAmount) > 0)
-        .map(s => ({
-            id: s.servicePriceId,
-            name: s.promotionName,
-            discountAmount: s.discountAmount
-        }))
-        || billData.promotionUsages
-        || billData.promotions
-        || [];
+        .map(s => ({ id: s.servicePriceId, name: s.promotionName, discountAmount: s.discountAmount })) || [];
 
-    // === Tính tiền ===
-    const subtotal = billData.originalAmount
-        ? Number(billData.originalAmount)
-        : services.reduce((acc, s) => acc + s.price, 0);
+    const subtotal = Number(billData.originalAmount || 0) || services.reduce((acc, s) => acc + s.price, 0);
+    const totalDiscountAmount = Number(billData.discountAmount || 0);
+    const totalPromotionDiscount = bookingPromotion
+        ? bookingPromotionDiscountAmount
+        : detailPromotions.reduce((acc, p) => acc + (Number(p.discountAmount) || 0), 0);
+    const actualVoucherDiscount = Math.max(0, totalDiscountAmount - totalPromotionDiscount);
+    const depositAmount = Number(billData.depositAmount || billData.booking?.billing?.depositAmount || 0);
+    const finalTotal = billData.finalAmount != null
+        ? Number(billData.finalAmount)
+        : Math.max(0, subtotal - totalDiscountAmount - depositAmount);
 
-    const promotionDiscount = billData.discountAmount
-        ? Number(billData.discountAmount)
-        : promotions.reduce((acc, p) => acc + (Number(p.discountAmount) || Number(p.discount) || 0), 0);
-
-    // Voucher discount từ API response (đã được backend tính sẵn)
-    const voucherDiscount = appliedVoucher?.discountValue ? Number(appliedVoucher.discountValue) : 0;
-
-    const finalTotal = billData.finalAmount
-        ? Number(billData.finalAmount) - voucherDiscount
-        : subtotal - promotionDiscount - voucherDiscount;
-
-    // Áp dụng voucher
+    // === Handlers ===
     const handleApplyVoucher = async () => {
         if (!voucherCode.trim()) {
             message.warning('Vui lòng nhập mã voucher!');
             return;
         }
-
         try {
             const response = await validateVoucher(customer.id, billData.billingId, voucherCode.trim());
             const voucherData = response?.data || response;
-
             if (voucherData) {
-                setAppliedVoucher(voucherData);
-                message.success(`Áp dụng thành công: ${voucherData.name || voucherData.voucherCode || voucherCode}`);
+                message.success('Áp dụng thành công voucher!');
+                await fetchBillData();
             } else {
                 message.error('Mã voucher không hợp lệ hoặc đã hết hạn!');
             }
         } catch (error) {
             console.error('Failed to validate voucher', error);
-            const errorMsg = error.response?.data?.message || 'Mã voucher không hợp lệ hoặc đã hết hạn!';
-            message.error(errorMsg);
+            message.error(error.response?.data?.message || 'Mã voucher không hợp lệ hoặc đã hết hạn!');
         }
     };
 
-    // Xóa voucher
-    const handleRemoveVoucher = () => {
-        setAppliedVoucher(null);
-        setVoucherCode('');
-        message.info('Đã xóa voucher.');
-    };
+    const handleProceedPayment = () => setCurrentStep(1);
 
-    // Chuyển sang bước thanh toán
-    const handleProceedPayment = () => {
-        setCurrentStep(1);
-    };
-
-    // FIX: Gọi API thật theo đúng phương thức thanh toán (CASH/QR-bank),
-    // thay cho logic mock cũ và tên function sai (confirmPaymentAPI không tồn tại).
     const handlePayment = async () => {
         if (!bookingId) {
             message.error('Không xác định được booking để xác nhận thanh toán!');
             return;
         }
-
         setConfirming(true);
         try {
             if (paymentMethod === 'CASH') {
                 await confirmPaymentByCash(billId);
+                setIsPaymentReceived(true);
+                message.success('Đã thu tiền mặt thành công!');
+                setConfirming(false);
+                setTimeout(() => {
+                    navigate(
+                        bayId ? '/staff/dashboard' : '/staff/history',
+                        bayId ? { state: { paidBayId: bayId, paidBookingId: bookingId } } : undefined
+                    );
+                }, 2000);
             } else {
-                await confirmPaymentByBank(billId);
-            }
-
-            setIsPaymentReceived(true);
-            message.success(paymentMethod === 'CASH' ? 'Đã thu tiền mặt thành công!' : 'Thanh toán QR thành công!');
-
-            // Tắt loading ngay khi đã xác nhận xong, tránh treo nút trong lúc
-            // hiển thị màn hình Result và chờ chuyển trang.
-            setConfirming(false);
-
-            setTimeout(() => {
-                // Quay về Dashboard với paidBayId và paidBookingId để giải phóng bay & update UI
-                if (bayId) {
-                    navigate('/staff/dashboard', { state: { paidBayId: bayId, paidBookingId: bookingId } });
+                const response = await confirmPaymentByBank(billId);
+                if (bayId) sessionStorage.setItem('pendingVnpayBayId', bayId);
+                if (bookingId) sessionStorage.setItem('pendingVnpayBookingId', bookingId);
+                if (response?.paymentUrl) {
+                    window.location.href = response.paymentUrl;
                 } else {
-                    navigate('/staff/history');
+                    message.error('Không nhận được link thanh toán từ hệ thống!');
+                    setConfirming(false);
                 }
-            }, 2500);
+            }
         } catch (error) {
-            console.error("Failed to confirm payment", error);
-            const errorMsg = error.response?.data?.message || 'Lỗi khi cập nhật trạng thái thanh toán!';
-            message.error(errorMsg);
+            console.error('Failed to confirm payment', error);
+            message.error(error.response?.data?.message || 'Lỗi khi cập nhật trạng thái thanh toán!');
             setConfirming(false);
         }
     };
@@ -258,7 +290,7 @@ export default function StaffPayment() {
         <div className="payment-container">
             <div className="payment-header">
                 <Title level={2} className="payment-title">
-                    <CreditCardOutlined style={{ color: '#1890ff', marginRight: '12px' }} />
+                    <CreditCardOutlined className="payment-title-icon" />
                     Thanh Toán
                 </Title>
             </div>
@@ -268,7 +300,7 @@ export default function StaffPayment() {
                 className="payment-steps"
                 items={[
                     { title: 'Xác nhận hóa đơn', icon: <DollarOutlined /> },
-                    { title: 'Thanh toán', icon: <QrcodeOutlined /> }
+                    { title: 'Thanh toán', icon: <QrcodeOutlined /> },
                 ]}
             />
 
@@ -280,7 +312,7 @@ export default function StaffPayment() {
                         <Card
                             className="payment-card"
                             title={
-                                <span style={{ fontSize: 18, fontWeight: 600 }}>
+                                <span className="payment-card-title">
                                     <DollarOutlined style={{ marginRight: 8 }} />
                                     Hóa Đơn Tạm Tính
                                 </span>
@@ -297,6 +329,9 @@ export default function StaffPayment() {
                                     </Descriptions.Item>
                                     <Descriptions.Item label="Số điện thoại">
                                         <Text>{customerPhone}</Text>
+                                    </Descriptions.Item>
+                                    <Descriptions.Item label="Email">
+                                        <Text>{customerEmail}</Text>
                                     </Descriptions.Item>
                                     <Descriptions.Item label="Phương tiện">
                                         <Text strong>{licensePlate}</Text>
@@ -321,30 +356,37 @@ export default function StaffPayment() {
                                     {services.map(s => (
                                         <Row justify="space-between" key={s.id} className="payment-service-row">
                                             <Col><Text>{s.name}</Text></Col>
-                                            <Col><Text strong>{s.price.toLocaleString('vi-VN')} đ</Text></Col>
+                                            <Col><Text strong>{s.price.toLocaleString('vi-VN')}đ</Text></Col>
                                         </Row>
                                     ))}
                                     <div className="payment-subtotal-row">
                                         <Row justify="space-between">
                                             <Col><Text strong>Tạm tính</Text></Col>
-                                            <Col><Text strong>{subtotal.toLocaleString('vi-VN')} đ</Text></Col>
+                                            <Col><Text strong>{subtotal.toLocaleString('vi-VN')}đ</Text></Col>
                                         </Row>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Khuyến mãi đã áp dụng từ check-in */}
-                            {promotions.length > 0 && (
+                            {/* Khuyến mãi */}
+                            {(bookingPromotion || detailPromotions.length > 0) && (
                                 <div className="payment-section">
                                     <Text className="payment-section-label">
-                                        <TagOutlined style={{ marginRight: 6 }} /> Khuyến mãi đã áp dụng
+                                        <TagOutlined style={{ marginRight: 6 }} /> Khuyến mãi
                                     </Text>
-                                    {promotions.map((p, idx) => (
-                                        <Row justify="space-between" key={p.id || idx} className="payment-promo-row">
-                                            <Col><Text style={{ color: '#52c41a' }}>{p.name || p.promotionName || 'Khuyến mãi'}</Text></Col>
-                                            <Col><Text strong style={{ color: '#52c41a' }}>-{(Number(p.discountAmount) || Number(p.discount) || 0).toLocaleString('vi-VN')} đ</Text></Col>
+                                    {bookingPromotion ? (
+                                        <Row justify="space-between" className="payment-promo-row">
+                                            <Col><Text className="payment-promo-text">{bookingPromotion.promotionName}</Text></Col>
+                                            <Col><Text strong className="payment-promo-text">-{totalPromotionDiscount.toLocaleString('vi-VN')}đ</Text></Col>
                                         </Row>
-                                    ))}
+                                    ) : (
+                                        detailPromotions.map((p, idx) => (
+                                            <Row justify="space-between" key={p.id || idx} className="payment-promo-row">
+                                                <Col><Text className="payment-promo-text">{p.name || p.promotionName || 'Khuyến mãi'}</Text></Col>
+                                                <Col><Text strong className="payment-promo-text">-{(Number(p.discountAmount) || 0).toLocaleString('vi-VN')}đ</Text></Col>
+                                            </Row>
+                                        ))
+                                    )}
                                 </div>
                             )}
 
@@ -356,32 +398,45 @@ export default function StaffPayment() {
                                     </Text>
                                     <Row justify="space-between" className="payment-voucher-applied-row">
                                         <Col>
-                                            <Tag color="blue">{voucherCode.toUpperCase()}</Tag>
-                                            <Text style={{ color: '#1890ff' }}>{appliedVoucher.rewardName}</Text>
+                                            <Tag color="blue" style={{ fontWeight: 500 }}>
+                                                {appliedVoucher.voucherCode.toUpperCase()}
+                                            </Tag>
+                                            <Text className="payment-voucher-text">{appliedVoucher.rewardName}</Text>
                                         </Col>
-                                        <Col><Text strong style={{ color: '#1890ff' }}>-{voucherDiscount.toLocaleString('vi-VN')} đ</Text></Col>
+                                        <Col>
+                                            <Text strong className="payment-voucher-amount">
+                                                -{actualVoucherDiscount.toLocaleString('vi-VN')}đ
+                                            </Text>
+                                        </Col>
                                     </Row>
                                 </div>
                             )}
 
-                            {/* Tổng cộng */}
+                            {/* Tiền cọc */}
+                            {depositAmount > 0 && (
+                                <div className="payment-section payment-section--with-border">
+                                    <Row justify="space-between" className="payment-deposit-row">
+                                        <Col><Text className="payment-deposit-text">Đã đặt cọc</Text></Col>
+                                        <Col><Text className="payment-deposit-text">{depositAmount.toLocaleString('vi-VN')}đ</Text></Col>
+                                    </Row>
+                                </div>
+                            )}
+
+                            {/* Tổng */}
                             <div className="payment-total-box">
                                 <Row justify="space-between" align="middle">
                                     <Col><Text className="payment-total-label">Tổng thanh toán</Text></Col>
                                     <Col>
                                         <Title level={2} className="payment-total-amount">
-                                            {Math.max(0, finalTotal).toLocaleString('vi-VN')} đ
+                                            {Math.max(0, finalTotal).toLocaleString('vi-VN')}đ
                                         </Title>
                                     </Col>
                                 </Row>
                             </div>
 
-                            {/* Staff note */}
                             {staffNote && (
                                 <div className="payment-note">
-                                    <Text type="secondary">
-                                        <strong>Ghi chú:</strong> {staffNote}
-                                    </Text>
+                                    <Text type="secondary"><strong>Ghi chú:</strong> {staffNote}</Text>
                                 </div>
                             )}
                         </Card>
@@ -392,15 +447,14 @@ export default function StaffPayment() {
                         <Card
                             className="payment-card voucher-card"
                             title={
-                                <span style={{ fontSize: 18, fontWeight: 600 }}>
+                                <span className="payment-card-title">
                                     <GiftOutlined style={{ marginRight: 8 }} /> Mã Voucher
                                 </span>
                             }
                         >
-                            <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
+                            <Text type="secondary" className="voucher-helper-text">
                                 Nhập mã voucher nếu khách hàng có, để áp dụng thêm ưu đãi.
                             </Text>
-
                             <Input
                                 className="voucher-input"
                                 placeholder="Nhập mã voucher..."
@@ -411,8 +465,7 @@ export default function StaffPayment() {
                                 prefix={<GiftOutlined style={{ color: '#bfbfbf' }} />}
                                 allowClear
                             />
-
-                            {!appliedVoucher ? (
+                            {!appliedVoucher && (
                                 <Button
                                     type="primary"
                                     block
@@ -422,35 +475,24 @@ export default function StaffPayment() {
                                 >
                                     Áp dụng voucher
                                 </Button>
-                            ) : (
-                                <Button
-                                    block
-                                    danger
-                                    className="voucher-remove-btn"
-                                    onClick={handleRemoveVoucher}
-                                >
-                                    Xóa voucher
-                                </Button>
                             )}
-
                             {appliedVoucher && (
                                 <div className="voucher-applied-info">
                                     <CheckCircleOutlined style={{ color: '#52c41a', marginRight: 8 }} />
-                                    <Text strong style={{ color: '#52c41a' }}>
+                                    <Text strong className="voucher-applied-text">
                                         Đã áp dụng: {appliedVoucher.rewardName}
                                     </Text>
                                 </div>
                             )}
                         </Card>
 
-                        {/* Nút thanh toán */}
                         <Card className="payment-card payment-action-card">
                             <div className="payment-action-summary">
                                 <Row justify="space-between" align="middle">
-                                    <Col><Text strong style={{ fontSize: 16 }}>Cần thanh toán</Text></Col>
+                                    <Col><Text strong className="payment-action-total-label">Cần thanh toán</Text></Col>
                                     <Col>
-                                        <Title level={3} style={{ margin: 0, color: '#1890ff' }}>
-                                            {Math.max(0, finalTotal).toLocaleString('vi-VN')} đ
+                                        <Title level={3} className="payment-action-total-value">
+                                            {Math.max(0, finalTotal).toLocaleString('vi-VN')}đ
                                         </Title>
                                     </Col>
                                 </Row>
@@ -469,7 +511,7 @@ export default function StaffPayment() {
                 </Row>
             )}
 
-            {/* GIAI ĐOẠN 2: Bill cuối + QR thanh toán */}
+            {/* GIAI ĐOẠN 2: Bill cuối + Thanh toán */}
             {currentStep === 1 && (
                 <Row gutter={[32, 24]}>
                     {/* Bill cuối cùng */}
@@ -477,7 +519,7 @@ export default function StaffPayment() {
                         <Card
                             className="payment-card"
                             title={
-                                <span style={{ fontSize: 18, fontWeight: 600 }}>
+                                <span className="payment-card-title">
                                     <DollarOutlined style={{ marginRight: 8 }} />
                                     Hóa Đơn Thanh Toán
                                 </span>
@@ -492,10 +534,9 @@ export default function StaffPayment() {
                                 <Text type="secondary">Mã hóa đơn: <Text strong>{billId}</Text></Text>
                             </div>
 
-                            {/* Khách hàng */}
                             <Descriptions bordered column={1} size="small" className="payment-descriptions" style={{ marginBottom: 24 }}>
                                 <Descriptions.Item label="Khách hàng">
-                                    <Text strong>{customerName}</Text> — {customerPhone}
+                                    <Text strong>{customerName}</Text> - {customerPhone} - {customerEmail}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Phương tiện">
                                     <Text strong>{licensePlate}</Text>
@@ -503,46 +544,73 @@ export default function StaffPayment() {
                                 </Descriptions.Item>
                             </Descriptions>
 
-                            {/* Chi tiết */}
                             <div className="payment-service-list">
-                                <Text className="payment-section-label" style={{ marginBottom: 12, display: 'block' }}>Chi tiết dịch vụ</Text>
+                                <Text className="payment-section-label">Chi tiết dịch vụ</Text>
                                 {services.map(s => (
                                     <Row justify="space-between" key={s.id} className="payment-service-row">
                                         <Col><Text>{s.name}</Text></Col>
-                                        <Col><Text strong>{s.price.toLocaleString('vi-VN')} đ</Text></Col>
+                                        <Col><Text strong>{s.price.toLocaleString('vi-VN')}đ</Text></Col>
                                     </Row>
                                 ))}
+                                <div className="payment-subtotal-row">
+                                    <Row justify="space-between">
+                                        <Col><Text strong>Tạm tính</Text></Col>
+                                        <Col><Text strong>{subtotal.toLocaleString('vi-VN')}đ</Text></Col>
+                                    </Row>
+                                </div>
                             </div>
 
-                            {/* Giảm giá */}
-                            {(promotions.length > 0 || appliedVoucher) && (
+                            {(bookingPromotion || detailPromotions.length > 0 || appliedVoucher || depositAmount > 0) && (
                                 <div className="payment-discount-section">
-                                    <Text className="payment-section-label" style={{ marginBottom: 12, display: 'block' }}>Giảm giá</Text>
-                                    {promotions.map((p, idx) => (
-                                        <Row justify="space-between" key={p.id || idx} className="payment-promo-row">
-                                            <Col><Text style={{ color: '#52c41a' }}>{p.name || p.promotionName || 'Khuyến mãi'}</Text></Col>
-                                            <Col><Text strong style={{ color: '#52c41a' }}>-{(Number(p.discountAmount) || Number(p.discount) || 0).toLocaleString('vi-VN')} đ</Text></Col>
-                                        </Row>
-                                    ))}
-                                    {appliedVoucher && (
+                                    <Text className="payment-section-label">Giảm giá & Cọc</Text>
+
+                                    {bookingPromotion ? (
                                         <Row justify="space-between" className="payment-promo-row">
+                                            <Col><Text className="payment-promo-text">{bookingPromotion.promotionName}</Text></Col>
+                                            <Col><Text strong className="payment-promo-text">-{totalPromotionDiscount.toLocaleString('vi-VN')}đ</Text></Col>
+                                        </Row>
+                                    ) : (
+                                        detailPromotions.map((p, idx) => (
+                                            <Row justify="space-between" key={p.id || idx} className="payment-promo-row">
+                                                <Col><Text strong className="payment-promo-text">{p.name || p.promotionName || 'Khuyến mãi'}</Text></Col>
+                                                <Col><Text strong className="payment-promo-text">-{(Number(p.discountAmount) || 0).toLocaleString('vi-VN')}đ</Text></Col>
+                                            </Row>
+                                        ))
+                                    )}
+
+                                    {appliedVoucher && (
+                                        <Row justify="space-between" className="payment-voucher-applied-row">
                                             <Col>
-                                                <Tag color="blue" style={{ marginRight: 4 }}>{voucherCode.toUpperCase()}</Tag>
-                                                <Text style={{ color: '#1890ff' }}>{appliedVoucher.rewardName}</Text>
+                                                <Tag color="blue" style={{ marginRight: 4, fontWeight: 500 }}>
+                                                    {appliedVoucher.voucherCode}
+                                                </Tag>
+                                                <Text strong className="payment-voucher-amount">
+                                                    {appliedVoucher.rewardName || 'Giảm giá Voucher'}
+                                                </Text>
                                             </Col>
-                                            <Col><Text strong style={{ color: '#1890ff' }}>-{voucherDiscount.toLocaleString('vi-VN')} đ</Text></Col>
+                                            <Col>
+                                                <Text strong className="payment-voucher-amount">
+                                                    -{actualVoucherDiscount.toLocaleString('vi-VN')}đ
+                                                </Text>
+                                            </Col>
+                                        </Row>
+                                    )}
+
+                                    {depositAmount > 0 && (
+                                        <Row justify="space-between" className="payment-deposit-row">
+                                            <Col><Text className="payment-deposit-text">Đã đặt cọc</Text></Col>
+                                            <Col><Text className="payment-deposit-text">{depositAmount.toLocaleString('vi-VN')}đ</Text></Col>
                                         </Row>
                                     )}
                                 </div>
                             )}
 
-                            {/* Tổng cuối */}
                             <div className="payment-final-total-box">
                                 <Row justify="space-between" align="middle">
                                     <Col><Text className="payment-final-total-label">TỔNG THANH TOÁN</Text></Col>
                                     <Col>
                                         <Title level={2} className="payment-final-total-amount">
-                                            {Math.max(0, finalTotal).toLocaleString('vi-VN')} đ
+                                            {Math.max(0, finalTotal).toLocaleString('vi-VN')}đ
                                         </Title>
                                     </Col>
                                 </Row>
@@ -550,12 +618,12 @@ export default function StaffPayment() {
                         </Card>
                     </Col>
 
-                    {/* Phần thanh toán (QR / Tiền mặt) */}
+                    {/* Phần thanh toán */}
                     <Col xs={24} lg={10}>
                         <Card className="payment-card qr-payment-card">
                             {!isPaymentReceived ? (
                                 <div className="qr-payment-area">
-                                    <Title level={4} style={{ marginBottom: 16, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                                    <Title level={4} className="qr-payment-title">
                                         Phương thức thanh toán
                                     </Title>
 
@@ -563,75 +631,63 @@ export default function StaffPayment() {
                                         value={paymentMethod}
                                         onChange={(e) => setPaymentMethod(e.target.value)}
                                         buttonStyle="solid"
-                                        style={{ width: '100%', marginBottom: 24, display: 'flex' }}
+                                        className="payment-method-group"
                                     >
-                                        <Radio.Button value="QR" style={{ flex: 1, textAlign: 'center' }}>
+                                        <Radio.Button value="QR" className="payment-method-btn">
                                             <QrcodeOutlined /> Chuyển khoản QR
                                         </Radio.Button>
-                                        <Radio.Button value="CASH" style={{ flex: 1, textAlign: 'center' }}>
+                                        <Radio.Button value="CASH" className="payment-method-btn">
                                             <MoneyCollectOutlined /> Tiền mặt
                                         </Radio.Button>
                                     </Radio.Group>
 
                                     {paymentMethod === 'QR' ? (
                                         <>
-                                            <Text type="secondary" style={{ marginBottom: 24, display: 'block' }}>
-                                                Khách hàng quét mã QR bên dưới để thanh toán
+                                            <Text type="secondary" className="qr-helper-text">
+                                                Khách hàng quét mã QR để thanh toán
                                             </Text>
-
-                                            {/* QR Code placeholder */}
-                                            <div className="qr-code-placeholder">
-                                                <QrcodeOutlined style={{ fontSize: 120, color: '#262626' }} />
-                                            </div>
-
                                             <div className="qr-amount-display">
                                                 <Text type="secondary">Số tiền cần thanh toán</Text>
-                                                <Title level={3} style={{ margin: '4px 0 0', color: '#1890ff' }}>
-                                                    {Math.max(0, finalTotal).toLocaleString('vi-VN')} đ
+                                                <Title level={3} className="qr-amount-value">
+                                                    {Math.max(0, finalTotal).toLocaleString('vi-VN')}đ
                                                 </Title>
                                             </div>
-
-                                            <Text type="secondary" style={{ fontSize: 13, marginTop: 16, display: 'block', textAlign: 'center' }}>
+                                            <Text type="secondary" className="qr-system-note">
                                                 Hệ thống sẽ tự động xác nhận khi nhận được thanh toán
                                             </Text>
-
-                                            {/* Nút giả lập QR */}
                                             <Button
-                                                type="dashed"
+                                                type="primary"
                                                 block
-                                                className="simulate-payment-btn"
+                                                size="large"
+                                                icon={<QrcodeOutlined />}
+                                                className="qr-vnpay-btn"
                                                 onClick={handlePayment}
                                                 loading={confirming}
                                             >
-                                                <CheckCircleOutlined /> Giả lập: Đã nhận chuyển khoản
+                                                Mở trang thanh toán VNPay
                                             </Button>
                                         </>
                                     ) : (
                                         <>
-                                            <Text type="secondary" style={{ marginBottom: 24, display: 'block' }}>
+                                            <Text type="secondary" className="qr-helper-text">
                                                 Thu tiền mặt trực tiếp từ khách hàng
                                             </Text>
-
-                                            <div className="qr-code-placeholder" style={{ background: '#f6ffed', borderColor: '#b7eb8f' }}>
-                                                <MoneyCollectOutlined style={{ fontSize: 120, color: '#52c41a' }} />
+                                            <div className="qr-code-placeholder qr-code-placeholder--cash">
+                                                <MoneyCollectOutlined className="qr-cash-icon" />
                                             </div>
-
                                             <div className="qr-amount-display">
                                                 <Text type="secondary">Số tiền cần thu</Text>
-                                                <Title level={3} style={{ margin: '4px 0 0', color: '#52c41a' }}>
-                                                    {Math.max(0, finalTotal).toLocaleString('vi-VN')} đ
+                                                <Title level={3} className="qr-amount-value">
+                                                    {Math.max(0, finalTotal).toLocaleString('vi-VN')}đ
                                                 </Title>
                                             </div>
-
                                             <Divider dashed style={{ margin: '16px 0' }} />
-
-                                            {/* Nút xác nhận thu tiền mặt */}
                                             <Button
                                                 type="primary"
                                                 block
                                                 size="large"
                                                 icon={<CheckCircleOutlined />}
-                                                style={{ background: '#52c41a', borderColor: '#52c41a' }}
+                                                className="cash-confirm-btn"
                                                 onClick={handlePayment}
                                                 loading={confirming}
                                             >
@@ -644,7 +700,7 @@ export default function StaffPayment() {
                                 <Result
                                     status="success"
                                     title="Thanh toán thành công!"
-                                    subTitle={`Hóa đơn ${billId} — ${Math.max(0, finalTotal).toLocaleString('vi-VN')} đ`}
+                                    subTitle={`Hóa đơn ${billId} — ${Math.max(0, finalTotal).toLocaleString('vi-VN')}đ`}
                                     extra={
                                         <Text type="secondary">
                                             {bayId ? 'Đang chuyển đến Dashboard...' : 'Đang chuyển đến lịch sử...'}

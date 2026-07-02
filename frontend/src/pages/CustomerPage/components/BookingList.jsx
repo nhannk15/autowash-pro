@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { CarOutlined } from '@ant-design/icons';
 import './Booking.css';
 import { message, Select } from 'antd';
-import { getAvailableSlot, getApplicablePromotion as getApplicablePromotionAPI, getService, getVehicleByCustomer, createBooking, getMembershipTier, getVoucher } from '../../../service/customerService';
+import { getAvailableSlot, getApplicablePromotion as getApplicablePromotionAPI, getService, getVehicleByCustomer, createBooking, getMembershipTier, getVoucher, createVNPayPayment, getPendingDeposit } from '../../../service/customerService';
 function VehicleImage({ src, alt, fallbackIcon }) {
     const [hasError, setHasError] = useState(false);
+    // Mục đích: Dùng để ghi nhận xem ảnh của xe có bị lỗi khi tải hay không.
+    // Mặc định là false (chưa có lỗi).
+    // Nếu trong quá trình tải ảnh xảy ra lỗi (link hỏng, ảnh không tồn tại), state này sẽ được cập nhật thành true để component biết và chuyển sang hiển thị biểu tượng dự phòng (fallbackIcon).
 
     if (!src || hasError) {
         return fallbackIcon;
@@ -17,18 +21,26 @@ function VehicleImage({ src, alt, fallbackIcon }) {
             alt={alt}
             className="vehicle-card__image"
             referrerPolicy="no-referrer"
+            //Ý nghĩa: Đây là một thuộc tính bảo mật và quyền riêng tư của thẻ <img> trong HTML5.
+            // Mục đích: Khi trình duyệt gửi yêu cầu tải ảnh từ link src (có thể là link ảnh lưu trên host khác như Google Drive, Firebase, Cloudinary, v.v.), trình duyệt sẽ không gửi kèm thông tin về trang web hiện tại (Header Referer) của bạn tới máy chủ chứa ảnh đó.
             onError={() => setHasError(true)}
+        //Ý nghĩa: Đây là một trình lắng nghe sự kiện (Event Listener) của thẻ <img>, nó sẽ tự động được kích hoạt khi trình duyệt không thể tải được ảnh từ đường dẫn src (ví dụ: lỗi 404 không tìm thấy file, lỗi mất kết nối mạng, hoặc link ảnh bị hỏng).
+        // Mục đích: Khi sự kiện lỗi xảy ra, hàm mũi tên () => setHasError(true) sẽ được chạy để cập nhật state hasError từ false thành true.
+        // Kết quả: Khi hasError trở thành true, component VehicleImage sẽ re-render, rơi vào điều kiện if (!src || hasError) ở dòng 10 và lập tức hiển thị fallbackIcon (biểu tượng xe dự phòng) thay thế cho chiếc ảnh bị lỗi, giúp giao diện không bị hiện biểu tượng "ảnh vỡ" mất thẩm mỹ.
+
         />
     );
 }
 
 export default function BookingList() {
     const { user } = useAuth();
+    const navigate = useNavigate();
 
     // Các trạng thái của Wizard
     const [currentStep, setCurrentStep] = useState(1);
     const [maxUnlockedStep, setMaxUnlockedStep] = useState(1);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [createdBooking, setCreatedBooking] = useState(null);
 
     // Dữ liệu lựa chọn đặt lịch
     const [selectedVehicleType, setSelectedVehicleType] = useState(null); // 'SEDAN' hoặc 'SUV'
@@ -197,10 +209,16 @@ export default function BookingList() {
                 const result = await getService()
                 const serviceList = result?.data || [];
                 if (Array.isArray(serviceList)) {
+                    // kiểm tra serviceList có phải là 1 mảng không và chỉ lấy dịch vụ đang hoạt động
+                    const activeServices = serviceList.filter(item => item.isActive !== false);
                     // Chuẩn hóa cấu trúc dịch vụ tương tự trang Dịch Vụ chính
-                    const formatted = serviceList.map(item => {
+                    const formatted = activeServices.map(item => {
                         const priceSedanItem = item.servicePrices?.find(sp => sp.vehicleType?.typeName === 'SEDAN');
+                        // Dấu ?. trong JavaScript được gọi là toán tử Optional Chaining (Liên kết tùy chọn).
+                        // Khi có dấu ?: Nếu item.servicePrices là null/undefined, JS sẽ dừng lại ngay tại đó, không gọi hàm .find() nữa mà trả về luôn giá trị undefined. Nhờ vậy, chương trình vẫn chạy tiếp bình thường mà không bị lỗi.
                         const priceSuvItem = item.servicePrices?.find(sp => sp.vehicleType?.typeName === 'SUV');
+
+                        // nhiệm vụ chuẩn hóa (format/mapping) lại cấu trúc dữ liệu của từng dịch vụ (item) nhận về từ API Backend thành một đối tượng mới có cấu trúc gọn gàng, đồng nhất để dễ dàng quản lý và hiển thị ở phía Frontend
                         return {
                             id: item.serviceId, // Sử dụng serviceId từ API thực tế
                             name: item.serviceName,
@@ -208,8 +226,12 @@ export default function BookingList() {
                             shortDesc: item.description || '',
                             priceSedan: priceSedanItem ? priceSedanItem.price : 0,
                             priceSuv: priceSuvItem ? priceSuvItem.price : 0,
+
                             priceSedanId: priceSedanItem ? priceSedanItem.servicePriceId : null,
                             priceSuvId: priceSuvItem ? priceSuvItem.servicePriceId : null,
+                            // lưu lại ID của bản ghi giá ứng với từng loại xe. Mục đích cuối cùng của chúng là để gửi lên API Backend khi khách hàng bấm Đặt lịch.
+
+
                             duration: item.duration || 0,
                         };
                     });
@@ -365,13 +387,50 @@ export default function BookingList() {
                 voucherCode: selectedVoucher ? selectedVoucher.voucherCode : null
             };
 
-            await createBooking(payload)
+            const newBooking = await createBooking(payload);
+
+            // Mẹo: Gọi getPendingDeposit để lấy thông tin hóa đơn (có chứa billingId) của lịch hẹn vừa tạo
+            try {
+                const pendingList = await getPendingDeposit();
+                const matchedBooking = pendingList.find(b => b.bookingCode === newBooking.bookingCode);
+                if (matchedBooking) {
+                    setCreatedBooking(matchedBooking);
+                } else {
+                    setCreatedBooking(newBooking);
+                }
+            } catch (err) {
+                console.error("Không thể lấy thông tin thanh toán đặt cọc", err);
+                setCreatedBooking(newBooking);
+            }
 
             setIsSuccess(true);
         } catch (err) {
             setBookingError(err.response?.data?.message || err.message || "Đã xảy ra lỗi khi tạo lịch đặt.")
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const handlePayDeposit = async (booking) => {
+        try {
+            const billingId = booking.billing?.id || booking.billingId;
+            if (!billingId) {
+                message.error("Không tìm thấy thông tin hóa đơn đặt cọc!");
+                return;
+            }
+            message.loading({ content: 'Đang tạo link thanh toán...', key: 'vnpay' });
+            const response = await createVNPayPayment({
+                billingId: billingId,
+                orderInfo: `Dat coc lich hen ${booking.bookingCode}`
+            });
+            if (response && response.paymentUrl) {
+                window.location.href = response.paymentUrl;
+            } else {
+                message.error({ content: "Không nhận được link thanh toán từ hệ thống!", key: 'vnpay' });
+            }
+        } catch (error) {
+            console.error("Lỗi khi thanh toán đặt cọc:", error);
+            message.error({ content: error.response?.data?.message || "Không thể khởi tạo thanh toán VNPay!", key: 'vnpay' });
         }
     };
 
@@ -449,7 +508,7 @@ export default function BookingList() {
                                         onClick={() => {
                                             setSelectedVehicle(vehicle);
                                             setSelectedVehicleType(vehicle.typeName);
-                                            setMaxUnlockedStep(Math.max(maxUnlockedStep, 2));
+                                            setMaxUnlockedStep(2);
                                         }}
                                     >
                                         {/* Hình ảnh xe hoặc Icon phân khúc xe */}
@@ -458,6 +517,8 @@ export default function BookingList() {
                                                 src={vehicle.image}
                                                 alt={`${vehicle.brand} ${vehicle.model}`}
                                                 fallbackIcon={
+                                                    // Thuộc tính fallbackIcon ở dòng 460 được dùng làm ảnh/biểu tượng thay thế dự phòng khi ảnh chính của xe không thể hiển thị được.
+                                                    // Nếu bạn nhìn lên phần định nghĩa component VehicleImage ở đầu file (từ dòng 7 đến dòng 23):
                                                     <div className="vehicle-card__icon-wrapper">
                                                         {isSedan ? <CarOutlined /> : <span style={{ fontSize: '24px' }}>🚙</span>}
                                                     </div>
@@ -506,6 +567,13 @@ export default function BookingList() {
 
             {/* LAYOUT 2 CỘT CHO BƯỚC 2 VÀ BƯỚC 3 */}
             {(currentStep === 2 || currentStep === 3) && (
+                // Step 2 & Step 3 dùng chung Layout 2 cột
+                // Khi người dùng ở Bước 2 (Dịch vụ) và Bước 3 (Thời gian), giao diện lúc này chia làm 2 cột:
+                // Cột bên trái (booking-main-panel): Nội dung thay đổi động tùy theo bước:
+                // Nếu ở Bước 2 (currentStep === 2): Hiện danh sách gói dịch vụ.
+                // Nếu ở Bước 3 (currentStep === 3): Hiện bảng chọn ngày & giờ hẹn.
+                // Cột bên phải (booking-sidebar): Luôn hiển thị bảng Tóm tắt tạm tính (thông tin xe đã chọn, danh sách các dịch vụ đã tick chọn và tổng tiền thanh toán).
+
                 <div className="booking-content-layout">
                     {/* BẢNG CHỌN CHÍNH BÊN TRÁI */}
                     <div className="booking-main-panel">
@@ -929,7 +997,7 @@ export default function BookingList() {
                             {(() => {
                                 const appPromo = getApplicablePromotion();
                                 const originalTotal = calculateTotal();
-                                
+
                                 let promoDiscount = 0;
                                 if (appPromo) {
                                     if (appPromo.discountType === 'PERCENTAGE') {
@@ -940,6 +1008,8 @@ export default function BookingList() {
                                     promoDiscount = Math.min(promoDiscount, originalTotal);
                                 }
                                 const totalAfterPromo = originalTotal - promoDiscount;
+                                const depositAmount = totalAfterPromo * 0.3;
+                                const remainingBeforeVoucher = totalAfterPromo - depositAmount;
 
                                 let voucherDiscount = 0;
                                 if (selectedVoucher) {
@@ -948,14 +1018,14 @@ export default function BookingList() {
                                     if (rType === 'DISCOUNT_FLAT') {
                                         voucherDiscount = vVal;
                                     } else if (rType === 'DISCOUNT_PERCENTAGE') {
-                                        voucherDiscount = originalTotal * (vVal / 100);
+                                        voucherDiscount = remainingBeforeVoucher * (vVal / 100);
                                     } else if (rType === 'FREE_WASH') {
-                                        voucherDiscount = totalAfterPromo;
+                                        voucherDiscount = remainingBeforeVoucher;
                                     }
-                                    voucherDiscount = Math.min(voucherDiscount, totalAfterPromo);
+                                    voucherDiscount = Math.min(voucherDiscount, remainingBeforeVoucher);
                                 }
 
-                                const finalTotal = totalAfterPromo - voucherDiscount;
+                                const finalTotal = remainingBeforeVoucher - voucherDiscount;
 
                                 return (
                                     <div className="sidebar-total-row" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', marginBottom: '16px' }}>
@@ -1070,7 +1140,7 @@ export default function BookingList() {
                             {(() => {
                                 const appPromo = getApplicablePromotion();
                                 const originalTotal = calculateTotal();
-                                
+
                                 let promoDiscount = 0;
                                 if (appPromo) {
                                     if (appPromo.discountType === 'PERCENTAGE') {
@@ -1081,6 +1151,8 @@ export default function BookingList() {
                                     promoDiscount = Math.min(promoDiscount, originalTotal);
                                 }
                                 const totalAfterPromo = originalTotal - promoDiscount;
+                                const depositAmount = totalAfterPromo * 0.3;
+                                const remainingBeforeVoucher = totalAfterPromo - depositAmount;
 
                                 let voucherDiscount = 0;
                                 if (selectedVoucher) {
@@ -1089,14 +1161,14 @@ export default function BookingList() {
                                     if (rType === 'DISCOUNT_FLAT') {
                                         voucherDiscount = vVal;
                                     } else if (rType === 'DISCOUNT_PERCENTAGE') {
-                                        voucherDiscount = originalTotal * (vVal / 100);
+                                        voucherDiscount = remainingBeforeVoucher * (vVal / 100);
                                     } else if (rType === 'FREE_WASH') {
-                                        voucherDiscount = totalAfterPromo;
+                                        voucherDiscount = remainingBeforeVoucher;
                                     }
-                                    voucherDiscount = Math.min(voucherDiscount, totalAfterPromo);
+                                    voucherDiscount = Math.min(voucherDiscount, remainingBeforeVoucher);
                                 }
 
-                                const finalTotal = totalAfterPromo - voucherDiscount;
+                                const finalTotal = remainingBeforeVoucher - voucherDiscount;
 
                                 return (
                                     <>
@@ -1125,9 +1197,56 @@ export default function BookingList() {
                             })()}
                         </div>
 
-                        <button className="btn-success-home" onClick={handleResetBooking}>
-                            ĐÓNG
-                        </button>
+                        {createdBooking && createdBooking.billing && createdBooking.billing.depositAmount > 0 && (
+                            <div style={{ marginTop: '12px', padding: '12px', backgroundColor: '#fff2f0', border: '1px solid #ffccc7', borderRadius: '8px', textAlign: 'center' }}>
+                                <div style={{ color: '#cf1322', fontWeight: 'bold', fontSize: '15px', marginBottom: '8px' }}>
+                                    ⚠️ Vui lòng thanh toán cọc để hệ thống giữ chỗ cho bạn.
+                                </div>
+                                <div style={{ fontSize: '14px', marginBottom: '16px' }}>
+                                    Số tiền cần cọc: <strong style={{ color: '#cf1322', fontSize: '18px' }}>
+                                        {(() => {
+                                            const appPromo = getApplicablePromotion();
+                                            const originalTotal = calculateTotal();
+                                            let promoDiscount = 0;
+                                            if (appPromo) {
+                                                promoDiscount = appPromo.discountType === 'PERCENTAGE' ? originalTotal * (appPromo.discountValue / 100) : appPromo.discountValue;
+                                                promoDiscount = Math.min(promoDiscount, originalTotal);
+                                            }
+                                            const totalAfterPromo = originalTotal - promoDiscount;
+                                            const depositAmount = totalAfterPromo * 0.3;
+                                            return depositAmount.toLocaleString();
+                                        })()} VND
+                                    </strong>
+                                </div>
+                                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                                    <button
+                                        type="button"
+                                        style={{ backgroundColor: '#1890ff', color: 'white', border: 'none', padding: '10px 12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', flex: 1, transition: 'all 0.3s' }}
+                                        onClick={() => handlePayDeposit(createdBooking)}
+                                    >
+                                        THANH TOÁN VNPay NGAY
+                                    </button>
+                                    <button
+                                        type="button"
+                                        style={{ backgroundColor: '#f0f0f0', color: '#595959', border: '1px solid #d9d9d9', padding: '10px 12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', flex: 1, transition: 'all 0.3s' }}
+                                        onClick={() => {
+                                            handleResetBooking();
+                                            navigate('/ca-nhan/tong-quan');
+                                        }}
+                                    >
+                                        ĐỂ SAU (VỀ TRANG CHỦ)
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                        {(!createdBooking || !createdBooking.billing || createdBooking.billing.depositAmount <= 0) && (
+                            <button className="btn-success-home" onClick={() => {
+                                handleResetBooking();
+                                navigate('/ca-nhan/tong-quan');
+                            }}>
+                                ĐÓNG (VỀ TRANG CHỦ)
+                            </button>
+                        )}
                     </div>
                 </div>
             )}

@@ -39,6 +39,7 @@ import com.autowashpro.backend.model.entity.BookingDetail;
 import com.autowashpro.backend.model.entity.Customer;
 import com.autowashpro.backend.model.entity.MembershipTier;
 import com.autowashpro.backend.model.entity.Promotion;
+import com.autowashpro.backend.model.entity.Reward;
 import com.autowashpro.backend.model.entity.ServicePrice;
 import com.autowashpro.backend.model.entity.TimeSlot;
 import com.autowashpro.backend.model.entity.User;
@@ -48,10 +49,12 @@ import com.autowashpro.backend.model.entity.WashBay;
 import com.autowashpro.backend.model.entity.WashSession;
 import com.autowashpro.backend.model.enums.BayStatus;
 import com.autowashpro.backend.model.enums.BookingStatus;
+import com.autowashpro.backend.model.enums.DepositStatus;
 import com.autowashpro.backend.model.enums.PaymentStatus;
 import com.autowashpro.backend.model.enums.PromotionDiscountType;
 import com.autowashpro.backend.model.enums.RewardType;
 import com.autowashpro.backend.model.enums.Role;
+import com.autowashpro.backend.model.enums.VoucherStatus;
 import com.autowashpro.backend.model.enums.WashSessionStatus;
 import com.autowashpro.backend.repository.AvailableSlotRepository;
 import com.autowashpro.backend.repository.BillingRepository;
@@ -59,6 +62,7 @@ import com.autowashpro.backend.repository.BookingDetailRepository;
 import com.autowashpro.backend.repository.BookingRepository;
 import com.autowashpro.backend.repository.CustomerRepository;
 import com.autowashpro.backend.repository.PromotionRepository;
+import com.autowashpro.backend.repository.RewardRepository;
 import com.autowashpro.backend.repository.ServicePriceRepository;
 import com.autowashpro.backend.repository.TimeSlotRepository;
 import com.autowashpro.backend.repository.UserRepository;
@@ -66,16 +70,17 @@ import com.autowashpro.backend.repository.VehicleRepository;
 import com.autowashpro.backend.repository.WashSessionRepository;
 import com.autowashpro.backend.utils.BookingCodeGenerator;
 import com.autowashpro.backend.utils.QrCodeGenerator;
+import com.autowashpro.backend.utils.VoucherCodeGenerator;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
 public class BookingService {
-    
 
     private static final int SLOT_DURATION = 60;
     private static final BigDecimal DEPOSIT_PERCENTAGE = new BigDecimal(30L);
+    private static Long CUSTOM_REWARD_FOR_VOUCHER = 4L;
 
     @Value("${email.sendbooking}")
     private boolean useEmailService;
@@ -94,10 +99,13 @@ public class BookingService {
     private final BookingMapper bookingMapper;
     private final BookingCodeGenerator bookingCodeGenerator;
     private final QrCodeGenerator qrCodeGenerator;
+    private final VoucherCodeGenerator voucherCodeGenerator;
     private final EmailService emailService;
     private final UserRepository userRepository;
     private final BillingService billingService;
     private final BillingRepository billingRepository;
+    private final RewardRepository rewardRepository;
+    private final NotificationService notificationService;
 
     @Autowired
     public BookingService(CustomerRepository customerRepository, ServicePriceRepository servicePriceRepository,
@@ -108,7 +116,9 @@ public class BookingService {
             BookingCodeGenerator bookingCodeGenerator, QrCodeGenerator qrCodeGenerator,
             EmailService emailService,
             UserRepository userRepository, PromotionService promotionService, BillingService billingService,
-            BillingRepository billingRepository, VoucherRepository voucherRepository) {
+            BillingRepository billingRepository, VoucherRepository voucherRepository,
+            VoucherCodeGenerator voucherCodeGenerator, RewardRepository rewardRepository,
+            NotificationService notificationService) {
         this.customerRepository = customerRepository;
         this.servicePriceRepository = servicePriceRepository;
         this.availableSlotRepository = availableSlotRepository;
@@ -122,11 +132,14 @@ public class BookingService {
         this.bookingMapper = bookingMapper;
         this.bookingCodeGenerator = bookingCodeGenerator;
         this.qrCodeGenerator = qrCodeGenerator;
+        this.voucherCodeGenerator = voucherCodeGenerator;
         this.emailService = emailService;
         this.userRepository = userRepository;
         this.billingService = billingService;
         this.billingRepository = billingRepository;
         this.voucherRepository = voucherRepository;
+        this.rewardRepository = rewardRepository;
+        this.notificationService = notificationService;
     }
 
     public SlotAvailabilityByDateResponse getAvailableTimeSlots(LocalDate date) {
@@ -362,27 +375,37 @@ public class BookingService {
         LocalDateTime startDateTime = bookingDay.atTime(startTimeSlot.getStartTime());
         LocalDateTime endDateTime = startDateTime.plusMinutes(totalDuration);
 
-        if (voucherRepository.findByVoucherCode(createBookingRequest.getVoucherCode()).isPresent()) {
-            Voucher voucher = voucherRepository.findByVoucherCode(createBookingRequest.getVoucherCode())
-                    .get();
-            log.info("BookingService - voucher found", voucher.getReward().getRewardName());
-            log.info("BookingService - totalDiscount before apply voucher: {}", totalDiscount);
-            log.info("BookingService - totalFinal before apply voucher: {}", totalFinalPrice);
-            if (voucher.getDiscountType().equals(RewardType.DISCOUNT_FLAT)) {
-                totalDiscount = totalDiscount.add(voucher.getDiscountValue());
-                totalFinalPrice = totalFinalPrice.subtract(voucher.getDiscountValue());
-            } else if (voucher.getDiscountType().equals(RewardType.DISCOUNT_PERCENTAGE)) {
-                BigDecimal discountAmount = totalOriginalPrice
-                        .multiply(voucher.getDiscountValue().divide(BigDecimal.valueOf(100L)));
-                totalDiscount = totalDiscount.add(discountAmount);
-                totalFinalPrice = totalFinalPrice.subtract(discountAmount);
-            } else if (voucher.getDiscountType().equals(RewardType.FREE_WASH)) {
-                totalDiscount = totalOriginalPrice;
-                totalFinalPrice = BigDecimal.ZERO;
-            }
-            log.info("BookingService - totalDiscount after apply voucher: {}", totalDiscount);
-            log.info("BookingService - totalFinal after apply voucher: {}", totalFinalPrice);
-        }
+        // if
+        // (voucherRepository.findByVoucherCode(createBookingRequest.getVoucherCode()).isPresent())
+        // {
+        // Voucher voucher =
+        // voucherRepository.findByVoucherCode(createBookingRequest.getVoucherCode())
+        // .get();
+        // log.info("BookingService - voucher found",
+        // voucher.getReward().getRewardName());
+        // log.info("BookingService - totalDiscount before apply voucher: {}",
+        // totalDiscount);
+        // log.info("BookingService - totalFinal before apply voucher: {}",
+        // totalFinalPrice);
+        // if (voucher.getDiscountType().equals(RewardType.DISCOUNT_FLAT)) {
+        // totalDiscount = totalDiscount.add(voucher.getDiscountValue());
+        // totalFinalPrice = totalFinalPrice.subtract(voucher.getDiscountValue());
+        // } else if (voucher.getDiscountType().equals(RewardType.DISCOUNT_PERCENTAGE))
+        // {
+        // //--- I fixed here, totalOriginalPrice --> totalFinalPrice
+        // BigDecimal discountAmount = totalFinalPrice
+        // .multiply(voucher.getDiscountValue().divide(BigDecimal.valueOf(100L)));
+        // totalDiscount = totalDiscount.add(discountAmount);
+        // totalFinalPrice = totalFinalPrice.subtract(discountAmount);
+        // } else if (voucher.getDiscountType().equals(RewardType.FREE_WASH)) {
+        // totalDiscount = totalOriginalPrice;
+        // totalFinalPrice = BigDecimal.ZERO;
+        // }
+        // log.info("BookingService - totalDiscount after apply voucher: {}",
+        // totalDiscount);
+        // log.info("BookingService - totalFinal after apply voucher: {}",
+        // totalFinalPrice);
+        // }
 
         CreateBookingResponse bookingResponse = CreateBookingResponse.builder()
                 .id(savedBooking.getId())
@@ -427,7 +450,8 @@ public class BookingService {
         savedBooking = bookingRepository.findByIdWithDetails(savedBooking.getId())
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
-        billingService.createPendingBilling(savedBooking.getId());
+        billingService.createPendingBilling(savedBooking.getId(), totalOriginalPrice, totalDiscount, totalFinalPrice);
+
         Billing savedBilling = billingRepository.findByBookingId(savedBooking.getId()).get();
         if (voucherRepository.findByVoucherCode(createBookingRequest.getVoucherCode()).isPresent()) {
             ApplyVoucherToBillingRequest request = ApplyVoucherToBillingRequest
@@ -486,9 +510,10 @@ public class BookingService {
     public void cancelCustomerBooking(CancelBookingRequest request) {
         String bookingCode = request.getBookingCode();
         String cancelReason = request.getCancelReason();
+
         log.info("BookingService - start canceling a booking with bookingCode: {}, reason: {}", bookingCode,
                 cancelReason);
-        Booking booking = bookingRepository.findByBookingCode(bookingCode)
+        Booking booking = bookingRepository.findByBookingCodeForCanceling(bookingCode)
                 .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy mã đặt lịch: " + bookingCode));
         if (booking.getStatus().equals(BookingStatus.COMPLETED)) {
             throw new RuntimeException("Không thể hủy lịch đặt đã hoàn thành");
@@ -496,10 +521,55 @@ public class BookingService {
             throw new RuntimeException("Không thể hủy lịch đặt đã được hủy");
         }
 
+        Billing billing = booking.getBilling();
+        Customer customer = booking.getCustomer();
+        MembershipTier customerMembershipTier = customer.getTier();
+        long minCancelHours = customerMembershipTier.getMinCancelHours().longValue();
+
+        if (billing.getDepositStatus().equals(DepositStatus.PENDING)) {
+            billing.setDepositStatus(DepositStatus.CANCELLED);
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate bookingDate = booking.getAvailableSlots().getFirst().getSlotDate();
+        LocalTime bookingTime = booking.getAvailableSlots().getFirst().getTimeSlot().getStartTime();
+        long hoursFromNowToBookingDate = ChronoUnit.HOURS.between(now, LocalDateTime.of(bookingDate, bookingTime));
+        log.info("cancelCustomerBooking() - It's {} hours till the booking's wash session starts.",
+                hoursFromNowToBookingDate);
+        log.info("cancelCustomerBooking() - the minimum time to get deposit is {}.", minCancelHours);
+        if (hoursFromNowToBookingDate < minCancelHours) {
+            log.info("cancelCustomerBooking() - too late for deposit refund, better luck next time!");
+        } else {
+            BigDecimal depositAmount = billing.getDepositAmount();
+            log.info("cancelCustomerBooking() - Deposit amount is {}, how are we gonna exchange to vouchers??",
+                    depositAmount);
+
+            BigDecimal discountValue = depositAmount
+                    .multiply(customerMembershipTier.getPercentageRefund())
+                    .divide(new BigDecimal(100L));
+            Reward customReward = rewardRepository.findById(CUSTOM_REWARD_FOR_VOUCHER)
+                    .orElseThrow(() -> new RuntimeException("Dưới Database chưa có Custom Reward"));
+
+            Voucher newVoucher = Voucher
+                    .builder()
+                    .reward(customReward)
+                    .voucherCode(voucherCodeGenerator.generate())
+                    .discountType(RewardType.DISCOUNT_FLAT)
+                    .discountValue(discountValue)
+                    .customer(customer)
+                    .status(VoucherStatus.ACTIVE)
+                    .expiresAt(LocalDateTime.now().plusDays(customReward.getValidityDays()))
+                    .build();
+            voucherRepository.save(newVoucher);
+            log.info("cancelCustomerBooking() - Voucher exchanged!...");
+            log.info("cancelCustomerBooking() - Sorry, we are testing...");
+        }
+
         List<AvailableSlot> availableSlots = booking.getAvailableSlots();
         log.info("BookingService - start destructing booking slots occupied before: {} slots", availableSlots.size());
         for (AvailableSlot availableSlot : availableSlots) {
-            log.info("BookingService - destruct booking from availableSlot: {}", availableSlot.getId());
+            log.info("BookingService - destruct booking from availableSlot: {}",
+                    availableSlot.getId());
             availableSlot.setBooking(null);
             availableSlotRepository.save(availableSlot);
         }
@@ -507,15 +577,16 @@ public class BookingService {
         List<WashSession> washSessions = booking.getWashSessions();
         log.info("BookingService - start canceling washSessions of booking {}, {} washSessions", bookingCode,
                 washSessions.size());
-        for (WashSession washSession: washSessions) {
+        for (WashSession washSession : washSessions) {
             log.info("BookingService - cancle washSession: {}", washSession.getId());
             washSession.setStatus(WashSessionStatus.CANCELLED);
             washSessionRepository.save(washSession);
         }
 
-        Billing billing = booking.getBilling();
-        log.info("BookngService - start canceling Billing attached to Booking: {}", billing.getId());
+        log.info("BookngService - start canceling Billing attached to Booking: {}",
+                billing.getId());
         billing.setPaymentStatus(PaymentStatus.CANCELLED);
+        billing.setFinalAmount(BigDecimal.ZERO);
         billingRepository.save(billing);
 
         log.info("BookingService - start canceling booking: {}", bookingCode);
@@ -523,8 +594,17 @@ public class BookingService {
         booking.setCancelReason(cancelReason);
         log.info("BookingService - complete canceling a booking: {}", bookingCode);
         bookingRepository.save(booking);
+
+        
     }
 
+    @Transactional(readOnly = true)
+    public List<BookingResponse> getCustomerDepositPendingBookings(String email) {
+        Customer customer = customerRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Không tìm thấy khách hàng với email: " + email));
+        List<Booking> pendingDepositBookings = bookingRepository.getPendingDepositBookings(customer.getId());
+        return bookingMapper.toBookingResponses(pendingDepositBookings);
+    }
 }
 
 /**

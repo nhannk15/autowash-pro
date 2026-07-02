@@ -1,0 +1,189 @@
+/* ===== Customer ===== */
+
+/* ─── Page wrapper ─── */
+.customer-page {
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* ─── Toolbar ─── */
+.customer-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.customer-toolbar-select {
+    width: 240px !important;
+}
+
+.customer-toolbar-search {
+    width: 220px !important;
+    border-radius: 8px !important;
+}
+
+.customer-toolbar-btn {
+    border-radius: 8px !important;
+    font-weight: 500;
+}
+
+/* ─── Table wrapper ─── */
+.customer-table-wrapper .ant-table {
+    border-radius: 12px !important;
+    overflow: hidden;
+    border: 1px solid #e8e8e8;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.customer-table-wrapper .ant-table-thead > tr > th {
+    background: #fafafa !important;
+    color: #8c8c8c !important;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #e8e8e8 !important;
+}
+
+.customer-table-wrapper .ant-table-tbody > tr > td {
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f5f5f5 !important;
+}
+
+.customer-table-wrapper .ant-table-tbody > tr:hover > td {
+    background: #f7f9ff !important;
+}
+
+.customer-table-wrapper .ant-table-tbody > tr:last-child > td {
+    border-bottom: none !important;
+}
+
+/* Pagination */
+.customer-table-wrapper .ant-pagination {
+    font-family: system-ui, -apple-system, sans-serif;
+    margin: 16px 0 4px !important;
+}
+
+.customer-table-wrapper .ant-pagination-item {
+    border-radius: 8px !important;
+    font-family: system-ui, -apple-system, sans-serif;
+    transition: all 0.2s ease;
+}
+
+.customer-table-wrapper .ant-pagination-item-active {
+    background: #4096ff !important;
+    border-color: #4096ff !important;
+}
+
+.customer-table-wrapper .ant-pagination-item-active a {
+    color: #fff !important;
+}
+
+.customer-table-wrapper .ant-pagination-prev .ant-pagination-item-link,
+.customer-table-wrapper .ant-pagination-next .ant-pagination-item-link {
+    border-radius: 8px !important;
+}
+
+/* ─── Cell renderers ─── */
+.customer-cell-name {
+    font-weight: 500;
+    color: #1a1a2e;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.customer-cell-text {
+    color: #434343;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.customer-cell-empty {
+    color: #bfbfbf;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-style: italic;
+}
+
+/* Vehicle tag */
+.customer-vehicle-tag {
+    font-family: system-ui, -apple-system, sans-serif !important;
+    font-size: 12px !important;
+    border-radius: 6px !important;
+    cursor: default !important;
+}
+
+/* Tier tag */
+.customer-tier-tag {
+    font-family: system-ui, -apple-system, sans-serif !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    border-radius: 6px !important;
+    padding: 2px 8px !important;
+}
+
+/* Points */
+.customer-points {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 500;
+    color: #1a1a2e;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.customer-points-icon {
+    color: #fadb14 !important;
+    font-size: 14px;
+}
+
+/* Status */
+.customer-status-active {
+    color: #52c41a;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+}
+
+.customer-status-locked {
+    color: #ff4d4f;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+}
+
+/* ─── Action buttons ─── */
+.customer-action-btn {
+    border-radius: 6px !important;
+    transition: all 0.2s ease !important;
+}
+
+.customer-action-btn--recover:not([disabled]) {
+    color: #52c41a !important;
+    border-color: #b7eb8f !important;
+}
+
+.customer-action-btn--recover:not([disabled]):hover {
+    background: #f6ffed !important;
+    border-color: #52c41a !important;
+}
+
+.customer-action-btn--recover[disabled] {
+    opacity: 0.35 !important;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+    .customer-toolbar {
+        justify-content: flex-start;
+    }
+
+    .customer-toolbar-select,
+    .customer-toolbar-search {
+        width: 100% !important;
+    }
+
+    .customer-toolbar-btn {
+        width: 100%;
+    }
+}

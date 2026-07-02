@@ -21,39 +21,77 @@ public interface BillingRepository extends JpaRepository<Billing, Long> {
     }
 
     @Query("""
-            SELECT SUM(billing.finalAmount) FROM Billing billing
-            WHERE billing.paymentStatus = com.autowashpro.backend.model.enums.PaymentStatus.PAID
-            AND billing.paidAt >= :startOfDay
-            AND billing.paidAt < :nextDay
+            SELECT SUM(billing.finalAmount + billing.depositAmount) FROM Billing billing
+            WHERE
+                (billing.paymentStatus = com.autowashpro.backend.model.enums.PaymentStatus.PAID
+                    AND billing.paidAt >= :startOfDay
+                    AND billing.paidAt < :nextDay)
+            OR (billing.depositStatus = com.autowashpro.backend.model.enums.DepositStatus.PAID
+                AND billing.depositPaidAt >= :startTime AND billing.depositPaidAt <= :endTime)
             """)
     BigDecimal sumRevenueByPaidDateRange(@Param("startOfDay") LocalDateTime startOfDay,
             @Param("nextDay") LocalDateTime nextDay);
 
     @Query("""
-            SELECT SUM(billing.finalAmount) FROM Billing billing
-            WHERE billing.paymentStatus = com.autowashpro.backend.model.enums.PaymentStatus.PAID
+            SELECT SUM(billing.finalAmount + billing.depositAmount) FROM Billing billing
+            WHERE
+                billing.paymentStatus = com.autowashpro.backend.model.enums.PaymentStatus.PAID
+            OR billing.depositStatus = com.autowashpro.backend.model.enums.DepositStatus.PAID
             """)
     BigDecimal sumRevenue();
 
     @Query("""
             SELECT billing FROM Billing billing
-            WHERE billing.paymentStatus = com.autowashpro.backend.model.enums.PaymentStatus.PAID
+            WHERE
+                billing.paymentStatus = com.autowashpro.backend.model.enums.PaymentStatus.PAID
+            OR billing.depositStatus = com.autowashpro.backend.model.enums.DepositStatus.PAID
             ORDER BY billing.paidAt
             """)
     List<Billing> getRecentTransactions();
 
     @Query("""
             SELECT billing FROM Billing billing
-            WHERE billing.paymentStatus = com.autowashpro.backend.model.enums.PaymentStatus.PAID 
-            AND billing.paidAt >= :startTime AND billing.paidAt <= :endTime
+            WHERE
+                (billing.paymentStatus = com.autowashpro.backend.model.enums.PaymentStatus.PAID
+                    AND billing.paidAt >= :startTime AND billing.paidAt <= :endTime)
+            OR (billing.paymentStatus != com.autowashpro.backend.model.enums.PaymentStatus.PAID
+                AND billing.depositStatus = com.autowashpro.backend.model.enums.DepositStatus.PAID
+                AND billing.depositPaidAt >= :startTime AND billing.depositPaidAt <= :endTime)
             """)
     List<Billing> findBillingsByStartDateAndEndDate(@Param("startTime") LocalDateTime startTime,
             @Param("endTime") LocalDateTime endTime);
 
     @Query("""
             SELECT billing FROM Billing billing
-            WHERE billing.paymentStatus = com.autowashpro.backend.model.enums.PaymentStatus.PAID 
+            WHERE
+                billing.paymentStatus = com.autowashpro.backend.model.enums.PaymentStatus.PAID
+            OR billing.depositStatus = com.autowashpro.backend.model.enums.DepositStatus.PAID
             """)
     List<Billing> findAllPaidBillings();
+
+    @Query("""
+            SELECT billing FROM Billing billing
+            WHERE
+                billing.paymentStatus = com.autowashpro.backend.model.enums.PaymentStatus.PAID
+            OR billing.depositStatus = com.autowashpro.backend.model.enums.DepositStatus.PAID
+            """)
+    List<Billing> findByOneDateOnly(LocalDateTime startTime, LocalDateTime endTime);
+
+    @Query("""
+            SELECT billing FROM Billing billing
+            WHERE
+                billing.paymentStatus = com.autowashpro.backend.model.enums.PaymentStatus.PENDING
+            AND billing.depositStatus = com.autowashpro.backend.model.enums.DepositStatus.PENDING
+            """)
+    List<Billing> findDepositUnpaidBillings();
+
+    @Query(value = """
+            SELECT * FROM billings b
+            WHERE b.payment_status = 'PENDING'
+            AND b.deposit_status = 'PENDING'
+            ORDER BY COALESCE(b.paid_at, b.deposit_paid_at)
+            LIMIT 1
+            """, nativeQuery = true)
+    Optional<Billing> findMinBilling();
 
 }

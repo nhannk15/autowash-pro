@@ -74,15 +74,15 @@ public class BookingController {
         return ResponseEntity.status(HttpStatus.OK).body(bookingService.getCustomerAllBookings(email));
     }
 
-    @PostMapping("/api/staff/cancel-booking")
+    @PostMapping("/api/cancel-booking")
     public ResponseEntity<Void> cancleBooking(@RequestBody CancelBookingRequest request) {
         bookingService.cancelCustomerBooking(request);
         return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 
     @GetMapping("/api/bookings/pending-deposit")
-    public ResponseEntity<Void> getAllDepositPendingBookings() {
-        return null;
+    public ResponseEntity<List<BookingResponse>> getAllDepositPendingBookings(@AuthenticationPrincipal String email) {
+        return ResponseEntity.ok().body(bookingService.getCustomerDepositPendingBookings(email));
     }
 
 }

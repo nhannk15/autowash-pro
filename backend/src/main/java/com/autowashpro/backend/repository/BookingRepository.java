@@ -54,7 +54,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> getUpcomingBookingsTillNow(
             @Param("today") LocalDate today,
             @Param("cutOffTime") LocalTime cutOffTime);
-    
+
     @Query("""
             SELECT booking FROM Booking booking
             WHERE booking.bookingCode = :bookingCode
@@ -110,4 +110,42 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             """)
     List<Booking> findBookingsAccordingToDate(@Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
+
+    @Query("""
+            SELECT 
+                booking
+            FROM Booking booking
+            JOIN booking.billing billing
+            JOIN booking.customer customer
+            WHERE 
+                customer.id = :customerId
+                AND booking.status = com.autowashpro.backend.model.enums.BookingStatus.PENDING
+                AND billing.depositStatus = com.autowashpro.backend.model.enums.DepositStatus.PENDING
+            """)
+    List<Booking> getPendingDepositBookings(@Param("customerId") Long customerId);
+
+    @Query("""
+            SELECT DISTINCT b FROM Booking b
+            JOIN FETCH b.customer
+            JOIN FETCH b.vehicle v
+            JOIN FETCH v.vehicleType
+            JOIN FETCH b.availableSlots a
+            JOIN FETCH a.timeSlot
+            JOIN FETCH a.washBay
+            JOIN FETCH b.bookingDetails bd
+            JOIN FETCH bd.servicePrice sp
+            JOIN FETCH sp.service
+            WHERE a.slotDate = :date
+            AND b.status = :status
+            AND b.reminderSent = false
+            """)
+    List<Booking> findBookingsForReminder(
+            @Param("date") LocalDate date,
+            @Param("status") BookingStatus status);
+
+    @Query("""
+            SELECT booking FROM Booking booking
+            WHERE booking.bookingCode = :bookingCode
+            """)
+    Optional<Booking> findByBookingCodeForCanceling(@Param("bookingCode") String bookingCode);
 }

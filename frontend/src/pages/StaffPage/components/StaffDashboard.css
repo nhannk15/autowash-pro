@@ -49,10 +49,10 @@
     margin-right: 12px;
 }
 
-.text-blue { color: #2f54eb; }
+.text-blue   { color: #2f54eb; }
 .text-orange { color: #fa8c16; }
-.text-green { color: #52c41a; }
-.text-gold { color: #faad14; }
+.text-green  { color: #52c41a; }
+.text-gold   { color: #faad14; }
 
 /* ===== Tình trạng khoang (Bays) ===== */
 .dashboard__bays-card {
@@ -66,6 +66,17 @@
     font-family: system-ui, -apple-system, sans-serif;
 }
 
+.dashboard__bays-card-title {
+    margin: 0 !important;
+}
+
+/* --- Bay Loading --- */
+.dashboard__bays-loading {
+    text-align: center;
+    padding: 40px;
+}
+
+/* --- Bay Card --- */
 .bay-card {
     border: 1px solid #e8e8e8;
     border-radius: 12px;
@@ -142,12 +153,30 @@
     line-height: 1.5;
 }
 
+.bay-card__vehicle-label {
+    margin-right: 4px;
+}
+
+.bay-card__customer-label {
+    margin-right: 4px;
+    font-size: 13px;
+}
+
 .bay-card__service-tag {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 4px;
     margin-bottom: 8px;
+}
+
+.bay-card__tag {
+    margin: 2px;
+}
+
+.bay-card__tag--more {
+    margin: 2px;
+    cursor: pointer;
 }
 
 .bay-card__actions {
@@ -161,6 +190,7 @@
     font-size: 13px;
     background: #2f54eb;
     border: none;
+    transform: translateY(-5px);
 }
 
 .bay-card__complete-btn:hover {
@@ -174,6 +204,7 @@
     font-size: 13px;
     background: #52c41a;
     border: none;
+    transform: translateY(-5px);
 }
 
 .bay-card__payment-btn:hover {
@@ -200,7 +231,14 @@
     border-color: #ffccc7;
 }
 
-/* ===== Timeline & Actions ===== */
+/* ===== Right Column ===== */
+
+/* --- Quick Actions --- */
+.dashboard__quick-actions {
+    margin-bottom: 24px;
+}
+
+/* ===== Timeline & Cards ===== */
 .dashboard__timeline-card,
 .dashboard__actions-card,
 .dashboard__notifications-card {
@@ -219,11 +257,41 @@
     font-family: system-ui, -apple-system, sans-serif;
 }
 
+.dashboard__card-title {
+    margin: 0 !important;
+}
+
 .timeline-item-content {
     padding-bottom: 8px;
     font-family: system-ui, -apple-system, sans-serif;
 }
 
+/* --- Timeline Loading / Empty --- */
+.dashboard__timeline-loading {
+    text-align: center;
+    padding: 20px;
+}
+
+/* --- Notifications --- */
+.notifications-list__item {
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.notifications-list__message {
+    margin-bottom: 4px;
+}
+
+.notifications-list__message-text {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.notifications-list__time {
+    font-size: 12px;
+}
+
+/* --- Action Buttons --- */
 .action-btn {
     font-weight: 600;
     font-family: system-ui, -apple-system, sans-serif;
@@ -232,7 +300,7 @@
 }
 
 .action-btn--checkin {
-    background: #52c41a;
+    background: #52c41a !important;
     border: none;
 }
 
@@ -241,10 +309,14 @@
 }
 
 .action-btn--walkin {
-    border-color: #2f54eb;
-    color: #2f54eb;
+    border: none;
 }
 
 .action-btn--walkin:hover {
-    background: #f0f5ff !important;
+    background: #0a4ac8 !important;
+}
+
+/* --- Walk-in Modal --- */
+.walkin-modal__body {
+    margin-top: 16px;
 }
