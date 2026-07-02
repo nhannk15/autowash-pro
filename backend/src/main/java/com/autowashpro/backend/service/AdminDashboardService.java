@@ -1,6 +1,7 @@
 package com.autowashpro.backend.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -20,6 +21,7 @@ import com.autowashpro.backend.mapper.BillingMapper;
 import com.autowashpro.backend.mapper.PromotionUsageMapper;
 import com.autowashpro.backend.model.dto.DashboardSummaryResponse;
 import com.autowashpro.backend.model.dto.DeductionChartItem;
+import com.autowashpro.backend.model.dto.DeductionSummaryResponse;
 import com.autowashpro.backend.model.dto.PeakHourStats;
 import com.autowashpro.backend.model.dto.PromotionPerformanceItem;
 import com.autowashpro.backend.model.dto.PromotionUsageStats;
@@ -28,6 +30,7 @@ import com.autowashpro.backend.model.dto.RevenueDataRequest;
 import com.autowashpro.backend.model.dto.RevenueDataResponse;
 import com.autowashpro.backend.model.dto.ServiceUsageStats;
 import com.autowashpro.backend.model.entity.Billing;
+import com.autowashpro.backend.model.entity.Booking;
 import com.autowashpro.backend.model.entity.Promotion;
 import com.autowashpro.backend.model.entity.PromotionUsage;
 import com.autowashpro.backend.model.entity.Voucher;
@@ -42,6 +45,7 @@ import com.autowashpro.backend.repository.BookingRepository;
 import com.autowashpro.backend.repository.CustomerRepository;
 import com.autowashpro.backend.repository.PromotionUsageRepository;
 import com.autowashpro.backend.repository.ServiceRepository;
+import com.autowashpro.backend.repository.VoucherRepository;
 import com.autowashpro.backend.repository.WashBayRepository;
 import com.autowashpro.backend.repository.WashSessionRepository;
 
@@ -60,13 +64,14 @@ public class AdminDashboardService {
     private final WashSessionRepository washSessionRepository;
     private final PromotionUsageRepository promotionUsageRepository;
     private final PromotionUsageMapper promotionUsageMapper;
+    private final VoucherRepository voucherRepository;
 
     @Autowired
     public AdminDashboardService(BillingRepository billingRepository, BookingRepository bookingRepository,
             CustomerRepository customerRepository, WashBayRepository washBayRepository,
             BillingMapper billingMapper, ServiceRepository serviceRepository,
             WashSessionRepository washSessionRepository, PromotionUsageRepository promotionUsageRepository,
-            PromotionUsageMapper promotionUsageMapper) {
+            PromotionUsageMapper promotionUsageMapper, VoucherRepository voucherRepository) {
         this.billingRepository = billingRepository;
         this.bookingRepository = bookingRepository;
         this.customerRepository = customerRepository;
@@ -76,6 +81,7 @@ public class AdminDashboardService {
         this.washSessionRepository = washSessionRepository;
         this.promotionUsageRepository = promotionUsageRepository;
         this.promotionUsageMapper = promotionUsageMapper;
+        this.voucherRepository = voucherRepository;
     }
 
     @Transactional(readOnly = true)
@@ -357,6 +363,7 @@ public class AdminDashboardService {
         return new ArrayList<>(revenueMap.values());
     }
 
+    @Transactional(readOnly = true)
     public List<ServiceUsageStats> getServiceUsagesStats(RevenueDataRequest request) {
         if (request.getStartDate() != null && request.getEndDate() != null) {
             LocalDate startDate = request.getStartDate();
@@ -387,6 +394,7 @@ public class AdminDashboardService {
 
     }
 
+    @Transactional(readOnly = true)
     public List<PeakHourStats> getPeakHours(RevenueDataRequest request) {
         if (request.getStartDate() != null && request.getEndDate() != null) {
             LocalDate startDate = request.getStartDate();
@@ -417,6 +425,7 @@ public class AdminDashboardService {
 
     }
 
+    @Transactional(readOnly = true)
     public List<PromotionUsageStats> getPromotionUsageStats(RevenueDataRequest request) {
 
         if (request.getStartDate() != null && request.getEndDate() != null) {
@@ -456,6 +465,7 @@ public class AdminDashboardService {
 
     }
 
+    @Transactional(readOnly = true)
     public HashMap<String, Long> countPromotionUsage(RevenueDataRequest request) {
         long usageCount = 0;
 
@@ -492,7 +502,7 @@ public class AdminDashboardService {
         return mapResponse;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public List<DeductionChartItem> getPromotionDeductionChartItems(RevenueDataRequest request) {
 
         if (request.getStartDate() != null && request.getEndDate() != null) {
@@ -606,7 +616,10 @@ public class AdminDashboardService {
         BigDecimal originalRevenue = billings
                 .stream()
                 .map((billing) -> {
-                    if (billing.getDepositStatus().equals(DepositStatus.PAID) && billing.getPaymentStatus().equals(PaymentStatus.CANCELLED)) {
+                    if (billing.getDepositStatus() == null) {
+                        return billing.getFinalAmount();
+                    } else if (billing.getDepositStatus().equals(DepositStatus.PAID)
+                            && billing.getPaymentStatus().equals(PaymentStatus.CANCELLED)) {
                         return billing.getDepositAmount();
                     } else {
                         return billing.getOriginalAmount();
@@ -618,9 +631,13 @@ public class AdminDashboardService {
         BigDecimal finalRevenue = billings
                 .stream()
                 .map((billing) -> {
-                    if (billing.getDepositStatus().equals(DepositStatus.PAID) && billing.getPaymentStatus().equals(PaymentStatus.CANCELLED)) {
+                    if (billing.getDepositStatus() == null) {
+                        return billing.getFinalAmount();
+                    } else if (billing.getDepositStatus().equals(DepositStatus.PAID)
+                            && billing.getPaymentStatus().equals(PaymentStatus.CANCELLED)) {
                         return billing.getDepositAmount();
-                    } else if (billing.getDepositStatus().equals(DepositStatus.PAID) && billing.getPaymentStatus().equals(PaymentStatus.PENDING)) {
+                    } else if (billing.getDepositStatus().equals(DepositStatus.PAID)
+                            && billing.getPaymentStatus().equals(PaymentStatus.PENDING)) {
                         return billing.getDepositAmount();
                     } else {
                         return billing.getFinalAmount().add(billing.getDepositAmount());
@@ -709,7 +726,7 @@ public class AdminDashboardService {
 
     @Transactional(readOnly = true)
     public List<PromotionPerformanceItem> getPromotionPerformance(RevenueDataRequest request) {
-        
+
         LocalDate startDate = request.getStartDate();
         LocalDate endDate = request.getEndDate();
         Month month = request.getMonth();
@@ -732,6 +749,168 @@ public class AdminDashboardService {
         } else {
             return List.of();
         }
+    }
+
+    @Transactional(readOnly = true)
+    public DeductionSummaryResponse getDeductionSummaryReport(RevenueDataRequest request) {
+        LocalDate startDate = request.getStartDate();
+        LocalDate endDate = request.getEndDate();
+        Month month = request.getMonth();
+        int year = request.getYear();
+
+        DeductionSummaryResponse deductionSummaryResponse = null;
+
+        if (startDate != null && endDate != null) {
+            LocalDateTime startTime = startDate.atStartOfDay();
+            LocalDateTime endTime = startDate.atTime(23, 59, 59);
+
+            List<Billing> billings = billingRepository.findBillingsByStartDateAndEndDate(startTime, endTime);
+            deductionSummaryResponse = calculateDeductionSummaryResponse(billings);
+
+            long totalPromotionUsages = promotionUsageRepository.countFromStartTimeToEndTime(startTime, endTime);
+            deductionSummaryResponse.setTotalPromotionUsages(totalPromotionUsages);
+
+            long totalVoucherUsages = voucherRepository.countUsedVouchersFromStartTimeToEndTime(startTime, endTime);
+            deductionSummaryResponse.setTotalVoucherUsages(totalVoucherUsages);
+
+        } else if (month != null && year != 0) {
+            LocalDateTime startTime = LocalDateTime.of(year, month.getValue(), 1, 0, 0, 0);
+            LocalDateTime endTime = startTime.plusMonths(1L).minusSeconds(1L);
+
+            List<Billing> billings = billingRepository.findBillingsByStartDateAndEndDate(startTime, endTime);
+            deductionSummaryResponse = calculateDeductionSummaryResponse(billings);
+
+            long totalPromotionUsages = promotionUsageRepository.countFromStartTimeToEndTime(startTime, endTime);
+            deductionSummaryResponse.setTotalPromotionUsages(totalPromotionUsages);
+
+            long totalVoucherUsages = voucherRepository.countUsedVouchersFromStartTimeToEndTime(startTime, endTime);
+            deductionSummaryResponse.setTotalVoucherUsages(totalVoucherUsages);
+
+            return deductionSummaryResponse;
+        } else if (year != 0) {
+            LocalDateTime startTime = LocalDateTime.of(year, 1, 1, 0, 0, 0);
+            LocalDateTime endTime = startTime.plusYears(1L).minusSeconds(1L);
+
+            List<Billing> billings = billingRepository.findBillingsByStartDateAndEndDate(startTime, endTime);
+            deductionSummaryResponse = calculateDeductionSummaryResponse(billings);
+
+            long totalPromotionUsages = promotionUsageRepository.countFromStartTimeToEndTime(startTime, endTime);
+            deductionSummaryResponse.setTotalPromotionUsages(totalPromotionUsages);
+
+            long totalVoucherUsages = voucherRepository.countUsedVouchersFromStartTimeToEndTime(startTime, endTime);
+            deductionSummaryResponse.setTotalVoucherUsages(totalVoucherUsages);
+
+            return deductionSummaryResponse;
+        } else if (year == 0) {
+            List<Billing> billings = billingRepository.findAllPaidBillings();
+            deductionSummaryResponse = calculateDeductionSummaryResponse(billings);
+
+            long totalPromotionUsages = promotionUsageRepository.count();
+            deductionSummaryResponse.setTotalPromotionUsages(totalPromotionUsages);
+
+            long totalVoucherUsages = voucherRepository.countAllUsedVouchers();
+            deductionSummaryResponse.setTotalVoucherUsages(totalVoucherUsages);
+
+        }
+        return deductionSummaryResponse;
+    }
+
+    private DeductionSummaryResponse calculateDeductionSummaryResponse(List<Billing> billings) {
+        BigDecimal totalOriginalRevenue = billings
+                .stream()
+                .map(Billing::getOriginalAmount)
+                .reduce(BigDecimal::add)
+                .orElse(BigDecimal.ZERO);
+
+        BigDecimal totalFinalRevenue = billings
+                .stream()
+                .map((billing) -> {
+                    if (billing.getDepositStatus() == null) {
+                        return billing.getFinalAmount();
+                    } else if (billing.getDepositStatus().equals(DepositStatus.PAID)
+                            && billing.getPaymentStatus().equals(PaymentStatus.PAID)) {
+                        return billing.getFinalAmount().add(billing.getDepositAmount());
+                    } else if (billing.getDepositStatus().equals(DepositStatus.PAID)
+                            && !billing.getPaymentStatus().equals(PaymentStatus.PAID)) {
+                        return billing.getDepositAmount();
+                    } else {
+                        return BigDecimal.ZERO;
+                    }
+                })
+                .reduce(BigDecimal::add)
+                .orElse(BigDecimal.ZERO);
+
+        BigDecimal totalDiscount = billings
+                .stream()
+                .map(Billing::getDiscountAmount)
+                .reduce(BigDecimal::add)
+                .orElse(BigDecimal.ZERO);
+
+        BigDecimal totalPromotionDiscount = billings
+                .stream()
+                .map((billing) -> {
+                    Booking booking = billing.getBooking();
+                    Promotion promotion = booking.getPromotion();
+                    if (promotion == null) {
+                        return BigDecimal.ZERO;
+                    } else if (promotion.getDiscountType().equals(PromotionDiscountType.FIXED_AMOUNT)) {
+                        return promotion.getDiscountValue();
+                    } else if (promotion.getDiscountType().equals(PromotionDiscountType.PERCENTAGE)) {
+                        return billing.getOriginalAmount().multiply(promotion.getDiscountValue())
+                                .divide(new BigDecimal(100L));
+                    } else {
+                        return BigDecimal.ZERO;
+                    }
+                })
+                .reduce(BigDecimal::add)
+                .orElse(BigDecimal.ZERO);
+
+        BigDecimal totalVoucherDiscount = billings
+                .stream()
+                .map((billing) -> {
+                    Voucher voucher = billing.getVoucher();
+                    if (voucher == null) {
+                        return BigDecimal.ZERO;
+                    } else if (voucher.getDiscountType().equals(RewardType.DISCOUNT_FLAT)) {
+                        return voucher.getDiscountValue();
+                    } else if (voucher.getDiscountType().equals(RewardType.DISCOUNT_PERCENTAGE)) {
+                        Promotion promotion = billing.getBooking().getPromotion();
+                        if (promotion == null) {
+                            BigDecimal tempFinalAmount = billing.getOriginalAmount()
+                                    .subtract(billing.getDepositAmount());
+                            return tempFinalAmount.multiply(voucher.getDiscountValue())
+                                    .divide(new BigDecimal(100L));
+
+                        } else if (promotion.getDiscountType().equals(PromotionDiscountType.FIXED_AMOUNT)) {
+                            BigDecimal tempFinalAmount = billing.getOriginalAmount()
+                                    .subtract(promotion.getDiscountValue());
+                            return tempFinalAmount.multiply(voucher.getDiscountValue())
+                                    .divide(new BigDecimal(100L));
+
+                        } else if (promotion.getDiscountType().equals(PromotionDiscountType.PERCENTAGE)) {
+                            BigDecimal tempFinalAmount = billing.getOriginalAmount()
+                                    .multiply(promotion.getDiscountValue()).divide(new BigDecimal(100L));
+                            return tempFinalAmount.multiply(voucher.getDiscountValue())
+                                    .divide(new BigDecimal(100L));
+
+                        } else {
+                            return BigDecimal.ZERO;
+                        }
+                    } else {
+                        return BigDecimal.ZERO;
+                    }
+                })
+                .reduce(BigDecimal::add)
+                .orElse(BigDecimal.ZERO);
+
+        BigDecimal discountRate = totalDiscount.multiply(new BigDecimal(100L)).divide(totalOriginalRevenue, 2, RoundingMode.HALF_UP);
+
+        long totalPromotionUsages = 0;
+
+        long totalVoucherUsages = 0;
+
+        return new DeductionSummaryResponse(totalOriginalRevenue, totalFinalRevenue, totalDiscount,
+                totalPromotionDiscount, totalVoucherDiscount, discountRate, totalPromotionUsages, totalVoucherUsages);
     }
 
 }
