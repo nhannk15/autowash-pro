@@ -303,7 +303,7 @@ export default function Overview() {
             render: (_, record) => {
                 const finalAmount = record.billing?.finalAmount || 0;
                 const depositAmount = record.billing?.depositAmount || 0;
-                const remaining = Math.max(0, finalAmount - depositAmount);
+                const remaining = Math.max(0, finalAmount);
                 return (
                     <Space direction="vertical" size={0}>
                         <Text strong style={{ color: '#52c41a' }}>
