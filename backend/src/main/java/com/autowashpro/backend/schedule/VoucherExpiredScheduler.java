@@ -26,7 +26,7 @@ public class VoucherExpiredScheduler {
 
     @Scheduled(cron = "0 * * * * *")
     public void scheduledCheckVoucherExpire() {
-        log.info("scheduledCheckVoucherExpire() - running...");
+        // log.info("scheduledCheckVoucherExpire() - running...");
         LocalDateTime now = LocalDateTime.now();
         List<Voucher> expiredVouchers = voucherRepository.findAllExpiredVoucher(now);
         if (expiredVouchers.size() != 0) {
