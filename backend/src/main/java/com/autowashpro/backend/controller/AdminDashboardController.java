@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.autowashpro.backend.model.dto.DashboardSummaryResponse;
 import com.autowashpro.backend.model.dto.DeductionChartItem;
+import com.autowashpro.backend.model.dto.DeductionSummaryResponse;
 import com.autowashpro.backend.model.dto.PeakHourStats;
 import com.autowashpro.backend.model.dto.PromotionPerformanceItem;
 import com.autowashpro.backend.model.dto.PromotionUsageStats;
@@ -77,6 +78,11 @@ public class AdminDashboardController {
     @PostMapping("/api/admin/dashboard/promotion-performance")
     public ResponseEntity<List<PromotionPerformanceItem>> getPromotionPerformanceItems(@RequestBody RevenueDataRequest request) {
         return ResponseEntity.ok().body(adminDashboardService.getPromotionPerformance(request));
+    }
+
+    @PostMapping("/api/admin/dashboard/deduction-summary")
+    public ResponseEntity<DeductionSummaryResponse> getDeductionSummary(@RequestBody RevenueDataRequest request) {
+        return ResponseEntity.ok().body(adminDashboardService.getDeductionSummaryReport(request));
     }
     
 }
