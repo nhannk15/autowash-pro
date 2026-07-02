@@ -213,12 +213,7 @@ export default function Checkin() {
     const calculateTotal = () => {
         if (!selectedCustomer) return 0;
         const billingFinal = getBillingFinalAmount(selectedCustomer);
-        if (billingFinal != null) return billingFinal;
-        const services = getServices(selectedCustomer);
-        const promotions = getPromotions(selectedCustomer);
-        const subtotal = services.reduce((acc, s) => acc + s.price, 0);
-        const discount = promotions.reduce((acc, p) => acc + p.discount, 0);
-        return subtotal - discount;
+        return billingFinal != null ? billingFinal : 0;
     };
 
     return (
@@ -330,7 +325,7 @@ export default function Checkin() {
                 const depositAmount = getDepositAmount(selectedCustomer);
                 const billingDiscount = getBillingDiscountAmount(selectedCustomer);
                 const promotionTotalDiscount = promotions.reduce((acc, p) => acc + p.discount, 0);
-                const voucherDiscountAmount = billingDiscount > 0 ? billingDiscount - promotionTotalDiscount : 0;
+                const voucherDiscountAmount = Math.max(0, billingDiscount - promotionTotalDiscount);
 
                 return (
                     <Row gutter={[32, 24]}>
