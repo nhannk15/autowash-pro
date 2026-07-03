@@ -134,6 +134,17 @@ public class CustomerService {
         if (customer.getPhoneNumber() != null && repository.existsByPhoneNumber(customer.getPhoneNumber())) {
             throw new IllegalArgumentException("Số điện thoại đã được sử dụng!");
         }
+        // Validate unique email
+        if (customer.getEmail() != null && !customer.getEmail().isBlank()) {
+            Optional<User> existingUser = userRepository.findByEmail(customer.getEmail());
+            if (existingUser.isPresent()) {
+                throw new AccountExistedException("Email đã tồn tại!");
+            }
+        }
+        // Set default password for walk-in customers
+        if (customer.getPassword() == null || customer.getPassword().isBlank()) {
+            customer.setPassword(passwordEncoder.encode("12345678"));
+        }
         applyCustomerDefaults(customer);
         return repository.save(customer);
     }
