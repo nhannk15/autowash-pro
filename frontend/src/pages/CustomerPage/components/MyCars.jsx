@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
-import { Spin, Alert, Empty, Card, Button, Modal, Form, Input, Select, message, Popconfirm, Upload } from 'antd';
-import { PlusOutlined, CarOutlined, DeleteOutlined, UploadOutlined, EditOutlined } from '@ant-design/icons';
+import { Spin, Alert, Empty, Card, Button, Modal, Form, Input, Select, message, Popconfirm, Upload, Dropdown } from 'antd';
+import { PlusOutlined, CarOutlined, DeleteOutlined, UploadOutlined, EditOutlined, SettingOutlined } from '@ant-design/icons';
 import './MyCars.css';
 import axios from 'axios';
 import { createVehicle, deleteVehicle, getVehicleByCustomer, getVehicleType, updateVehicle } from '../../../service/customerService';
@@ -312,8 +312,60 @@ export default function MyCars() {
                                         />
                                     </div>
 
-                                    {/* Tên hãng & model */}
-                                    <h3 className="mycar-card__name">{vehicle.brand} {vehicle.model}</h3>
+                                    {/* Tên hãng & model & Menu */}
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px', width: '100%' }}>
+                                        <h3 className="mycar-card__name" style={{ marginBottom: 0 }}>{vehicle.brand} {vehicle.model}</h3>
+                                        
+                                        {/* Menu Hành động */}
+                                        {isCarActive && (
+                                            <Dropdown
+                                                menu={{
+                                                    items: [
+                                                        {
+                                                            key: 'edit',
+                                                            label: 'Sửa thông tin',
+                                                            icon: <EditOutlined />,
+                                                            onClick: () => handleEditClick(vehicle)
+                                                        },
+                                                        {
+                                                            key: 'delete',
+                                                            label: 'Xóa xe',
+                                                            icon: <DeleteOutlined />,
+                                                            danger: true,
+                                                            onClick: () => {
+                                                                Modal.confirm({
+                                                                    title: 'Xóa phương tiện',
+                                                                    content: 'Bạn có chắc chắn muốn xóa xe này?',
+                                                                    okText: 'Xóa',
+                                                                    okType: 'danger',
+                                                                    cancelText: 'Hủy',
+                                                                    onOk: () => handleDeleteVehicle(vehicle.vehicleId),
+                                                                    maskClosable: true,
+                                                                });
+                                                            }
+                                                        }
+                                                    ]
+                                                }}
+                                                trigger={['click']}
+                                                placement="bottomRight"
+                                            >
+                                                <Button
+                                                    type="text"
+                                                    icon={<SettingOutlined style={{ fontSize: '18px', color: '#64748b' }} />}
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        border: 'none',
+                                                        padding: '4px',
+                                                        width: '32px',
+                                                        height: '32px',
+                                                        backgroundColor: 'transparent'
+                                                    }}
+                                                />
+                                            </Dropdown>
+                                        )}
+                                    </div>
 
                                     {/* Phân khúc xe */}
                                     <span className="mycar-card__type">
@@ -332,30 +384,7 @@ export default function MyCars() {
                                         </div>
                                     </div>
 
-                                    {/* Nút hành động Sửa & Xóa xe - Chỉ hiện cho xe đang hoạt động */}
-                                    {isCarActive && (
-                                        <div className="mycar-card__actions">
-                                            <Button
-                                                className="action-btn-edit"
-                                                icon={<EditOutlined />}
-                                                onClick={() => handleEditClick(vehicle)}
-                                            >
-                                                Sửa thông tin
-                                            </Button>
-                                            <Popconfirm
-                                                title="Xóa phương tiện"
-                                                description="Bạn có chắc chắn muốn xóa xe này?"
-                                                onConfirm={() => handleDeleteVehicle(vehicle.vehicleId)}
-                                                okText="Xóa"
-                                                cancelText="Hủy"
-                                                okButtonProps={{ danger: true }}
-                                            >
-                                                <Button danger className="action-btn-delete" icon={<DeleteOutlined />}>
-                                                    Xóa xe
-                                                </Button>
-                                            </Popconfirm>
-                                        </div>
-                                    )}
+
 
                                     {/* Nút Liên hệ khôi phục - Chỉ hiện cho xe đã ẩn */}
                                     {!isCarActive && (
