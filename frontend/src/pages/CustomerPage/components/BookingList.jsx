@@ -60,7 +60,7 @@ export default function BookingList() {
     const [customer, setCustomer] = useState(null);
     const [applicablePromotion, setApplicablePromotion] = useState(null);
     const [vouchers, setVouchers] = useState([]);
-    const [membershipTier, setMembershipTier] = useState();
+    // const [membershipTier, setMembershipTier] = useState();
     const [submitting, setSubmitting] = useState(false);
     const [bookingError, setBookingError] = useState(null);
     const [selectedVoucher, setSelectedVoucher] = useState(null);
@@ -124,19 +124,18 @@ export default function BookingList() {
     //         }
     //     };
     //     fetchCustomerInfo();
-    // }, [user]);
-    useEffect(() => {
-        const fetchMembershipTier = async () => {
-            try {
-                const result = await getMembershipTier()
-                setMembershipTier(result || undefined)
-            } catch (err) {
-                console.error("Failed to fetch membershipTier:", err);
-                message.warning(err.response?.data.message || err.message || "không thể tải membership tier")
-            }
-        }
-        fetchMembershipTier()
-    }, [])
+    // useEffect(() => {
+    //     const fetchMembershipTier = async () => {
+    //         try {
+    //             const result = await getMembershipTier()
+    //             setMembershipTier(result || undefined)
+    //         } catch (err) {
+    //             console.error("Failed to fetch membershipTier:", err);
+    //             message.warning(err.response?.data.message || err.message || "không thể tải membership tier")
+    //         }
+    //     }
+    //     fetchMembershipTier()
+    // }, [])
 
     // Lấy chương trình khuyến mãi tự động áp dụng dựa trên thời gian hẹn
     useEffect(() => {
