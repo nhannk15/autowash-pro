@@ -3,7 +3,7 @@ import { Row, Col, Card, Table, Tag, Progress, Button, Empty, Space, Typography,
 import { CalendarOutlined, TrophyOutlined, CrownOutlined, ArrowRightOutlined, GiftOutlined, StarOutlined, WalletOutlined, RiseOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import { getMembershipTier, getUpcomingBooking, getReward, exchangeVoucher, getVoucher, getRecentActivities, getPendingDeposit } from '../../../service/customerService';
+import { getMembershipTier, getUpcomingBooking, getReward, exchangeVoucher, getVoucher, getRecentActivities, getPendingDeposit, cancelBooking } from '../../../service/customerService';
 import axios from 'axios';
 import PolicyModal from './PolicyModal';
 import './Overview.css';
@@ -330,10 +330,17 @@ export default function Overview() {
                             okText: 'Xác nhận hủy',
                             okType: 'danger',
                             cancelText: 'Quay lại',
-                            onOk: () => {
-                                // Hủy lịch tượng trưng ở FrontEnd
-                                setUpcomingBookings(prev => prev.filter(b => b.id !== record.id));
-                                message.success(`Hủy lịch đặt xe ${record.bookingCode} thành công (FE Mockup)!`);
+                            onOk: async () => {
+                                try {
+                                    await cancelBooking({
+                                        bookingCode: record.bookingCode,
+                                        cancelReason: 'Khách hàng chủ động hủy trên hệ thống'
+                                    });
+                                    setUpcomingBookings(prev => prev.filter(b => b.bookingCode !== record.bookingCode));
+                                    message.success(`Hủy lịch đặt xe ${record.bookingCode} thành công!`);
+                                } catch (error) {
+                                    message.error(error.response?.data?.message || 'Có lỗi xảy ra khi hủy lịch');
+                                }
                             }
                         });
                     }}
