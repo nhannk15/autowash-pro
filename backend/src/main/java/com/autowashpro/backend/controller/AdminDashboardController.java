@@ -12,7 +12,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.autowashpro.backend.model.dto.DashboardSummaryResponse;
+import com.autowashpro.backend.model.dto.DeductionChartItem;
+import com.autowashpro.backend.model.dto.DeductionSummaryResponse;
 import com.autowashpro.backend.model.dto.PeakHourStats;
+import com.autowashpro.backend.model.dto.PromotionPerformanceItem;
 import com.autowashpro.backend.model.dto.PromotionUsageStats;
 import com.autowashpro.backend.model.dto.RecentTransactionItem;
 import com.autowashpro.backend.model.dto.RevenueDataRequest;
@@ -63,7 +66,23 @@ public class AdminDashboardController {
     }
 
     @PostMapping("/api/admin/dashboard/promotion-usage-count")
-    public ResponseEntity<HashMap<String, Long>> getPromotionUsageCount(RevenueDataRequest request) {
+    public ResponseEntity<HashMap<String, Long>> getPromotionUsageCount(@RequestBody RevenueDataRequest request) {
         return ResponseEntity.ok().body(adminDashboardService.countPromotionUsage(request));
     }
+
+    @PostMapping("/api/admin/dashboard/deduction-chart")
+    public ResponseEntity<List<DeductionChartItem>> getDeductionChartItems(@RequestBody RevenueDataRequest request) {
+        return ResponseEntity.ok().body(adminDashboardService.getPromotionDeductionChartItems(request));
+    }
+
+    @PostMapping("/api/admin/dashboard/promotion-performance")
+    public ResponseEntity<List<PromotionPerformanceItem>> getPromotionPerformanceItems(@RequestBody RevenueDataRequest request) {
+        return ResponseEntity.ok().body(adminDashboardService.getPromotionPerformance(request));
+    }
+
+    @PostMapping("/api/admin/dashboard/deduction-summary")
+    public ResponseEntity<DeductionSummaryResponse> getDeductionSummary(@RequestBody RevenueDataRequest request) {
+        return ResponseEntity.ok().body(adminDashboardService.getDeductionSummaryReport(request));
+    }
+    
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Steps, Card, Input, Button, Typography,
     Row, Col, Descriptions, Space, message, Result, Tag, Empty, Spin, Radio, Divider,
@@ -84,13 +84,16 @@ export default function StaffPayment() {
         fetchBillData();
     }, [bookingId]);
 
-    // Xử lý kết quả trả về từ VNPay
+    // Xử lý kết quả trả về từ VNPay (chỉ xử lý 1 lần duy nhất)
+    const vnpayProcessedRef = useRef(false);
+
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const status = params.get('status');
         const billing = params.get('billing');
 
-        if (!status) return;
+        if (!status || vnpayProcessedRef.current) return;
+        vnpayProcessedRef.current = true;
 
         if (status === '00') {
             message.success(`Thanh toán VNPay thành công (Hóa đơn: ${billing || 'Không rõ'})!`);
@@ -208,9 +211,6 @@ export default function StaffPayment() {
     const staffNote = billData.booking?.notes || billData.session?.note || billData.staffNote || '';
 
     const bookingPromotion = billData.bookingPromotionResponse || billData.booking?.promotion || null;
-    const bookingPromotionDiscountAmount = bookingPromotion
-        ? services.reduce((acc, s) => acc + (s.price * (Number(bookingPromotion.discountValue || 0) / 100)), 0)
-        : 0;
 
     const detailPromotions = billData.booking?.bookingDetails
         ?.filter(s => s.promotionName && Number(s.discountAmount) > 0)
@@ -218,14 +218,10 @@ export default function StaffPayment() {
 
     const subtotal = Number(billData.originalAmount || 0) || services.reduce((acc, s) => acc + s.price, 0);
     const totalDiscountAmount = Number(billData.discountAmount || 0);
-    const totalPromotionDiscount = bookingPromotion
-        ? bookingPromotionDiscountAmount
-        : detailPromotions.reduce((acc, p) => acc + (Number(p.discountAmount) || 0), 0);
+    const totalPromotionDiscount = detailPromotions.reduce((acc, p) => acc + (Number(p.discountAmount) || 0), 0);
     const actualVoucherDiscount = Math.max(0, totalDiscountAmount - totalPromotionDiscount);
-    const depositAmount = Number(billData.depositAmount || billData.booking?.billing?.depositAmount || 0);
-    const finalTotal = billData.finalAmount != null
-        ? Number(billData.finalAmount)
-        : Math.max(0, subtotal - totalDiscountAmount - depositAmount);
+    const depositAmount = Number(billData.booking?.billing?.depositAmount || 0);
+    const finalTotal = Number(billData?.booking?.billing?.finalAmount || 0);
 
     // === Handlers ===
     const handleApplyVoucher = async () => {

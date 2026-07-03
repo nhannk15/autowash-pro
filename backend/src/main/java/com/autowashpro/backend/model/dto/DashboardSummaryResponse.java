@@ -13,7 +13,7 @@ import lombok.Setter;
 @Setter
 public class DashboardSummaryResponse {
     
-    private Long totalRevenue;;
+    private Long totalRevenue;
     private Long previousRevenue;
     private int totalBookings;
     private int completedBookings;

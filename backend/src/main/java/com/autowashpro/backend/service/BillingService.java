@@ -143,7 +143,7 @@ public class BillingService {
             washSession.setStatus(WashSessionStatus.PAID);
             washSessionRepository.save(washSession);
         }
-
+        
         Billing savedBilling = billingRepository.saveAndFlush(billing);
 
         Customer customer = billing.getBooking().getCustomer();
@@ -239,7 +239,8 @@ public class BillingService {
         log.info("applyVoucherForBilling() - finalAmount: {}", savedBilling.getFinalAmount());
 
         voucher.setStatus(VoucherStatus.USED);
-        voucher.setIssuedAt(LocalDateTime.now());
+        //--- Why issued at??
+        voucher.setUsedAt(LocalDateTime.now());
         Voucher savedVoucher = voucherRepository.save(voucher);
         return voucherMapper.toVoucherResponse(savedVoucher);
     }
@@ -259,6 +260,7 @@ public class BillingService {
                         "Hóa đơn " + billingId + " không tồn tại"));
         if (billing.getDepositStatus().equals(DepositStatus.PENDING)) {
             billing.setDepositStatus(DepositStatus.PAID);
+            billing.setDepositPaidAt(LocalDateTime.now());
             Billing savedBilling = billingRepository.save(billing);
 
             Booking booking = billing.getBooking();

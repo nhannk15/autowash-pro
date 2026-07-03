@@ -74,7 +74,7 @@ public class BookingController {
         return ResponseEntity.status(HttpStatus.OK).body(bookingService.getCustomerAllBookings(email));
     }
 
-    @PostMapping("/api/staff/cancel-booking")
+    @PostMapping("/api/cancel-booking")
     public ResponseEntity<Void> cancleBooking(@RequestBody CancelBookingRequest request) {
         bookingService.cancelCustomerBooking(request);
         return ResponseEntity.status(HttpStatus.OK).body(null);

@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../context/AuthContext'
-import { MenuOutlined, CloseOutlined } from '@ant-design/icons'
+import { MenuOutlined, CloseOutlined, InfoCircleOutlined } from '@ant-design/icons'
 import NotificationDropdown from '../../Notification/NotificationDropdown'
+import PolicyModal from '../../../pages/CustomerPage/components/PolicyModal'
 import './Navbar.css'
 
 export default function NavBar() {
@@ -10,6 +11,7 @@ export default function NavBar() {
     const navigate = useNavigate()
     const [isDropdownOpen, setIsDropdownOpen] = useState(false)
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+    const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false)
     const dropdownRef = useRef(null)
 
     // Đóng dropdown khi click ra ngoài
@@ -102,6 +104,7 @@ export default function NavBar() {
                     {user ? (
                         <>
                         {/* Bell thông báo - chỉ dành cho CUSTOMER */}
+                        {/* Bell thông báo - chỉ dành cho CUSTOMER */}
                         {user?.role?.toUpperCase() === 'CUSTOMER' && (
                             <NotificationDropdown />
                         )}
@@ -143,6 +146,16 @@ export default function NavBar() {
                                     >
                                         Trang cá nhân
                                     </NavLink>
+                                    <button
+                                        className="navbar__dropdown-item"
+                                        style={{ textAlign: 'left', border: 'none', background: 'none', width: '100%', fontFamily: 'inherit', fontSize: 'inherit', color: 'inherit' }}
+                                        onClick={() => {
+                                            setIsPolicyModalOpen(true)
+                                            setIsDropdownOpen(false)
+                                        }}
+                                    >
+                                        Chính sách & Quy định
+                                    </button>
                                     <hr className="navbar__dropdown-divider" />
                                     <button
                                         className="navbar__dropdown-item navbar__dropdown-item--logout"
@@ -172,6 +185,11 @@ export default function NavBar() {
                     </button>
                 )}
             </div>
+            
+            <PolicyModal 
+                isOpen={isPolicyModalOpen} 
+                onClose={() => setIsPolicyModalOpen(false)} 
+            />
         </nav>
     )
 }

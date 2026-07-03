@@ -11,9 +11,8 @@ import org.springframework.data.repository.query.Param;
 import com.autowashpro.backend.model.entity.Voucher;
 
 public interface VoucherRepository extends JpaRepository<Voucher, Long> {
-    
-    Optional<Voucher> findByVoucherCode(String voucherCode);
 
+    Optional<Voucher> findByVoucherCode(String voucherCode);
 
     @Query("""
             SELECT voucher FROM Voucher voucher
@@ -29,5 +28,22 @@ public interface VoucherRepository extends JpaRepository<Voucher, Long> {
             AND voucher.status = com.autowashpro.backend.model.enums.VoucherStatus.ACTIVE
             """)
     List<Voucher> findAllExpiredVoucher(@Param("now") LocalDateTime nowDateTime);
-    
+
+    @Query("""
+            SELECT COUNT(voucher)
+            FROM Voucher voucher
+            WHERE
+            (voucher.status = com.autowashpro.backend.model.enums.VoucherStatus.USED)
+            AND (voucher.usedAt >= :startTime AND voucher.usedAt <= :endTime)
+            """)
+    long countUsedVouchersFromStartTimeToEndTime(@Param("startTime") LocalDateTime startTime,
+            @Param("endTime") LocalDateTime endTime);
+
+    @Query("""
+            SELECT COUNT(voucher)
+            FROM Voucher voucher
+            WHERE voucher.status = com.autowashpro.backend.model.enums.VoucherStatus.USED
+            """)
+    long countAllUsedVouchers();
+
 }

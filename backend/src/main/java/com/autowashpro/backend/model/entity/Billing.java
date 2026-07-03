@@ -69,6 +69,9 @@ public class Billing {
     @Column(name = "paid_at", nullable = true)
     private LocalDateTime paidAt;
 
+    @Column(name = "deposit_paid_at", nullable = true)
+    private LocalDateTime depositPaidAt;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

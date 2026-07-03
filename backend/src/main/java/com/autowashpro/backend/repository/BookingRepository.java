@@ -142,4 +142,10 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findBookingsForReminder(
             @Param("date") LocalDate date,
             @Param("status") BookingStatus status);
+
+    @Query("""
+            SELECT booking FROM Booking booking
+            WHERE booking.bookingCode = :bookingCode
+            """)
+    Optional<Booking> findByBookingCodeForCanceling(@Param("bookingCode") String bookingCode);
 }
