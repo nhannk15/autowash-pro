@@ -47,7 +47,7 @@
 
 /* ---- Mỗi card dịch vụ ---- */
 .service-card {
-    flex: 0 0 276px;         /* cố định chiều rộng */
+    flex: 0 0 252px;         /* cố định chiều rộng */
     height: 220px;
     border-radius: 12px;
     overflow: hidden;
