@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { getMembershipTier, getUpcomingBooking, getReward, exchangeVoucher, getVoucher, getRecentActivities, getPendingDeposit } from '../../../service/customerService';
 import axios from 'axios';
+import PolicyModal from './PolicyModal';
 import './Overview.css';
 
 const { Title, Text } = Typography;
@@ -65,6 +66,7 @@ export default function Overview() {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isPendingModalOpen, setIsPendingModalOpen] = useState(false);
+    const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
 
     // State cho reward
     const [rewards, setRewards] = useState([])
@@ -793,6 +795,10 @@ export default function Overview() {
                 footer={null}
                 width={850}
             >
+                <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#f0f5ff', border: '1px solid #d6e4ff', borderRadius: '8px', fontSize: '14px', color: '#002b7f' }}>
+                    <InfoCircleOutlined style={{ marginRight: '8px' }} />
+                    Để đảm bảo quyền lợi, vui lòng tham khảo <span style={{ fontWeight: 'bold', textDecoration: 'underline', cursor: 'pointer' }} onClick={() => setIsPolicyModalOpen(true)}>Chính sách & Quy định đặt lịch</span> của chúng tôi.
+                </div>
                 <Table
                     columns={upcomingTableColumns}
                     dataSource={upcomingBookings}
@@ -939,6 +945,8 @@ export default function Overview() {
                     ]}
                 />
             </Modal>
+            {/* Modal Policy */}
+            <PolicyModal isOpen={isPolicyModalOpen} onClose={() => setIsPolicyModalOpen(false)} />
         </div >
     );
 }

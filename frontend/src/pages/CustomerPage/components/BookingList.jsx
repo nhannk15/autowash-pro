@@ -1026,8 +1026,23 @@ export default function BookingList() {
 
                                 const finalTotal = remainingBeforeVoucher - voucherDiscount;
 
+
                                 return (
                                     <div className="sidebar-total-row" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', marginBottom: '16px' }}>
+                                        <div style={{ width: '100%', marginBottom: '8px', paddingBottom: '12px', borderBottom: '1px dashed #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Thời gian:</span>
+                                            <span style={{ fontSize: '0.9rem', color: '#0d1b4b', fontWeight: '700' }}>{selectedTime} - {selectedDate.split('-').reverse().join('/')}</span>
+                                        </div>
+                                        <div style={{ width: '100%', marginBottom: '8px', paddingBottom: '12px', borderBottom: '1px dashed #e2e8f0' }}>
+                                            <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '8px', textTransform: 'uppercase' }}>Dịch vụ:</span>
+                                            {selectedServices.map(service => (
+                                                <div key={service.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', marginBottom: '4px' }}>
+                                                    <span style={{ color: '#334155' }}>• {service.name}</span>
+                                                    <span style={{ color: '#64748b', fontWeight: '500' }}>{formatCurrency(getServicePrice(service))}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+
                                         <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
                                             <span className="sidebar-total-label" style={{ fontSize: '0.9rem' }}>Tổng chi phí gốc</span>
                                             <span className="sidebar-total-value" style={{ color: '#64748b', fontSize: '1rem' }}>
@@ -1053,7 +1068,7 @@ export default function BookingList() {
                                         <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', borderTop: '1px solid #e2e8f0', paddingTop: '6px' }}>
                                             <span className="sidebar-total-label" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.95rem' }}>Tổng thanh toán</span>
                                             <span className="sidebar-total-value" style={{ color: '#ef4444', fontSize: '1.3rem', fontWeight: 'bold' }}>
-                                                {formatCurrency(finalTotal)}
+                                                {formatCurrency(totalAfterPromo)}
                                             </span>
                                         </div>
                                     </div>
@@ -1134,6 +1149,14 @@ export default function BookingList() {
                             <div className="success-detail-item">
                                 <span>Thời gian:</span>
                                 <strong>{selectedTime} - {selectedDate.split('-').reverse().join('/')}</strong>
+                            </div>
+                            <div className="success-detail-item" style={{ alignItems: 'flex-start' }}>
+                                <span>Dịch vụ:</span>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'right' }}>
+                                    {selectedServices.map(service => (
+                                        <strong key={service.id} style={{ fontWeight: '600' }}>• {service.name}</strong>
+                                    ))}
+                                </div>
                             </div>
 
                             {(() => {
