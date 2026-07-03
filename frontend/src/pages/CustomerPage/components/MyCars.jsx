@@ -297,28 +297,7 @@ export default function MyCars() {
                                 bordered={false}
                             >
                                 <div className="mycar-card__content">
-                                    {/* Nút hành động Sửa & Xóa xe - Chỉ hiện cho xe đang hoạt động */}
-                                    {isCarActive && (
-                                        <div className="mycar-card__actions">
-                                            <Button
-                                                type="text"
-                                                icon={<EditOutlined />}
-                                                size="small"
-                                                onClick={() => handleEditClick(vehicle)}
-                                                style={{ marginRight: '4px', color: '#002b7f' }}
-                                            />
-                                            <Popconfirm
-                                                title="Xóa phương tiện"
-                                                description="Bạn có chắc chắn muốn xóa xe này ra khỏi danh sách?"
-                                                onConfirm={() => handleDeleteVehicle(vehicle.vehicleId)}
-                                                okText="Xóa"
-                                                cancelText="Hủy"
-                                                okButtonProps={{ danger: true }}
-                                            >
-                                                <Button type="text" danger icon={<DeleteOutlined />} size="small" />
-                                            </Popconfirm>
-                                        </div>
-                                    )}
+
 
                                     {/* Hình ảnh xe hoặc Icon phân khúc xe */}
                                     <div className="mycar-card__image-wrapper">
@@ -352,6 +331,31 @@ export default function MyCars() {
                                             <span className="mycar-detail-value">{vehicle.color || 'Chưa cập nhật'}</span>
                                         </div>
                                     </div>
+
+                                    {/* Nút hành động Sửa & Xóa xe - Chỉ hiện cho xe đang hoạt động */}
+                                    {isCarActive && (
+                                        <div className="mycar-card__actions">
+                                            <Button
+                                                className="action-btn-edit"
+                                                icon={<EditOutlined />}
+                                                onClick={() => handleEditClick(vehicle)}
+                                            >
+                                                Sửa thông tin
+                                            </Button>
+                                            <Popconfirm
+                                                title="Xóa phương tiện"
+                                                description="Bạn có chắc chắn muốn xóa xe này?"
+                                                onConfirm={() => handleDeleteVehicle(vehicle.vehicleId)}
+                                                okText="Xóa"
+                                                cancelText="Hủy"
+                                                okButtonProps={{ danger: true }}
+                                            >
+                                                <Button danger className="action-btn-delete" icon={<DeleteOutlined />}>
+                                                    Xóa xe
+                                                </Button>
+                                            </Popconfirm>
+                                        </div>
+                                    )}
 
                                     {/* Nút Liên hệ khôi phục - Chỉ hiện cho xe đã ẩn */}
                                     {!isCarActive && (

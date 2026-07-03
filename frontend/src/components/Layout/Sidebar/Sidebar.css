@@ -239,3 +239,64 @@
     background-color: transparent;
 }
 
+/* ===== Theme: Light ===== */
+.sidebar--light {
+    background: #ffffff;
+    border-right: 1px solid #eaeaea;
+    box-shadow: 1px 0 8px rgba(0, 0, 0, 0.05);
+}
+
+.sidebar--light .sidebar__profile {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.sidebar--light .sidebar__username {
+    color: #333333;
+}
+
+.sidebar--light .sidebar__role {
+    color: #002b7f;
+    background: rgba(0, 43, 127, 0.1);
+}
+
+.sidebar--light .sidebar__avatar {
+    border: 3px solid #f0f0f0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar--light .ant-menu {
+    color: #444444 !important;
+}
+
+.sidebar--light .ant-menu-item {
+    color: #555555 !important;
+}
+
+.sidebar--light .ant-menu-item:hover {
+    color: #002b7f !important;
+    background: #f1f4f9 !important;
+}
+
+.sidebar--light .ant-menu-item-selected {
+    color: #ffffff !important;
+    background: #002b7f !important;
+}
+
+.sidebar--light .sidebar__toggle {
+    border-top: 1px solid #f0f0f0;
+    color: #666666;
+}
+
+.sidebar--light .sidebar__toggle:hover {
+    color: #002b7f;
+    background: #f8f9fa;
+}
+
+.sidebar--light .ant-menu-item.sidebar__menu-item--logout {
+    color: #d32f2f !important;
+}
+
+.sidebar--light .ant-menu-item.sidebar__menu-item--logout:hover {
+    background: #ffebee !important;
+    color: #c62828 !important;
+}

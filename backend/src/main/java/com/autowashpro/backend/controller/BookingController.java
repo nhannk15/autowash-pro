@@ -41,6 +41,12 @@ public class BookingController {
         return ResponseEntity.status(HttpStatus.OK).body(bookingService.getAvailableTimeSlots(date));
     }
 
+    @GetMapping("/api/bookings/premium-service/available-slots")
+    public ResponseEntity<SlotAvailabilityByDateResponse> getAvailableSlotsForPremiumService(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        return ResponseEntity.status(HttpStatus.OK).body(bookingService.getAvailableTimeSlotsForPremiumService(date));
+    }
+
     @PostMapping("/api/bookings")
     public ResponseEntity<CreateBookingResponse> createBooking(@RequestBody CreateBookingRequest request) {
         log.info("BookingController - start creating booking.");
