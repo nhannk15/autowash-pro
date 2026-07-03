@@ -1,12 +1,19 @@
 import ctaBg from '../../../../assets/CTARegister/CTARegister.jpg'
 import './CTARegister.css'
-
+import { Link } from 'react-router-dom'
+import {
+    CalendarOutlined,
+    FileTextOutlined,
+    GiftOutlined,
+    BellOutlined,
+    StarOutlined
+} from '@ant-design/icons';
 const benefits = [
-    { icon: '📅', text: 'Đặt lịch rửa xe nhanh chóng, tiện lợi' },
-    { icon: '📋', text: 'Theo dõi lịch sử dịch vụ toàn bộ xe' },
-    { icon: '🎁', text: 'Nhận ưu đãi & khuyến mãi độc quyền' },
-    { icon: '🔔', text: 'Nhắc lịch tự động, không bỏ lỡ bảo dưỡng' },
-    { icon: '⭐', text: 'Tích điểm đổi quà với mỗi lần sử dụng' },
+    { icon: <CalendarOutlined />, text: 'Đặt lịch rửa xe nhanh chóng, tiện lợi' },
+    { icon: <FileTextOutlined />, text: 'Theo dõi lịch sử dịch vụ toàn bộ xe' },
+    { icon: <GiftOutlined />, text: 'Nhận ưu đãi & khuyến mãi độc quyền' },
+    { icon: <BellOutlined />, text: 'Nhắc lịch tự động, không bỏ lỡ bảo dưỡng' },
+    { icon: <StarOutlined />, text: 'Tích điểm đổi quà với mỗi lần sử dụng' },
 ]
 
 export default function CTARegister() {
@@ -44,16 +51,18 @@ export default function CTARegister() {
 
                     {/* Buttons */}
                     <div className="cta-register__actions">
-                        <a href="/signup" className="cta-register__btn cta-register__btn--primary">
+                        <Link to="/signup" className="cta-register__btn cta-register__btn--primary">
                             Đăng Ký Miễn Phí
-                        </a>
-                        <a href="/login" className="cta-register__btn cta-register__btn--secondary">
+                        </Link>
+                        <Link to="/login" className="cta-register__btn cta-register__btn--secondary">
                             Đã Có Tài Khoản? Đăng Nhập
-                        </a>
+                        </Link>
                     </div>
                 </div>
 
                 {/* ── CỘT PHẢI: visual card ────────────────── */}
+
+                {false && (
                 <div className="cta-register__visual">
                     <div className="cta-register__card">
                         {/* Card header */}
@@ -106,6 +115,7 @@ export default function CTARegister() {
                         🔒 Bảo mật thông tin
                     </div>
                 </div>
+                )}
 
             </div>
         </section>
