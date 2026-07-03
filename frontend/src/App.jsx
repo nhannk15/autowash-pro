@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/Layout/Header/Navbar.jsx'
 import Footer from './components/Layout/Footer/Footer.jsx'
 import Home from './pages/HomePage/Home.jsx'
+import ScrollToTop from './components/ScrollToTop.jsx'
 import { ProtectedRoute } from './routes/ProtectedRoute.jsx'
 import Service from './pages/ServicePage/Service.jsx'
 import Blog from './pages/BlogPage/Blog.jsx'
@@ -48,8 +49,10 @@ function MainLayout({ children }) {
 
 function App() {
   return (
-    <Routes>
-      {/* Các trang công khai (Guest hoặc Customer) */}
+    <>
+      <ScrollToTop />
+      <Routes>
+        {/* Các trang công khai (Guest hoặc Customer) */}
       <Route element={<ProtectedRoute allowedRoles={["CUSTOMER"]} requireAuth={false} />}>
         <Route path="/" element={
           <MainLayout><Home /></MainLayout>
@@ -139,6 +142,7 @@ function App() {
         <Route path="profile" element={<Profile />} />
       </Route>
     </Routes>
+    </>
   )
 }
 
