@@ -165,13 +165,50 @@
 }
 
 .mycar-card__actions {
-    position: absolute;
-    top: 16px;
-    right: 16px;
+    width: 100%;
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 4px;
-    z-index: 10;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.mycar-card__actions .ant-btn {
+    flex: 1;
+    border-radius: 8px;
+    height: 38px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.2s ease;
+}
+
+.action-btn-edit {
+    background-color: #f0f5ff !important;
+    color: #002b7f !important;
+    border: 1px solid #d6e4ff !important;
+}
+
+.action-btn-edit:hover {
+    background-color: #e6f0ff !important;
+    border-color: #002b7f !important;
+    box-shadow: 0 2px 4px rgba(0, 43, 127, 0.1) !important;
+}
+
+.action-btn-delete {
+    background-color: #fff1f0 !important;
+    color: #cf1322 !important;
+    border: 1px solid #ffa39e !important;
+}
+
+.action-btn-delete:hover {
+    background-color: #ffccc7 !important;
+    border-color: #cf1322 !important;
+    box-shadow: 0 2px 4px rgba(207, 19, 34, 0.1) !important;
 }
 
 .mycars-add-btn {

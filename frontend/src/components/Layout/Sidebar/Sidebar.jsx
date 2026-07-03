@@ -5,7 +5,7 @@ import { Menu } from 'antd';
 import { useAuth } from '../../../context/AuthContext';
 import './Sidebar.css';
 
-export default function Sidebar({ menuItems, children }) {
+export default function Sidebar({ menuItems, children, theme = 'dark' }) {
     const [collapsed, setCollapsed] = useState(true);
     const renderItems = menuItems;
     const navigate = useNavigate();
@@ -35,7 +35,7 @@ export default function Sidebar({ menuItems, children }) {
         <div className="dashboard-layout">
             <div className="dashboard-layout__body">
                 {/* Sidebar */}
-                <aside className={`sidebar ${collapsed ? 'sidebar--collapsed' : ''}`}>
+                <aside className={`sidebar ${collapsed ? 'sidebar--collapsed' : ''} sidebar--${theme}`}>
                     {/* Profile Card */}
                     <div className="sidebar__profile">
                         <div className="sidebar__avatar">

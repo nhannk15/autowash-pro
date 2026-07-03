@@ -43,6 +43,11 @@ export async function createBooking(payload) {
     return response.data;
 }
 
+export async function cancelBooking(payload) {
+    const response = await axios.post("/api/cancel-booking", payload);
+    return response.data;
+}
+
 export async function createVNPayPayment(payload) {
     const response = await axios.post("/api/payment/vnpay/create", payload);
     return response.data;
