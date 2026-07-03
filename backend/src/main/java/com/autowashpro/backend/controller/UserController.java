@@ -1,10 +1,13 @@
 package com.autowashpro.backend.controller;
 
+import java.util.HashMap;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.HttpStatus;
@@ -35,6 +38,21 @@ public class UserController {
     @GetMapping("/me")
     public ResponseEntity<UserResponse> getMe(@AuthenticationPrincipal String email) {
         return ResponseEntity.status(HttpStatus.OK).body(service.getMyInfo(email));
-    }   
+    }
+
+    public record CheckPasswordEqualRequest(String password, String confirm) {
+    }
+    @PostMapping("/check-password")
+    public ResponseEntity<HashMap<String, Boolean>> checkIfPasswordEquals(@AuthenticationPrincipal String email, @RequestBody CheckPasswordEqualRequest request) {
+        return ResponseEntity.ok().body(service.checkPasswordEqual(email, request));
+    }
+
+    public record ChangePasswordRequest(String newPassword) {
+    }
+    @PostMapping("/change-password")
+    public ResponseEntity<Void> changePassword(@AuthenticationPrincipal String email, @RequestBody ChangePasswordRequest request) {
+        service.changePassword(email, request);
+        return ResponseEntity.noContent().build();
+    }
 
 }
