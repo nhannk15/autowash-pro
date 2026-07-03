@@ -54,6 +54,7 @@ import com.autowashpro.backend.model.enums.PaymentStatus;
 import com.autowashpro.backend.model.enums.PromotionDiscountType;
 import com.autowashpro.backend.model.enums.RewardType;
 import com.autowashpro.backend.model.enums.Role;
+import com.autowashpro.backend.model.enums.ServiceCategory;
 import com.autowashpro.backend.model.enums.VoucherStatus;
 import com.autowashpro.backend.model.enums.WashSessionStatus;
 import com.autowashpro.backend.repository.AvailableSlotRepository;
@@ -151,6 +152,15 @@ public class BookingService {
                 .build();
     }
 
+    public SlotAvailabilityByDateResponse getAvailableTimeSlotsForPremiumService(LocalDate date) {
+        List<TimeSlotAvailabilityResponse> timeSlots = getAvailableTimeSlotForPremiumService(date);
+        return SlotAvailabilityByDateResponse
+                .builder()
+                .date(date)
+                .timeSlotAvailabilityResponses(timeSlots)
+                .build();
+    }
+
     public List<UpcomingBookingResponse> getUpcomingBookings() {
         LocalDate today = LocalDate.now();
         LocalTime rightThisTimeMinus15Minutes = LocalTime.now().minusMinutes(15);
@@ -161,6 +171,21 @@ public class BookingService {
 
     public List<TimeSlotAvailabilityResponse> getAvailableTimeSlot(LocalDate date) {
         return availableSlotRepository.findTimeSlotAvailability(date)
+                .stream()
+                .map(row -> TimeSlotAvailabilityResponse
+                        .builder()
+                        .timeSlotId((Long) row[0])
+                        .startTime((LocalTime) row[1])
+                        .endTime((LocalTime) row[2])
+                        .totalBayCount(((Number) row[3]).intValue())
+                        .availableBayCount(((Number) row[4]).intValue())
+                        .isAvailable(((Number) row[4]).intValue() > 0)
+                        .build())
+                .toList();
+    }
+
+    public List<TimeSlotAvailabilityResponse> getAvailableTimeSlotForPremiumService(LocalDate date) {
+        return availableSlotRepository.findTimeSlotAvailabilityForPremiumServices(date)
                 .stream()
                 .map(row -> TimeSlotAvailabilityResponse
                         .builder()
@@ -199,8 +224,8 @@ public class BookingService {
         if (bookingDay.equals(now)) {
             // LocalTime minStartTime = LocalTime.now().plusMinutes(15L);
             // if (startTimeSlot.getStartTime().isBefore(minStartTime)) {
-            //     throw new SlotInavailabilityException(
-            //             "Giờ đặt lịch phải trước thời điểm hiện tại ít nhất 15 phút");
+            // throw new SlotInavailabilityException(
+            // "Giờ đặt lịch phải trước thời điểm hiện tại ít nhất 15 phút");
             // }
         }
         long dayBeetween = ChronoUnit.DAYS.between(now, bookingDay);
@@ -223,16 +248,36 @@ public class BookingService {
                 .mapToInt(sp -> sp.getService().getDurationMinutes())
                 .sum();
         int slotsNeeded = (int) Math.ceil((double) totalDuration / SLOT_DURATION);
+        log.info("createBooking() - slotsNeeded: {}", slotsNeeded);
 
         /**
          * Step 3. Get all the succcessive/consecutive slots start from the selected
          * slot.
          */
-        List<AvailableSlot> consecutiveSlots = availableSlotRepository.findConsecutiveSlotsFromDate(
-                bookingDay,
-                startTimeSlot.getId(),
-                slotsNeeded,
-                PageRequest.of(0, slotsNeeded));
+        List<AvailableSlot> consecutiveSlots = new ArrayList<>();
+        boolean checkIfPremiumServiceExist = false;
+        for (ServicePrice servicePrice : servicePrices) {
+            if (servicePrice.getService().getCategory().equals(ServiceCategory.PREMIUM)) {
+                checkIfPremiumServiceExist = true;
+                break;
+            }
+        }
+
+        if (checkIfPremiumServiceExist) {
+            consecutiveSlots = availableSlotRepository.findConsecutiveSlotsFromDateForPremiumServices(
+                    bookingDay,
+                    startTimeSlot.getStartTime(),
+                    PageRequest.of(0, slotsNeeded));
+            log.info("createBooking() - consecutiveSlots needed for PREMIUM service: {}", consecutiveSlots.size());
+        } else {
+            consecutiveSlots = availableSlotRepository.findConsecutiveSlotsFromDate(
+                    bookingDay,
+                    startTimeSlot.getId(),
+                    slotsNeeded,
+                    PageRequest.of(0, slotsNeeded));
+            log.info("createBooking() - consecutiveSlots needed for NORMAL service: {}", consecutiveSlots.size());
+        }
+
         if (consecutiveSlots.size() < slotsNeeded) {
             throw new SlotInavailabilityException("Không đủ slot để thực hiện các dịch vụ!");
         }
@@ -595,7 +640,6 @@ public class BookingService {
         log.info("BookingService - complete canceling a booking: {}", bookingCode);
         bookingRepository.save(booking);
 
-        
     }
 
     @Transactional(readOnly = true)

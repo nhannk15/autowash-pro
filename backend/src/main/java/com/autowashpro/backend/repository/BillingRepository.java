@@ -54,7 +54,7 @@ public interface BillingRepository extends JpaRepository<Billing, Long> {
             WHERE
                 (billing.paymentStatus = com.autowashpro.backend.model.enums.PaymentStatus.PAID
                     AND billing.paidAt >= :startTime AND billing.paidAt <= :endTime)
-            OR (billing.paymentStatus != com.autowashpro.backend.model.enums.PaymentStatus.PAID
+            OR (billing.paymentStatus = com.autowashpro.backend.model.enums.PaymentStatus.PENDING
                 AND billing.depositStatus = com.autowashpro.backend.model.enums.DepositStatus.PAID
                 AND billing.depositPaidAt >= :startTime AND billing.depositPaidAt <= :endTime)
             """)
