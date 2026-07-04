@@ -228,9 +228,9 @@ export default function Queue() {
 
             {/* Queue Table */}
             <Card className="queue-card">
-                <Flex justify="space-between" align="center" className="queue-card__header">
+                <Flex justify="space-between" align="center" wrap="wrap" gap={12} className="queue-card__header">
                     <Title level={4} className="queue-card__title">Danh sách hàng đợi</Title>
-                    <Space>
+                    <Space wrap style={{ width: '100%', maxWidth: 460 }} className="queue-card__controls">
                         <Input
                             placeholder="Tìm biển số xe..."
                             prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
@@ -264,6 +264,7 @@ export default function Queue() {
                         columns={columns}
                         dataSource={filteredData}
                         rowKey="id"
+                        scroll={{ x: 760 }}
                         pagination={{
                             current: pagination.current,
                             pageSize: pagination.pageSize,
