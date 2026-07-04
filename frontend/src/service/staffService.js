@@ -41,6 +41,14 @@ export async function createWalkInCustomer(fullName, phoneNumber, email, dateOfB
     return response.data;
 }
 
+export async function searchCustomerByPhone(phone) {
+    const response = await axios.get(`${API}/api/staff/customers/search`, {
+        params: { phone },
+        withCredentials: true,
+    });
+    return response.data;
+}
+
 export async function completeSession(bookingId) {
     const response = await axios.post(`${API}/api/staff/wash-sessions/complete`,
         { bookingId },
