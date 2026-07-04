@@ -323,7 +323,7 @@ public class BookingService {
                 .builder()
                 .customer(customer)
                 .vehicle(vehicle)
-                .status(BookingStatus.PENDING)
+                .status(createBookingRequest.isWalkIn() ? BookingStatus.CONFIRMED : BookingStatus.PENDING)
                 .notes(createBookingRequest.getNotes())
                 .promotion(promotion)
                 .bookingCode(bookingCodeGenerator.generate())
@@ -495,7 +495,7 @@ public class BookingService {
         savedBooking = bookingRepository.findByIdWithDetails(savedBooking.getId())
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
-        billingService.createPendingBilling(savedBooking.getId(), totalOriginalPrice, totalDiscount, totalFinalPrice);
+        billingService.createPendingBilling(savedBooking.getId(), totalOriginalPrice, totalDiscount, totalFinalPrice, createBookingRequest.isWalkIn());
 
         Billing savedBilling = billingRepository.findByBookingId(savedBooking.getId()).get();
         if (voucherRepository.findByVoucherCode(createBookingRequest.getVoucherCode()).isPresent()) {
