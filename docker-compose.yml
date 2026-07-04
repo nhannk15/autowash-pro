@@ -21,8 +21,7 @@ services:
       - autowash-net
 
   backend:
-    build:
-      context: ./backend
+    image: 761990338651.dkr.ecr.ap-northeast-2.amazonaws.com/autowash-pro:backend-latest
     container_name: autowash-backend
     restart: unless-stopped
     environment:
@@ -41,8 +40,7 @@ services:
       - autowash-net
 
   frontend:
-    build:
-      context: ./frontend
+    image: 761990338651.dkr.ecr.ap-northeast-2.amazonaws.com/autowash-pro:frontend-latest
     container_name: autowash-frontend
     restart: unless-stopped
     ports:
