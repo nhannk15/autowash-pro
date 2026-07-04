@@ -42,9 +42,11 @@ jobs:
           ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:frontend-$IMAGE_TAG \
-                       -t $ECR_REGISTRY/$ECR_REPOSITORY:frontend-latest \
-                       ./frontend
+          docker build \
+            --build-arg VITE_BACKEND_ABSOLUTE_PATH="" \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:frontend-$IMAGE_TAG \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:frontend-latest \
+            ./frontend
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:frontend-$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:frontend-latest
 
