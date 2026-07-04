@@ -4,7 +4,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { CarOutlined } from '@ant-design/icons';
 import './Booking.css';
 import { message, Select } from 'antd';
-import { getAvailableSlot, getApplicablePromotion as getApplicablePromotionAPI, getService, getVehicleByCustomer, createBooking, getMembershipTier, getVoucher, createVNPayPayment, getPendingDeposit } from '../../../service/customerService';
+import { getAvailableSlot, getPremiumAvailableSlot, getApplicablePromotion as getApplicablePromotionAPI, getService, getVehicleByCustomer, createBooking, getMembershipTier, getVoucher, createVNPayPayment, getPendingDeposit } from '../../../service/customerService';
 function VehicleImage({ src, alt, fallbackIcon }) {
     const [hasError, setHasError] = useState(false);
     // Mục đích: Dùng để ghi nhận xem ảnh của xe có bị lỗi khi tải hay không.
@@ -49,7 +49,7 @@ export default function BookingList() {
     const [selectedDate, setSelectedDate] = useState('');
     const [selectedTime, setSelectedTime] = useState('');
     const [selectedTimeSlotId, setSelectedTimeSlotId] = useState(null);
-    const [activeTab, setActiveTab] = useState('all');
+    const [activeTab, setActiveTab] = useState('basic');
 
     // Trạng thái cho Khung giờ trống (Bays)
     const [timeSlots, setTimeSlots] = useState([]);
@@ -254,7 +254,13 @@ export default function BookingList() {
             setLoadingSlots(true);
             setErrorSlots(null);
             try {
-                const result = await getAvailableSlot(selectedDate)
+                let result;
+                const isPremiumBooking = selectedServices.length > 0 && selectedServices[0].type === 'premium';
+                if (isPremiumBooking) {
+                    result = await getPremiumAvailableSlot(selectedDate);
+                } else {
+                    result = await getAvailableSlot(selectedDate);
+                }
                 const slotList = result?.timeSlotAvailabilityResponses || [];
                 setTimeSlots(slotList);
             } catch (err) {
@@ -265,7 +271,7 @@ export default function BookingList() {
             }
         };
         fetchAvailableSlots();
-    }, [selectedDate, currentStep]);
+    }, [selectedDate, currentStep, selectedServices]);
 
     // Phân loại các slot theo buổi (Sáng, Chiều, Tối)
     const getSlotsForPeriod = (period) => {
@@ -318,6 +324,22 @@ export default function BookingList() {
         if (isSelected) {
             setSelectedServices(selectedServices.filter(s => s.id !== service.id));
         } else {
+            if (selectedServices.length > 0) {
+                const currentType = selectedServices[0].type;
+                const newType = service.type;
+                const isCurrentPremium = currentType === 'premium';
+                const isNewPremium = newType === 'premium';
+
+                if (isCurrentPremium !== isNewPremium) {
+                    message.warning("Bạn không thể chọn chung dịch vụ cao cấp và dịch vụ thường trong cùng một lịch hẹn.");
+                    return;
+                }
+
+                if (isCurrentPremium && isNewPremium) {
+                    message.warning("Chỉ được chọn 1 dịch vụ cao cấp trong mỗi lịch hẹn.");
+                    return;
+                }
+            }
             setSelectedServices([...selectedServices, service]);
         }
     };
@@ -339,7 +361,6 @@ export default function BookingList() {
 
     // Lọc dịch vụ theo Tab bộ lọc
     const filteredServices = services.filter(service => {
-        if (activeTab === 'all') return true;
         if (activeTab === 'basic') {
             return service.type === 'basic' || service.type === 'addon';
         }
@@ -586,22 +607,16 @@ export default function BookingList() {
 
                                 <div className="booking-filter-tabs">
                                     <button
-                                        className={`booking-filter-btn ${activeTab === 'all' ? 'active' : ''}`}
-                                        onClick={() => setActiveTab('all')}
+                                        className={`booking-filter-btn ${activeTab === 'basic' ? 'active' : ''}`}
+                                        onClick={() => setActiveTab('basic')}
                                     >
-                                        Tất cả <span className="tab-count">{services.length}</span>
+                                        Cơ bản <span className="tab-count">{basicCount}</span>
                                     </button>
                                     <button
                                         className={`booking-filter-btn ${activeTab === 'premium' ? 'active' : ''}`}
                                         onClick={() => setActiveTab('premium')}
                                     >
                                         ✨ Cao cấp <span className="tab-count">{premiumCount}</span>
-                                    </button>
-                                    <button
-                                        className={`booking-filter-btn ${activeTab === 'basic' ? 'active' : ''}`}
-                                        onClick={() => setActiveTab('basic')}
-                                    >
-                                        Cơ bản <span className="tab-count">{basicCount}</span>
                                     </button>
                                 </div>
 
