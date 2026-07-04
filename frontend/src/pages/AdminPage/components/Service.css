@@ -428,3 +428,17 @@
         gap: 0;
     }
 }
+
+@media (max-width: 480px) {
+    .service-item__image {
+        height: 140px;
+    }
+
+    .service-item__actions {
+        flex-direction: column;
+    }
+
+    .service-detail-descriptions .ant-descriptions-item-label {
+        width: auto !important;
+    }
+}
