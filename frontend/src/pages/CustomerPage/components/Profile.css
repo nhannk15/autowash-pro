@@ -19,93 +19,64 @@
     margin-bottom: 24px;
 }
 
-/* Tabs styling */
-.profile-tabs .ant-tabs-nav {
-    margin-bottom: 24px !important;
+.profile-info-card {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 32px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
 }
 
-.profile-tabs .ant-tabs-tab {
-    font-weight: 600 !important;
-    font-size: 15px !important;
-    color: #555555 !important;
-    padding: 10px 0 !important;
-}
-
-.profile-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
-    color: #002b7f !important;
-}
-
-.profile-tabs .ant-tabs-ink-bar {
-    background: #002b7f !important;
-    height: 3px !important;
-}
-
-/* Form layout */
-.profile-form {
+.profile-info-row {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f1f5f9;
 }
 
-.profile-form__row {
-    display: flex;
-    gap: 20px;
-    width: 100%;
+.profile-info-row:last-of-type {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
 }
 
-.profile-form__item {
-    flex: 1;
-    margin-bottom: 0 !important;
+.profile-info-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
 }
 
-/* Form Item Label */
-.profile-form .ant-form-item-label > label {
-    font-size: 11px !important;
-    font-weight: 700 !important;
-    color: #002b7f !important;
-    letter-spacing: 0.5px;
+.profile-info-value {
+    font-size: 16px;
+    font-weight: 500;
+    color: #0f172a;
 }
 
-/* Form inputs */
-.profile-form .ant-input,
-.profile-form .ant-input-password,
-.profile-form .ant-input-affix-wrapper {
-    border: 1px solid #cccccc !important;
-    border-radius: 4px !important;
-    transition: all 0.3s;
-    font-size: 14px;
-}
-
-.profile-form .ant-input:focus,
-.profile-form .ant-input-affix-wrapper-focused {
-    border-color: #002b7f !important;
-    box-shadow: 0 0 0 2px rgba(0, 43, 127, 0.1) !important;
-}
-
-/* Form submit button */
-.profile-form__btn-submit {
+.profile-btn-change-password {
     background-color: #002b7f !important;
     border-color: #002b7f !important;
     color: #ffffff !important;
     font-weight: 700 !important;
-    border-radius: 2px !important;
-    padding: 8px 32px !important;
-    height: auto !important;
+    border-radius: 4px !important;
+    padding: 0 32px !important;
+    height: 44px !important;
     font-size: 14px !important;
     box-shadow: 0 4px 6px rgba(0, 43, 127, 0.15) !important;
     transition: all 0.3s !important;
     letter-spacing: 0.5px;
 }
 
-.profile-form__btn-submit:hover {
+.profile-btn-change-password:hover {
     background-color: #001f5c !important;
     border-color: #001f5c !important;
     transform: translateY(-1px);
+    box-shadow: 0 6px 12px rgba(0, 43, 127, 0.2) !important;
 }
 
-.profile-notifications {
-    padding: 16px;
-    background: #f9f9f9;
-    border-radius: 4px;
-    border: 1px dashed #dddddd;
+.forgot-flow-container p {
+    color: #64748b;
 }
