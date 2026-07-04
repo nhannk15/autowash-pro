@@ -410,4 +410,82 @@ public class EmailService {
                 .replace("{vehicleType}", booking.getVehicle().getVehicleType().getTypeName())
                 .replace("{services}", services.toString());
     }
+
+    /**
+     * Gửi email chào mừng đăng ký tài khoản thành công.
+     * @param defaultPassword nếu != null thì hiển thị mật khẩu mặc định trong email (cho walk-in).
+     * nếu == null thì chỉ thông báo đăng ký thành công (cho đăng ký thường).
+     */
+    public void sendWelcomeEmail(String toEmail, String fullName, String defaultPassword) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom("autowashpro.noreply@gmail.com", "AutoWash Pro");
+            helper.setTo(toEmail);
+            helper.setSubject("Chào mừng bạn đến với AutoWash Pro!");
+
+            String htmlContent = buildWelcomeEmailTemplate(fullName, defaultPassword);
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+            log.info("Welcome email sent successfully to: {}", toEmail);
+        } catch (Exception e) {
+            log.error("Failed to send welcome email to: {}", toEmail, e);
+        }
+    }
+
+    private String buildWelcomeEmailTemplate(String fullName, String defaultPassword) {
+        String passwordSection = "";
+        if (defaultPassword != null) {
+            passwordSection = """
+                <tr>
+                <td style="padding: 16px 24px; background-color: #fff3e0; border-radius: 8px; margin: 16px 0;">
+                <p style="margin: 0; color: #e65100; font-weight: bold;">🔑 Thông tin đăng nhập của bạn:</p>
+                <p style="margin: 8px 0 0 0; color: #333;">
+                Email: <strong>%s</strong><br/>
+                Mật khẩu: <strong>%s</strong>
+                </p>
+                <p style="margin: 8px 0 0 0; color: #999; font-size: 12px;">
+                Vui lòng đổi mật khẩu sau khi đăng nhập lần đầu.
+                </p>
+                </td>
+                </tr>
+                """.formatted(fullName, defaultPassword);
+        }
+
+        return """
+                <!DOCTYPE html>
+                <html>
+                <head><meta charset="UTF-8"></head>
+                <body style="margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background-color:#f5f5f5;">
+                <table width="100%%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.1);">
+                <tr>
+                <td style="background: linear-gradient(135deg, #1976d2, #42a5f5); padding: 32px; text-align: center;">
+                <h1 style="color:#ffffff;margin:0;font-size:24px;">🚗 AutoWash Pro</h1>
+                <p style="color:#e3f2fd;margin:8px 0 0 0;">Chào mừng thành viên mới!</p>
+                </td>
+                </tr>
+                <tr>
+                <td style="padding: 32px 24px;">
+                <h2 style="color:#333;margin:0 0 16px 0;">Xin chào %s! 👋</h2>
+                <p style="color:#666;line-height:1.6;">
+                Tài khoản của bạn tại <strong>AutoWash Pro</strong> đã được tạo thành công!
+                Bạn có thể đặt lịch rửa xe, tích điểm thưởng và nhận ưu đãi đặc biệt.
+                </p>
+                </td>
+                </tr>
+                %s
+                <tr>
+                <td style="padding: 24px; text-align: center; background-color: #fafafa; border-top: 1px solid #eee;">
+                <p style="color:#999;font-size:12px;margin:0;">
+                © 2025 AutoWash Pro. Mọi quyền được bảo lưu.
+                </p>
+                </td>
+                </tr>
+                </table>
+                </body>
+                </html>
+                """.formatted(fullName, passwordSection);
+    }
 }
