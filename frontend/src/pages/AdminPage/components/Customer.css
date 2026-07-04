@@ -175,6 +175,8 @@
 /* ─── Responsive ─── */
 @media (max-width: 768px) {
     .customer-toolbar {
+        flex-direction: column;
+        align-items: stretch;
         justify-content: flex-start;
     }
 
@@ -185,5 +187,9 @@
 
     .customer-toolbar-btn {
         width: 100%;
+    }
+
+    .customer-table-wrapper {
+        overflow-x: auto;
     }
 }
