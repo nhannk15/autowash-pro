@@ -9,7 +9,7 @@ import {
     DollarCircleOutlined, CalendarOutlined, UserAddOutlined, CarOutlined,
     UnorderedListOutlined, CrownOutlined, WarningOutlined, BellOutlined,
     CheckCircleOutlined, UserOutlined, FallOutlined,
-    ArrowUpOutlined, ArrowDownOutlined,
+    ArrowUpOutlined, ArrowDownOutlined, GiftOutlined,
 } from '@ant-design/icons';
 import {
     LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
@@ -22,6 +22,7 @@ import {
     getDashboardSummary, getServiceDistribution, getRevenueChart,
     getPeakHours, getRecentTransactions,
     getDeductionChart, getPromotionPerformance, getDeductionSummary,
+    getPromotionUsages, getPromotionUsageCount,
 } from '../../../service/adminService';
 import './AdminDashboard.css';
 
@@ -87,6 +88,46 @@ const transactionColumns = [
     },
 ];
 
+// ─── Promotion usage history table columns ──────────────
+const promotionUsageColumns = [
+    {
+        title: 'Thời gian',
+        dataIndex: 'usedAt',
+        width: 90,
+        render: (v) => {
+            if (!v) return '—';
+            const d = new Date(v);
+            return (
+                <div>
+                    <span className="admin-txn-date">
+                        {`${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`}
+                    </span>
+                    <br />
+                    <span className="admin-txn-time">
+                        {`${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`}
+                    </span>
+                </div>
+            );
+        },
+    },
+    {
+        title: 'Khuyến mãi',
+        dataIndex: 'promotionName',
+        render: (v) => <Tag color="purple">{v || '—'}</Tag>,
+    },
+    {
+        title: 'Khách hàng',
+        dataIndex: 'customerName',
+        render: (v) => <span className="admin-txn-customer">{v || '—'}</span>,
+    },
+    {
+        title: 'Giảm giá',
+        dataIndex: 'discountAmount',
+        align: 'right',
+        render: (v) => <span className="admin-txn-amount">{formatCurrency(v)}</span>,
+    },
+];
+
 // ─── Main Component ─────────────────────────────────────
 export default function AdminDashboard() {
     const [bays, setBays] = useState([]);
@@ -104,6 +145,10 @@ export default function AdminDashboard() {
     const [deductionChart, setDeductionChart] = useState([]);
     const [promotionPerformance, setPromotionPerformance] = useState([]);
     const [deductionSummary, setDeductionSummary] = useState(null);
+
+    // ── Lượt sử dụng khuyến mãi states ──
+    const [promotionUsages, setPromotionUsages] = useState([]);
+    const [promotionUsageCount, setPromotionUsageCount] = useState(0);
 
     const [filterMode, setFilterMode] = useState('range');
     const [dateRange, setDateRange] = useState([dayjs(), dayjs()]);
@@ -172,6 +217,19 @@ export default function AdminDashboard() {
     useEffect(() => { getDeductionChart(apiParams).then(setDeductionChart).catch(console.error); }, [apiParamsKey]);
     useEffect(() => { getPromotionPerformance(apiParams).then(setPromotionPerformance).catch(console.error); }, [apiParamsKey]);
     useEffect(() => { getDeductionSummary(apiParams).then(setDeductionSummary).catch(console.error); }, [apiParamsKey]);
+
+    // ── Fetch dữ liệu lượt sử dụng khuyến mãi (reactive theo filter) ──
+    useEffect(() => {
+        getPromotionUsages(apiParams).then((data) => {
+            setPromotionUsages([...data].sort((a, b) => new Date(b.usedAt) - new Date(a.usedAt)));
+        }).catch(console.error);
+    }, [apiParamsKey]);
+
+    useEffect(() => {
+        getPromotionUsageCount(apiParams).then((data) => {
+            setPromotionUsageCount(data?.totalUsageCount ?? 0);
+        }).catch(console.error);
+    }, [apiParamsKey]);
 
     // Tính breakdown cho PieChart từ dữ liệu summary (màu do FE quản lý)
     const deductionBreakdown = useMemo(() => {
@@ -270,12 +328,12 @@ export default function AdminDashboard() {
                 {/* ── Cột trái (70%) ── */}
                 <Col xs={24} lg={17}>
 
-                    {/* KPI Cards – 5 cột */}
+                    {/* KPI Cards – 6 cột */}
                     {loadingTodayBookings ? (
                         <div className="admin-dashboard__loading-center"><Spin size="large" /></div>
                     ) : (
                         <Row gutter={[16, 16]} className="dashboard__stats-row">
-                            <Col xs={12} sm={8} lg={5}>
+                            <Col xs={12} sm={8} lg={4}>
                                 <Card className="stat-card">
                                     <Statistic
                                         title="Doanh thu"
@@ -303,7 +361,7 @@ export default function AdminDashboard() {
                                     })()}
                                 </Card>
                             </Col>
-                            <Col xs={12} sm={8} lg={5}>
+                            <Col xs={12} sm={8} lg={4}>
                                 <Card className="stat-card">
                                     <Statistic
                                         title="Tổng khấu trừ"
@@ -313,7 +371,7 @@ export default function AdminDashboard() {
                                     />
                                 </Card>
                             </Col>
-                            <Col xs={12} sm={8} lg={5}>
+                            <Col xs={12} sm={8} lg={4}>
                                 <Card className="stat-card">
                                     <Statistic
                                         title="Lịch hẹn"
@@ -322,7 +380,7 @@ export default function AdminDashboard() {
                                     />
                                 </Card>
                             </Col>
-                            <Col xs={12} sm={8} lg={5}>
+                            <Col xs={12} sm={8} lg={4}>
                                 <Card className="stat-card">
                                     <Statistic
                                         title="Khách mới"
@@ -337,6 +395,15 @@ export default function AdminDashboard() {
                                         title="Đã hoàn thành"
                                         value={dashboardData?.completedBookings ?? 0}
                                         prefix={<CheckCircleOutlined className="stat-icon text-green" />}
+                                    />
+                                </Card>
+                            </Col>
+                            <Col xs={12} sm={8} lg={4}>
+                                <Card className="stat-card">
+                                    <Statistic
+                                        title="Lượt dùng KM"
+                                        value={promotionUsageCount}
+                                        prefix={<GiftOutlined className="stat-icon" style={{ color: '#7F77DD' }} />}
                                     />
                                 </Card>
                             </Col>
@@ -417,6 +484,29 @@ export default function AdminDashboard() {
                         ) : (
                             <div className="admin-dashboard__empty-chart">
                                 <Text type="secondary">Chưa có dữ liệu khấu trừ</Text>
+                            </div>
+                        )}
+                    </Card>
+
+                    {/* Lịch sử sử dụng khuyến mãi */}
+                    <Card
+                        size="small"
+                        title={`Lịch sử sử dụng khuyến mãi - ${filterLabel}`}
+                        className="admin-dashboard__chart-card"
+                        bodyStyle={{ maxHeight: 280, overflowY: 'auto', padding: 0 }}
+                    >
+                        {promotionUsages.length > 0 ? (
+                            <Table
+                                dataSource={promotionUsages}
+                                columns={promotionUsageColumns}
+                                rowKey="id"
+                                pagination={false}
+                                size="small"
+                                className="admin-txn-table"
+                            />
+                        ) : (
+                            <div className="admin-dashboard__empty-chart">
+                                <Text type="secondary">Chưa có lượt sử dụng khuyến mãi nào</Text>
                             </div>
                         )}
                     </Card>
