@@ -70,6 +70,8 @@ export default function BookingList() {
     const [selectedVehicle, setSelectedVehicle] = useState(null);
     const [loadingVehicles, setLoadingVehicles] = useState(false);
     const [errorVehicles, setErrorVehicles] = useState(null);
+    const [showAllVehicles, setShowAllVehicles] = useState(false); // Trạng thái "Xem thêm" xe
+    const VEHICLES_INITIAL_LIMIT = 3; // Số xe hiển thị mặc định
 
     // Lấy danh sách xe của khách hàng từ API thực tế
     useEffect(() => {
@@ -517,60 +519,77 @@ export default function BookingList() {
                     ) : userVehicles.length === 0 ? (
                         <p style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>Bạn chưa có xe nào. Hãy vào trang "Xe của tôi" để thêm xe.</p>
                     ) : (
-                        <div className="vehicle-selection-grid">
-                            {userVehicles.map((vehicle) => {
-                                const isSelected = selectedVehicle?.vehicleId === vehicle.vehicleId;
-                                const isSedan = vehicle.typeName === 'SEDAN';
-                                return (
-                                    <div
-                                        key={vehicle.vehicleId}
-                                        className={`vehicle-card ${isSelected ? 'active' : ''}`}
-                                        onClick={() => {
-                                            setSelectedVehicle(vehicle);
-                                            setSelectedVehicleType(vehicle.typeName);
-                                            setMaxUnlockedStep(2);
-                                        }}
+                        <>
+                            <div className="vehicle-selection-grid">
+                                {(showAllVehicles ? userVehicles : userVehicles.slice(0, VEHICLES_INITIAL_LIMIT)).map((vehicle) => {
+                                    const isSelected = selectedVehicle?.vehicleId === vehicle.vehicleId;
+                                    const isSedan = vehicle.typeName === 'SEDAN';
+                                    return (
+                                        <div
+                                            key={vehicle.vehicleId}
+                                            className={`vehicle-card ${isSelected ? 'active' : ''}`}
+                                            onClick={() => {
+                                                setSelectedVehicle(vehicle);
+                                                setSelectedVehicleType(vehicle.typeName);
+                                                setMaxUnlockedStep(2);
+                                            }}
+                                        >
+                                            {/* Hình ảnh xe hoặc Icon phân khúc xe */}
+                                            <div className="vehicle-card__image-container">
+                                                <VehicleImage
+                                                    src={vehicle.image}
+                                                    alt={`${vehicle.brand} ${vehicle.model}`}
+                                                    fallbackIcon={
+                                                        // Thuộc tính fallbackIcon ở dòng 460 được dùng làm ảnh/biểu tượng thay thế dự phòng khi ảnh chính của xe không thể hiển thị được.
+                                                        // Nếu bạn nhìn lên phần định nghĩa component VehicleImage ở đầu file (từ dòng 7 đến dòng 23):
+                                                        <div className="vehicle-card__icon-wrapper">
+                                                            {isSedan ? <CarOutlined /> : <span style={{ fontSize: '24px' }}>🚙</span>}
+                                                        </div>
+                                                    }
+                                                />
+                                            </div>
+
+                                            {/* Tên hãng & dòng xe */}
+                                            <h3 className="vehicle-card__title">{vehicle.brand} {vehicle.model}</h3>
+
+                                            {/* Phân khúc xe */}
+                                            <span className="vehicle-card__type-tag">
+                                                {isSedan ? 'Sedan (4-5 chỗ)' : 'SUV (5-7 chỗ)'}
+                                            </span>
+
+                                            {/* Chi tiết biển số & màu sắc */}
+                                            <div className="vehicle-card__details">
+                                                <div className="vehicle-detail-row">
+                                                    <span className="vehicle-detail-label">Biển số:</span>
+                                                    <span className="vehicle-detail-value license-plate">{vehicle.licensePlate}</span>
+                                                </div>
+                                                <div className="vehicle-detail-row">
+                                                    <span className="vehicle-detail-label">Màu sắc:</span>
+                                                    <span className="vehicle-detail-value">{vehicle.color || 'Chưa cập nhật'}</span>
+                                                </div>
+                                            </div>
+
+                                            {isSelected && <span className="vehicle-card__badge">✓ Đã chọn</span>}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Nút Xem thêm / Thu gọn */}
+                            {userVehicles.length > VEHICLES_INITIAL_LIMIT && (
+                                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
+                                    <button
+                                        className="btn-show-more-vehicles"
+                                        onClick={() => setShowAllVehicles(prev => !prev)}
                                     >
-                                        {/* Hình ảnh xe hoặc Icon phân khúc xe */}
-                                        <div className="vehicle-card__image-container">
-                                            <VehicleImage
-                                                src={vehicle.image}
-                                                alt={`${vehicle.brand} ${vehicle.model}`}
-                                                fallbackIcon={
-                                                    // Thuộc tính fallbackIcon ở dòng 460 được dùng làm ảnh/biểu tượng thay thế dự phòng khi ảnh chính của xe không thể hiển thị được.
-                                                    // Nếu bạn nhìn lên phần định nghĩa component VehicleImage ở đầu file (từ dòng 7 đến dòng 23):
-                                                    <div className="vehicle-card__icon-wrapper">
-                                                        {isSedan ? <CarOutlined /> : <span style={{ fontSize: '24px' }}>🚙</span>}
-                                                    </div>
-                                                }
-                                            />
-                                        </div>
-
-                                        {/* Tên hãng & dòng xe */}
-                                        <h3 className="vehicle-card__title">{vehicle.brand} {vehicle.model}</h3>
-
-                                        {/* Phân khúc xe */}
-                                        <span className="vehicle-card__type-tag">
-                                            {isSedan ? 'Sedan (4-5 chỗ)' : 'SUV (5-7 chỗ)'}
-                                        </span>
-
-                                        {/* Chi tiết biển số & màu sắc */}
-                                        <div className="vehicle-card__details">
-                                            <div className="vehicle-detail-row">
-                                                <span className="vehicle-detail-label">Biển số:</span>
-                                                <span className="vehicle-detail-value license-plate">{vehicle.licensePlate}</span>
-                                            </div>
-                                            <div className="vehicle-detail-row">
-                                                <span className="vehicle-detail-label">Màu sắc:</span>
-                                                <span className="vehicle-detail-value">{vehicle.color || 'Chưa cập nhật'}</span>
-                                            </div>
-                                        </div>
-
-                                        {isSelected && <span className="vehicle-card__badge">✓ Đã chọn</span>}
-                                    </div>
-                                );
-                            })}
-                        </div>
+                                        {showAllVehicles
+                                            ? `Thu gọn ▲`
+                                            : `Xem thêm ${userVehicles.length - VEHICLES_INITIAL_LIMIT} xe ▼`
+                                        }
+                                    </button>
+                                </div>
+                            )}
+                        </>
                     )}
 
                     <div className="step-1-footer">
@@ -605,19 +624,33 @@ export default function BookingList() {
                                     Chọn các dịch vụ chăm sóc tốt nhất cho xe của bạn ({selectedVehicleType === 'SEDAN' ? 'Xe Sedan' : 'Xe SUV / Bán tải'})
                                 </p>
 
-                                <div className="booking-filter-tabs">
-                                    <button
-                                        className={`booking-filter-btn ${activeTab === 'basic' ? 'active' : ''}`}
-                                        onClick={() => setActiveTab('basic')}
-                                    >
-                                        Cơ bản <span className="tab-count">{basicCount}</span>
-                                    </button>
-                                    <button
-                                        className={`booking-filter-btn ${activeTab === 'premium' ? 'active' : ''}`}
-                                        onClick={() => setActiveTab('premium')}
-                                    >
-                                        ✨ Cao cấp <span className="tab-count">{premiumCount}</span>
-                                    </button>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                                    <div className="booking-filter-tabs" style={{ marginBottom: 0 }}>
+                                        <button
+                                            className={`booking-filter-btn ${activeTab === 'basic' ? 'active' : ''}`}
+                                            onClick={() => setActiveTab('basic')}
+                                        >
+                                            Cơ bản <span className="tab-count">{basicCount}</span>
+                                        </button>
+                                        <button
+                                            className={`booking-filter-btn ${activeTab === 'premium' ? 'active' : ''}`}
+                                            onClick={() => setActiveTab('premium')}
+                                        >
+                                            ✨ Cao cấp <span className="tab-count">{premiumCount}</span>
+                                        </button>
+                                    </div>
+                                    
+                                    {selectedServices.length > 0 && (
+                                        <button
+                                            className="btn-clear-services"
+                                            onClick={() => {
+                                                setSelectedServices([]);
+                                                setMaxUnlockedStep(2);
+                                            }}
+                                        >
+                                            Hủy chọn tất cả
+                                        </button>
+                                    )}
                                 </div>
 
                                 {loadingServices ? (

@@ -6,7 +6,7 @@ import { useAuth } from '../../../context/AuthContext';
 import './Sidebar.css';
 
 export default function Sidebar({ menuItems, children, theme = 'dark' }) {
-    const [collapsed, setCollapsed] = useState(true);
+    const [collapsed, setCollapsed] = useState(false);
     const renderItems = menuItems;
     const navigate = useNavigate();
     const location = useLocation();
@@ -32,7 +32,7 @@ export default function Sidebar({ menuItems, children, theme = 'dark' }) {
     };
 
     return (
-        <div className="dashboard-layout">
+        <div className={`dashboard-layout dashboard-layout--${theme}`}>
             <div className="dashboard-layout__body">
                 {/* Sidebar */}
                 <aside className={`sidebar ${collapsed ? 'sidebar--collapsed' : ''} sidebar--${theme}`}>
