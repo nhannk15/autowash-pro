@@ -81,7 +81,7 @@
     border: 1px solid #e8e8e8;
     border-radius: 12px;
     padding: 16px;
-    height: 250px;
+    min-height: 250px;
     display: flex;
     flex-direction: column;
     transition: all 0.2s ease;
@@ -317,4 +317,20 @@
 
 .action-btn--booking:hover {
     background: #1939b7 !important;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 576px) {
+    .staff-dashboard {
+        padding: 8px;
+    }
+
+    .bay-card {
+        min-height: 210px;
+        padding: 12px;
+    }
+
+    .stat-card .ant-statistic-content {
+        font-size: 18px;
+    }
 }
