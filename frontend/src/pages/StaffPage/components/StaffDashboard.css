@@ -299,24 +299,22 @@
     height: 40px;
 }
 
-.action-btn--checkin {
-    background: #52c41a !important;
-    border: none;
-}
-
-.action-btn--checkin:hover {
-    background: #73d13d !important;
-}
-
+/* Nút "Tạo tài khoản / Thêm xe" */
 .action-btn--walkin {
+    background: #1b40d2 !important;
     border: none;
 }
 
 .action-btn--walkin:hover {
-    background: #0a4ac8 !important;
+    background: #1939b7 !important;
 }
 
-/* --- Walk-in Modal --- */
-.walkin-modal__body {
-    margin-top: 16px;
+/* Nút "Tạo lịch dịch vụ" */
+.action-btn--booking {
+    background: #1b40d2 !important;
+    border: none;
+}
+
+.action-btn--booking:hover {
+    background: #1939b7 !important;
 }
