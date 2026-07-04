@@ -37,7 +37,7 @@ public interface BillingMapper {
 
     List<RecentTransactionItem> toRecentTransactionItems(List<Billing> billings);
 
-    @Mapping(target = "day", source = "paidAt", qualifiedByName = "toDate")
+    @Mapping(target = "day", expression = "java(toDate(billing))")
     @Mapping(target = "revenue", source = "finalAmount")
     @Mapping(target = "totalOrders", ignore = true)
     RevenueDataResponse toRevenueDataResponse(Billing billing);
@@ -46,9 +46,16 @@ public interface BillingMapper {
 
     BookingBillingResponse toBookingBillingResponse(Billing billing);
 
-    @Named("toDate")
-    default LocalDate toDate(LocalDateTime paidAt) {
-        return paidAt.toLocalDate();
+    default LocalDate toDate(Billing billing) {
+        LocalDateTime paidAt = billing.getPaidAt();
+        LocalDateTime depositPaidAt = billing.getDepositPaidAt();
+        if (paidAt != null) {
+            return paidAt.toLocalDate();
+        } else if (depositPaidAt != null) {
+            return depositPaidAt.toLocalDate();
+        } else {
+            return null;
+        }
     }
 
     default BigDecimal calculateFinalAmount(Billing billing) {

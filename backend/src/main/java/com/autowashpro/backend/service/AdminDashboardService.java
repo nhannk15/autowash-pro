@@ -906,9 +906,13 @@ public class AdminDashboardService {
                 })
                 .reduce(BigDecimal::add)
                 .orElse(BigDecimal.ZERO);
-
-        BigDecimal discountRate = totalDiscount.multiply(new BigDecimal(100L)).divide(totalOriginalRevenue, 2,
-                RoundingMode.HALF_UP);
+        log.info("calculateDeductionSummaryResponse() - calculating discountRate, maybe exception will raised here");
+        
+        BigDecimal discountRate = BigDecimal.ZERO;
+        if (!totalOriginalRevenue.equals(BigDecimal.ZERO)) {
+        discountRate = totalDiscount.multiply(new BigDecimal(100L)).divide(totalOriginalRevenue, 2,
+                RoundingMode.HALF_UP);    
+        }
 
         long totalPromotionUsages = 0;
 
