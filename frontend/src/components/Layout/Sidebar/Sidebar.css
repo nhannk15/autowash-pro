@@ -12,6 +12,7 @@
     height: auto;
     min-height: calc(100vh - 64px);
     overflow: visible;
+    background-color: #ffffff;
 }
 
 .dashboard-layout--light .dashboard-layout__body {
@@ -284,6 +285,7 @@
     background-color: #ffffff;
     padding: 0;
     overflow: visible;
+    min-height: calc(100vh - 64px);
 }
 
 .sidebar--light .sidebar__profile {
