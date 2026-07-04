@@ -81,6 +81,22 @@ export async function getDeductionSummary({ startDate, endDate, month, year }) {
     return response.data;
 }
 
+// Lượt sử dụng khuyến mãi chi tiết (danh sách, dùng cho bảng lịch sử)
+export async function getPromotionUsages({ startDate, endDate, month, year }) {
+    const response = await axios.post(`${API}/api/admin/dashboard/promotion-usages`, {
+        startDate, endDate, month, year
+    }, { withCredentials: true });
+    return response.data;
+}
+
+// Tổng số lượt sử dụng khuyến mãi (dùng cho KPI card)
+export async function getPromotionUsageCount({ startDate, endDate, month, year }) {
+    const response = await axios.post(`${API}/api/admin/dashboard/promotion-usage-count`, {
+        startDate, endDate, month, year
+    }, { withCredentials: true });
+    return response.data;
+}
+
 // Lấy danh sách tất cả khách hàng
 export async function getCustomers(params) {
     const response = await axios.get(`${API}/api/admin/customers`, {
