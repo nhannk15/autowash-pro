@@ -98,6 +98,9 @@ jobs:
             # Login to ECR
             aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin $ECR_REGISTRY
 
+            # Pull latest source code (docker-compose.yml, configs, ...)
+            git pull origin develop
+
             # Pull latest pre-built images từ ECR và restart (không build trên EC2)
             docker compose pull
             docker compose up -d --remove-orphans
