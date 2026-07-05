@@ -608,12 +608,18 @@ export default function AdminDashboard() {
                                     const session = getCurrentSession(bay);
                                     const displayStatus = getBayDisplayStatus(bay);
                                     const isOccupied = displayStatus === 'OCCUPIED' || displayStatus === 'COMPLETED';
+                                    const isPremium = bay.category?.toUpperCase() === 'PREMIUM';
 
                                     return (
                                         <Col xs={24} sm={12} md={8} key={bay.id}>
-                                            <div className={`bay-card bay-card--${displayStatus.toLowerCase()}${displayStatus === 'COMPLETED' ? ' bay-card--completed' : ''} admin-bay-card`}>
+                                            <div className={`bay-card bay-card--${displayStatus.toLowerCase()}${displayStatus === 'COMPLETED' ? ' bay-card--completed' : ''}${isPremium ? ' bay-card--premium' : ''} admin-bay-card`}>
                                                 <div className="bay-card__header">
-                                                    <span className="bay-card__name">{bay.name}</span>
+                                                    <span className="bay-card__name">
+                                                        {bay.name}
+                                                        {isPremium && (
+                                                            <span className="bay-card__premium-badge">Premium</span>
+                                                        )}
+                                                    </span>
                                                     <Badge status={getBayStatusColor(displayStatus)} text={getBayStatusText(displayStatus)} />
                                                 </div>
                                                 <div className="bay-card__content">

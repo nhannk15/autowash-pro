@@ -81,11 +81,12 @@
     border: 1px solid #e8e8e8;
     border-radius: 12px;
     padding: 16px;
-    min-height: 250px;
+    height: 250px;
     display: flex;
     flex-direction: column;
     transition: all 0.2s ease;
     background: #fff;
+    position: relative;
 }
 
 .bay-card:hover {
@@ -106,6 +107,23 @@
     font-size: 15px;
     font-family: system-ui, -apple-system, sans-serif;
     color: #1a1a2e;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.bay-card__premium-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #ad6800;
+    background: #fff7e6;
+    border: 1px solid #ffd591;
+    border-radius: 999px;
+    padding: 1px 8px;
+    line-height: 1.6;
 }
 
 .bay-card__content {
@@ -231,6 +249,12 @@
     border-color: #ffccc7;
 }
 
+/* ===== Bay Premium ===== */
+/* Chỉ viền vàng mỏng, không ghi đè màu nền trạng thái (available/occupied/maintenance/completed) */
+.bay-card--premium {
+    border: 1.5px solid #faad14 !important;
+}
+
 /* ===== Right Column ===== */
 
 /* --- Quick Actions --- */
@@ -318,7 +342,6 @@
 .action-btn--booking:hover {
     background: #1939b7 !important;
 }
-
 /* ===== RESPONSIVE ===== */
 @media (max-width: 576px) {
     .staff-dashboard {
