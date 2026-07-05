@@ -94,4 +94,12 @@ public interface BillingRepository extends JpaRepository<Billing, Long> {
             """, nativeQuery = true)
     Optional<Billing> findMinBilling();
 
+    @Query("""
+            SELECT billing
+            FROM Billing billing
+            JOIN billing.booking booking
+            WHERE booking.customer.id = :customerId
+            """)
+    List<Billing> findCustomerBillingHistory(Long customerId);
+
 }

@@ -1,8 +1,6 @@
-/* Reset/General Styles */
 .payment-container {
     padding: 24px;
     background: #f8fafc;
-    min-height: 100vh;
 }
 
 .payment-header {

@@ -32,7 +32,7 @@ export default function Sidebar({ menuItems, children, theme = 'dark' }) {
     };
 
     return (
-        <div className="dashboard-layout">
+        <div className={`dashboard-layout dashboard-layout--${theme}`}>
             <div className="dashboard-layout__body">
                 {/* Sidebar */}
                 <aside className={`sidebar ${collapsed ? 'sidebar--collapsed' : ''} sidebar--${theme}`}>

@@ -41,6 +41,8 @@ export default function MyCars() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false); // Trạng thái Modal sửa
     const [formEdit] = Form.useForm(); // Form sửa xe độc lập
     const [editFileList, setEditFileList] = useState([]); // File ảnh của xe đang sửa
+    const [showAllVehicles, setShowAllVehicles] = useState(false); // Trạng thái "Xem thêm"
+    const VEHICLES_INITIAL_LIMIT = 3; // Số xe hiển thị mặc định
     // Tải danh sách xe của khách hàng
     const fetchVehicles = async () => {
         if (!user) {
@@ -286,123 +288,140 @@ export default function MyCars() {
                     <Button type="primary" onClick={() => setIsModalOpen(true)}>Đăng ký xe ngay</Button>
                 </Empty>
             ) : (
-                <div className="mycars-grid">
-                    {vehicles.map((vehicle) => {
-                        const isSedan = vehicle.typeName === 'SEDAN';
-                        const isCarActive = vehicle.active !== false && vehicle.isActive !== false;
-                        return (
-                            <Card
-                                key={vehicle.vehicleId}
-                                className={`mycar-card ${!isCarActive ? 'mycar-card--inactive' : ''}`}
-                                bordered={false}
-                            >
-                                <div className="mycar-card__content">
+                <>
+                    <div className="mycars-grid">
+                        {(showAllVehicles ? vehicles : vehicles.slice(0, VEHICLES_INITIAL_LIMIT)).map((vehicle) => {
+                            const isSedan = vehicle.typeName === 'SEDAN';
+                            const isCarActive = vehicle.active !== false && vehicle.isActive !== false;
+                            return (
+                                <Card
+                                    key={vehicle.vehicleId}
+                                    className={`mycar-card ${!isCarActive ? 'mycar-card--inactive' : ''}`}
+                                    bordered={false}
+                                >
+                                    <div className="mycar-card__content">
 
 
-                                    {/* Hình ảnh xe hoặc Icon phân khúc xe */}
-                                    <div className="mycar-card__image-wrapper">
-                                        <VehicleImage
-                                            src={vehicle.image}
-                                            alt={`${vehicle.brand} ${vehicle.model}`}
-                                            fallbackIcon={
-                                                <div className="mycar-card__icon-wrapper">
-                                                    {isSedan ? <CarOutlined /> : <span style={{ fontSize: '24px' }}>🚙</span>}
-                                                </div>
-                                            }
-                                        />
-                                    </div>
+                                        {/* Hình ảnh xe hoặc Icon phân khúc xe */}
+                                        <div className="mycar-card__image-wrapper">
+                                            <VehicleImage
+                                                src={vehicle.image}
+                                                alt={`${vehicle.brand} ${vehicle.model}`}
+                                                fallbackIcon={
+                                                    <div className="mycar-card__icon-wrapper">
+                                                        {isSedan ? <CarOutlined /> : <span style={{ fontSize: '24px' }}>🚙</span>}
+                                                    </div>
+                                                }
+                                            />
+                                        </div>
 
-                                    {/* Tên hãng & model & Menu */}
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px', width: '100%' }}>
-                                        <h3 className="mycar-card__name" style={{ marginBottom: 0 }}>{vehicle.brand} {vehicle.model}</h3>
-                                        
-                                        {/* Menu Hành động */}
-                                        {isCarActive && (
-                                            <Dropdown
-                                                menu={{
-                                                    items: [
-                                                        {
-                                                            key: 'edit',
-                                                            label: 'Sửa thông tin',
-                                                            icon: <EditOutlined />,
-                                                            onClick: () => handleEditClick(vehicle)
-                                                        },
-                                                        {
-                                                            key: 'delete',
-                                                            label: 'Xóa xe',
-                                                            icon: <DeleteOutlined />,
-                                                            danger: true,
-                                                            onClick: () => {
-                                                                Modal.confirm({
-                                                                    title: 'Xóa phương tiện',
-                                                                    content: 'Bạn có chắc chắn muốn xóa xe này?',
-                                                                    okText: 'Xóa',
-                                                                    okType: 'danger',
-                                                                    cancelText: 'Hủy',
-                                                                    onOk: () => handleDeleteVehicle(vehicle.vehicleId),
-                                                                    maskClosable: true,
-                                                                });
+                                        {/* Tên hãng & model & Menu */}
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '8px', width: '100%' }}>
+                                            <h3 className="mycar-card__name" style={{ marginBottom: 0 }}>{vehicle.brand} {vehicle.model}</h3>
+
+                                            {/* Menu Hành động */}
+                                            {isCarActive && (
+                                                <Dropdown
+                                                    menu={{
+                                                        items: [
+                                                            {
+                                                                key: 'edit',
+                                                                label: 'Sửa thông tin',
+                                                                icon: <EditOutlined />,
+                                                                onClick: () => handleEditClick(vehicle)
+                                                            },
+                                                            {
+                                                                key: 'delete',
+                                                                label: 'Xóa xe',
+                                                                icon: <DeleteOutlined />,
+                                                                danger: true,
+                                                                onClick: () => {
+                                                                    Modal.confirm({
+                                                                        title: 'Xóa phương tiện',
+                                                                        content: 'Bạn có chắc chắn muốn xóa xe này?',
+                                                                        okText: 'Xóa',
+                                                                        okType: 'danger',
+                                                                        cancelText: 'Hủy',
+                                                                        onOk: () => handleDeleteVehicle(vehicle.vehicleId),
+                                                                        maskClosable: true,
+                                                                    });
+                                                                }
                                                             }
-                                                        }
-                                                    ]
-                                                }}
-                                                trigger={['click']}
-                                                placement="bottomRight"
-                                            >
-                                                <Button
-                                                    type="text"
-                                                    icon={<SettingOutlined style={{ fontSize: '18px', color: '#64748b' }} />}
-                                                    style={{
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        border: 'none',
-                                                        padding: '4px',
-                                                        width: '32px',
-                                                        height: '32px',
-                                                        backgroundColor: 'transparent'
+                                                        ]
                                                     }}
-                                                />
-                                            </Dropdown>
+                                                    trigger={['click']}
+                                                    placement="bottomRight"
+                                                >
+                                                    <Button
+                                                        type="text"
+                                                        icon={<SettingOutlined style={{ fontSize: '18px', color: '#64748b' }} />}
+                                                        style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            border: 'none',
+                                                            padding: '4px',
+                                                            width: '32px',
+                                                            height: '32px',
+                                                            backgroundColor: 'transparent'
+                                                        }}
+                                                    />
+                                                </Dropdown>
+                                            )}
+                                        </div>
+
+                                        {/* Phân khúc xe */}
+                                        <span className="mycar-card__type">
+                                            {isSedan ? 'Sedan (4-5 chỗ)' : 'SUV (5-7 chỗ)'}
+                                        </span>
+
+                                        {/* Chi tiết biển số & màu sắc */}
+                                        <div className="mycar-card__details">
+                                            <div className="mycar-detail-row">
+                                                <span className="mycar-detail-label">Biển số:</span>
+                                                <span className="mycar-detail-value license-plate">{vehicle.licensePlate}</span>
+                                            </div>
+                                            <div className="mycar-detail-row">
+                                                <span className="mycar-detail-label">Màu sắc:</span>
+                                                <span className="mycar-detail-value">{vehicle.color || 'Chưa cập nhật'}</span>
+                                            </div>
+                                        </div>
+
+
+
+                                        {/* Nút Liên hệ khôi phục - Chỉ hiện cho xe đã ẩn */}
+                                        {!isCarActive && (
+                                            <Button
+                                                type="primary"
+                                                ghost
+                                                size="middle"
+                                                style={{ marginTop: '16px', width: '100%', borderRadius: '8px', fontWeight: '600' }}
+                                                onClick={() => handleShowRestoreInfo(vehicle)}
+                                            >
+                                                Liên hệ khôi phục
+                                            </Button>
                                         )}
                                     </div>
+                                </Card>
+                            );
+                        })}
+                    </div>
 
-                                    {/* Phân khúc xe */}
-                                    <span className="mycar-card__type">
-                                        {isSedan ? 'Sedan (4-5 chỗ)' : 'SUV (5-7 chỗ)'}
-                                    </span>
-
-                                    {/* Chi tiết biển số & màu sắc */}
-                                    <div className="mycar-card__details">
-                                        <div className="mycar-detail-row">
-                                            <span className="mycar-detail-label">Biển số:</span>
-                                            <span className="mycar-detail-value license-plate">{vehicle.licensePlate}</span>
-                                        </div>
-                                        <div className="mycar-detail-row">
-                                            <span className="mycar-detail-label">Màu sắc:</span>
-                                            <span className="mycar-detail-value">{vehicle.color || 'Chưa cập nhật'}</span>
-                                        </div>
-                                    </div>
-
-
-
-                                    {/* Nút Liên hệ khôi phục - Chỉ hiện cho xe đã ẩn */}
-                                    {!isCarActive && (
-                                        <Button
-                                            type="primary"
-                                            ghost
-                                            size="middle"
-                                            style={{ marginTop: '16px', width: '100%', borderRadius: '8px', fontWeight: '600' }}
-                                            onClick={() => handleShowRestoreInfo(vehicle)}
-                                        >
-                                            Liên hệ khôi phục
-                                        </Button>
-                                    )}
-                                </div>
-                            </Card>
-                        );
-                    })}
-                </div>
+                    {/* Nút Xem thêm / Thu gọn */}
+                    {vehicles.length > VEHICLES_INITIAL_LIMIT && (
+                        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px' }}>
+                            <button
+                                className="btn-show-more-vehicles"
+                                onClick={() => setShowAllVehicles(prev => !prev)}
+                            >
+                                {showAllVehicles
+                                    ? `Thu gọn ▲`
+                                    : `Xem thêm ${vehicles.length - VEHICLES_INITIAL_LIMIT} xe ▼`
+                                }
+                            </button>
+                        </div>
+                    )}
+                </>
             )}
 
             {/* Modal Thêm xe mới */}

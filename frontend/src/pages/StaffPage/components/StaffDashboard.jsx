@@ -3,17 +3,17 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Row, Col, Card, Statistic, Button,
     Timeline, Tag, Typography, Badge, message, Spin, Divider, Tooltip,
-    Modal, Form, Input, Select,
+    Modal, Form, Input, Select, Tabs,
 } from 'antd';
 import {
-    CarOutlined, DollarCircleOutlined, CheckCircleOutlined, ScanOutlined,
+    CarOutlined, DollarCircleOutlined, CheckCircleOutlined,
     CalendarOutlined, UserAddOutlined, ArrowRightOutlined, BellOutlined,
     UserOutlined, CreditCardOutlined,
 } from '@ant-design/icons';
 import {
     getAllBays, getUpcomingBookings, getTodayBookings, completeSession,
     createWalkInCustomer, getVehicleTypes, getServices, getAvailableSlots,
-    createBooking, confirmBooking,
+    createBooking, searchCustomerByPhone,
 } from '../../../service/staffService';
 import './StaffDashboard.css';
 
@@ -44,9 +44,24 @@ export default function StaffDashboard() {
     const [loadingTodayBookings, setLoadingTodayBookings] = useState(true);
     const [loadingUpcomingBookings, setLoadingUpcomingBookings] = useState(true);
 
-    const [isWalkInModalVisible, setIsWalkInModalVisible] = useState(false);
-    const [submittingWalkIn, setSubmittingWalkIn] = useState(false);
-    const [walkInForm] = Form.useForm();
+    // === Modal 1: Tạo tài khoản / Thêm xe ===
+    const [isAccountModalVisible, setIsAccountModalVisible] = useState(false);
+    const [accountActiveTab, setAccountActiveTab] = useState('full');
+    const [submittingAccount, setSubmittingAccount] = useState(false);
+    const [accountFormFull] = Form.useForm();
+    const [accountFormQuick] = Form.useForm();
+
+    // === Modal 2: Tạo lịch dịch vụ ===
+    const [isBookingModalVisible, setIsBookingModalVisible] = useState(false);
+    const [submittingBooking, setSubmittingBooking] = useState(false);
+    const [bookingForm] = Form.useForm();
+    const [searchPhone, setSearchPhone] = useState('');
+    const [searchingCustomer, setSearchingCustomer] = useState(false);
+    const [foundCustomer, setFoundCustomer] = useState(null); // { customerId, fullName, vehicles }
+    const [selectedVehicleTypeId, setSelectedVehicleTypeId] = useState(null);
+    const [availableSlots, setAvailableSlots] = useState([]);
+    const [loadingSlots, setLoadingSlots] = useState(false);
+
     const [vehicleTypes, setVehicleTypes] = useState([]);
     const [servicesList, setServicesList] = useState([]);
 
@@ -201,38 +216,33 @@ export default function StaffDashboard() {
         return 'Không hoạt động';
     };
 
-    // === Walk-in handlers ===
-    const handleWalkinCustomer = async () => {
-        setIsWalkInModalVisible(true);
-        walkInForm.resetFields();
+    // === Lookups dùng chung (loại xe, dịch vụ) ===
+    const ensureLookups = async () => {
         if (vehicleTypes.length === 0) {
             try { setVehicleTypes(await getVehicleTypes()); } catch (err) { console.error(err); }
         }
         if (servicesList.length === 0) {
             try {
                 const svcs = await getServices();
-                setServicesList(svcs.data || []);
+                setServicesList(svcs.data || svcs || []);
             } catch (err) { console.error(err); }
         }
     };
 
-    const handleWalkInSubmit = async (values) => {
+    // === Modal 1: Tạo tài khoản / Thêm xe ===
+    const handleOpenAccountModal = async () => {
+        setIsAccountModalVisible(true);
+        setAccountActiveTab('full');
+        accountFormFull.resetFields();
+        accountFormQuick.resetFields();
+        await ensureLookups();
+    };
+
+    // Tab A: Tạo tài khoản đầy đủ
+    const handleSubmitAccountFull = async (values) => {
         try {
-            setSubmittingWalkIn(true);
-
-            const servicePriceIds = values.services.map(svcId => {
-                const svc = servicesList.find(s => s.serviceId === svcId);
-                const priceItem = svc?.servicePrices?.find(p => p.vehicleType.id === values.vehicleTypeId);
-                return priceItem ? priceItem.servicePriceId : null;
-            }).filter(id => id != null);
-
-            if (servicePriceIds.length === 0) {
-                message.error('Vui lòng chọn ít nhất 1 dịch vụ hợp lệ cho loại xe này!');
-                setSubmittingWalkIn(false);
-                return;
-            }
-
-            const customerRes = await createWalkInCustomer(
+            setSubmittingAccount(true);
+            await createWalkInCustomer(
                 values.fullName,
                 values.phoneNumber,
                 values.email || '',
@@ -243,46 +253,166 @@ export default function StaffDashboard() {
                 values.model || '',
                 values.color || ''
             );
+            message.success('Tạo tài khoản và thêm xe thành công! Email chào mừng đã được gửi.');
+            setIsAccountModalVisible(false);
 
-            const cData = customerRes.data || customerRes;
-            const customerId = cData.customerId;
-            const vehicleId = cData.vehicleId;
+            // Chuyển thẳng sang Modal 2 và tự tìm kiếm theo SĐT vừa tạo,
+            // giúp staff đặt lịch ngay cho xe vừa thêm mà không cần gõ lại SĐT.
+            setFoundCustomer(null);
+            setSelectedVehicleTypeId(null);
+            setAvailableSlots([]);
+            bookingForm.resetFields();
+            setSearchPhone(values.phoneNumber);
+            setIsBookingModalVisible(true);
+            await ensureLookups();
+            await handleSearchCustomer(values.phoneNumber);
+        } catch (error) {
+            console.error('Failed to create account', error);
+            message.error(error.response?.data?.message || 'Có lỗi xảy ra khi tạo tài khoản!');
+        } finally {
+            setSubmittingAccount(false);
+        }
+    };
+
+    // Tab B: Tạo tài khoản nhanh (gán vào Khách Vãng Lai mặc định)
+    const handleSubmitAccountQuick = async (values) => {
+        try {
+            setSubmittingAccount(true);
+            await createWalkInCustomer(
+                'Khách Vãng Lai',
+                '0000000000',
+                'walkin@autowash.vn',
+                null,
+                values.vehicleTypeId,
+                values.licensePlate,
+                '', '', ''
+            );
+            message.success('Đã thêm xe vào tài khoản Khách Vãng Lai mặc định!');
+            setIsAccountModalVisible(false);
+
+            // Tương tự Tab A: tự chuyển sang Modal 2 và tìm luôn theo SĐT mặc định 0000000000
+            setFoundCustomer(null);
+            setSelectedVehicleTypeId(null);
+            setAvailableSlots([]);
+            bookingForm.resetFields();
+            setSearchPhone('0000000000');
+            setIsBookingModalVisible(true);
+            await ensureLookups();
+            await handleSearchCustomer('0000000000');
+        } catch (error) {
+            console.error('Failed to quick create', error);
+            message.error(error.response?.data?.message || 'Có lỗi xảy ra khi tạo nhanh!');
+        } finally {
+            setSubmittingAccount(false);
+        }
+    };
+
+    // === Modal 2: Tạo lịch dịch vụ ===
+    const handleOpenBookingModal = async () => {
+        setIsBookingModalVisible(true);
+        setFoundCustomer(null);
+        setSearchPhone('');
+        setSelectedVehicleTypeId(null);
+        setAvailableSlots([]);
+        bookingForm.resetFields();
+        await ensureLookups();
+    };
+
+    const handleSearchCustomer = async (phoneArg) => {
+        // Ưu tiên dùng phone truyền trực tiếp vào (VD: gọi ngay sau khi vừa setSearchPhone,
+        // lúc đó state searchPhone chưa kịp cập nhật do setState là bất đồng bộ).
+        const phone = (typeof phoneArg === 'string' ? phoneArg : searchPhone).trim();
+        if (!phone) {
+            message.warning('Vui lòng nhập số điện thoại!');
+            return;
+        }
+        try {
+            setSearchingCustomer(true);
+            setLoadingSlots(true);
+
+            const res = await searchCustomerByPhone(phone);
+            const cData = res.data || res;
+            if (!cData || !cData.id) {
+                message.error('Không tìm thấy khách hàng với số điện thoại này!');
+                setFoundCustomer(null);
+                return;
+            }
+
+            setFoundCustomer({
+                customerId: cData.id,
+                fullName: cData.fullName || 'Khách hàng',
+                phoneNumber: cData.phoneNumber || phone,
+                vehicles: cData.vehicles || [],
+            });
+            bookingForm.resetFields();
 
             const todayStr = new Date().toISOString().split('T')[0];
             const slotsRes = await getAvailableSlots(todayStr);
             const slotData = slotsRes.data || slotsRes;
-            const availableSlots = (slotData.timeSlotAvailabilityResponses || []).filter(s => s.available || s.isAvailable);
+            const slots = (slotData.timeSlotAvailabilityResponses || []).filter(s => s.available || s.isAvailable);
+            setAvailableSlots(slots);
 
-            if (availableSlots.length === 0) {
-                message.error('Hôm nay đã hết khung giờ trống! Đã tạo hồ sơ khách nhưng chưa thể check-in.');
-                setIsWalkInModalVisible(false);
-                setSubmittingWalkIn(false);
+            if (slots.length === 0) {
+                message.warning('Hôm nay đã hết khung giờ trống!');
+            }
+        } catch (error) {
+            console.error('Failed to search customer', error);
+            message.error(error.response?.data?.message || 'Không tìm thấy khách hàng!');
+            setFoundCustomer(null);
+        } finally {
+            setSearchingCustomer(false);
+            setLoadingSlots(false);
+        }
+    };
+
+    const handleVehicleSelect = (vehicleId) => {
+        const vehicle = foundCustomer?.vehicles.find(v => v.id === vehicleId);
+        setSelectedVehicleTypeId(vehicle?.vehicleType?.id || null);
+        bookingForm.setFieldsValue({ services: undefined });
+    };
+
+    const handleSubmitBooking = async (values) => {
+        if (!foundCustomer) {
+            message.error('Vui lòng tìm khách hàng trước!');
+            return;
+        }
+        try {
+            setSubmittingBooking(true);
+
+            const servicePriceIds = (values.services || []).map(svcId => {
+                const svc = servicesList.find(s => s.serviceId === svcId);
+                const priceItem = svc?.servicePrices?.find(p => p.vehicleType.id === selectedVehicleTypeId);
+                return priceItem ? priceItem.servicePriceId : null;
+            }).filter(id => id != null);
+
+            if (servicePriceIds.length === 0) {
+                message.error('Vui lòng chọn ít nhất 1 dịch vụ hợp lệ cho loại xe này!');
+                setSubmittingBooking(false);
                 return;
             }
 
-            const bookingRes = await createBooking({
-                customerId,
-                vehicleId,
-                timeSlotId: availableSlots[0].timeSlotId,
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            await createBooking({
+                customerId: foundCustomer.customerId,
+                vehicleId: values.vehicleId,
+                timeSlotId: values.timeSlotId,
                 bookingDate: todayStr,
                 servicePriceIds,
-                notes: 'Khách vãng lai',
+                walkIn: true,
+                notes: 'Khách tại quán',
             });
-            const bData = bookingRes.data || bookingRes;
-            const bookingId = bData.id;
 
-            await confirmBooking(bookingId);
-
-            message.success('Tạo khách vãng lai và check-in thành công!');
-            setIsWalkInModalVisible(false);
+            message.success('Tạo lịch dịch vụ thành công!');
+            setIsBookingModalVisible(false);
             fetchBays();
             fetchTodayBookings();
             fetchUpcomingBookings();
         } catch (error) {
-            console.error('Failed to process walk-in', error);
-            message.error(error.response?.data?.message || 'Có lỗi xảy ra khi tiếp nhận khách vãng lai!');
+            console.error('Failed to create booking', error);
+            message.error(error.response?.data?.message || 'Có lỗi xảy ra khi tạo lịch dịch vụ!');
         } finally {
-            setSubmittingWalkIn(false);
+            setSubmittingBooking(false);
         }
     };
 
@@ -464,26 +594,27 @@ export default function StaffDashboard() {
                 <Col xs={24} lg={7}>
                     {/* THAO TÁC NHANH */}
                     <div className="dashboard__quick-actions">
-                        <Row gutter={12}>
+                        <Row gutter={[12, 12]}>
                             <Col span={12}>
                                 <Button
                                     type="primary"
-                                    icon={<ScanOutlined />}
-                                    className="action-btn action-btn--checkin"
-                                    onClick={() => navigate('/staff/checkin')}
+                                    icon={<UserAddOutlined />}
+                                    className="action-btn action-btn--walkin"
                                     block
+                                    onClick={handleOpenAccountModal}
                                 >
-                                    Check-in
+                                    Tạo tài khoản / Thêm xe
                                 </Button>
                             </Col>
                             <Col span={12}>
                                 <Button
-                                    icon={<UserAddOutlined />}
-                                    className="action-btn action-btn--walkin"
+                                    type="primary"
+                                    icon={<CalendarOutlined />}
+                                    className="action-btn action-btn--booking"
                                     block
-                                    onClick={handleWalkinCustomer}
+                                    onClick={handleOpenBookingModal}
                                 >
-                                    Khách vãng lai
+                                    Tạo lịch dịch vụ
                                 </Button>
                             </Col>
                         </Row>
@@ -547,96 +678,251 @@ export default function StaffDashboard() {
                 </Col>
             </Row>
 
-            {/* Modal Khách Vãng Lai */}
+            {/* Modal 1: Tạo tài khoản / Thêm xe */}
             <Modal
-                title={<Title level={4} style={{ margin: 0 }}>Tiếp nhận Khách vãng lai</Title>}
-                open={isWalkInModalVisible}
-                onCancel={() => setIsWalkInModalVisible(false)}
-                onOk={() => walkInForm.submit()}
-                confirmLoading={submittingWalkIn}
-                okText="Tạo & Check-in"
-                cancelText="Hủy"
+                title={<Title level={4} style={{ margin: 0 }}>Tạo tài khoản / Thêm xe</Title>}
+                open={isAccountModalVisible}
+                onCancel={() => setIsAccountModalVisible(false)}
+                footer={null}
                 width={700}
                 centered
                 maskClosable={false}
             >
-                <div className="walkin-modal__body">
-                    <Form form={walkInForm} layout="vertical" onFinish={handleWalkInSubmit}>
-                        <Row gutter={24}>
-                            <Col span={12}>
-                                <Divider orientation="left" plain>Thông tin Khách hàng</Divider>
-                                <Form.Item
-                                    name="fullName"
-                                    label="Họ tên"
-                                    rules={[
-                                        { required: true, message: 'Vui lòng nhập họ tên' },
-                                        { min: 2, message: 'Họ tên phải có ít nhất 2 ký tự' },
-                                    ]}
-                                >
-                                    <Input placeholder="Ví dụ: Nguyễn Văn A" />
-                                </Form.Item>
-                                <Form.Item
-                                    name="phoneNumber"
-                                    label="Số điện thoại"
-                                    rules={[
-                                        { required: true, message: 'Vui lòng nhập số điện thoại' },
-                                        { pattern: /^(0[3|5|7|8|9])+([0-9]{8})$/, message: 'Số điện thoại không hợp lệ (Ví dụ: 0987654321)' },
-                                    ]}
-                                >
-                                    <Input placeholder="Ví dụ: 0987654321" />
-                                </Form.Item>
-                                <Form.Item
-                                    name="email"
-                                    label="Email"
-                                    rules={[
-                                        { required: true, message: 'Vui lòng nhập email' },
-                                        { type: 'email', message: 'Email không đúng định dạng' },
-                                    ]}
-                                >
-                                    <Input placeholder="Ví dụ: email@example.com" />
-                                </Form.Item>
-                            </Col>
+                <Tabs
+                    activeKey={accountActiveTab}
+                    onChange={setAccountActiveTab}
+                    items={[
+                        {
+                            key: 'full',
+                            label: 'Tạo tài khoản đầy đủ',
+                            children: (
+                                <Form form={accountFormFull} layout="vertical" onFinish={handleSubmitAccountFull}>
+                                    <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
+                                        Dành cho khách mới muốn đăng ký thành viên. Hệ thống sẽ tạo tài khoản với mật khẩu mặc định
+                                        {' '}<Text code>12345678</Text> và gửi email chào mừng.
+                                    </Text>
+                                    <Row gutter={24}>
+                                        <Col span={12}>
+                                            <Form.Item
+                                                name="fullName"
+                                                label="Họ tên"
+                                                rules={[
+                                                    { required: true, message: 'Vui lòng nhập họ tên' },
+                                                    { min: 2, message: 'Họ tên phải có ít nhất 2 ký tự' },
+                                                ]}
+                                            >
+                                                <Input placeholder="Ví dụ: Nguyễn Văn A" />
+                                            </Form.Item>
+                                        </Col>
+                                        <Col span={12}>
+                                            <Form.Item
+                                                name="licensePlate"
+                                                label="Biển số xe"
+                                                rules={[
+                                                    { required: true, message: 'Vui lòng nhập biển số xe' },
+                                                    { min: 5, message: 'Biển số xe không hợp lệ' },
+                                                ]}
+                                            >
+                                                <Input placeholder="Ví dụ: 30A-123.45" />
+                                            </Form.Item>
+                                        </Col>
 
-                            <Col span={12}>
-                                <Divider orientation="left" plain>Thông tin Xe & Dịch vụ</Divider>
-                                <Form.Item
-                                    name="licensePlate"
-                                    label="Biển số xe"
-                                    rules={[
-                                        { required: true, message: 'Vui lòng nhập biển số xe' },
-                                        { min: 5, message: 'Biển số xe không hợp lệ' },
-                                    ]}
-                                >
-                                    <Input placeholder="Ví dụ: 30A-123.45" />
-                                </Form.Item>
-                                <Form.Item
-                                    name="vehicleTypeId"
-                                    label="Loại xe"
-                                    rules={[{ required: true, message: 'Vui lòng chọn loại xe' }]}
-                                >
-                                    <Select placeholder="Chọn loại xe">
-                                        {vehicleTypes.map(vt => (
-                                            <Select.Option key={vt.id} value={vt.id}>{vt.typeName}</Select.Option>
-                                        ))}
-                                    </Select>
-                                </Form.Item>
-                                <Form.Item
-                                    name="services"
-                                    label="Dịch vụ yêu cầu"
-                                    rules={[{ required: true, message: 'Vui lòng chọn dịch vụ' }]}
-                                >
-                                    <Select mode="multiple" placeholder="Chọn dịch vụ" optionFilterProp="children">
-                                        {servicesList.map(svc => (
-                                            <Select.Option key={svc.serviceId} value={svc.serviceId}>
-                                                {svc.serviceName}
-                                            </Select.Option>
-                                        ))}
-                                    </Select>
-                                </Form.Item>
-                            </Col>
-                        </Row>
-                    </Form>
+                                        <Col span={12}>
+                                            <Form.Item
+                                                name="phoneNumber"
+                                                label="Số điện thoại"
+                                                rules={[
+                                                    { required: true, message: 'Vui lòng nhập số điện thoại' },
+                                                    { pattern: /^(0[3|5|7|8|9])+([0-9]{8})$/, message: 'Số điện thoại không hợp lệ (Ví dụ: 0987654321)' },
+                                                ]}
+                                            >
+                                                <Input placeholder="Ví dụ: 0987654321" />
+                                            </Form.Item>
+                                        </Col>
+                                        <Col span={12}>
+                                            <Form.Item
+                                                name="vehicleTypeId"
+                                                label="Loại xe"
+                                                rules={[{ required: true, message: 'Vui lòng chọn loại xe' }]}
+                                            >
+                                                <Select placeholder="Chọn loại xe">
+                                                    {vehicleTypes.map(vt => (
+                                                        <Select.Option key={vt.id} value={vt.id}>{vt.typeName}</Select.Option>
+                                                    ))}
+                                                </Select>
+                                            </Form.Item>
+                                        </Col>
+
+                                        <Col span={12}>
+                                            <Form.Item
+                                                name="email"
+                                                label="Email"
+                                                rules={[
+                                                    { required: true, message: 'Vui lòng nhập email' },
+                                                    { type: 'email', message: 'Email không đúng định dạng' },
+                                                ]}
+                                            >
+                                                <Input placeholder="Ví dụ: email@example.com" />
+                                            </Form.Item>
+                                        </Col>
+                                        <Col span={12}>
+                                            <Form.Item name="brand" label="Hãng xe (tùy chọn)">
+                                                <Input placeholder="Ví dụ: Honda" />
+                                            </Form.Item>
+                                        </Col>
+
+                                        <Col span={12}>
+                                            <Form.Item name="model" label="Dòng xe (tùy chọn)">
+                                                <Input placeholder="Ví dụ: Vision" />
+                                            </Form.Item>
+                                        </Col>
+                                        <Col span={12}>
+                                            <Form.Item name="color" label="Màu xe (tùy chọn)">
+                                                <Input placeholder="Ví dụ: Đen" />
+                                            </Form.Item>
+                                        </Col>
+                                    </Row>
+                                    <div style={{ textAlign: 'right' }}>
+                                        <Button onClick={() => setIsAccountModalVisible(false)} style={{ marginRight: 8 }}>
+                                            Hủy
+                                        </Button>
+                                        <Button type="primary" htmlType="submit" loading={submittingAccount}>
+                                            Tạo tài khoản
+                                        </Button>
+                                    </div>
+                                </Form>
+                            ),
+                        },
+                        {
+                            key: 'quick',
+                            label: 'Tạo nhanh (Khách vãng lai)',
+                            children: (
+                                <Form form={accountFormQuick} layout="vertical" onFinish={handleSubmitAccountQuick}>
+                                    <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
+                                        Dành cho khách vãng lai không muốn cung cấp thông tin. Xe sẽ được gán vào tài khoản
+                                        {' '}<Text strong>Khách Vãng Lai</Text> mặc định (SĐT: <Text code>0000000000</Text>).
+                                    </Text>
+                                    <Form.Item
+                                        name="licensePlate"
+                                        label="Biển số xe"
+                                        rules={[
+                                            { required: true, message: 'Vui lòng nhập biển số xe' },
+                                            { min: 5, message: 'Biển số xe không hợp lệ' },
+                                        ]}
+                                    >
+                                        <Input placeholder="Ví dụ: 30A-999.99" />
+                                    </Form.Item>
+                                    <Form.Item
+                                        name="vehicleTypeId"
+                                        label="Loại xe"
+                                        rules={[{ required: true, message: 'Vui lòng chọn loại xe' }]}
+                                    >
+                                        <Select placeholder="Chọn loại xe">
+                                            {vehicleTypes.map(vt => (
+                                                <Select.Option key={vt.id} value={vt.id}>{vt.typeName}</Select.Option>
+                                            ))}
+                                        </Select>
+                                    </Form.Item>
+                                    <div style={{ textAlign: 'right' }}>
+                                        <Button onClick={() => setIsAccountModalVisible(false)} style={{ marginRight: 8 }}>
+                                            Hủy
+                                        </Button>
+                                        <Button type="primary" htmlType="submit" loading={submittingAccount}>
+                                            Tạo nhanh
+                                        </Button>
+                                    </div>
+                                </Form>
+                            ),
+                        },
+                    ]}
+                />
+            </Modal>
+
+            {/* Modal 2: Tạo lịch dịch vụ */}
+            <Modal
+                title={<Title level={4} style={{ margin: 0 }}>Tạo lịch dịch vụ</Title>}
+                open={isBookingModalVisible}
+                onCancel={() => setIsBookingModalVisible(false)}
+                footer={null}
+                width={700}
+                centered
+                maskClosable={false}
+            >
+                <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                    <Input
+                        placeholder="Nhập số điện thoại (VD: 0987654321 hoặc 0000000000)"
+                        value={searchPhone}
+                        onChange={e => setSearchPhone(e.target.value)}
+                        onPressEnter={() => handleSearchCustomer()}
+                    />
+                    <Button type="primary" loading={searchingCustomer} onClick={() => handleSearchCustomer()}>
+                        Tìm kiếm
+                    </Button>
                 </div>
+
+                {foundCustomer ? (
+                    <Form form={bookingForm} layout="vertical" onFinish={handleSubmitBooking}>
+                        <Text strong>Khách hàng: </Text><Text>{foundCustomer.fullName}</Text>
+                        <Text type="secondary"> — {foundCustomer.phoneNumber}</Text>
+                        <Divider />
+                        <Form.Item
+                            name="vehicleId"
+                            label="Chọn xe"
+                            rules={[{ required: true, message: 'Vui lòng chọn xe' }]}
+                        >
+                            <Select placeholder="Chọn xe" onChange={handleVehicleSelect}>
+                                {foundCustomer.vehicles.map(v => (
+                                    <Select.Option key={v.id} value={v.id}>
+                                        {v.licensePlate} - {v.vehicleType?.typeName || ''}
+                                    </Select.Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                        <Form.Item
+                            name="timeSlotId"
+                            label="Khung giờ"
+                            rules={[{ required: true, message: 'Vui lòng chọn khung giờ' }]}
+                        >
+                            <Select placeholder="Chọn khung giờ" loading={loadingSlots}>
+                                {availableSlots.map(s => (
+                                    <Select.Option key={s.timeSlotId} value={s.timeSlotId}>
+                                        {s.startTime || s.label || `Slot #${s.timeSlotId}`}
+                                    </Select.Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                        <Form.Item
+                            name="services"
+                            label="Dịch vụ rửa xe"
+                            rules={[{ required: true, message: 'Vui lòng chọn dịch vụ' }]}
+                        >
+                            <Select
+                                mode="multiple"
+                                placeholder={selectedVehicleTypeId ? 'Chọn dịch vụ' : 'Vui lòng chọn xe trước'}
+                                optionFilterProp="children"
+                                disabled={!selectedVehicleTypeId}
+                            >
+                                {servicesList.map(svc => (
+                                    <Select.Option key={svc.serviceId} value={svc.serviceId}>
+                                        {svc.serviceName}
+                                    </Select.Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                        <div style={{ textAlign: 'right' }}>
+                            <Button onClick={() => setIsBookingModalVisible(false)} style={{ marginRight: 8 }}>
+                                Hủy
+                            </Button>
+                            <Button type="primary" htmlType="submit" loading={submittingBooking}>
+                                Tạo lịch
+                            </Button>
+                        </div>
+                    </Form>
+                ) : (
+                    <Text type="secondary">
+                        Nhập số điện thoại và bấm "Tìm kiếm" để tải danh sách xe của khách (SĐT khách vãng lai mặc định: 0000000000).
+                    </Text>
+                )}
             </Modal>
         </div>
     );

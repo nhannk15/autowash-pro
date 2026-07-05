@@ -7,6 +7,41 @@
     overflow: hidden; /* Ngăn cuộn toàn trang */
 }
 
+/* Light theme: content tự mở rộng theo nội dung, không giới hạn chiều cao */
+.dashboard-layout--light {
+    height: auto;
+    min-height: calc(100vh - 64px);
+    overflow: visible;
+    background-color: #ffffff;
+}
+
+.dashboard-layout--light .dashboard-layout__body {
+    height: auto;
+    min-height: calc(100vh - 64px);
+    overflow: visible;
+}
+
+/* Sidebar cố định khi cuộn trang */
+.dashboard-layout--light .sidebar {
+    position: fixed;
+    top: 64px;
+    left: 0;
+    height: calc(100vh - 64px);
+    z-index: 100;
+}
+
+/* Content area bù lại khoảng trống sidebar fixed chiếm (expanded: 15%) */
+.dashboard-layout--light .sidebar + .dashboard-layout__content {
+    margin-left: 15%;
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Content area bù lại khoảng trống sidebar fixed chiếm (collapsed: 80px) */
+.dashboard-layout--light .sidebar--collapsed + .dashboard-layout__content {
+    margin-left: 80px;
+}
+
+
 .dashboard-layout__body {
     display: flex;
     flex: 1;
@@ -244,6 +279,13 @@
     background: #ffffff;
     border-right: 1px solid #eaeaea;
     box-shadow: 1px 0 8px rgba(0, 0, 0, 0.05);
+}
+
+.sidebar--light + .dashboard-layout__content {
+    background-color: #ffffff;
+    padding: 0;
+    overflow: visible;
+    min-height: calc(100vh - 64px);
 }
 
 .sidebar--light .sidebar__profile {

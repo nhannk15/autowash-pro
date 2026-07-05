@@ -27,6 +27,8 @@ import com.autowashpro.backend.service.CustomerService;
 import com.autowashpro.backend.service.PointTransactionService;
 import com.autowashpro.backend.service.VehicleService;
 
+import java.util.Optional;
+
 import jakarta.validation.Valid;
 
 @RestController
@@ -57,14 +59,20 @@ public class StaffCustomerController {
 
     @PostMapping("/quick-create")
     public ResponseEntity<ApiResponse<QuickCreateResponse>> quickCreate(@RequestBody QuickCreateRequest request) {
-
-        // Create customer
-        Customer customer = new Customer();
-        customer.setFullName(request.getFullName());
-        customer.setPhoneNumber(request.getPhoneNumber());
-        customer.setEmail(request.getEmail());
-        customer.setDateOfBirth(request.getDateOfBirth());
-        customer = customerService.createNew(customer);
+        Customer customer;
+        // Kiểm tra SĐT đã tồn tại chưa (phục vụ Tab B khách vãng lai nhanh)
+        Optional<Customer> existingCustomer = customerRepository.findByPhoneNumber(request.getPhoneNumber());
+        if (existingCustomer.isPresent()) {
+            customer = existingCustomer.get();
+        } else {
+            // Khách mới: tạo tài khoản
+            customer = new Customer();
+            customer.setFullName(request.getFullName());
+            customer.setPhoneNumber(request.getPhoneNumber());
+            customer.setEmail(request.getEmail());
+            customer.setDateOfBirth(request.getDateOfBirth());
+            customer = customerService.createNew(customer);
+        }
 
         // Create vehicle
         Vehicle vehicle = new Vehicle();
