@@ -8,7 +8,6 @@ import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.Named;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import com.autowashpro.backend.model.dto.BillingResponse;
@@ -59,7 +58,7 @@ public interface BillingMapper {
     }
 
     default BigDecimal calculateFinalAmount(Billing billing) {
-        return billing.getFinalAmount().subtract(billing.getDepositAmount());
+        return billing.getFinalAmount();
     }
 
 }

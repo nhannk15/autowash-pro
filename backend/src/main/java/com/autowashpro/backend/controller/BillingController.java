@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,6 +42,11 @@ public class BillingController {
     @PostMapping("/api/billings/apply-voucher")
     public ResponseEntity<VoucherResponse> applyVoucherForBilling(@RequestBody ApplyVoucherToBillingRequest request) {
         return ResponseEntity.status(HttpStatus.OK).body(billingService.applyVoucherForBilling(request));
+    }
+
+    @GetMapping("/api/billings/customer/billing-history")
+    public ResponseEntity<List<BillingResponse>> getCustomerBillingHistory(@AuthenticationPrincipal String email) {
+        return ResponseEntity.status(HttpStatus.OK).body(billingService.getCustomerBillingHistory(email));
     }
     
 }

@@ -338,4 +338,15 @@ public class BillingService {
         return billingResponse;
     }
 
+    public List<BillingResponse> getCustomerBillingHistory(String email) {
+        Customer customer = customerRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Không thể tìm thấy người dùng"));
+        List<Billing> customerBillings = billingRepository.findCustomerBillingHistory(customer.getId());
+        for (Billing billing: customerBillings) {
+            log.info("getCustomerBillingHistory() - billing {} has finalAmount {}", billing.getId(), billing.getFinalAmount());
+        }
+        log.info("getCustomerBillingHistory() - customerBillings's size: {}", customerBillings.size());
+        return billingMapper.toBillingResponses(customerBillings);
+    }
+
 }

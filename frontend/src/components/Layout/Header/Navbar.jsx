@@ -94,7 +94,7 @@ export default function NavBar() {
                         {!user && (
                             <li className="navbar__auth-mobile">
                                 <NavLink to="/login" className="navbar__btn navbar__btn--login" onClick={() => setIsMobileMenuOpen(false)}>Đăng Nhập</NavLink>
-                                <NavLink to="/signup" className="navbar__btn navbar__btn--signup" onClick={() => setIsMobileMenuOpen(false)}>Đăng Kí</NavLink>
+                                <NavLink to="/signup" className="navbar__btn navbar__btn--signup" onClick={() => setIsMobileMenuOpen(false)}>Đăng Ký</NavLink>
                             </li>
                         )}
                     </ul>
@@ -154,7 +154,7 @@ export default function NavBar() {
                                                 setIsDropdownOpen(false)
                                             }}
                                         >
-                                            Chính sách & Quy định
+                                            Chính sách và quy định
                                         </button>
                                         <hr className="navbar__dropdown-divider" />
                                         <button
@@ -170,7 +170,7 @@ export default function NavBar() {
                     ) : (
                         <div className="navbar__auth-desktop" style={{ display: 'flex', gap: '5px' }}>
                             <NavLink to="/login" className="navbar__btn navbar__btn--login">Đăng Nhập</NavLink>
-                            <NavLink to="/signup" className="navbar__btn navbar__btn--signup">Đăng Kí</NavLink>
+                            <NavLink to="/signup" className="navbar__btn navbar__btn--signup">Đăng Ký</NavLink>
                         </div>
                     )}
                 </div>
