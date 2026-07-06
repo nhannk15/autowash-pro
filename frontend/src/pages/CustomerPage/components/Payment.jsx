@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Row, Col, Card, Table, Tag, Progress, Select, Space, Typography, Badge } from 'antd';
+import { Row, Col, Card, Table, Tag, Progress, Select, Space, Typography, Badge, Spin, Empty } from 'antd';
 import { 
     WalletOutlined, 
     HistoryOutlined, 
@@ -8,10 +8,90 @@ import {
     CheckCircleOutlined,
     CloseCircleOutlined
 } from '@ant-design/icons';
+import { getCustomerBillingHistory } from '../../../service/customerService';
 import './Payment.css';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
+
+// ── Transform Utilities ───────────────────────────────────────────────────────
+
+const PAYMENT_METHOD_LABEL = {
+    CASH: 'Tiền mặt',
+    BANK_TRANSFER: 'VNPAY',
+    MOMO: 'Momo',
+    ZALO_PAY: 'ZaloPay',
+};
+
+function getQuarter(month) {
+    return `Q${Math.ceil(month / 3)}`;
+}
+
+function formatDateDisplay(isoString) {
+    if (!isoString) return '—';
+    return new Date(isoString).toLocaleString('vi-VN', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+    });
+}
+
+function formatCurrency(value) {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value || 0);
+}
+
+/**
+ * Transform raw BillingResponse[] → UI payment records.
+ * - Filters out CONFIRMED bookings (chưa hoàn thành dịch vụ)
+ * - Amount: COMPLETED = finalAmount + depositAmount | CANCELLED = depositAmount (mất cọc)
+ * - paymentMethod: hardcode VNPAY nếu isForfeited
+ * - quarter/year: derived from paidAt ?? depositPaidAt
+ */
+function transformBillings(rawList) {
+    return (rawList ?? [])
+        .filter(b => b.booking?.status !== 'CONFIRMED')
+        .map((billing, idx) => {
+            const booking       = billing.booking ?? {};
+            const isCancelled   = booking.status === 'CANCELLED';
+            const isForfeited   = isCancelled && billing.depositStatus === 'PAID';
+
+            const depositAmount  = Number(billing.depositAmount)  || 0;
+            const finalAmount    = Number(billing.finalAmount)    || 0;
+            const originalAmount = Number(billing.originalAmount) || 0;
+            const discountAmount = Number(billing.discountAmount) || 0;
+
+            const amount = isForfeited ? depositAmount : finalAmount + depositAmount;
+
+            const rawDate = billing.paidAt ?? billing.depositPaidAt;
+            const dateObj = rawDate ? new Date(rawDate) : null;
+            const month   = dateObj ? dateObj.getMonth() + 1 : null;
+
+            const paymentMethod = isForfeited
+                ? 'VNPAY'
+                : (PAYMENT_METHOD_LABEL[billing.paymentMethod] ?? billing.paymentMethod ?? '—');
+
+            const v = booking.vehicle;
+            const vehicle = v ? `${v.brand} ${v.model} (${v.licensePlate})` : '—';
+
+            return {
+                key:         String(billing.billingId ?? idx),
+                bookingCode: booking.bookingCode ?? '—',
+                dateDisplay: formatDateDisplay(rawDate),
+                rawDate,
+                vehicle,
+                services:    (booking.bookingDetails ?? []).map(d => d.serviceName),
+                paymentMethod,
+                amount,
+                originalAmount,
+                discount:    discountAmount,
+                status:      billing.paymentStatus === 'PAID' ? 'SUCCESS' : 'CANCELLED',
+                isForfeited,
+                quarter:     month ? getQuarter(month) : null,
+                year:        dateObj ? dateObj.getFullYear() : null,
+                // Legacy fields kept for mock data compatibility
+                points:      billing.pointsChange ?? 0,
+            };
+        });
+}
 
 // Mock data lịch sử thanh toán mới theo nghiệp vụ đặt cọc và hủy lịch
 const mockPayments = [
