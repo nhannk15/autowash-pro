@@ -450,4 +450,49 @@
     .payment-steps {
         padding: 0 16px;
     }
+
+    .payment-descriptions .ant-descriptions-item-label {
+        width: 140px;
+    }
+}
+
+@media (max-width: 576px) {
+    .payment-steps .ant-steps {
+        flex-direction: column;
+    }
+
+    .payment-steps .ant-steps-item {
+        flex: none !important;
+    }
+
+    .qr-code-placeholder {
+        width: 180px;
+        height: 180px;
+    }
+
+    .qr-cash-icon {
+        font-size: 90px;
+    }
+
+    .qr-amount-display {
+        padding: 12px 20px;
+        width: 100%;
+    }
+
+    .payment-method-group {
+        flex-direction: column;
+    }
+
+    .payment-final-total-amount {
+        font-size: 24px !important;
+    }
+
+    .payment-total-amount {
+        font-size: 22px !important;
+    }
+
+    .payment-descriptions .ant-descriptions-item-label {
+        width: 110px;
+        font-size: 13px;
+    }
 }
