@@ -38,8 +38,18 @@ export async function getAvailableSlot(selectedDate) {
     return response.data
 }
 
+export async function getPremiumAvailableSlot(selectedDate) {
+    const response = await axios.get(`/api/bookings/premium-service/available-slots?date=${selectedDate}`);
+    return response.data
+}
+
 export async function createBooking(payload) {
     const response = await axios.post("/api/bookings", payload);
+    return response.data;
+}
+
+export async function cancelBooking(payload) {
+    const response = await axios.post("/api/cancel-booking", payload);
     return response.data;
 }
 

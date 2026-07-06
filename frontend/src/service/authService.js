@@ -75,3 +75,21 @@ export async function resetPasswordApi(email, otp, newPassword, confirmPassword)
     );
     return response.data;
 }
+
+export async function checkPasswordApi(currentPassword) {
+    const response = await axios.post(
+        `${API}/api/users/check-password`,
+        { password: currentPassword, confirm: currentPassword },
+        { withCredentials: true }
+    );
+    return response.data;
+}
+
+export async function changePasswordApi(newPassword) {
+    const response = await axios.post(
+        `${API}/api/users/change-password`,
+        { newPassword },
+        { withCredentials: true }
+    );
+    return response.data;
+}

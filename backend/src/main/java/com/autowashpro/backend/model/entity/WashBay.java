@@ -3,6 +3,7 @@ package com.autowashpro.backend.model.entity;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.autowashpro.backend.model.enums.BayCategory;
 import com.autowashpro.backend.model.enums.BayStatus;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -59,6 +60,10 @@ public class WashBay {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
+    @Column(name = "category", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private BayCategory category;
 
     // Và cập nhật PrePersist
     @PrePersist

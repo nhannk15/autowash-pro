@@ -21,17 +21,24 @@ services:
       - autowash-net
 
   backend:
-    build:
-      context: ./backend
+    image: 761990338651.dkr.ecr.ap-northeast-2.amazonaws.com/autowash-pro:backend-latest
     container_name: autowash-backend
     restart: unless-stopped
     environment:
       TZ: Asia/Ho_Chi_Minh
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
       FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-http://localhost:3000}
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT:-587}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      EMAIL_SENDBOOKING: ${EMAIL_SENDBOOKING:-yes}
     ports:
       - "8080:8080"
     depends_on:
@@ -41,8 +48,7 @@ services:
       - autowash-net
 
   frontend:
-    build:
-      context: ./frontend
+    image: 761990338651.dkr.ecr.ap-northeast-2.amazonaws.com/autowash-pro:frontend-latest
     container_name: autowash-frontend
     restart: unless-stopped
     ports:

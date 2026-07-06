@@ -589,4 +589,49 @@
     .qr-input-wrapper {
         max-width: 100%;
     }
+
+    .invoice-card {
+        position: static;
+        margin-top: 16px;
+    }
+
+    .customer-info-card .ant-descriptions-item-label {
+        width: 140px;
+    }
+}
+
+@media (max-width: 576px) {
+    .checkin-steps .ant-steps {
+        flex-direction: column;
+    }
+
+    .checkin-steps .ant-steps-item {
+        flex: none !important;
+    }
+
+    .camera-reader {
+        min-height: 240px;
+    }
+
+    .qr-action-buttons {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .camera-btn {
+        width: 100%;
+    }
+
+    .invoice-total-amount {
+        font-size: 22px !important;
+    }
+
+    .invoice-card .ant-card-body {
+        padding: 16px;
+    }
+
+    .customer-info-card .ant-descriptions-item-label {
+        width: 110px;
+        font-size: 13px;
+    }
 }

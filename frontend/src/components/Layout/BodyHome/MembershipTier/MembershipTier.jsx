@@ -1,4 +1,5 @@
 import './MembershipTier.css'
+import { useNavigate } from 'react-router-dom'
 
 const tiers = [
     {
@@ -43,6 +44,7 @@ const tiers = [
 ]
 
 export default function MembershipTier() {
+    const navigate = useNavigate();
     return (
         <section className="membership">
             <div className="membership__container">
@@ -53,7 +55,7 @@ export default function MembershipTier() {
                     <p className="membership__desc">
                         Nâng tầm trải nghiệm chăm sóc xe với những ưu đãi đặc quyền dành riêng cho khách hàng thân thiết.
                     </p>
-                    <button className="membership__cta">ĐĂNG KÝ NGAY</button>
+                    <button className="membership__cta" onClick={() => navigate('/signup')}>ĐĂNG KÝ NGAY</button>
                 </div>
 
                 {/* PHẢI: 3 Card tier */}

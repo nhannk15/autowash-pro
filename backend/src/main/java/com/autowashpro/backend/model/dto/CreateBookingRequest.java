@@ -34,4 +34,7 @@ public class CreateBookingRequest {
 
     private String voucherCode;
 
+    @Builder.Default
+    private boolean walkIn = false;
+
 }

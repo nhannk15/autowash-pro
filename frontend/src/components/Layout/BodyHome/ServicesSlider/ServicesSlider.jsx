@@ -1,63 +1,51 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './ServicesSlider.css'
 import ceramicImg from '../../../../assets/Service/PhuCeramic.png';
 import exteriorImg from '../../../../assets/Service/RuaXeNgoaiThat.jpg';
 import interiorImg from '../../../../assets/Service/VeSinhNoiThat.jpg';
-import khuMui from '../../../../assets/Service/KhuMui.png';
-import baoDuongNhanh from '../../../../assets/Service/BaoDuongNhanh.png';
+import odorImg from '../../../../assets/Service/KhuMui.png';
+import baoDuong from '../../../../assets/Service/baoDuong.jpg';
+import engineImg from '../../../../assets/Service/VeSinhKhoangMay.png';
+import cachNhiet from '../../../../assets/Service/cachNhiet.jpg';
+import { getService } from '../../../../service/customerService';
 
-
-// Dữ liệu 5 dịch vụ - dùng màu tạm, thay ảnh sau
-const services = [
-    {
-        id: 1,
-        name: 'Bảo dưỡng nhanh',
-        desc: 'Bugi, lọc gió, dầu phanh,...',
-        bgImage: baoDuongNhanh, // Cập nhật từ bgColor sang bgImage
-        icon: '🔧',
-    },
-    {
-        id: 2,
-        name: 'Khử mùi',
-        desc: 'Các loại mùi ẩm mốc',
-        bgImage: khuMui,
-        icon: '🏠',
-    },
-    {
-        id: 3,
-        name: 'Rửa xe đúng cách',
-        desc: 'Sạch bóng, an toàn sơn xe',
-        bgImage: exteriorImg,
-        icon: '🚿',
-    },
-    {
-        id: 4,
-        name: 'Vệ sinh nội thất',
-        desc: 'Khử mùi, hút bụi chuyên sâu',
-        bgImage: interiorImg,
-        icon: '✨',
-    },
-    {
-        id: 5,
-        name: 'Phủ ceramic',
-        desc: 'Bảo vệ sơn lâu dài',
-        bgImage: ceramicImg,
-        icon: '💎',
-    },
-]
+const localImages = {
+    'Rửa xe ngoại thất cao cấp': exteriorImg,
+    'Vệ sinh nội thất chuyên sâu': interiorImg,
+    'Phủ Ceramic bảo vệ sơn': ceramicImg,
+    'Vệ sinh khoang máy chuyên sâu': engineImg,
+    'Khử mùi và diệt khuẩn cabin': odorImg,
+    'Bảo dưỡng nhanh tổng quát': baoDuong,
+    'Dán phim cách nhiệt chống nóng cao cấp': cachNhiet
+};
 
 // Số card hiển thị cùng lúc
 const VISIBLE = 4
 // Chiều rộng mỗi card (px) + gap → tính bước trượt
-const CARD_WIDTH = 276
+const CARD_WIDTH = 252
 const GAP = 16
 const STEP = CARD_WIDTH + GAP
 
 export default function ServicesSlider() {
     const navigate = useNavigate()
     const [currentIndex, setCurrentIndex] = useState(0)
-    const maxIndex = services.length - VISIBLE // = 1 (chỉ có 1 bước trượt)
+    const [services, setServices] = useState([])
+
+    useEffect(() => {
+        const fetchServices = async () => {
+            try {
+                const response = await getService()
+                const data = response?.data || []
+                setServices(data)
+            } catch (error) {
+                console.error("Lỗi khi tải dịch vụ:", error)
+            }
+        }
+        fetchServices()
+    }, [])
+
+    const maxIndex = Math.max(0, services.length - VISIBLE)
 
     const prev = () => setCurrentIndex(i => Math.max(0, i - 1))
     const next = () => setCurrentIndex(i => Math.min(maxIndex, i + 1))
@@ -94,28 +82,30 @@ export default function ServicesSlider() {
                             className="services-track"
                             style={{ transform: `translateX(-${currentIndex * STEP}px)` }}
                         >
-                            {services.map((service) => (
-                                <div
-                                    key={service.id}
-                                    className="service-card"
-                                    style={{
-                                        backgroundImage: `url(${service.bgImage})`,
-                                        backgroundSize: 'cover',
-                                        backgroundPosition: 'center'
-                                    }}
-                                >
-                                    {/* Vùng ảnh */}
-                                    <div className="service-card__visual">
+                            {services.map((service) => {
+                                // Lấy ảnh từ URL hoặc fallback sang localImages hoặc fallback mặc định
+                                const imageSrc = service.imageUrl || localImages[service.serviceName] || exteriorImg;
+                                return (
+                                    <div
+                                        key={service.serviceId}
+                                        className="service-card"
+                                        style={{
+                                            backgroundImage: `url(${imageSrc})`,
+                                            backgroundSize: 'cover',
+                                            backgroundPosition: 'center'
+                                        }}
+                                    >
+                                        {/* Vùng ảnh */}
+                                        <div className="service-card__visual">
+                                        </div>
+
+                                        {/* Nhãn tên dịch vụ */}
+                                        <div className="service-card__label">
+                                            <h3 className="service-card__name">{service.serviceName}</h3>
+                                        </div>
                                     </div>
-
-
-
-                                    {/* Nhãn tên dịch vụ */}
-                                    <div className="service-card__label">
-                                        <h3 className="service-card__name">{service.name}</h3>
-                                    </div>
-                                </div>
-                            ))}
+                                )
+                            })}
                         </div>
                     </div>
 
@@ -144,7 +134,7 @@ export default function ServicesSlider() {
                 {/* NÚT XEM THÊM */}
                 <div className="services__footer">
                     <button className="services__view-more" onClick={handleViewMore}>
-                        Xem Thêm
+                        Xem CHI TIẾT
                     </button>
                 </div>
 

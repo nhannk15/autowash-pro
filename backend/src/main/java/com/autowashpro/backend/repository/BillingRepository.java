@@ -27,7 +27,7 @@ public interface BillingRepository extends JpaRepository<Billing, Long> {
                     AND billing.paidAt >= :startOfDay
                     AND billing.paidAt < :nextDay)
             OR (billing.depositStatus = com.autowashpro.backend.model.enums.DepositStatus.PAID
-                AND billing.depositPaidAt >= :startTime AND billing.depositPaidAt <= :endTime)
+                AND billing.depositPaidAt >= :startOfDay AND billing.depositPaidAt <= :nextDay)
             """)
     BigDecimal sumRevenueByPaidDateRange(@Param("startOfDay") LocalDateTime startOfDay,
             @Param("nextDay") LocalDateTime nextDay);
@@ -54,7 +54,7 @@ public interface BillingRepository extends JpaRepository<Billing, Long> {
             WHERE
                 (billing.paymentStatus = com.autowashpro.backend.model.enums.PaymentStatus.PAID
                     AND billing.paidAt >= :startTime AND billing.paidAt <= :endTime)
-            OR (billing.paymentStatus != com.autowashpro.backend.model.enums.PaymentStatus.PAID
+            OR (billing.paymentStatus = com.autowashpro.backend.model.enums.PaymentStatus.PENDING
                 AND billing.depositStatus = com.autowashpro.backend.model.enums.DepositStatus.PAID
                 AND billing.depositPaidAt >= :startTime AND billing.depositPaidAt <= :endTime)
             """)
@@ -93,5 +93,13 @@ public interface BillingRepository extends JpaRepository<Billing, Long> {
             LIMIT 1
             """, nativeQuery = true)
     Optional<Billing> findMinBilling();
+
+    @Query("""
+            SELECT billing
+            FROM Billing billing
+            JOIN billing.booking booking
+            WHERE booking.customer.id = :customerId
+            """)
+    List<Billing> findCustomerBillingHistory(Long customerId);
 
 }

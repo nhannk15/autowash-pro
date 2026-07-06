@@ -7,24 +7,66 @@
     overflow: hidden; /* Ngăn cuộn toàn trang */
 }
 
+/* Light theme: content tự mở rộng theo nội dung, không giới hạn chiều cao */
+.dashboard-layout--light {
+    height: auto;
+    min-height: calc(100vh - 64px);
+    overflow: visible;
+    background-color: #ffffff;
+}
+
+.dashboard-layout--light .dashboard-layout__body {
+    height: auto;
+    min-height: calc(100vh - 64px);
+    overflow: visible;
+}
+
+/* Sidebar cố định khi cuộn trang */
+.dashboard-layout--light .sidebar {
+    position: fixed;
+    top: 64px;
+    left: 0;
+    height: calc(100vh - 64px);
+    z-index: 100;
+}
+
+/* Content area bù lại khoảng trống sidebar fixed chiếm (expanded: 15%) */
+.dashboard-layout--light .sidebar + .dashboard-layout__content {
+    margin-left: 15%;
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Content area bù lại khoảng trống sidebar fixed chiếm (collapsed: 80px) */
+.dashboard-layout--light .sidebar--collapsed + .dashboard-layout__content {
+    margin-left: 80px;
+}
+
+
 .dashboard-layout__body {
     display: flex;
     flex: 1;
     height: 100%;
     overflow: hidden; /* Giới hạn cuộn ở các thành phần con */
+    position: relative;
 }
 
 /* ===== Sidebar ===== */
 .sidebar {
-    width: 15%;
+    width: 240px;
+    min-width: 240px;
     height: 100%;
     background: #121E4B;
     display: flex;
     flex-direction: column;
-    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s ease;
     box-shadow: 2px 0 12px rgba(0, 0, 0, 0.08);
     position: relative;
     z-index: 100;
+}
+
+/* ===== Overlay nền tối khi sidebar mở dạng drawer trên mobile ===== */
+.sidebar__overlay {
+    display: none;
 }
 
 /* Ẩn scrollbar của sidebar cho đẹp (Tùy chọn) */
@@ -38,6 +80,7 @@
 
 .sidebar--collapsed {
     width: 80px;
+    min-width: 80px;
 }
 
 /* ===== Profile Card ===== */
@@ -239,3 +282,211 @@
     background-color: transparent;
 }
 
+/* ===== Theme: Light ===== */
+.sidebar--light {
+    background: #ffffff;
+    border-right: 1px solid #eaeaea;
+    box-shadow: 1px 0 8px rgba(0, 0, 0, 0.05);
+}
+
+.sidebar--light + .dashboard-layout__content {
+    background-color: #ffffff;
+    padding: 0;
+    overflow: visible;
+    min-height: calc(100vh - 64px);
+}
+
+.sidebar--light .sidebar__profile {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.sidebar--light .sidebar__username {
+    color: #333333;
+}
+
+.sidebar--light .sidebar__role {
+    color: #002b7f;
+    background: rgba(0, 43, 127, 0.1);
+}
+
+.sidebar--light .sidebar__avatar {
+    border: 3px solid #f0f0f0;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar--light .ant-menu {
+    color: #444444 !important;
+}
+
+.sidebar--light .ant-menu-item {
+    color: #555555 !important;
+}
+
+.sidebar--light .ant-menu-item:hover {
+    color: #002b7f !important;
+    background: #f1f4f9 !important;
+}
+
+.sidebar--light .ant-menu-item-selected {
+    color: #ffffff !important;
+    background: #002b7f !important;
+}
+
+.sidebar--light .sidebar__toggle {
+    border-top: 1px solid #f0f0f0;
+    color: #666666;
+}
+
+.sidebar--light .sidebar__toggle:hover {
+    color: #002b7f;
+    background: #f8f9fa;
+}
+
+.sidebar--light .ant-menu-item.sidebar__menu-item--logout {
+    color: #d32f2f !important;
+}
+
+.sidebar--light .ant-menu-item.sidebar__menu-item--logout:hover {
+    background: #ffebee !important;
+    color: #c62828 !important;
+}
+
+/* ===== Thanh trigger mở sidebar trên mobile (nằm trong luồng, dưới Navbar) ===== */
+.sidebar__mobile-topbar {
+    display: none;
+}
+
+@media (max-width: 576px) {
+    .sidebar__mobile-topbar {
+        display: flex;
+        align-items: center;
+        padding: 10px 16px;
+        background: #ffffff;
+        border-bottom: 1px solid #e8e8e8;
+        flex-shrink: 0;
+    }
+
+    .sidebar__mobile-trigger {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border: none;
+        background: transparent;
+        color: #121E4B;
+        font-size: 15px;
+        font-weight: 600;
+        font-family: 'Inter', 'Segoe UI', sans-serif;
+        padding: 6px 4px;
+        cursor: pointer;
+    }
+
+    .sidebar__mobile-trigger svg {
+        font-size: 18px;
+    }
+}
+
+/* ===== RESPONSIVE ===== */
+
+/* Tablet: sidebar tự thu gọn còn icon, không cần thao tác người dùng */
+@media (max-width: 992px) {
+    .sidebar {
+        width: 80px;
+        min-width: 80px;
+    }
+
+    .sidebar .sidebar__user-info {
+        opacity: 0;
+        height: 0;
+        margin: 0;
+        overflow: hidden;
+    }
+
+    .sidebar .sidebar__avatar {
+        width: 40px;
+        height: 40px;
+    }
+
+    .sidebar .sidebar__avatar-placeholder {
+        font-size: 1rem;
+    }
+
+    .sidebar .sidebar__profile {
+        padding: 16px 10px 14px;
+    }
+
+    .sidebar .ant-menu-item {
+        margin: 2px 8px !important;
+        padding: 0 !important;
+        display: flex;
+        justify-content: center;
+    }
+
+    /* Khi người dùng chủ động mở rộng (collapsed=false) trên tablet,
+       cho sidebar nổi đè lên nội dung thay vì ép content co lại */
+    .sidebar:not(.sidebar--collapsed) {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 240px;
+        min-width: 240px;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.25);
+    }
+}
+
+/* Mobile: sidebar biến thành drawer off-canvas, ẩn/hiện bằng transform */
+@media (max-width: 576px) {
+    .dashboard-layout__body {
+        position: relative;
+    }
+
+    .sidebar {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 220px;
+        min-width: 220px;
+        transform: translateX(-100%);
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Trạng thái "mở" trên mobile: dùng chung class collapsed=false để hiện drawer */
+    .sidebar:not(.sidebar--collapsed) {
+        transform: translateX(0);
+    }
+
+    .sidebar--collapsed {
+        transform: translateX(-100%);
+        width: 220px;
+        min-width: 220px;
+    }
+
+    .sidebar--collapsed .sidebar__user-info {
+        opacity: 1;
+        height: auto;
+        margin: 14px 0 0;
+        overflow: visible;
+    }
+
+    .sidebar--collapsed .sidebar__avatar {
+        width: 64px;
+        height: 64px;
+    }
+
+    .sidebar--collapsed .ant-menu-item {
+        margin: 2px 12px !important;
+        padding: 0 16px !important;
+        justify-content: flex-start;
+    }
+
+    .sidebar__overlay {
+        display: block;
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.35);
+        z-index: 90;
+    }
+
+    .dashboard-layout__content {
+        padding: 16px;
+    }
+}

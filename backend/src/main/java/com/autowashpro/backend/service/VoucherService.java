@@ -68,6 +68,7 @@ public class VoucherService {
         Voucher newVoucher = Voucher
                 .builder()
                 .voucherCode(codeGenerator.generate())
+                .issuedAt(LocalDateTime.now())
                 .reward(reward)
                 .discountType(reward.getRewardType())
                 .discountValue(reward.getDiscountValue())

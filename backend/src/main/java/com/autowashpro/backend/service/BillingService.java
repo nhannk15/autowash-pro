@@ -82,7 +82,7 @@ public class BillingService {
     }
 
     @Transactional
-    public Billing createPendingBilling(Long bookingId, BigDecimal originalAmount, BigDecimal discountAmount, BigDecimal finalAmount) {
+    public Billing createPendingBilling(Long bookingId, BigDecimal originalAmount, BigDecimal discountAmount, BigDecimal finalAmount, boolean walkIn) {
         log.info("createPendingBilling() - start creating new pendingBilling");
         Booking booking = bookingRepository.findByIdWithDetails(bookingId)
                 .orElseThrow(() -> new BookingNotFoundException(
@@ -93,11 +93,23 @@ public class BillingService {
         PaymentStatus paymentStatus = PaymentStatus.PENDING;
         LocalDateTime paidAt = null;
 
-        log.info("createPendingBilling() - finalAmount before deposit: {}", finalAmount);
-        BigDecimal depositAmount = finalAmount.multiply(DEPOSIT_PERCENTAGE).divide(new BigDecimal(100L));
-        log.info("createPendingBilling() - depositAmount: {}", depositAmount);
-        finalAmount = finalAmount.subtract(depositAmount);
-        log.info("createPendingBilling() - finalAmount after deposit: {}", finalAmount);
+        BigDecimal depositAmount;
+        DepositStatus depositStatus;
+        if (walkIn) {
+            // Khách vãng lai: không cần đặt cọc
+            depositAmount = BigDecimal.ZERO;
+            depositStatus = DepositStatus.PAID;
+            log.info("createPendingBilling() - walkIn=true, skipping deposit");
+        } else {
+            // Khách đặt lịch online: đặt cọc 30%
+            log.info("createPendingBilling() - finalAmount before deposit: {}", finalAmount);
+            depositAmount = finalAmount.multiply(DEPOSIT_PERCENTAGE).divide(new BigDecimal(100L));
+            log.info("createPendingBilling() - depositAmount: {}", depositAmount);
+            finalAmount = finalAmount.subtract(depositAmount);
+            log.info("createPendingBilling() - finalAmount after deposit: {}", finalAmount);
+            depositStatus = DepositStatus.PENDING;
+        }
+
         Billing newBilling = Billing
                 .builder()
                 .booking(booking)
@@ -109,7 +121,7 @@ public class BillingService {
                 .paymentStatus(paymentStatus)
                 .paidAt(paidAt)
                 .depositAmount(depositAmount)
-                .depositStatus(DepositStatus.PENDING)
+                .depositStatus(depositStatus)
                 .build();
         Billing savedBilling = billingRepository.saveAndFlush(newBilling);
         log.info("createPendingBilling() - originalAmount after saving: {}", originalAmount);
@@ -239,7 +251,8 @@ public class BillingService {
         log.info("applyVoucherForBilling() - finalAmount: {}", savedBilling.getFinalAmount());
 
         voucher.setStatus(VoucherStatus.USED);
-        voucher.setIssuedAt(LocalDateTime.now());
+        //--- Why issued at??
+        voucher.setUsedAt(LocalDateTime.now());
         Voucher savedVoucher = voucherRepository.save(voucher);
         return voucherMapper.toVoucherResponse(savedVoucher);
     }
@@ -323,6 +336,17 @@ public class BillingService {
 
         notificationService.createPointEarnNotification(newPointTransaction);
         return billingResponse;
+    }
+
+    public List<BillingResponse> getCustomerBillingHistory(String email) {
+        Customer customer = customerRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Không thể tìm thấy người dùng"));
+        List<Billing> customerBillings = billingRepository.findCustomerBillingHistory(customer.getId());
+        for (Billing billing: customerBillings) {
+            log.info("getCustomerBillingHistory() - billing {} has finalAmount {}", billing.getId(), billing.getFinalAmount());
+        }
+        log.info("getCustomerBillingHistory() - customerBillings's size: {}", customerBillings.size());
+        return billingMapper.toBillingResponses(customerBillings);
     }
 
 }

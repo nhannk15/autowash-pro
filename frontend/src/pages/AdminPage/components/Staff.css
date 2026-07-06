@@ -219,4 +219,16 @@
     .staff-toolbar-btn {
         width: 100% !important;
     }
+
+    .staff-table-wrapper {
+        overflow-x: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    .staff-form .ant-form-item-label {
+        width: 100% !important;
+        min-width: 100% !important;
+        text-align: left;
+    }
 }

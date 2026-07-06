@@ -41,18 +41,21 @@ public class CustomerService {
     private final PasswordEncoder passwordEncoder;
     private final MembershipTierMapper membershipTierMapper;
     private final CustomerRepository customerRepository;
+    private final EmailService emailService;
 
     @Autowired
     public CustomerService(CustomerRepository repository,
             UserRepository userRepository,
             MembershipTierRepository membershipTierRepository,
-            PasswordEncoder passwordEncoder, MembershipTierMapper membershipTierMapper, CustomerRepository customerRepository) {
+            PasswordEncoder passwordEncoder, MembershipTierMapper membershipTierMapper, CustomerRepository customerRepository,
+            EmailService emailService) {
         this.repository = repository;
         this.userRepository = userRepository;
         this.membershipTierRepository = membershipTierRepository;
         this.passwordEncoder = passwordEncoder;
         this.membershipTierMapper = membershipTierMapper;
         this.customerRepository = customerRepository;
+        this.emailService = emailService;
     }
 
     public Customer register(RegistrationRequest request) {
@@ -98,11 +101,19 @@ public class CustomerService {
                 // Update customer-specific fields if the user is a Customer
                 if (user instanceof Customer customer) {
                     customer.setDateOfBirth(request.getDateOfBirth());
-                    return repository.save(customer);
+                    Customer savedCustomer = repository.save(customer);
+                    if (savedCustomer.getEmail() != null && !savedCustomer.getEmail().isBlank()) {
+                        emailService.sendWelcomeEmail(savedCustomer.getEmail(), savedCustomer.getFullName(), null);
+                    }
+                    return savedCustomer;
                 }
 
                 userRepository.save(user);
-                return repository.findByEmail(request.getEmail()).orElseThrow();
+                Customer linkedCustomer = repository.findByEmail(request.getEmail()).orElseThrow();
+                if (linkedCustomer.getEmail() != null && !linkedCustomer.getEmail().isBlank()) {
+                    emailService.sendWelcomeEmail(linkedCustomer.getEmail(), linkedCustomer.getFullName(), null);
+                }
+                return linkedCustomer;
             }
         }
 
@@ -126,7 +137,14 @@ public class CustomerService {
         customer.setTierStartDate(LocalDate.now());
 
         applyCustomerDefaults(customer);
-        return repository.save(customer);
+        Customer savedCustomer = repository.save(customer);
+
+        // Gửi email chào mừng nếu có email
+        if (savedCustomer.getEmail() != null && !savedCustomer.getEmail().isBlank()) {
+            emailService.sendWelcomeEmail(savedCustomer.getEmail(), savedCustomer.getFullName(), null);
+        }
+
+        return savedCustomer;
     }
 
     public Customer createNew(Customer customer) {
@@ -134,8 +152,26 @@ public class CustomerService {
         if (customer.getPhoneNumber() != null && repository.existsByPhoneNumber(customer.getPhoneNumber())) {
             throw new IllegalArgumentException("Số điện thoại đã được sử dụng!");
         }
+        // Validate unique email
+        if (customer.getEmail() != null && !customer.getEmail().isBlank()) {
+            Optional<User> existingUser = userRepository.findByEmail(customer.getEmail());
+            if (existingUser.isPresent()) {
+                throw new AccountExistedException("Email đã tồn tại!");
+            }
+        }
+        // Set default password for walk-in customers
+        if (customer.getPassword() == null || customer.getPassword().isBlank()) {
+            customer.setPassword(passwordEncoder.encode("12345678"));
+        }
         applyCustomerDefaults(customer);
-        return repository.save(customer);
+        Customer savedCustomer = repository.save(customer);
+
+        // Gửi email chào mừng nếu có email
+        if (savedCustomer.getEmail() != null && !savedCustomer.getEmail().isBlank()) {
+            emailService.sendWelcomeEmail(savedCustomer.getEmail(), savedCustomer.getFullName(), "12345678");
+        }
+
+        return savedCustomer;
     }
 
     public Customer findById(Long id) {

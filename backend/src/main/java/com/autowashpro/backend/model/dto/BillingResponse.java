@@ -3,6 +3,7 @@ package com.autowashpro.backend.model.dto;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.autowashpro.backend.model.enums.DepositStatus;
 import com.autowashpro.backend.model.enums.PaymentMethod;
 import com.autowashpro.backend.model.enums.PaymentStatus;
 
@@ -26,10 +27,13 @@ public class BillingResponse {
     private BigDecimal depositAmount;
     private PaymentMethod paymentMethod;
     private PaymentStatus paymentStatus;
+    private DepositStatus depositStatus;
     private String transactionId;
     private String referenceCode;
     private LocalDateTime createdAt;
     private Long pointsChange;
+    private LocalDateTime paidAt;
+    private LocalDateTime depositPaidAt;
 
     private BookingPromotionResponse bookingPromotionResponse;
 

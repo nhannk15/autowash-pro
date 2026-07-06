@@ -10,6 +10,7 @@ import engineImg from '../../assets/Service/VeSinhKhoangMay.png';
 import odorImg from '../../assets/Service/KhuMui.png';
 import baoDuong from '../../assets/Service/baoDuong.jpg';
 import cachNhiet from '../../assets/Service/cachNhiet.jpg';
+import HeroImg from '../../assets/Service/HeroImageService.jpg';
 import { getService } from '../../service/customerService';
 
 // Bản đồ mapping tên dịch vụ -> hình ảnh cục bộ tương ứng
@@ -113,7 +114,7 @@ export default function Service() {
     return (
         <section className="dichvu-page">
             {/* BANNER HEADER */}
-            <div className="dichvu-header">
+            <div className="dichvu-header" style={{ backgroundImage: `url(${HeroImg})`, backgroundPosition: 'center', backgroundSize: 'cover', backgroundRepeat: 'no-repeat' }}>
                 <div className="dichvu-header__overlay" />
                 <div className="dichvu-header__content">
                     <h1 className="dichvu-header__title">
