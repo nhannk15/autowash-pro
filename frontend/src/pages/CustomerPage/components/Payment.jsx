@@ -126,8 +126,8 @@ export default function Payment() {
         return () => { isMounted = false; };
     }, []);
 
-    // Tổng tích lũy: chỉ tính COMPLETED (SUCCESS)
-    const totalSpent        = payments.filter(p => p.status === 'SUCCESS').reduce((s, p) => s + p.amount, 0);
+    // Tổng tích lũy: bao gồm COMPLETED (SUCCESS) và cọc bị mất (FORFEITED)
+    const totalSpent        = payments.filter(p => p.status === 'SUCCESS' || p.isForfeited).reduce((s, p) => s + p.amount, 0);
     const totalTransactions = payments.length;
 
     // Filter theo quý/năm (client-side) – 'ALL' = cả năm
