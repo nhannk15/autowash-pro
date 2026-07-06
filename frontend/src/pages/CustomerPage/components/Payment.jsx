@@ -64,6 +64,7 @@ function transformBillings(rawList) {
             const rawDate = billing.paidAt ?? billing.depositPaidAt;
             const dateObj = rawDate ? new Date(rawDate) : null;
             const month   = dateObj ? dateObj.getMonth() + 1 : null;
+            const year    = dateObj ? dateObj.getFullYear() : null;
 
             const paymentMethod = isForfeited
                 ? 'VNPAY'
@@ -86,6 +87,7 @@ function transformBillings(rawList) {
                 status:      billing.paymentStatus === 'PAID' ? 'SUCCESS' : 'CANCELLED',
                 isForfeited,
                 quarter:     month ? getQuarter(month) : null,
+                year,
             };
         });
 }
@@ -93,11 +95,14 @@ function transformBillings(rawList) {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function Payment() {
+    const currentYear    = new Date().getFullYear();
+    const currentQuarter = `Q${Math.ceil((new Date().getMonth() + 1) / 3)}`;
+
     const [payments, setPayments]               = useState([]);
     const [loading, setLoading]                 = useState(true);
     const [error, setError]                     = useState(null);
-    const [selectedQuarter, setSelectedQuarter] = useState(`Q${Math.ceil((new Date().getMonth() + 1) / 3)}`);
-    const [selectedYear, setSelectedYear]       = useState(new Date().getFullYear());
+    const [selectedQuarter, setSelectedQuarter] = useState(currentQuarter);
+    const [selectedYear, setSelectedYear]       = useState(currentYear);
 
     useEffect(() => {
         let isMounted = true;
@@ -105,9 +110,19 @@ export default function Payment() {
             try {
                 setLoading(true);
                 const raw = await getCustomerBillingHistory();
+                const transformed = transformBillings(raw);
                 if (isMounted) {
-                    setPayments(transformBillings(raw));
+                    setPayments(transformed);
                     setError(null);
+
+                    // Auto-select quý gần nhất có data (sort by rawDate desc)
+                    const withDate = transformed
+                        .filter(p => p.rawDate && p.quarter && p.year)
+                        .sort((a, b) => new Date(b.rawDate) - new Date(a.rawDate));
+                    if (withDate.length > 0) {
+                        setSelectedQuarter(withDate[0].quarter);
+                        setSelectedYear(withDate[0].year);
+                    }
                 }
             } catch (err) {
                 console.error('Payment history error:', err);
