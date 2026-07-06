@@ -101,7 +101,7 @@ export default function Payment() {
     const [payments, setPayments]               = useState([]);
     const [loading, setLoading]                 = useState(true);
     const [error, setError]                     = useState(null);
-    const [selectedQuarter, setSelectedQuarter] = useState(currentQuarter);
+    const [selectedQuarter, setSelectedQuarter] = useState('ALL');
     const [selectedYear, setSelectedYear]       = useState(currentYear);
 
     useEffect(() => {
@@ -114,15 +114,6 @@ export default function Payment() {
                 if (isMounted) {
                     setPayments(transformed);
                     setError(null);
-
-                    // Auto-select quý gần nhất có data (sort by rawDate desc)
-                    const withDate = transformed
-                        .filter(p => p.rawDate && p.quarter && p.year)
-                        .sort((a, b) => new Date(b.rawDate) - new Date(a.rawDate));
-                    if (withDate.length > 0) {
-                        setSelectedQuarter(withDate[0].quarter);
-                        setSelectedYear(withDate[0].year);
-                    }
                 }
             } catch (err) {
                 console.error('Payment history error:', err);
@@ -139,9 +130,10 @@ export default function Payment() {
     const totalSpent        = payments.filter(p => p.status === 'SUCCESS').reduce((s, p) => s + p.amount, 0);
     const totalTransactions = payments.length;
 
-    // Filter theo quý/năm (client-side), dựa trên paidAt ?? depositPaidAt
-    const filteredPayments = payments.filter(
-        p => p.quarter === selectedQuarter && p.year === selectedYear
+    // Filter theo quý/năm (client-side) – 'ALL' = cả năm
+    const filteredPayments = payments.filter(p =>
+        p.year === selectedYear &&
+        (selectedQuarter === 'ALL' || p.quarter === selectedQuarter)
     );
 
     const quarterSpent     = filteredPayments.reduce((s, p) => s + p.amount, 0);
@@ -280,7 +272,7 @@ export default function Payment() {
                             <PayCircleOutlined className="stat-card__icon" />
                         </div>
                         <div className="stat-card__content">
-                            <Text className="stat-card__label">Thực Chi {selectedQuarter}/{selectedYear}</Text>
+                            <Text className="stat-card__label">Thực Chi {selectedQuarter === 'ALL' ? `Cả Năm ${selectedYear}` : `${selectedQuarter}/${selectedYear}`}</Text>
                             <Title level={3} className="stat-card__value">{formatCurrency(quarterSpent)}</Title>
                         </div>
                     </Card>
@@ -305,7 +297,7 @@ export default function Payment() {
                         title={
                             <div className="card-title-flex">
                                 <PieChartOutlined />
-                                <span>Phân Tích Chi Tiêu {selectedQuarter}/{selectedYear}</span>
+                                <span>Phân Tích Chi Tiêu {selectedQuarter === 'ALL' ? 'Cả Năm' : selectedQuarter}/{selectedYear}</span>
                             </div>
                         } 
                         className="breakdown-card"
@@ -314,7 +306,8 @@ export default function Payment() {
                         {/* Selector */}
                         <div className="selector-group">
                             <Space>
-                                <Select value={selectedQuarter} onChange={setSelectedQuarter} style={{ width: 100 }}>
+                                <Select value={selectedQuarter} onChange={setSelectedQuarter} style={{ width: 110 }}>
+                                    <Option value="ALL">Cả năm</Option>
                                     <Option value="Q1">Quý 1</Option>
                                     <Option value="Q2">Quý 2</Option>
                                     <Option value="Q3">Quý 3</Option>
