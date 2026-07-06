@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Row, Col, Card, Table, Tag, Progress, Select, Space, Typography, Badge, Spin, Empty } from 'antd';
 import { 
     WalletOutlined, 
@@ -86,115 +86,11 @@ function transformBillings(rawList) {
                 status:      billing.paymentStatus === 'PAID' ? 'SUCCESS' : 'CANCELLED',
                 isForfeited,
                 quarter:     month ? getQuarter(month) : null,
-                year:        dateObj ? dateObj.getFullYear() : null,
-                // Legacy fields kept for mock data compatibility
-                points:      billing.pointsChange ?? 0,
             };
         });
 }
 
-// Mock data lịch sử thanh toán mới theo nghiệp vụ đặt cọc và hủy lịch
-// ── Component ────────────────────────────────────────────────────────────────
-// (mock data removed – data now comes from GET /api/billings/customer/billing-history)
-
-
-    {
-        key: '1',
-        bookingCode: 'BK-8902',
-        date: '2026-06-20 09:30',
-        vehicle: 'Mazda 3 (30A-999.99)',
-        services: ['Rửa xe bọt tuyết', 'Hút bụi nội thất'],
-        paymentMethod: 'VNPAY',
-        amount: 250000, // Thực chi
-        originalAmount: 250000,
-        discount: 0,
-        status: 'SUCCESS',
-        points: 25,
-        quarter: 'Q2',
-        year: 2026,
-        isForfeited: false
-    },
-    {
-        key: '2',
-        bookingCode: 'BK-8812',
-        date: '2026-06-02 11:00',
-        vehicle: 'Mazda 3 (30A-999.99)',
-        services: ['Rửa xe cao cấp'],
-        paymentMethod: 'VNPAY',
-        amount: 50000, // Chỉ mất tiền cọc
-        originalAmount: 150000,
-        discount: 0,
-        status: 'CANCELLED', // Bị hủy, mất cọc
-        points: 0,
-        quarter: 'Q2',
-        year: 2026,
-        isForfeited: true
-    },
-    {
-        key: '3',
-        bookingCode: 'BK-8751',
-        date: '2026-05-15 14:00',
-        vehicle: 'Ford Ranger (29C-888.88)',
-        services: ['Vệ sinh khoang máy', 'Tẩy ố kính'],
-        paymentMethod: 'TIỀN MẶT',
-        amount: 1100000, // Đã giảm 100k
-        originalAmount: 1200000,
-        discount: 100000,
-        status: 'SUCCESS',
-        points: 110,
-        quarter: 'Q2',
-        year: 2026,
-        isForfeited: false
-    },
-    {
-        key: '4',
-        bookingCode: 'BK-8600',
-        date: '2026-04-10 10:15',
-        vehicle: 'Mazda 3 (30A-999.99)',
-        services: ['Đánh bóng toàn xe', 'Phủ Ceramic'],
-        paymentMethod: 'VNPAY',
-        amount: 3150000, // Đã giảm 350k
-        originalAmount: 3500000,
-        discount: 350000,
-        status: 'SUCCESS',
-        points: 315,
-        quarter: 'Q2',
-        year: 2026,
-        isForfeited: false
-    },
-    {
-        key: '5',
-        bookingCode: 'BK-8510',
-        date: '2026-03-05 16:30',
-        vehicle: 'Mazda 3 (30A-999.99)',
-        services: ['Rửa xe tiêu chuẩn'],
-        paymentMethod: 'TIỀN MẶT',
-        amount: 150000,
-        originalAmount: 150000,
-        discount: 0,
-        status: 'SUCCESS',
-        points: 15,
-        quarter: 'Q1',
-        year: 2026,
-        isForfeited: false
-    },
-    {
-        key: '6',
-        bookingCode: 'BK-8422',
-        date: '2026-01-20 08:00',
-        vehicle: 'Mazda 3 (30A-999.99)',
-        services: ['Xông tinh dầu khử mùi'],
-        paymentMethod: 'VNPAY',
-        amount: 270000, // Đã giảm 30k
-        originalAmount: 300000,
-        discount: 30000,
-        status: 'SUCCESS',
-        points: 27,
-        quarter: 'Q1',
-        year: 2026,
-        isForfeited: false
-    }
-];
+// ── Component ─────────────────────────────────────────────────────────────────
 
 export default function Payment() {
     const [payments, setPayments]               = useState([]);
@@ -307,16 +203,6 @@ export default function Payment() {
             )
         },
         {
-            title: 'Tích điểm',
-            dataIndex: 'points',
-            key: 'points',
-            render: (points) => points > 0 ? (
-                <Text style={{ color: '#eab308', fontWeight: 'bold' }}>+{points} pts</Text>
-            ) : (
-                <Text type="secondary">-</Text>
-            )
-        },
-        {
             title: 'Trạng thái',
             dataIndex: 'status',
             key: 'status',
@@ -333,6 +219,22 @@ export default function Payment() {
             )
         }
     ];
+
+    if (loading) {
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+                <Spin size="large" tip="Đang tải lịch sử thanh toán..." />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div style={{ padding: '40px', textAlign: 'center' }}>
+                <Text type="danger">{error}</Text>
+            </div>
+        );
+    }
 
     return (
         <div className="payment-container">
@@ -398,15 +300,15 @@ export default function Payment() {
                         <div className="selector-group">
                             <Space>
                                 <Select value={selectedQuarter} onChange={setSelectedQuarter} style={{ width: 100 }}>
-                                    <Option value="All">Cả Năm</Option>
                                     <Option value="Q1">Quý 1</Option>
                                     <Option value="Q2">Quý 2</Option>
                                     <Option value="Q3">Quý 3</Option>
                                     <Option value="Q4">Quý 4</Option>
                                 </Select>
                                 <Select value={selectedYear} onChange={setSelectedYear} style={{ width: 100 }}>
-                                    <Option value={2026}>2026</Option>
-                                    <Option value={2025}>2025</Option>
+                                    {[new Date().getFullYear(), new Date().getFullYear() - 1].map(y => (
+                                        <Option key={y} value={y}>{y}</Option>
+                                    ))}
                                 </Select>
                             </Space>
                         </div>
@@ -460,10 +362,11 @@ export default function Payment() {
                     >
                         <Table 
                             columns={columns} 
-                            dataSource={mockPayments} 
+                            dataSource={payments} 
                             pagination={{ pageSize: 5 }}
                             scroll={{ x: 'max-content' }}
                             className="payment-table"
+                            locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Bạn chưa có giao dịch nào." /> }}
                         />
                     </Card>
                 </Col>
