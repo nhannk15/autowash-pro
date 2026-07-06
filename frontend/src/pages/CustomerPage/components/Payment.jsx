@@ -94,7 +94,10 @@ function transformBillings(rawList) {
 }
 
 // Mock data lịch sử thanh toán mới theo nghiệp vụ đặt cọc và hủy lịch
-const mockPayments = [
+// ── Component ────────────────────────────────────────────────────────────────
+// (mock data removed – data now comes from GET /api/billings/customer/billing-history)
+
+
     {
         key: '1',
         bookingCode: 'BK-8902',
@@ -194,45 +197,52 @@ const mockPayments = [
 ];
 
 export default function Payment() {
-    const [selectedQuarter, setSelectedQuarter] = useState('Q2');
-    const [selectedYear, setSelectedYear] = useState(2026);
+    const [payments, setPayments]               = useState([]);
+    const [loading, setLoading]                 = useState(true);
+    const [error, setError]                     = useState(null);
+    const [selectedQuarter, setSelectedQuarter] = useState(`Q${Math.ceil((new Date().getMonth() + 1) / 3)}`);
+    const [selectedYear, setSelectedYear]       = useState(new Date().getFullYear());
 
-    // Tính toán số liệu thống kê tổng quát (Chỉ tính giao dịch thành công và phần cọc bị mất thực tế)
-    const totalSpent = mockPayments.reduce((sum, item) => sum + item.amount, 0);
-    const totalTransactions = mockPayments.length;
-    
-    // Lọc data theo quý/năm được chọn
-    const filteredPayments = mockPayments.filter(
-        item => item.quarter === selectedQuarter && item.year === selectedYear
+    useEffect(() => {
+        let isMounted = true;
+        async function fetchHistory() {
+            try {
+                setLoading(true);
+                const raw = await getCustomerBillingHistory();
+                if (isMounted) {
+                    setPayments(transformBillings(raw));
+                    setError(null);
+                }
+            } catch (err) {
+                console.error('Payment history error:', err);
+                if (isMounted) setError('Không thể tải lịch sử thanh toán. Vui lòng thử lại.');
+            } finally {
+                if (isMounted) setLoading(false);
+            }
+        }
+        fetchHistory();
+        return () => { isMounted = false; };
+    }, []);
+
+    // Tổng tích lũy: chỉ tính COMPLETED (SUCCESS)
+    const totalSpent        = payments.filter(p => p.status === 'SUCCESS').reduce((s, p) => s + p.amount, 0);
+    const totalTransactions = payments.length;
+
+    // Filter theo quý/năm (client-side), dựa trên paidAt ?? depositPaidAt
+    const filteredPayments = payments.filter(
+        p => p.quarter === selectedQuarter && p.year === selectedYear
     );
 
-    const quarterSpent = filteredPayments.reduce((sum, item) => sum + item.amount, 0);
+    const quarterSpent     = filteredPayments.reduce((s, p) => s + p.amount, 0);
+    const successSpent     = filteredPayments.filter(p => p.status === 'SUCCESS').reduce((s, p) => s + p.amount, 0);
+    const forfeitedSpent   = filteredPayments.filter(p => p.isForfeited).reduce((s, p) => s + p.amount, 0);
+    // Tiết kiệm chỉ tính trên giao dịch thành công
+    const totalSavings     = filteredPayments.filter(p => p.status === 'SUCCESS').reduce((s, p) => s + p.discount, 0);
 
-    // Phân tích dòng tiền cho Quý được chọn
-    // 1. Chi tiêu dịch vụ thành công
-    const successSpent = filteredPayments
-        .filter(item => item.status === 'SUCCESS')
-        .reduce((sum, item) => sum + item.amount, 0);
-        
-    // 2. Chi phí cọc bị mất do hủy lịch muộn
-    const forfeitedSpent = filteredPayments
-        .filter(item => item.isForfeited)
-        .reduce((sum, item) => sum + item.amount, 0);
-
-    // 3. Số tiền tiết kiệm được nhờ áp dụng Voucher / Promotion
-    const totalSavings = filteredPayments
-        .reduce((sum, item) => sum + (item.discount || 0), 0);
-
-    // Tính toán phần trăm dòng tiền trên tổng chi tiêu thực tế của quý
-    const successPercent = quarterSpent > 0 ? Math.round((successSpent / quarterSpent) * 100) : 0;
+    const successPercent   = quarterSpent > 0 ? Math.round((successSpent / quarterSpent) * 100) : 0;
     const forfeitedPercent = quarterSpent > 0 ? Math.round((forfeitedSpent / quarterSpent) * 100) : 0;
 
-    // Định dạng tiền tệ VND
-    const formatCurrency = (value) => {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
-    };
-
-    // Columns cho Ant Design Table (Không có cột Thao tác, đổi thành Mã đặt lịch)
+    // Columns cho Ant Design Table
     const columns = [
         {
             title: 'Mã Đặt Lịch',
@@ -242,8 +252,8 @@ export default function Payment() {
         },
         {
             title: 'Ngày thanh toán',
-            dataIndex: 'date',
-            key: 'date',
+            dataIndex: 'dateDisplay',
+            key: 'dateDisplay',
             render: (text) => <span className="payment-date">{text}</span>
         },
         {
