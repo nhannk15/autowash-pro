@@ -145,6 +145,12 @@ export default function Payment() {
     const successPercent   = quarterSpent > 0 ? Math.round((successSpent / quarterSpent) * 100) : 0;
     const forfeitedPercent = quarterSpent > 0 ? Math.round((forfeitedSpent / quarterSpent) * 100) : 0;
 
+    // Lấy danh sách các năm có giao dịch (bao gồm cả năm hiện tại), sắp xếp giảm dần
+    const availableYears = Array.from(new Set([
+        currentYear,
+        ...payments.map(p => p.year).filter(Boolean)
+    ])).sort((a, b) => b - a);
+
     // Columns cho Ant Design Table
     const columns = [
         {
@@ -314,7 +320,7 @@ export default function Payment() {
                                     <Option value="Q4">Quý 4</Option>
                                 </Select>
                                 <Select value={selectedYear} onChange={setSelectedYear} style={{ width: 100 }}>
-                                    {[new Date().getFullYear(), new Date().getFullYear() - 1].map(y => (
+                                    {availableYears.map(y => (
                                         <Option key={y} value={y}>{y}</Option>
                                     ))}
                                 </Select>
