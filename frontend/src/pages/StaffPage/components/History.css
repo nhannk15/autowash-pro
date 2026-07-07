@@ -188,3 +188,26 @@
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .history-card__header {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 12px;
+    }
+
+    .history-search-input {
+        width: 100% !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .stat-card__value {
+        font-size: 22px;
+    }
+
+    .stat-card__icon-wrapper {
+        padding: 12px;
+    }
+}

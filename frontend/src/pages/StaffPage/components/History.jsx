@@ -194,7 +194,7 @@ export default function History() {
 
             {/* History Table */}
             <Card className="history-card">
-                <Flex justify="space-between" align="center" className="history-card__header">
+                <Flex justify="space-between" align="center" wrap="wrap" gap={12} className="history-card__header">
                     <Title level={4} className="history-card__title">Lịch sử hoàn thành</Title>
                     <Input
                         placeholder="Tìm biển số xe..."
@@ -215,6 +215,7 @@ export default function History() {
                         columns={columns}
                         dataSource={completedData}
                         rowKey="id"
+                        scroll={{ x: 800 }}
                         pagination={{
                             current: pagination.current,
                             pageSize: pagination.pageSize,

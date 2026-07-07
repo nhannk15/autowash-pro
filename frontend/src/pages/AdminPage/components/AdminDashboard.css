@@ -271,6 +271,23 @@
     font-size: 14px;
     font-family: system-ui, -apple-system, sans-serif;
     color: #1a1a2e;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.bay-card__premium-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #ad6800;
+    background: #fff7e6;
+    border: 1px solid #ffd591;
+    border-radius: 999px;
+    padding: 1px 8px;
+    line-height: 1.6;
 }
 
 .bay-card__content {
@@ -329,6 +346,12 @@
 .bay-card--occupied    { background: #fff; border-color: #e8e8e8; }
 .bay-card--maintenance { background: #fff2f0; border-color: #ffccc7; }
 .bay-card--inactive    { background: #fafafa; border-color: #e8e8e8; opacity: 0.7; }
+
+/* ===== Bay Premium ===== */
+/* Chỉ viền vàng mỏng, không ghi đè màu nền trạng thái (available/occupied/maintenance/completed) */
+.bay-card--premium {
+    border: 1.5px solid #faad14 !important;
+}
 
 /* Admin bay: no action buttons needed */
 .admin-bay-card .bay-card__actions { display: none; }
