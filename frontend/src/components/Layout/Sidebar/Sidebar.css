@@ -19,6 +19,7 @@
     height: auto;
     min-height: calc(100vh - 64px);
     overflow: visible;
+    background-color: #ffffff;
 }
 
 /* Sidebar cố định khi cuộn trang */
@@ -30,9 +31,9 @@
     z-index: 100;
 }
 
-/* Content area bù lại khoảng trống sidebar fixed chiếm (expanded: 15%) */
+/* Content area bù lại khoảng trống sidebar fixed chiếm (expanded: 240px) */
 .dashboard-layout--light .sidebar + .dashboard-layout__content {
-    margin-left: 15%;
+    margin-left: 240px;
     transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 

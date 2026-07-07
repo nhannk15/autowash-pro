@@ -71,7 +71,7 @@ export default function Sidebar({ menuItems, children, theme = 'dark' }) {
         : (collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />);
 
     return (
-        <div className="dashboard-layout">
+        <div className={`dashboard-layout${theme === 'light' ? ' dashboard-layout--light' : ''}`}>
             {/* Thanh trigger mở sidebar trên mobile - nằm trong luồng bình thường,
                 ngay dưới Navbar, không dùng fixed để tránh đè lên Navbar */}
             {isMobile && (

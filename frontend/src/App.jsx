@@ -100,7 +100,11 @@ function App() {
       {/* Trang Cá nhân (Customer Dashboard) */}
       <Route path="/ca-nhan" element={
         <ProtectedRoute allowedRoles={["CUSTOMER"]}>
-          <MainLayout><CustomerPage /></MainLayout>
+          <>
+            <Navbar />
+            <CustomerPage />
+            <Footer />
+          </>
         </ProtectedRoute>
       }>
         <Route index element={<Navigate to="ho-so" replace />} />
