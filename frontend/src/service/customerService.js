@@ -134,3 +134,10 @@ export async function markAllNotificationsRead() {
     const response = await axios.put('/api/notifications/read-all');
     return response.data;
 }
+
+// ── Payment APIs ──────────────────────────────────────────────────────────────
+
+export async function getCustomerBillingHistory() {
+    const response = await axios.get('/api/billings/customer/billing-history');
+    return response.data;
+}

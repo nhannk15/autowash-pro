@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Row, Col, Card, Table, Tag, Progress, Select, Space, Typography, Badge } from 'antd';
+import { useState, useEffect } from 'react';
+import { Row, Col, Card, Table, Tag, Progress, Select, Space, Typography, Badge, Spin, Empty } from 'antd';
 import { 
     WalletOutlined, 
     HistoryOutlined, 
@@ -8,151 +8,150 @@ import {
     CheckCircleOutlined,
     CloseCircleOutlined
 } from '@ant-design/icons';
+import { getCustomerBillingHistory } from '../../../service/customerService';
 import './Payment.css';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
-// Mock data lịch sử thanh toán mới theo nghiệp vụ đặt cọc và hủy lịch
-const mockPayments = [
-    {
-        key: '1',
-        bookingCode: 'BK-8902',
-        date: '2026-06-20 09:30',
-        vehicle: 'Mazda 3 (30A-999.99)',
-        services: ['Rửa xe bọt tuyết', 'Hút bụi nội thất'],
-        paymentMethod: 'VNPAY',
-        amount: 250000, // Thực chi
-        originalAmount: 250000,
-        discount: 0,
-        status: 'SUCCESS',
-        points: 25,
-        quarter: 'Q2',
-        year: 2026,
-        isForfeited: false
-    },
-    {
-        key: '2',
-        bookingCode: 'BK-8812',
-        date: '2026-06-02 11:00',
-        vehicle: 'Mazda 3 (30A-999.99)',
-        services: ['Rửa xe cao cấp'],
-        paymentMethod: 'VNPAY',
-        amount: 50000, // Chỉ mất tiền cọc
-        originalAmount: 150000,
-        discount: 0,
-        status: 'CANCELLED', // Bị hủy, mất cọc
-        points: 0,
-        quarter: 'Q2',
-        year: 2026,
-        isForfeited: true
-    },
-    {
-        key: '3',
-        bookingCode: 'BK-8751',
-        date: '2026-05-15 14:00',
-        vehicle: 'Ford Ranger (29C-888.88)',
-        services: ['Vệ sinh khoang máy', 'Tẩy ố kính'],
-        paymentMethod: 'TIỀN MẶT',
-        amount: 1100000, // Đã giảm 100k
-        originalAmount: 1200000,
-        discount: 100000,
-        status: 'SUCCESS',
-        points: 110,
-        quarter: 'Q2',
-        year: 2026,
-        isForfeited: false
-    },
-    {
-        key: '4',
-        bookingCode: 'BK-8600',
-        date: '2026-04-10 10:15',
-        vehicle: 'Mazda 3 (30A-999.99)',
-        services: ['Đánh bóng toàn xe', 'Phủ Ceramic'],
-        paymentMethod: 'VNPAY',
-        amount: 3150000, // Đã giảm 350k
-        originalAmount: 3500000,
-        discount: 350000,
-        status: 'SUCCESS',
-        points: 315,
-        quarter: 'Q2',
-        year: 2026,
-        isForfeited: false
-    },
-    {
-        key: '5',
-        bookingCode: 'BK-8510',
-        date: '2026-03-05 16:30',
-        vehicle: 'Mazda 3 (30A-999.99)',
-        services: ['Rửa xe tiêu chuẩn'],
-        paymentMethod: 'TIỀN MẶT',
-        amount: 150000,
-        originalAmount: 150000,
-        discount: 0,
-        status: 'SUCCESS',
-        points: 15,
-        quarter: 'Q1',
-        year: 2026,
-        isForfeited: false
-    },
-    {
-        key: '6',
-        bookingCode: 'BK-8422',
-        date: '2026-01-20 08:00',
-        vehicle: 'Mazda 3 (30A-999.99)',
-        services: ['Xông tinh dầu khử mùi'],
-        paymentMethod: 'VNPAY',
-        amount: 270000, // Đã giảm 30k
-        originalAmount: 300000,
-        discount: 30000,
-        status: 'SUCCESS',
-        points: 27,
-        quarter: 'Q1',
-        year: 2026,
-        isForfeited: false
-    }
-];
+// ── Transform Utilities ───────────────────────────────────────────────────────
+
+const PAYMENT_METHOD_LABEL = {
+    CASH: 'Tiền mặt',
+    BANK_TRANSFER: 'VNPAY',
+    MOMO: 'Momo',
+    ZALO_PAY: 'ZaloPay',
+};
+
+function getQuarter(month) {
+    return `Q${Math.ceil(month / 3)}`;
+}
+
+function formatDateDisplay(isoString) {
+    if (!isoString) return '—';
+    return new Date(isoString).toLocaleString('vi-VN', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+    });
+}
+
+function formatCurrency(value) {
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value || 0);
+}
+
+/**
+ * Transform raw BillingResponse[] → UI payment records.
+ * - Filters out CONFIRMED bookings (chưa hoàn thành dịch vụ)
+ * - Amount: COMPLETED = finalAmount + depositAmount | CANCELLED = depositAmount (mất cọc)
+ * - paymentMethod: hardcode VNPAY nếu isForfeited
+ * - quarter/year: derived from paidAt ?? depositPaidAt
+ */
+function transformBillings(rawList) {
+    return (rawList ?? [])
+        .filter(b => b.booking?.status !== 'CONFIRMED')
+        .map((billing, idx) => {
+            const booking       = billing.booking ?? {};
+            const isCancelled   = booking.status === 'CANCELLED';
+            const isForfeited   = isCancelled && billing.depositStatus === 'PAID';
+
+            const depositAmount  = Number(billing.depositAmount)  || 0;
+            const finalAmount    = Number(billing.finalAmount)    || 0;
+            const originalAmount = Number(billing.originalAmount) || 0;
+            const discountAmount = Number(billing.discountAmount) || 0;
+
+            const amount = isForfeited ? depositAmount : finalAmount + depositAmount;
+
+            const rawDate = billing.paidAt ?? billing.depositPaidAt;
+            const dateObj = rawDate ? new Date(rawDate) : null;
+            const month   = dateObj ? dateObj.getMonth() + 1 : null;
+            const year    = dateObj ? dateObj.getFullYear() : null;
+
+            const paymentMethod = isForfeited
+                ? 'VNPAY'
+                : (PAYMENT_METHOD_LABEL[billing.paymentMethod] ?? billing.paymentMethod ?? '—');
+
+            const v = booking.vehicle;
+            const vehicle = v ? `${v.brand} ${v.model} (${v.licensePlate})` : '—';
+
+            return {
+                key:         String(billing.billingId ?? idx),
+                bookingCode: booking.bookingCode ?? '—',
+                dateDisplay: formatDateDisplay(rawDate),
+                rawDate,
+                vehicle,
+                services:    (booking.bookingDetails ?? []).map(d => d.serviceName),
+                paymentMethod,
+                amount,
+                originalAmount,
+                discount:    discountAmount,
+                status:      billing.paymentStatus === 'PAID' ? 'SUCCESS' : 'CANCELLED',
+                isForfeited,
+                quarter:     month ? getQuarter(month) : null,
+                year,
+            };
+        });
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
 
 export default function Payment() {
-    const [selectedQuarter, setSelectedQuarter] = useState('Q2');
-    const [selectedYear, setSelectedYear] = useState(2026);
+    const currentYear    = new Date().getFullYear();
+    const currentQuarter = `Q${Math.ceil((new Date().getMonth() + 1) / 3)}`;
 
-    // Tính toán số liệu thống kê tổng quát (Chỉ tính giao dịch thành công và phần cọc bị mất thực tế)
-    const totalSpent = mockPayments.reduce((sum, item) => sum + item.amount, 0);
-    const totalTransactions = mockPayments.length;
-    
-    // Lọc data theo quý/năm được chọn
-    const filteredPayments = mockPayments.filter(
-        item => item.quarter === selectedQuarter && item.year === selectedYear
+    const [payments, setPayments]               = useState([]);
+    const [loading, setLoading]                 = useState(true);
+    const [error, setError]                     = useState(null);
+    const [selectedQuarter, setSelectedQuarter] = useState('ALL');
+    const [selectedYear, setSelectedYear]       = useState(currentYear);
+
+    useEffect(() => {
+        let isMounted = true;
+        async function fetchHistory() {
+            try {
+                setLoading(true);
+                const raw = await getCustomerBillingHistory();
+                const transformed = transformBillings(raw);
+                if (isMounted) {
+                    setPayments(transformed);
+                    setError(null);
+                }
+            } catch (err) {
+                console.error('Payment history error:', err);
+                if (isMounted) setError('Không thể tải lịch sử thanh toán. Vui lòng thử lại.');
+            } finally {
+                if (isMounted) setLoading(false);
+            }
+        }
+        fetchHistory();
+        return () => { isMounted = false; };
+    }, []);
+
+    // Tổng tích lũy: bao gồm COMPLETED (SUCCESS) và cọc bị mất (FORFEITED)
+    const totalSpent        = payments.filter(p => p.status === 'SUCCESS' || p.isForfeited).reduce((s, p) => s + p.amount, 0);
+    const totalTransactions = payments.length;
+
+    // Filter theo quý/năm (client-side) – 'ALL' = cả năm
+    const filteredPayments = payments.filter(p =>
+        p.year === selectedYear &&
+        (selectedQuarter === 'ALL' || p.quarter === selectedQuarter)
     );
 
-    const quarterSpent = filteredPayments.reduce((sum, item) => sum + item.amount, 0);
+    const quarterSpent     = filteredPayments.reduce((s, p) => s + p.amount, 0);
+    const successSpent     = filteredPayments.filter(p => p.status === 'SUCCESS').reduce((s, p) => s + p.amount, 0);
+    const forfeitedSpent   = filteredPayments.filter(p => p.isForfeited).reduce((s, p) => s + p.amount, 0);
+    // Tiết kiệm chỉ tính trên giao dịch thành công
+    const totalSavings     = filteredPayments.filter(p => p.status === 'SUCCESS').reduce((s, p) => s + p.discount, 0);
 
-    // Phân tích dòng tiền cho Quý được chọn
-    // 1. Chi tiêu dịch vụ thành công
-    const successSpent = filteredPayments
-        .filter(item => item.status === 'SUCCESS')
-        .reduce((sum, item) => sum + item.amount, 0);
-        
-    // 2. Chi phí cọc bị mất do hủy lịch muộn
-    const forfeitedSpent = filteredPayments
-        .filter(item => item.isForfeited)
-        .reduce((sum, item) => sum + item.amount, 0);
-
-    // 3. Số tiền tiết kiệm được nhờ áp dụng Voucher / Promotion
-    const totalSavings = filteredPayments
-        .reduce((sum, item) => sum + (item.discount || 0), 0);
-
-    // Tính toán phần trăm dòng tiền trên tổng chi tiêu thực tế của quý
-    const successPercent = quarterSpent > 0 ? Math.round((successSpent / quarterSpent) * 100) : 0;
+    const successPercent   = quarterSpent > 0 ? Math.round((successSpent / quarterSpent) * 100) : 0;
     const forfeitedPercent = quarterSpent > 0 ? Math.round((forfeitedSpent / quarterSpent) * 100) : 0;
 
-    // Định dạng tiền tệ VND
-    const formatCurrency = (value) => {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
-    };
+    // Lấy danh sách các năm có giao dịch (bao gồm cả năm hiện tại), sắp xếp giảm dần
+    const availableYears = Array.from(new Set([
+        currentYear,
+        ...payments.map(p => p.year).filter(Boolean)
+    ])).sort((a, b) => b - a);
 
-    // Columns cho Ant Design Table (Không có cột Thao tác, đổi thành Mã đặt lịch)
+    // Columns cho Ant Design Table
     const columns = [
         {
             title: 'Mã Đặt Lịch',
@@ -162,8 +161,8 @@ export default function Payment() {
         },
         {
             title: 'Ngày thanh toán',
-            dataIndex: 'date',
-            key: 'date',
+            dataIndex: 'dateDisplay',
+            key: 'dateDisplay',
             render: (text) => <span className="payment-date">{text}</span>
         },
         {
@@ -217,16 +216,6 @@ export default function Payment() {
             )
         },
         {
-            title: 'Tích điểm',
-            dataIndex: 'points',
-            key: 'points',
-            render: (points) => points > 0 ? (
-                <Text style={{ color: '#eab308', fontWeight: 'bold' }}>+{points} pts</Text>
-            ) : (
-                <Text type="secondary">-</Text>
-            )
-        },
-        {
             title: 'Trạng thái',
             dataIndex: 'status',
             key: 'status',
@@ -243,6 +232,22 @@ export default function Payment() {
             )
         }
     ];
+
+    if (loading) {
+        return (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+                <Spin size="large" tip="Đang tải lịch sử thanh toán..." />
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div style={{ padding: '40px', textAlign: 'center' }}>
+                <Text type="danger">{error}</Text>
+            </div>
+        );
+    }
 
     return (
         <div className="payment-container">
@@ -273,7 +278,7 @@ export default function Payment() {
                             <PayCircleOutlined className="stat-card__icon" />
                         </div>
                         <div className="stat-card__content">
-                            <Text className="stat-card__label">Thực Chi {selectedQuarter}/{selectedYear}</Text>
+                            <Text className="stat-card__label">Thực Chi {selectedQuarter === 'ALL' ? `Cả Năm ${selectedYear}` : `${selectedQuarter}/${selectedYear}`}</Text>
                             <Title level={3} className="stat-card__value">{formatCurrency(quarterSpent)}</Title>
                         </div>
                     </Card>
@@ -298,7 +303,7 @@ export default function Payment() {
                         title={
                             <div className="card-title-flex">
                                 <PieChartOutlined />
-                                <span>Phân Tích Chi Tiêu {selectedQuarter}/{selectedYear}</span>
+                                <span>Phân Tích Chi Tiêu {selectedQuarter === 'ALL' ? 'Cả Năm' : selectedQuarter}/{selectedYear}</span>
                             </div>
                         } 
                         className="breakdown-card"
@@ -307,16 +312,17 @@ export default function Payment() {
                         {/* Selector */}
                         <div className="selector-group">
                             <Space>
-                                <Select value={selectedQuarter} onChange={setSelectedQuarter} style={{ width: 100 }}>
-                                    <Option value="All">Cả Năm</Option>
+                                <Select value={selectedQuarter} onChange={setSelectedQuarter} style={{ width: 110 }}>
+                                    <Option value="ALL">Cả năm</Option>
                                     <Option value="Q1">Quý 1</Option>
                                     <Option value="Q2">Quý 2</Option>
                                     <Option value="Q3">Quý 3</Option>
                                     <Option value="Q4">Quý 4</Option>
                                 </Select>
                                 <Select value={selectedYear} onChange={setSelectedYear} style={{ width: 100 }}>
-                                    <Option value={2026}>2026</Option>
-                                    <Option value={2025}>2025</Option>
+                                    {availableYears.map(y => (
+                                        <Option key={y} value={y}>{y}</Option>
+                                    ))}
                                 </Select>
                             </Space>
                         </div>
@@ -370,10 +376,11 @@ export default function Payment() {
                     >
                         <Table 
                             columns={columns} 
-                            dataSource={mockPayments} 
+                            dataSource={payments} 
                             pagination={{ pageSize: 5 }}
                             scroll={{ x: 'max-content' }}
                             className="payment-table"
+                            locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Bạn chưa có giao dịch nào." /> }}
                         />
                     </Card>
                 </Col>
