@@ -71,11 +71,12 @@
     background-color: #ffffff;
     border: 1px solid #e4e8f0;
     border-radius: 14px;
-    padding: 28px 22px;
+    padding: 24px 20px;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 12px;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+    min-width: 0;
 }
 
 .tier-card:hover {
@@ -85,15 +86,14 @@
 
 /* ---- CARD NỔI BẬT (GOLD) ---- */
 .tier-card--featured {
-    background-color: #0d1b4b;
     border-color: #0d1b4b;
-    color: #ffffff;
-    box-shadow: 0 8px 32px rgba(13, 27, 75, 0.3);
+    color: inherit;
+    box-shadow: 0 8px 32px rgba(13, 27, 75, 0.12);
 }
 
 .tier-card--featured:hover {
     transform: translateY(-4px);
-    box-shadow: 0 16px 40px rgba(13, 27, 75, 0.4);
+    box-shadow: 0 16px 40px rgba(13, 27, 75, 0.18);
 }
 
 /* ---- HEADER (icon + level badge) ---- */
@@ -104,7 +104,18 @@
 }
 
 .tier-card__icon {
-    font-size: 1.6rem;
+    font-size: 1.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(0,0,0,0.06);
+}
+
+.tier-card__icon .anticon {
+    font-size: 1.4rem;
 }
 
 .tier-card__level {
@@ -141,17 +152,28 @@
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     flex: 1;
 }
 
 .tier-card__perk {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 8px;
-    font-size: 0.875rem;
+    font-size: 0.84rem;
     color: #444;
-    line-height: 1.5;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tier-card__perk-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
 }
 
 .tier-card--featured .tier-card__perk {
@@ -161,7 +183,9 @@
 .tier-card__check {
     font-size: 0.8rem;
     flex-shrink: 0;
-    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    line-height: 1;
 }
 
 /* ---- HIGHLIGHT (discount text) ---- */
@@ -178,6 +202,103 @@
 .tier-card--featured .tier-card__highlight {
     color: #f5a623;
     border-top-color: rgba(255, 255, 255, 0.15);
+}
+
+/* ── PER-TIER COLOR THEMES ────────────────────────────────────────────────── */
+
+/* Level 1 – Bronze (Đồng) – Nâu nhẹ */
+.tier-card--bronze {
+    background: linear-gradient(160deg, #fdf5ec 0%, #faebd7 100%);
+    border-color: #cd7f32;
+}
+.tier-card--bronze .tier-card__icon {
+    background: linear-gradient(135deg, #f5cfa0, #e8a96a);
+    color: #7d4a0f;
+}
+.tier-card--bronze .tier-card__level {
+    color: #9d5c0d;
+    background-color: rgba(205, 127, 50, 0.15);
+}
+.tier-card--bronze .tier-card__name {
+    color: #7d4a0f;
+}
+.tier-card--bronze .tier-card__highlight {
+    color: #9d5c0d;
+    border-top-color: #f5cfa0;
+}
+
+/* Level 2 – Silver (Bạc) – Bạc nhẹ */
+.tier-card--silver {
+    background: linear-gradient(160deg, #f8f8f8 0%, #efefef 100%);
+    border-color: #9ca3af;
+}
+.tier-card--silver .tier-card__icon {
+    background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+    color: #4b5563;
+}
+.tier-card--silver .tier-card__level {
+    color: #4b5563;
+    background-color: rgba(156, 163, 175, 0.18);
+}
+.tier-card--silver .tier-card__name {
+    color: #374151;
+}
+.tier-card--silver .tier-card__highlight {
+    color: #6b7280;
+    border-top-color: #d1d5db;
+}
+
+/* Level 3 – Gold (Vàng) – Vàng nhẹ (override featured dark bg) */
+.tier-card--gold {
+    background: linear-gradient(160deg, #fffbeb 0%, #fef3c7 100%) !important;
+    border-color: #f59e0b;
+    color: inherit !important;
+    box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15);
+}
+.tier-card--gold:hover {
+    box-shadow: 0 14px 36px rgba(245, 158, 11, 0.22) !important;
+}
+.tier-card--gold .tier-card__icon {
+    background: linear-gradient(135deg, #fde68a, #fbbf24);
+    color: #92400e;
+}
+.tier-card--gold .tier-card__level {
+    color: #92400e !important;
+    background-color: rgba(245, 158, 11, 0.18) !important;
+}
+.tier-card--gold .tier-card__name {
+    color: #92400e !important;
+}
+.tier-card--gold .tier-card__perk {
+    color: #78350f !important;
+}
+.tier-card--gold .tier-card__highlight {
+    color: #b45309 !important;
+    border-top-color: #fde68a !important;
+}
+
+/* Level 4 – Diamond (Kim Cương) – Tím nhẹ */
+.tier-card--diamond {
+    background: linear-gradient(160deg, #f5f3ff 0%, #ede9fe 100%);
+    border-color: #7c3aed;
+}
+.tier-card--diamond .tier-card__icon {
+    background: linear-gradient(135deg, #ddd6fe, #c4b5fd);
+    color: #5b21b6;
+}
+.tier-card--diamond .tier-card__level {
+    color: #5b21b6;
+    background-color: rgba(124, 58, 237, 0.12);
+}
+.tier-card--diamond .tier-card__name {
+    color: #4c1d95;
+}
+.tier-card--diamond .tier-card__highlight {
+    color: #6d28d9;
+    border-top-color: #c4b5fd;
+}
+.tier-card--diamond:hover {
+    box-shadow: 0 12px 28px rgba(124, 58, 237, 0.18);
 }
 
 /* Media Query for Tablet & Mobile */
