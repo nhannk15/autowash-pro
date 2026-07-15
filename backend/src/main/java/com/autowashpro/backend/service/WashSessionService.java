@@ -108,4 +108,48 @@ public class WashSessionService {
         return washSessionMapper.toResponseList(savedWashSessions);
     }
 
+    @Transactional
+    public List<WashSessionResponse> startWashSessionAssigningStaff(Long bookingId, Long staffId) {
+        Staff staff = staffRepository.findById(staffId)
+                .orElseThrow(() -> new UserNotFoundException("Không tìm thấy staff"));
+        staff.setOccupied(true);
+        staffRepository.save(staff);
+
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy Booking với id: " + bookingId));
+
+        booking.setStatus(BookingStatus.COMPLETED);
+        bookingRepository.save(booking);
+
+        List<WashSession> washSessions = repository.findByBookingId(bookingId);
+        for (WashSession washSession : washSessions) {
+            washSession.setStaff(staff);
+            washSession.setStatus(WashSessionStatus.IN_PROGRESS);
+            washSession.setStartTime(LocalDateTime.now());
+            repository.save(washSession);
+        }
+
+        List<WashSession> savedWashSessions = repository.findByBookingId(bookingId);
+        return washSessionMapper.toResponseList(savedWashSessions);
+    }
+
+    @Transactional
+    public List<WashSessionResponse> completeWashSessionVersion2(Long bookingId) {
+        
+        List<WashSession> washSessions = repository.findByBookingId(bookingId);
+        for (WashSession washSession : washSessions) {
+            washSession.setStatus(WashSessionStatus.COMPLETED);
+            washSession.setEndTime(LocalDateTime.now());
+            repository.save(washSession);
+        }
+
+        List<WashSession> savedWashSessions = repository.findByBookingId(bookingId);
+
+        /**
+         * Create Billing immediately.
+         */
+        // billingService.createPendingBilling(bookingId);
+        return washSessionMapper.toResponseList(savedWashSessions);
+    }
+
 }
