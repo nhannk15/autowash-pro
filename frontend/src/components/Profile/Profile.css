@@ -83,16 +83,6 @@
     letter-spacing: 0.5px;
 }
 
-.profile-actions {
-    margin-top: 24px;
-}
-
-@media (min-width: 768px) {
-    .profile-actions {
-        margin-top: 0;
-    }
-}
-
 .profile-details {
     padding-top: 8px;
     font-family: system-ui, -apple-system, sans-serif;

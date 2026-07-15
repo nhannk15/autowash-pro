@@ -1,22 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Avatar, Typography, Divider, Button, Descriptions, Tag, Row, Col } from "antd";
-import { EditOutlined, IdcardOutlined, CalendarOutlined, TeamOutlined, PhoneOutlined, MailOutlined } from '@ant-design/icons';
-import { useAuth } from '../../context/AuthContext.jsx';
-import { getStaffProfile, updateStaffProfile } from '../../service/staffService.js';
+import { Card, Avatar, Typography, Divider, Descriptions, Tag, Row, Col } from "antd";
+import { IdcardOutlined, CalendarOutlined, PhoneOutlined, MailOutlined } from '@ant-design/icons';
+import { getStaffProfile } from '../../service/staffService.js';
 import './Profile.css';
 
 const { Title, Text } = Typography;
 
 export default function Profile() {
-    const { user } = useAuth();
     const [employeeProfile, setEmployeeProfile] = useState({});
     const [avatarError, setAvatarError] = useState(false);
 
     useEffect(() => {
         async function fetchEmployeeProfile() {
-            if (!user?.id) return;
             try {
-                const data = await getStaffProfile(user.id);
+                const data = await getStaffProfile();
                 setEmployeeProfile(data);
                 setAvatarError(false);
             } catch (error) {
@@ -24,7 +21,7 @@ export default function Profile() {
             }
         }
         fetchEmployeeProfile();
-    }, [user?.id]);
+    }, []);
 
     const displayName = employeeProfile?.fullName;
     const role = employeeProfile?.role;
@@ -32,7 +29,7 @@ export default function Profile() {
     const email = employeeProfile?.email;
     const avatarUrl = employeeProfile?.avatarUrl;
     const avatarLetter = displayName?.charAt(0).toUpperCase();
-    const employeeId = user?.id;
+    const employeeId = employeeProfile?.id;
     const joinDate = employeeProfile?.hiredDate;
     const status = employeeProfile?.active ? 'active' : 'inactive';
 
@@ -42,17 +39,6 @@ export default function Profile() {
     };
     const { color: statusColor, label: statusLabel } = statusConfig[status] ?? statusConfig.active;
 
-    const handleEditProfile = async (data) => {
-        try {
-            const data = await updateStaffProfile(user?.id, data);
-            setEmployeeProfile(data);
-            setAvatarError(false);
-            message.success("Cập nhật hồ sơ thành công!");
-        } catch (error) {
-            console.error("Failed to update employee profile", error);
-            message.error("Cập nhật hồ sơ thất bại!");
-        }
-    };
     return (
         <div className="profile-container">
             {/* ── Card chính ── */}
@@ -75,12 +61,6 @@ export default function Profile() {
                             </Tag>
                         </div>
                         <Text className="profile-role">{role}</Text>
-                    </div>
-
-                    <div className="profile-actions">
-                        <Button type="primary" size="large" onClick={handleEditProfile} icon={<EditOutlined />} style={{ borderRadius: '8px' }}>
-                            Chỉnh sửa hồ sơ
-                        </Button>
                     </div>
                 </div>
 

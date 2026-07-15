@@ -109,7 +109,6 @@ export default function Staff() {
             const payload = {
                 ...values,
                 hiredDate: values.hiredDate?.format('YYYY-MM-DD') ?? null,
-                dateOfBirth: values.dateOfBirth?.format('YYYY-MM-DD') ?? null,
             };
             await addStaff(payload);
             notification.success({ message: "Thành công", description: "Đã tạo tài khoản nhân viên mới" });
