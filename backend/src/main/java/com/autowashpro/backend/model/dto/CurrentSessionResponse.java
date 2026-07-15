@@ -25,5 +25,6 @@ public class CurrentSessionResponse {
     private WashBayCustomerResponse customer;
     private VehicleResponse vehicle;
     private List<String> services;
+    private String staffName;
 
 }
