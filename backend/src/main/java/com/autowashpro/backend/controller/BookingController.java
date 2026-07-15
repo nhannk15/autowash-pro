@@ -55,6 +55,14 @@ public class BookingController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/api/v2/bookings")
+    public ResponseEntity<CreateBookingResponse> createBooking(@RequestParam("staffId") Long staffId, @RequestBody CreateBookingRequest request) {
+        log.info("BookingController - start creating booking.");
+        log.info("promotionId: {}", request.getPromotionId());
+        CreateBookingResponse response = bookingService.createBookingWithStaff(staffId, request);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/api/staff/upcoming-bookings")
     public ResponseEntity<List<UpcomingBookingResponse>> getUpcomingBookings() {
         return ResponseEntity.status(HttpStatus.OK).body(bookingService.getUpcomingBookings());
