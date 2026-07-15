@@ -196,31 +196,31 @@ export async function deleteService(serviceId) {
 
 // Lấy danh sách tất cả khuyến mãi
 export async function getPromotions() {
-    const response = await axios.get(`/api/promotions`);
+    const response = await axios.get(`${API}/api/promotions`, { withCredentials: true });
     return response.data;
 }
 
 // Lấy danh sách tất cả dịch vụ
 export async function getServices() {
-    const response = await axios.get(`/api/services`);
+    const response = await axios.get(`${API}/api/services`, { withCredentials: true });
     return response.data;
 }
 
 // Thêm khuyến mãi mới
 export async function createPromotion(payload) {
-    const response = await axios.post(`/api/promotions`, payload);
+    const response = await axios.post(`${API}/api/promotions`, payload, { withCredentials: true });
     return response.data;
 }
 
 // Cập nhật khuyến mãi
 export async function updatePromotion(id, payload) {
-    const response = await axios.put(`/api/promotions/${id}`, payload);
+    const response = await axios.put(`${API}/api/promotions/${id}`, payload, { withCredentials: true });
     return response.data;
 }
 
 // Xóa khuyến mãi
 export async function deletePromotion(id) {
-    const response = await axios.delete(`/api/promotions/${id}`);
+    const response = await axios.delete(`${API}/api/promotions/${id}`, { withCredentials: true });
     return response.data;
 }
 

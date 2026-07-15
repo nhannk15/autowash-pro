@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Avatar, Typography, Divider, Button, Descriptions, Tag, Row, Col } from "antd";
-import { EditOutlined, IdcardOutlined, CalendarOutlined, TeamOutlined, PhoneOutlined, MailOutlined } from '@ant-design/icons';
+import { Card, Avatar, Typography, Divider, Descriptions, Tag, Row, Col } from "antd";
+import { IdcardOutlined, CalendarOutlined, TeamOutlined, PhoneOutlined, MailOutlined } from '@ant-design/icons';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { getStaffProfile, updateStaffProfile } from '../../service/staffService.js';
+import { getStaffProfile } from '../../service/staffService.js';
 import './Profile.css';
 
 const { Title, Text } = Typography;
@@ -42,17 +42,6 @@ export default function Profile() {
     };
     const { color: statusColor, label: statusLabel } = statusConfig[status] ?? statusConfig.active;
 
-    const handleEditProfile = async (data) => {
-        try {
-            const data = await updateStaffProfile(user?.id, data);
-            setEmployeeProfile(data);
-            setAvatarError(false);
-            message.success("Cập nhật hồ sơ thành công!");
-        } catch (error) {
-            console.error("Failed to update employee profile", error);
-            message.error("Cập nhật hồ sơ thất bại!");
-        }
-    };
     return (
         <div className="profile-container">
             {/* ── Card chính ── */}
@@ -75,12 +64,6 @@ export default function Profile() {
                             </Tag>
                         </div>
                         <Text className="profile-role">{role}</Text>
-                    </div>
-
-                    <div className="profile-actions">
-                        <Button type="primary" size="large" onClick={handleEditProfile} icon={<EditOutlined />} style={{ borderRadius: '8px' }}>
-                            Chỉnh sửa hồ sơ
-                        </Button>
                     </div>
                 </div>
 
