@@ -1,22 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Avatar, Typography, Divider, Descriptions, Tag, Row, Col } from "antd";
-import { IdcardOutlined, CalendarOutlined, TeamOutlined, PhoneOutlined, MailOutlined } from '@ant-design/icons';
-import { useAuth } from '../../context/AuthContext.jsx';
+import { IdcardOutlined, CalendarOutlined, PhoneOutlined, MailOutlined } from '@ant-design/icons';
 import { getStaffProfile } from '../../service/staffService.js';
 import './Profile.css';
 
 const { Title, Text } = Typography;
 
 export default function Profile() {
-    const { user } = useAuth();
     const [employeeProfile, setEmployeeProfile] = useState({});
     const [avatarError, setAvatarError] = useState(false);
 
     useEffect(() => {
         async function fetchEmployeeProfile() {
-            if (!user?.id) return;
             try {
-                const data = await getStaffProfile(user.id);
+                const data = await getStaffProfile();
                 setEmployeeProfile(data);
                 setAvatarError(false);
             } catch (error) {
@@ -24,7 +21,7 @@ export default function Profile() {
             }
         }
         fetchEmployeeProfile();
-    }, [user?.id]);
+    }, []);
 
     const displayName = employeeProfile?.fullName;
     const role = employeeProfile?.role;
@@ -32,7 +29,7 @@ export default function Profile() {
     const email = employeeProfile?.email;
     const avatarUrl = employeeProfile?.avatarUrl;
     const avatarLetter = displayName?.charAt(0).toUpperCase();
-    const employeeId = user?.id;
+    const employeeId = employeeProfile?.id;
     const joinDate = employeeProfile?.hiredDate;
     const status = employeeProfile?.active ? 'active' : 'inactive';
 

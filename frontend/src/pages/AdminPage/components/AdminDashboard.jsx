@@ -243,14 +243,6 @@ export default function AdminDashboard() {
         ].filter(item => item.value > 0);
     }, [deductionSummary]);
 
-    // Computed stats
-    const stats = useMemo(() => {
-        const completed = todayBookings.filter(b => b.washSessionStatus === 'PAID').length;
-        const todayAppointments = todayBookings.length;
-        const revenue = todayBookings.reduce((t, b) => t + getBookingRevenue(b), 0);
-        return { completed, todayAppointments, revenue };
-    }, [bays, todayBookings]);
-
     // Upcoming bookings
     const upcoming = useMemo(() => {
         const now = new Date();

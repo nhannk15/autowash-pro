@@ -366,7 +366,7 @@ export default function StaffDashboard() {
     };
 
     const handleVehicleSelect = (vehicleId) => {
-        const vehicle = foundCustomer?.vehicles.find(v => v.id === vehicleId);
+        const vehicle = foundCustomer?.vehicles?.find(v => v.id === vehicleId);
         setSelectedVehicleTypeId(vehicle?.vehicleType?.id || null);
         bookingForm.setFieldsValue({ services: undefined });
     };
