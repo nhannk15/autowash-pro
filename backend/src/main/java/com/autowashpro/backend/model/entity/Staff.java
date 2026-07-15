@@ -35,4 +35,7 @@ public class Staff extends User {
     @OneToMany(mappedBy = "staff")
     @JsonIgnoreProperties("staff")
     private List<PointTransaction> pointTransactions;
+
+    @Column(name = "is_occupied")
+    private boolean isOccupied = false;
 }

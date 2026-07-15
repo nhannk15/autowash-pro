@@ -47,6 +47,8 @@ public class WashSessionService {
     public List<WashSessionResponse> startWashSession(Long bookingId, String email) {
         Staff staff = staffRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("Không tìm thấy staff"));
+        staff.setOccupied(true);
+        staffRepository.save(staff);
 
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy Booking với id: " + bookingId));
@@ -70,6 +72,9 @@ public class WashSessionService {
     public List<WashSessionResponse> completeWashSession(Long bookingId, String email) {
         Staff staff = staffRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("Không tìm thấy staff"));
+        staff.setOccupied(true);
+        staffRepository.save(staff);
+        
         List<WashSession> washSessions = repository.findByBookingId(bookingId);
         for (WashSession washSession : washSessions) {
             washSession.setStaff(staff);
