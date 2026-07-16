@@ -4,7 +4,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { CarOutlined } from '@ant-design/icons';
 import './Booking.css';
 import { message, Select } from 'antd';
-import { getAvailableSlot, getPremiumAvailableSlot, getApplicablePromotion as getApplicablePromotionAPI, getService, getVehicleByCustomer, createBooking, getMembershipTier, getVoucher, createVNPayPayment, getPendingDeposit } from '../../../service/customerService';
+import { getAvailableSlot, getPremiumAvailableSlot, getApplicablePromotion as getApplicablePromotionAPI, getService, getVehicleByCustomer, createBooking, getMembershipTier, getVoucher, createVNPayPayment, getPendingDeposit, getAllStaffs } from '../../../service/customerService';
 function VehicleImage({ src, alt, fallbackIcon }) {
     const [hasError, setHasError] = useState(false);
     // Mục đích: Dùng để ghi nhận xem ảnh của xe có bị lỗi khi tải hay không.
@@ -29,6 +29,44 @@ function VehicleImage({ src, alt, fallbackIcon }) {
         // Kết quả: Khi hasError trở thành true, component VehicleImage sẽ re-render, rơi vào điều kiện if (!src || hasError) ở dòng 10 và lập tức hiển thị fallbackIcon (biểu tượng xe dự phòng) thay thế cho chiếc ảnh bị lỗi, giúp giao diện không bị hiện biểu tượng "ảnh vỡ" mất thẩm mỹ.
 
         />
+    );
+}
+
+// Component card chọn kỹ thuật viên
+function StaffCard({ staff, isSelected, onSelect }) {
+    const avatarFallback = (
+        <div className="staff-card__avatar-fallback">
+            <span>🧑‍🔧</span>
+        </div>
+    );
+    return (
+        <div
+            className={`staff-card ${isSelected ? 'staff-card--selected' : ''}`}
+            onClick={onSelect}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === 'Enter' && onSelect()}
+        >
+            {isSelected && <span className="staff-card__badge">✓</span>}
+            <div className="staff-card__avatar-wrap">
+                {staff?.avatarUrl ? (
+                    <img
+                        src={staff.avatarUrl}
+                        alt={staff.fullName}
+                        className="staff-card__avatar-img"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                    />
+                ) : null}
+                <div className="staff-card__avatar-fallback" style={{ display: staff?.avatarUrl ? 'none' : 'flex' }}>
+                    <span>{staff ? '🧑‍🔧' : '👥'}</span>
+                </div>
+            </div>
+            <div className="staff-card__name">{staff ? staff.fullName : 'Bất kỳ'}</div>
+            <div className="staff-card__role">
+                {staff ? (staff.role || 'Kỹ thuật viên') : 'Hệ thống phân công'}
+            </div>
+        </div>
     );
 }
 
@@ -72,6 +110,11 @@ export default function BookingList() {
     const [errorVehicles, setErrorVehicles] = useState(null);
     const [showAllVehicles, setShowAllVehicles] = useState(false); // Trạng thái "Xem thêm" xe
     const VEHICLES_INITIAL_LIMIT = 3; // Số xe hiển thị mặc định
+
+    // Danh sách và lựa chọn kỹ thuật viên (Bước 4)
+    const [staffList, setStaffList] = useState([]);
+    const [loadingStaffs, setLoadingStaffs] = useState(false);
+    const [selectedStaff, setSelectedStaff] = useState(null); // null = "Bất kỳ kỹ thuật viên"
 
     // Lấy danh sách xe của khách hàng từ API thực tế
     useEffect(() => {
@@ -248,6 +291,24 @@ export default function BookingList() {
         };
         fetchServices();
     }, []);
+
+    // Lấy danh sách kỹ thuật viên rảnh khi vào Bước 4
+    useEffect(() => {
+        if (currentStep !== 4 || !selectedTimeSlotId || !selectedDate) return;
+        const fetchStaffs = async () => {
+            setLoadingStaffs(true);
+            try {
+                const result = await getAllStaffs(selectedTimeSlotId, selectedDate);
+                setStaffList(result || []);
+            } catch (err) {
+                console.error('Không thể tải danh sách kỹ thuật viên', err);
+                setStaffList([]);
+            } finally {
+                setLoadingStaffs(false);
+            }
+        };
+        fetchStaffs();
+    }, [currentStep, selectedTimeSlotId, selectedDate]);
 
     // Lấy dữ liệu khung giờ trống khi ngày thay đổi hoặc khi người dùng quay lại màn hình chọn giờ (Bước 3)
     useEffect(() => {
@@ -468,6 +529,8 @@ export default function BookingList() {
         setMaxUnlockedStep(1);
         setIsSuccess(false);
         setSelectedVoucher(null);
+        setStaffList([]);
+        setSelectedStaff(null);
     };
 
     const steps = [
@@ -968,6 +1031,44 @@ export default function BookingList() {
                                 </div>
                             </div>
 
+                            {/* CHỌN KỸ THUẬT VIÊN */}
+                            <div style={{ backgroundColor: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '24px' }}>
+                                <h4 style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 14px 0', fontWeight: 'bold' }}>
+                                    👨‍🔧 Kỹ thuật viên thực hiện
+                                </h4>
+
+                                {loadingStaffs ? (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#64748b', fontSize: '0.9rem', padding: '8px 0' }}>
+                                        <span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⏳</span>
+                                        <span>Đang tải danh sách kỹ thuật viên...</span>
+                                    </div>
+                                ) : (
+                                    <div className="staff-card-grid">
+                                        {/* Card "Bất kỳ" — mặc định */}
+                                        <StaffCard
+                                            staff={null}
+                                            isSelected={selectedStaff === null}
+                                            onSelect={() => setSelectedStaff(null)}
+                                        />
+                                        {/* Danh sách staff từ API */}
+                                        {staffList.length === 0 ? (
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '0.85rem', gridColumn: '1 / -1', padding: '12px' }}>
+                                                Không có kỹ thuật viên rảnh cho khung giờ này
+                                            </div>
+                                        ) : (
+                                            staffList.map(staff => (
+                                                <StaffCard
+                                                    key={staff.id}
+                                                    staff={staff}
+                                                    isSelected={selectedStaff?.id === staff.id}
+                                                    onSelect={() => setSelectedStaff(staff)}
+                                                />
+                                            ))
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
                             {/* ÁP DỤNG VOUCHER */}
                             <div style={{ backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', paddingTop: '20px', marginBottom: '20px' }}>
                                 <h4 style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0', fontWeight: 'bold' }}>🎟 Áp dụng Voucher</h4>
@@ -1081,7 +1182,14 @@ export default function BookingList() {
                                             <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Thời gian:</span>
                                             <span style={{ fontSize: '0.9rem', color: '#0d1b4b', fontWeight: '700' }}>{selectedTime} - {selectedDate.split('-').reverse().join('/')}</span>
                                         </div>
+                                        {selectedStaff && (
+                                            <div style={{ width: '100%', marginBottom: '8px', paddingBottom: '12px', borderBottom: '1px dashed #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                                                <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', flexShrink: 0 }}>👨‍🔧 KTV:</span>
+                                                <span style={{ fontSize: '0.9rem', color: '#0d1b4b', fontWeight: '700', textAlign: 'right' }}>{selectedStaff.fullName}</span>
+                                            </div>
+                                        )}
                                         <div style={{ width: '100%', marginBottom: '8px', paddingBottom: '12px', borderBottom: '1px dashed #e2e8f0' }}>
+
                                             <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '8px', textTransform: 'uppercase' }}>Dịch vụ:</span>
                                             {selectedServices.map(service => (
                                                 <div key={service.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', marginBottom: '4px' }}>
