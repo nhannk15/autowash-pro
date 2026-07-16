@@ -1007,14 +1007,13 @@ export default function BookingList() {
                                         Phân khúc: {selectedVehicleType === 'SEDAN' ? 'Sedan (4-5 chỗ)' : 'SUV / Bán tải (5-7 chỗ)'}
                                     </div>
                                 </div>
-
                                 <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                                    <h4 style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0', fontWeight: 'bold' }}>📅 Thời gian hẹn</h4>
+                                    <h4 style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0', fontWeight: 'bold' }}>📅 Lịch hẹn</h4>
                                     <div style={{ fontSize: '1rem', fontWeight: '700', color: '#0d1b4b' }}>
-                                        {selectedTime} ngày {selectedDate.split('-').reverse().join('/')}
+                                        {selectedTime} — {selectedDate ? selectedDate.split('-').reverse().join('/') : ''}
                                     </div>
                                     <div style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: '500', marginTop: '4px' }}>
-                                        Vui lòng đến đúng giờ hẹn để tiệm phục vụ chu đáo nhất
+                                        Vui lòng đến đúng giờ hẹn
                                     </div>
                                 </div>
                             </div>
