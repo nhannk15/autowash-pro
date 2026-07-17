@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import { CarOutlined } from '@ant-design/icons';
+import { CarOutlined, UserOutlined } from '@ant-design/icons';
 import './Booking.css';
 import { message, Select } from 'antd';
 import { getAvailableSlot, getPremiumAvailableSlot, getApplicablePromotion as getApplicablePromotionAPI, getService, getVehicleByCustomer, createBooking, getMembershipTier, getVoucher, createVNPayPayment, getPendingDeposit, getAllStaffs } from '../../../service/customerService';
@@ -32,43 +32,7 @@ function VehicleImage({ src, alt, fallbackIcon }) {
     );
 }
 
-// Component card chọn kỹ thuật viên
-function StaffCard({ staff, isSelected, onSelect }) {
-    const avatarFallback = (
-        <div className="staff-card__avatar-fallback">
-            <span>🧑‍🔧</span>
-        </div>
-    );
-    return (
-        <div
-            className={`staff-card ${isSelected ? 'staff-card--selected' : ''}`}
-            onClick={onSelect}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => e.key === 'Enter' && onSelect()}
-        >
-            {isSelected && <span className="staff-card__badge">✓</span>}
-            <div className="staff-card__avatar-wrap">
-                {staff?.avatarUrl ? (
-                    <img
-                        src={staff.avatarUrl}
-                        alt={staff.fullName}
-                        className="staff-card__avatar-img"
-                        referrerPolicy="no-referrer"
-                        onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
-                    />
-                ) : null}
-                <div className="staff-card__avatar-fallback" style={{ display: staff?.avatarUrl ? 'none' : 'flex' }}>
-                    <span>{staff ? '🧑‍🔧' : '👥'}</span>
-                </div>
-            </div>
-            <div className="staff-card__name">{staff ? staff.fullName : 'Bất kỳ'}</div>
-            <div className="staff-card__role">
-                {staff ? (staff.role || 'Kỹ thuật viên') : 'Hệ thống phân công'}
-            </div>
-        </div>
-    );
-}
+
 
 export default function BookingList() {
     const { user } = useAuth();
@@ -702,7 +666,7 @@ export default function BookingList() {
                                             ✨ Cao cấp <span className="tab-count">{premiumCount}</span>
                                         </button>
                                     </div>
-                                    
+
                                     {selectedServices.length > 0 && (
                                         <button
                                             className="btn-clear-services"
@@ -1031,40 +995,35 @@ export default function BookingList() {
                             </div>
 
                             {/* CHỌN KỸ THUẬT VIÊN */}
-                            <div style={{ backgroundColor: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '24px' }}>
-                                <h4 style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 14px 0', fontWeight: 'bold' }}>
-                                    👨‍🔧 Kỹ thuật viên thực hiện
-                                </h4>
-
+                            <div style={{ backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', paddingTop: '20px', marginBottom: '20px' }}>
+                                <h4 style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0', fontWeight: 'bold' }}><UserOutlined style={{ marginRight: '8px' }} /> Kỹ thuật viên thực hiện</h4>
                                 {loadingStaffs ? (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#64748b', fontSize: '0.9rem', padding: '8px 0' }}>
                                         <span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⏳</span>
                                         <span>Đang tải danh sách kỹ thuật viên...</span>
                                     </div>
                                 ) : (
-                                    <div className="staff-card-grid">
-                                        {/* Card "Bất kỳ" — mặc định */}
-                                        <StaffCard
-                                            staff={null}
-                                            isSelected={selectedStaff === null}
-                                            onSelect={() => setSelectedStaff(null)}
-                                        />
-                                        {/* Danh sách staff từ API */}
-                                        {staffList.length === 0 ? (
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '0.85rem', gridColumn: '1 / -1', padding: '12px' }}>
-                                                Không có kỹ thuật viên rảnh cho khung giờ này
-                                            </div>
-                                        ) : (
-                                            staffList.map(staff => (
-                                                <StaffCard
-                                                    key={staff.id}
-                                                    staff={staff}
-                                                    isSelected={selectedStaff?.id === staff.id}
-                                                    onSelect={() => setSelectedStaff(staff)}
-                                                />
-                                            ))
-                                        )}
-                                    </div>
+                                    <Select
+                                        placeholder="Hệ thống phân công (Bất kỳ kỹ thuật viên)"
+                                        style={{ width: '100%', marginTop: '8px' }}
+                                        allowClear
+                                        value={selectedStaff ? selectedStaff.id : undefined}
+                                        onChange={(value) => {
+                                            if (!value) {
+                                                setSelectedStaff(null);
+                                            } else {
+                                                const chosen = staffList.find(staff => staff.id === value);
+                                                setSelectedStaff(chosen || null);
+                                            }
+                                        }}
+                                        notFoundContent="Không có kỹ thuật viên rảnh cho khung giờ này"
+                                    >
+                                        {staffList.map(staff => (
+                                            <Select.Option key={staff.id} value={staff.id}>
+                                                {staff.fullName} - {staff.role || 'Kỹ thuật viên'}
+                                            </Select.Option>
+                                        ))}
+                                    </Select>
                                 )}
                             </div>
 
@@ -1183,7 +1142,7 @@ export default function BookingList() {
                                         </div>
                                         {selectedStaff && (
                                             <div style={{ width: '100%', marginBottom: '8px', paddingBottom: '12px', borderBottom: '1px dashed #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-                                                <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', flexShrink: 0 }}>👨‍🔧 KTV:</span>
+                                                <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', flexShrink: 0 }}><UserOutlined style={{ marginRight: '8px' }} /> Kĩ thuật viên:</span>
                                                 <span style={{ fontSize: '0.9rem', color: '#0d1b4b', fontWeight: '700', textAlign: 'right' }}>{selectedStaff.fullName}</span>
                                             </div>
                                         )}
@@ -1305,6 +1264,12 @@ export default function BookingList() {
                                 <span>Thời gian:</span>
                                 <strong>{selectedTime} - {selectedDate.split('-').reverse().join('/')}</strong>
                             </div>
+                            {selectedStaff && (
+                                <div className="success-detail-item">
+                                    <span>Kỹ thuật viên:</span>
+                                    <strong>{selectedStaff.fullName}</strong>
+                                </div>
+                            )}
                             <div className="success-detail-item" style={{ alignItems: 'flex-start' }}>
                                 <span>Dịch vụ:</span>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'right' }}>
