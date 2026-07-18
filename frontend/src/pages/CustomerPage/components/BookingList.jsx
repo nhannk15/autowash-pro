@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import { CarOutlined } from '@ant-design/icons';
+import { CarOutlined, UserOutlined } from '@ant-design/icons';
 import './Booking.css';
 import { message, Select } from 'antd';
-import { getAvailableSlot, getPremiumAvailableSlot, getApplicablePromotion as getApplicablePromotionAPI, getService, getVehicleByCustomer, createBooking, getMembershipTier, getVoucher, createVNPayPayment, getPendingDeposit } from '../../../service/customerService';
+import { getAvailableSlot, getPremiumAvailableSlot, getApplicablePromotion as getApplicablePromotionAPI, getService, getVehicleByCustomer, createBooking, getMembershipTier, getVoucher, createVNPayPayment, getPendingDeposit, getAllStaffs } from '../../../service/customerService';
 function VehicleImage({ src, alt, fallbackIcon }) {
     const [hasError, setHasError] = useState(false);
     // Mục đích: Dùng để ghi nhận xem ảnh của xe có bị lỗi khi tải hay không.
@@ -31,6 +31,8 @@ function VehicleImage({ src, alt, fallbackIcon }) {
         />
     );
 }
+
+
 
 export default function BookingList() {
     const { user } = useAuth();
@@ -72,6 +74,11 @@ export default function BookingList() {
     const [errorVehicles, setErrorVehicles] = useState(null);
     const [showAllVehicles, setShowAllVehicles] = useState(false); // Trạng thái "Xem thêm" xe
     const VEHICLES_INITIAL_LIMIT = 3; // Số xe hiển thị mặc định
+
+    // Danh sách và lựa chọn kỹ thuật viên (Bước 4)
+    const [staffList, setStaffList] = useState([]);
+    const [loadingStaffs, setLoadingStaffs] = useState(false);
+    const [selectedStaff, setSelectedStaff] = useState(null); // null = "Bất kỳ kỹ thuật viên"
 
     // Lấy danh sách xe của khách hàng từ API thực tế
     useEffect(() => {
@@ -248,6 +255,24 @@ export default function BookingList() {
         };
         fetchServices();
     }, []);
+
+    // Lấy danh sách kỹ thuật viên rảnh khi vào Bước 4
+    useEffect(() => {
+        if (currentStep !== 4 || !selectedTimeSlotId || !selectedDate) return;
+        const fetchStaffs = async () => {
+            setLoadingStaffs(true);
+            try {
+                const result = await getAllStaffs(selectedTimeSlotId, selectedDate);
+                setStaffList(result || []);
+            } catch (err) {
+                console.error('Không thể tải danh sách kỹ thuật viên', err);
+                setStaffList([]);
+            } finally {
+                setLoadingStaffs(false);
+            }
+        };
+        fetchStaffs();
+    }, [currentStep, selectedTimeSlotId, selectedDate]);
 
     // Lấy dữ liệu khung giờ trống khi ngày thay đổi hoặc khi người dùng quay lại màn hình chọn giờ (Bước 3)
     useEffect(() => {
@@ -468,6 +493,8 @@ export default function BookingList() {
         setMaxUnlockedStep(1);
         setIsSuccess(false);
         setSelectedVoucher(null);
+        setStaffList([]);
+        setSelectedStaff(null);
     };
 
     const steps = [
@@ -639,7 +666,7 @@ export default function BookingList() {
                                             ✨ Cao cấp <span className="tab-count">{premiumCount}</span>
                                         </button>
                                     </div>
-                                    
+
                                     {selectedServices.length > 0 && (
                                         <button
                                             className="btn-clear-services"
@@ -944,14 +971,13 @@ export default function BookingList() {
                                         Phân khúc: {selectedVehicleType === 'SEDAN' ? 'Sedan (4-5 chỗ)' : 'SUV / Bán tải (5-7 chỗ)'}
                                     </div>
                                 </div>
-
                                 <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                                    <h4 style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0', fontWeight: 'bold' }}>📅 Thời gian hẹn</h4>
+                                    <h4 style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0', fontWeight: 'bold' }}>📅 Lịch hẹn</h4>
                                     <div style={{ fontSize: '1rem', fontWeight: '700', color: '#0d1b4b' }}>
-                                        {selectedTime} ngày {selectedDate.split('-').reverse().join('/')}
+                                        {selectedTime} — {selectedDate ? selectedDate.split('-').reverse().join('/') : ''}
                                     </div>
                                     <div style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: '500', marginTop: '4px' }}>
-                                        Vui lòng đến đúng giờ hẹn để tiệm phục vụ chu đáo nhất
+                                        Vui lòng đến đúng giờ hẹn
                                     </div>
                                 </div>
                             </div>
@@ -966,6 +992,39 @@ export default function BookingList() {
                                         </div>
                                     ))}
                                 </div>
+                            </div>
+
+                            {/* CHỌN KỸ THUẬT VIÊN */}
+                            <div style={{ backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', paddingTop: '20px', marginBottom: '20px' }}>
+                                <h4 style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0', fontWeight: 'bold' }}><UserOutlined style={{ marginRight: '8px' }} /> Kỹ thuật viên thực hiện</h4>
+                                {loadingStaffs ? (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#64748b', fontSize: '0.9rem', padding: '8px 0' }}>
+                                        <span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⏳</span>
+                                        <span>Đang tải danh sách kỹ thuật viên...</span>
+                                    </div>
+                                ) : (
+                                    <Select
+                                        placeholder="Hệ thống phân công (Bất kỳ kỹ thuật viên)"
+                                        style={{ width: '100%', marginTop: '8px' }}
+                                        allowClear
+                                        value={selectedStaff ? selectedStaff.id : undefined}
+                                        onChange={(value) => {
+                                            if (!value) {
+                                                setSelectedStaff(null);
+                                            } else {
+                                                const chosen = staffList.find(staff => staff.id === value);
+                                                setSelectedStaff(chosen || null);
+                                            }
+                                        }}
+                                        notFoundContent="Không có kỹ thuật viên rảnh cho khung giờ này"
+                                    >
+                                        {staffList.map(staff => (
+                                            <Select.Option key={staff.id} value={staff.id}>
+                                                {staff.fullName} - {staff.role || 'Kỹ thuật viên'}
+                                            </Select.Option>
+                                        ))}
+                                    </Select>
+                                )}
                             </div>
 
                             {/* ÁP DỤNG VOUCHER */}
@@ -1081,7 +1140,14 @@ export default function BookingList() {
                                             <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase' }}>Thời gian:</span>
                                             <span style={{ fontSize: '0.9rem', color: '#0d1b4b', fontWeight: '700' }}>{selectedTime} - {selectedDate.split('-').reverse().join('/')}</span>
                                         </div>
+                                        {selectedStaff && (
+                                            <div style={{ width: '100%', marginBottom: '8px', paddingBottom: '12px', borderBottom: '1px dashed #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                                                <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'bold', textTransform: 'uppercase', flexShrink: 0 }}><UserOutlined style={{ marginRight: '8px' }} /> Kĩ thuật viên:</span>
+                                                <span style={{ fontSize: '0.9rem', color: '#0d1b4b', fontWeight: '700', textAlign: 'right' }}>{selectedStaff.fullName}</span>
+                                            </div>
+                                        )}
                                         <div style={{ width: '100%', marginBottom: '8px', paddingBottom: '12px', borderBottom: '1px dashed #e2e8f0' }}>
+
                                             <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'bold', display: 'block', marginBottom: '8px', textTransform: 'uppercase' }}>Dịch vụ:</span>
                                             {selectedServices.map(service => (
                                                 <div key={service.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', marginBottom: '4px' }}>
@@ -1198,6 +1264,12 @@ export default function BookingList() {
                                 <span>Thời gian:</span>
                                 <strong>{selectedTime} - {selectedDate.split('-').reverse().join('/')}</strong>
                             </div>
+                            {selectedStaff && (
+                                <div className="success-detail-item">
+                                    <span>Kỹ thuật viên:</span>
+                                    <strong>{selectedStaff.fullName}</strong>
+                                </div>
+                            )}
                             <div className="success-detail-item" style={{ alignItems: 'flex-start' }}>
                                 <span>Dịch vụ:</span>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', textAlign: 'right' }}>
