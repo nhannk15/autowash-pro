@@ -347,6 +347,20 @@
 .bay-card--maintenance { background: #fff2f0; border-color: #ffccc7; }
 .bay-card--inactive    { background: #fafafa; border-color: #e8e8e8; opacity: 0.7; }
 
+/* --- Bay Card Staff Label (đồng bộ với StaffDashboard) --- */
+.bay-card__staff-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: #595959;
+}
+
+.bay-card__staff-name {
+    font-size: 11px !important;
+}
+
+
 /* ===== Bay Premium ===== */
 /* Chỉ viền vàng mỏng, không ghi đè màu nền trạng thái (available/occupied/maintenance/completed) */
 .bay-card--premium {

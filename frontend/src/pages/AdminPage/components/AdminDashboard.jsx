@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react';
 import dayjs from 'dayjs';
 import {
     Row, Col, Card, Statistic, Table, DatePicker, Segmented,
@@ -316,9 +316,9 @@ export default function AdminDashboard() {
                 </div>
             </div>
 
-            <Row gutter={[24, 24]}>
-                {/* ── Cột trái (70%) ── */}
-                <Col xs={24} lg={17}>
+            {/* ── Nội dung chính – 1 cột trung tâm ── */}
+            <Row gutter={[0, 0]}>
+                <Col xs={24}>
 
                     {/* KPI Cards – 6 cột */}
                     {loadingTodayBookings ? (
@@ -402,7 +402,7 @@ export default function AdminDashboard() {
                         </Row>
                     )}
 
-                    {/* Charts */}
+                    {/* Charts – Doanh thu + Tỉ lệ dịch vụ */}
                     <Row gutter={[16, 16]} className="admin-dashboard__charts-row">
                         <Col xs={24} lg={15}>
                             <Card size="small" title={`Doanh thu - ${filterLabel}`} className="admin-dashboard__chart-card">
@@ -439,22 +439,41 @@ export default function AdminDashboard() {
                         </Col>
                     </Row>
 
-                    {/* Peak hours */}
-                    <Card size="small" title={`Khung giờ cao điểm - ${filterLabel}`} className="admin-dashboard__chart-card admin-dashboard__peak-card">
-                        <ResponsiveContainer width="100%" height={130}>
-                            <BarChart data={peakHours} barSize={22}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
-                                <XAxis dataKey="hourOfDay" tick={{ fontSize: 11 }} />
-                                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                                <Tooltip />
-                                <Bar dataKey="count" name="Lượt xe" fill="#B5D4F4" stroke="#378ADD" strokeWidth={1} radius={[3, 3, 0, 0]} />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </Card>
+                    {/* Row: Khung giờ cao điểm + Giao dịch gần đây */}
+                    <Row gutter={[16, 16]} className="admin-dashboard__charts-row">
+                        <Col xs={24} lg={14}>
+                            <Card size="small" title={`Khung giờ cao điểm - ${filterLabel}`} className="admin-dashboard__chart-card admin-dashboard__peak-card">
+                                <ResponsiveContainer width="100%" height={160}>
+                                    <BarChart data={peakHours} barSize={22}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
+                                        <XAxis dataKey="hourOfDay" tick={{ fontSize: 11 }} />
+                                        <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                                        <Tooltip />
+                                        <Bar dataKey="count" name="Lượt xe" fill="#B5D4F4" stroke="#378ADD" strokeWidth={1} radius={[3, 3, 0, 0]} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </Card>
+                        </Col>
+                        <Col xs={24} lg={10}>
+                            <Card
+                                size="small"
+                                title="Giao dịch gần đây"
+                                className="admin-dashboard__transactions-card"
+                                bodyStyle={{ maxHeight: 220, overflowY: 'auto', padding: 0 }}
+                            >
+                                <Table
+                                    dataSource={transactions}
+                                    columns={transactionColumns}
+                                    rowKey="id"
+                                    pagination={false}
+                                    size="small"
+                                    className="admin-txn-table"
+                                />
+                            </Card>
+                        </Col>
+                    </Row>
 
-                    {/* ── BIỂU ĐỒ DOANH THU KHẤU TRỪ ── */}
-
-                    {/* Stacked BarChart: Doanh thu thực vs Khấu trừ */}
+                    {/* Doanh thu & Khấu trừ – full width */}
                     <Card size="small" title={`Doanh thu & Khấu trừ - ${filterLabel}`} className="admin-dashboard__chart-card admin-dashboard__deduction-chart">
                         {deductionChart.length > 0 ? (
                             <ResponsiveContainer width="100%" height={220}>
@@ -480,7 +499,7 @@ export default function AdminDashboard() {
                         )}
                     </Card>
 
-                    {/* Lịch sử sử dụng khuyến mãi */}
+                    {/* Lịch sử sử dụng khuyến mãi – full width */}
                     <Card
                         size="small"
                         title={`Lịch sử sử dụng khuyến mãi - ${filterLabel}`}
@@ -503,9 +522,8 @@ export default function AdminDashboard() {
                         )}
                     </Card>
 
-                    {/* Row: Top Khuyến mãi + Cơ cấu khấu trừ */}
+                    {/* Row: Top khuyến mãi + Cơ cấu doanh thu */}
                     <Row gutter={[16, 16]} className="admin-dashboard__deduction-row">
-                        {/* Horizontal BarChart – Top khuyến mãi hiệu quả */}
                         <Col xs={24} lg={14}>
                             <Card size="small" title={`Top khuyến mãi hiệu quả - ${filterLabel}`} className="admin-dashboard__chart-card admin-dashboard__chart-card--full-height">
                                 {promotionPerformance.length > 0 ? (
@@ -541,7 +559,6 @@ export default function AdminDashboard() {
                             </Card>
                         </Col>
 
-                        {/* Donut PieChart – Cơ cấu doanh thu & khấu trừ */}
                         <Col xs={24} lg={10}>
                             <Card size="small" title={`Cơ cấu doanh thu - ${filterLabel}`} className="admin-dashboard__chart-card admin-dashboard__chart-card--full-height">
                                 {deductionBreakdown.length > 0 ? (
@@ -587,7 +604,7 @@ export default function AdminDashboard() {
                         </Col>
                     </Row>
 
-                    {/* Bay status */}
+                    {/* Bay status – full width */}
                     <Card
                         title={<Title level={4} className="admin-dashboard__section-title">Tình trạng Khoang (Bays)</Title>}
                         className="dashboard__bays-card admin-dashboard__bays-card"
@@ -603,7 +620,7 @@ export default function AdminDashboard() {
                                     const isPremium = bay.category?.toUpperCase() === 'PREMIUM';
 
                                     return (
-                                        <Col xs={24} sm={12} md={8} key={bay.id}>
+                                        <Col xs={24} sm={12} md={8} lg={6} key={bay.id}>
                                             <div className={`bay-card bay-card--${displayStatus.toLowerCase()}${displayStatus === 'COMPLETED' ? ' bay-card--completed' : ''}${isPremium ? ' bay-card--premium' : ''} admin-bay-card`}>
                                                 <div className="bay-card__header">
                                                     <span className="bay-card__name">
@@ -628,6 +645,14 @@ export default function AdminDashboard() {
                                                                     <UserOutlined style={{ marginRight: 4 }} />
                                                                     {session.customer?.fullName || 'N/A'}
                                                                 </Text>
+                                                                {session.staffName && (
+                                                                    <>
+                                                                        <br />
+                                                                        <Text type="secondary" className="bay-card__staff-label">
+                                                                            Nhân viên: <Text type="secondary" className="bay-card__staff-name">{session.staffName}</Text>
+                                                                        </Text>
+                                                                    </>
+                                                                )}
                                                             </div>
                                                             <div className="bay-card__service-tag">
                                                                 {(session.services?.length > 0) ? (
@@ -663,7 +688,7 @@ export default function AdminDashboard() {
                         )}
                     </Card>
 
-                    {/* Upcoming timeline */}
+                    {/* Lịch hẹn sắp tới – full width */}
                     <Card
                         title={<Title level={4} className="admin-dashboard__section-title">Lịch hẹn sắp tới</Title>}
                         className="dashboard__timeline-card admin-dashboard__timeline-card"
@@ -689,47 +714,7 @@ export default function AdminDashboard() {
                             <Text type="secondary">Không có lịch hẹn sắp tới</Text>
                         )}
                     </Card>
-                </Col>
 
-                {/* ── Cột phải (30%) ── */}
-                <Col xs={24} lg={7}>
-                    {/* Notifications */}
-                    <Card
-                        title={<><BellOutlined className="admin-dashboard__bell-icon" />Thông báo</>}
-                        className="dashboard__notifications-card admin-dashboard__notifications-card"
-                        bodyStyle={{ maxHeight: 320, overflowY: 'auto', padding: 12 }}
-                    >
-                        <Space direction="vertical" style={{ width: '100%' }} size={8}>
-                            {alerts.map((a) => (
-                                <Alert
-                                    key={a.id}
-                                    type={a.type}
-                                    icon={ALERT_ICON[a.type] || <BellOutlined />}
-                                    showIcon
-                                    message={<span className="admin-alert-title">{a.title}</span>}
-                                    description={<span className="admin-alert-desc">{a.desc}</span>}
-                                    className="admin-dashboard__alert-item"
-                                />
-                            ))}
-                        </Space>
-                    </Card>
-
-                    {/* Recent transactions */}
-                    <Card
-                        size="small"
-                        title="Giao dịch gần đây"
-                        className="admin-dashboard__transactions-card"
-                        bodyStyle={{ maxHeight: 280, overflowY: 'auto', padding: 0 }}
-                    >
-                        <Table
-                            dataSource={transactions}
-                            columns={transactionColumns}
-                            rowKey="id"
-                            pagination={false}
-                            size="small"
-                            className="admin-txn-table"
-                        />
-                    </Card>
                 </Col>
             </Row>
         </div>
