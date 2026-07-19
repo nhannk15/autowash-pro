@@ -100,10 +100,16 @@ jobs:
 
             # Pull latest source code (docker-compose.yml, configs, ...)
             git pull origin develop
+            chmod +x ops/*.sh
+
+            # Validate runtime config and snapshot DB before changing containers
+            ./ops/validate-env.sh
+            ./ops/backup-db.sh
 
             # Pull latest pre-built images từ ECR và restart (không build trên EC2)
             docker compose pull
             docker compose up -d --remove-orphans
+            BASE_URL=https://autowashpro.io.vn BACKEND_URL=http://localhost:8080 ./ops/health-check.sh
 
       - name: Notify deploy failure
         if: failure()
