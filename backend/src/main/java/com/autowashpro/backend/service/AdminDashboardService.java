@@ -18,7 +18,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.autowashpro.backend.mapper.BillingMapper;
+import com.autowashpro.backend.mapper.BookingMapper;
 import com.autowashpro.backend.mapper.PromotionUsageMapper;
+import com.autowashpro.backend.model.dto.BookingResponse;
 import com.autowashpro.backend.model.dto.DashboardSummaryResponse;
 import com.autowashpro.backend.model.dto.DeductionChartItem;
 import com.autowashpro.backend.model.dto.DeductionSummaryResponse;
@@ -65,13 +67,14 @@ public class AdminDashboardService {
     private final PromotionUsageRepository promotionUsageRepository;
     private final PromotionUsageMapper promotionUsageMapper;
     private final VoucherRepository voucherRepository;
+    private final BookingMapper bookingMapper;
 
     @Autowired
     public AdminDashboardService(BillingRepository billingRepository, BookingRepository bookingRepository,
             CustomerRepository customerRepository, WashBayRepository washBayRepository,
             BillingMapper billingMapper, ServiceRepository serviceRepository,
             WashSessionRepository washSessionRepository, PromotionUsageRepository promotionUsageRepository,
-            PromotionUsageMapper promotionUsageMapper, VoucherRepository voucherRepository) {
+            PromotionUsageMapper promotionUsageMapper, VoucherRepository voucherRepository, BookingMapper bookingMapper) {
         this.billingRepository = billingRepository;
         this.bookingRepository = bookingRepository;
         this.customerRepository = customerRepository;
@@ -82,6 +85,7 @@ public class AdminDashboardService {
         this.promotionUsageRepository = promotionUsageRepository;
         this.promotionUsageMapper = promotionUsageMapper;
         this.voucherRepository = voucherRepository;
+        this.bookingMapper = bookingMapper;
     }
 
     @Transactional(readOnly = true)
@@ -363,6 +367,34 @@ public class AdminDashboardService {
         }
 
         return new ArrayList<>(revenueMap.values());
+    }
+
+    public List<BookingResponse> getBookingList(RevenueDataRequest request) {
+        log.info("getBookingList() - ");
+        List<Booking> bookings = new ArrayList<>();
+        if (request.getStartDate() != null && request.getEndDate() != null) {
+            LocalDate startDate = request.getStartDate();
+            LocalDate endDate = request.getEndDate();
+            log.info("AdminDashboardService - get revenue from {} to {}", startDate, endDate);
+            if (endDate.isBefore(startDate)) {
+                throw new DateTimeException("startDate can't be after endDate");
+            }
+
+            bookings = bookingRepository.findByStartDateAndEndDate(startDate, endDate);
+        } else if (request.getMonth() != null && request.getYear() != 0) {
+            LocalDate startDate = LocalDate.of(request.getYear(), request.getMonth().getValue(), 1);
+            LocalDate endDate = startDate.plusMonths(1L).minusDays(1L);
+            log.info("AdminDashboardService - get revenue in {}/{}", startDate.getMonth(), startDate.getYear());
+            bookings = bookingRepository.findByStartDateAndEndDate(startDate, endDate);
+        } else if (request.getYear() != 0) {
+            LocalDate startDate = LocalDate.of(request.getYear(), 1, 1);
+            LocalDate endDate = startDate.plusYears(1).minusDays(1L);
+            log.info("AdminDashboardService - get revenue in {}/{}", startDate.getMonth(), startDate.getYear());
+            bookings = bookingRepository.findByStartDateAndEndDate(startDate, endDate);
+        } else {
+            bookings = bookingRepository.findAll();
+        }
+        return bookingMapper.toBookingResponses(bookings);
     }
 
     @Transactional(readOnly = true)
@@ -921,5 +953,6 @@ public class AdminDashboardService {
         return new DeductionSummaryResponse(totalOriginalRevenue, totalFinalRevenue, totalDiscount,
                 totalPromotionDiscount, totalVoucherDiscount, discountRate, totalPromotionUsages, totalVoucherUsages);
     }
+
 
 }
