@@ -21,6 +21,8 @@ export function LoginForm() {
                 } else if (role === 'ADMIN') {
                     navigate("/admin");
                 } else {
+                    // Đặt flag để Home.jsx hiện thông báo chính sách
+                    sessionStorage.setItem("just_logged_in", "true");
                     navigate("/");
                 }
             }, 1000);

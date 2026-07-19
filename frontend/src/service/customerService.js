@@ -44,7 +44,11 @@ export async function getPremiumAvailableSlot(selectedDate) {
 }
 
 export async function createBooking(payload) {
-    const response = await axios.post("/api/v2/bookings", payload);
+    const { staffId, ...body } = payload;
+    const url = staffId
+        ? `/api/v2/bookings?staffId=${staffId}`
+        : `/api/v2/bookings`;
+    const response = await axios.post(url, body);
     return response.data;
 }
 
