@@ -108,6 +108,13 @@ export async function getPendingDeposit() {
     return response.data
 }
 
+export async function getAllStaffs(timeSlotId, bookingDate) {
+    const response = await axios.get(
+        `/api/customer/all-staffs?timeSlotId=${timeSlotId}&bookingDate=${bookingDate}`
+    );
+    return response.data;
+}
+
 // ── Notification APIs ──────────────────────────────────────────────────────
 
 export async function getAllNotifications() {

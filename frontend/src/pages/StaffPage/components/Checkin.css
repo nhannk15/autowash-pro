@@ -414,6 +414,53 @@
     margin-top: 16px;
 }
 
+/* --- Staff Selector Card --- */
+.staff-selector-card {
+    margin-top: 16px;
+}
+
+.staff-selector-card .ant-card-head {
+    border-bottom: 1px solid #e8e8e8;
+}
+
+.staff-selector-card .ant-card-head-title {
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.staff-select .ant-select-selector {
+    border-radius: 8px !important;
+    border: 1.5px solid #d9d9d9 !important;
+    min-height: 44px !important;
+    transition: all 0.2s ease;
+}
+
+.staff-select:hover .ant-select-selector,
+.staff-select.ant-select-focused .ant-select-selector {
+    border-color: #2f54eb !important;
+    box-shadow: 0 0 0 2px rgba(47, 84, 235, 0.1) !important;
+}
+
+.staff-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 2px 0;
+}
+
+.staff-option-name {
+    font-weight: 600;
+    color: #1a1a2e;
+    flex: 1;
+}
+
+.staff-option-phone {
+    font-size: 12px;
+    color: #8c8c8c;
+    margin-left: auto;
+}
+
+
 .staff-notes-card .ant-card-head {
     border-bottom: 1px solid #e8e8e8;
 }

@@ -1,5 +1,7 @@
 package com.autowashpro.backend.repository;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -25,4 +27,19 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
                    OR s.phoneNumber LIKE CONCAT('%', :search, '%'))
             """)
     Page<Staff> searchStaffs(@Param("search") String search, Pageable pageable);
+
+    @Query("""
+            SELECT staff FROM Staff staff
+            WHERE staff.id NOT IN (
+                SELECT staff2.id FROM Booking booking
+                JOIN booking.availableSlots availableSlot
+                JOIN booking.washSessions washSession
+                JOIN washSession.staff staff2
+                WHERE availableSlot.timeSlot.id = :timeSlotId AND
+                    availableSlot.slotDate = :bookingDate
+            )
+            AND staff.role = com.autowashpro.backend.model.enums.Role.WASH_STAFF
+
+            """)
+    List<Staff> findAvailableStaff(Long timeSlotId, LocalDate bookingDate);
 }
