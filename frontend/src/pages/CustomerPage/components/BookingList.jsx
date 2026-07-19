@@ -431,7 +431,8 @@ export default function BookingList() {
                 servicePriceIds: servicePriceIds,
                 notes: contactInfo.notes,
                 promotionId: appPromo ? appPromo.id : null,
-                voucherCode: selectedVoucher ? selectedVoucher.voucherCode : null
+                voucherCode: selectedVoucher ? selectedVoucher.voucherCode : null,
+                staffId: selectedStaff ? selectedStaff.id : null // null = bất kỳ kỹ thuật viên
             };
 
             const newBooking = await createBooking(payload);

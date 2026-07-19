@@ -44,7 +44,7 @@ export async function getPremiumAvailableSlot(selectedDate) {
 }
 
 export async function createBooking(payload) {
-    const response = await axios.post("/api/bookings", payload);
+    const response = await axios.post("/api/v2/bookings", payload);
     return response.data;
 }
 
