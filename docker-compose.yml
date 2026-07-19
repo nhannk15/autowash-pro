@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     environment:
       MARIADB_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MARIADB_DATABASE: autowash
+      MARIADB_DATABASE: ${MYSQL_DATABASE:-autowashpro}
       MARIADB_USER: ${MYSQL_USER}
       MARIADB_PASSWORD: ${MYSQL_PASSWORD}
     ports:
@@ -21,7 +21,7 @@ services:
       - autowash-net
 
   backend:
-    image: 761990338651.dkr.ecr.ap-northeast-2.amazonaws.com/autowash-pro:backend-latest
+    image: ${BACKEND_IMAGE:-761990338651.dkr.ecr.ap-northeast-2.amazonaws.com/autowash-pro:backend-latest}
     container_name: autowash-backend
     restart: unless-stopped
     environment:
@@ -31,6 +31,8 @@ services:
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
+      MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: ${MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED:-true}
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: ${MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE:-health,info}
       FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-http://localhost:3000}
       SPRING_MAIL_HOST: ${SPRING_MAIL_HOST}
       SPRING_MAIL_PORT: ${SPRING_MAIL_PORT:-587}
@@ -56,11 +58,17 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q '\"status\":\"UP\"'"]
+      start_period: 45s
+      interval: 15s
+      timeout: 5s
+      retries: 5
     networks:
       - autowash-net
 
   frontend:
-    image: 761990338651.dkr.ecr.ap-northeast-2.amazonaws.com/autowash-pro:frontend-latest
+    image: ${FRONTEND_IMAGE:-761990338651.dkr.ecr.ap-northeast-2.amazonaws.com/autowash-pro:frontend-latest}
     container_name: autowash-frontend
     restart: unless-stopped
     ports:
@@ -70,7 +78,14 @@ services:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - ./nginx/ssl:/etc/nginx/ssl:ro
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/ >/dev/null"]
+      start_period: 15s
+      interval: 15s
+      timeout: 5s
+      retries: 5
     networks:
       - autowash-net
 

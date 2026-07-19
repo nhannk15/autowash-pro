@@ -22,5 +22,6 @@ docker-data/
 # Backup script (contains DB password)
 backup_db.sh
 backups/
+logs/
 
 .vscode
