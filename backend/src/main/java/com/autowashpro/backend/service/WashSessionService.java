@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.autowashpro.backend.exception.BookingNotFoundException;
 import com.autowashpro.backend.exception.UserNotFoundException;
 import com.autowashpro.backend.mapper.WashSessionMapper;
+import com.autowashpro.backend.model.dto.StartWashSessionRequest;
 import com.autowashpro.backend.model.dto.WashSessionResponse;
 import com.autowashpro.backend.model.entity.Booking;
 import com.autowashpro.backend.model.entity.Staff;
@@ -61,6 +62,34 @@ public class WashSessionService {
             washSession.setStaff(staff);
             washSession.setStatus(WashSessionStatus.IN_PROGRESS);
             washSession.setStartTime(LocalDateTime.now());
+            repository.save(washSession);
+        }
+
+        List<WashSession> savedWashSessions = repository.findByBookingId(bookingId);
+        return washSessionMapper.toResponseList(savedWashSessions);
+    }
+
+    @Transactional
+    public List<WashSessionResponse> startWashSessionVersion2(StartWashSessionRequest request, String email) {
+        Long bookingId = request.getBookingId();
+        String staffNote = request.getStaffNote();
+        Staff staff = staffRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Không tìm thấy staff"));
+        staff.setOccupied(true);
+        staffRepository.save(staff);
+
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy Booking với id: " + bookingId));
+
+        booking.setStatus(BookingStatus.COMPLETED);
+        bookingRepository.save(booking);
+
+        List<WashSession> washSessions = repository.findByBookingId(bookingId);
+        for (WashSession washSession : washSessions) {
+            washSession.setStaff(staff);
+            washSession.setStatus(WashSessionStatus.IN_PROGRESS);
+            washSession.setStartTime(LocalDateTime.now());
+            washSession.setStaffNote(staffNote);
             repository.save(washSession);
         }
 
@@ -126,6 +155,36 @@ public class WashSessionService {
             washSession.setStaff(staff);
             washSession.setStatus(WashSessionStatus.IN_PROGRESS);
             washSession.setStartTime(LocalDateTime.now());
+            repository.save(washSession);
+        }
+
+        List<WashSession> savedWashSessions = repository.findByBookingId(bookingId);
+        return washSessionMapper.toResponseList(savedWashSessions);
+    }
+
+    @Transactional
+    public List<WashSessionResponse> startWashSessionAssigningStaffVersion3(StartWashSessionRequest request, Long staffId) {
+
+        Long bookingId = request.getBookingId();
+        String staffNote = request.getStaffNote();
+
+        Staff staff = staffRepository.findById(staffId)
+                .orElseThrow(() -> new UserNotFoundException("Không tìm thấy staff"));
+        staff.setOccupied(true);
+        staffRepository.save(staff);
+
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy Booking với id: " + bookingId));
+
+        booking.setStatus(BookingStatus.COMPLETED);
+        bookingRepository.save(booking);
+
+        List<WashSession> washSessions = repository.findByBookingId(bookingId);
+        for (WashSession washSession : washSessions) {
+            washSession.setStaff(staff);
+            washSession.setStatus(WashSessionStatus.IN_PROGRESS);
+            washSession.setStartTime(LocalDateTime.now());
+            washSession.setStaffNote(staffNote);
             repository.save(washSession);
         }
 

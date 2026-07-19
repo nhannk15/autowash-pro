@@ -831,7 +831,7 @@ public class BookingService {
          * status.
          */
         Staff staff = staffRepository.findById(staffId)
-                .orElseThrow(() -> new UserNotFoundException("Không tìm thấy nhân viên"));
+                .orElse(null);
         log.info("createBookingWithStaff() - staff: {}", staff.getFullName());
         log.info("savedDetails length: {}", savedDetails.size());
         for (BookingDetail bookingDetail : savedDetails) {
@@ -970,6 +970,12 @@ public class BookingService {
         }
         return bookingResponse;
 
+    }
+
+    public BookingResponse findBookingById(Long id) {
+        Booking booking = bookingRepository.findById(id)
+                .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy Lịch đặt với id: " + id));
+        return bookingMapper.toBookingResponse(booking);
     }
 }
 

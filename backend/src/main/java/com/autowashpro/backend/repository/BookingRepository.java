@@ -148,4 +148,11 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             WHERE booking.bookingCode = :bookingCode
             """)
     Optional<Booking> findByBookingCodeForCanceling(@Param("bookingCode") String bookingCode);
+
+    @Query("""
+            SELECT booking FROM Booking booking
+            JOIN booking.availableSlots availableSlot
+            WHERE availableSlot.slotDate >= :startDate AND availableSlot.slotDate <= :endDate
+            """)
+    List<Booking> findByStartDateAndEndDate(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 }

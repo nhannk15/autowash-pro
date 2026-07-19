@@ -79,6 +79,9 @@ public class WashSession {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "staff_note", nullable = true)
+    private String staffNote;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

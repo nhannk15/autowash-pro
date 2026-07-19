@@ -22,5 +22,6 @@ public class UpcomingBookingResponse {
     private LocalTime endTime;
     private WashBayCustomerResponse customer;
     private VehicleResponse vehicle;
+    private StaffInfoDTO staffInfoDTO;
 
 }
