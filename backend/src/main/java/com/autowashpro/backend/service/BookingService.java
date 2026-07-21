@@ -830,9 +830,12 @@ public class BookingService {
          * Step 9. Immediately create WashSession for each BookingDetail in PENDING
          * status.
          */
-        Staff staff = staffRepository.findById(staffId)
-                .orElse(null);
-        log.info("createBookingWithStaff() - staff: {}", staff.getFullName());
+        Staff staff = null;
+        if (staffId != null) {
+            staff = staffRepository.findById(staffId)
+                    .orElse(null);
+        }
+        log.info("createBookingWithStaff() - staff: {}", staff == null ? "Chưa chọn nhân viên" : staff.getFullName());
         log.info("savedDetails length: {}", savedDetails.size());
         for (BookingDetail bookingDetail : savedDetails) {
             WashSession washSession = WashSession.builder()
@@ -937,7 +940,7 @@ public class BookingService {
                                 ? createBookingRequest.getVoucherCode()
                                 : null)
                 .depositAmount(totalFinalPrice.multiply(DEPOSIT_PERCENTAGE).divide(new BigDecimal(100L)))
-                .staffName(staff.getFullName())
+                .staffName(staff == null ? "Chưa chọn nhân viên rửa xe" : staff.getFullName())
                 .build();
 
         /**
