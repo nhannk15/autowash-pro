@@ -8,14 +8,18 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.autowashpro.backend.config.VnpayConfig;
 import com.autowashpro.backend.exception.BillingNotFoundException;
 import com.autowashpro.backend.model.entity.Billing;
+import com.autowashpro.backend.model.entity.User;
 import com.autowashpro.backend.model.enums.DepositStatus;
+import com.autowashpro.backend.model.enums.Role;
 import com.autowashpro.backend.repository.BillingRepository;
+import com.autowashpro.backend.repository.UserRepository;
 import com.autowashpro.backend.utils.VnpayUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,21 +30,31 @@ public class VnpayService {
     private final VnpayConfig vnpayConfig;
     private final VnpayUtils vnpayUtils;
     private final BillingRepository billingRepository;
+    private final UserRepository userRepository;
 
     @Autowired
-    public VnpayService(VnpayConfig vnpayConfig, VnpayUtils vnpayUtils, BillingRepository billingRepository) {
+    public VnpayService(VnpayConfig vnpayConfig, VnpayUtils vnpayUtils, BillingRepository billingRepository,
+            UserRepository userRepository) {
         this.vnpayConfig = vnpayConfig;
         this.vnpayUtils = vnpayUtils;
         this.billingRepository = billingRepository;
+        this.userRepository = userRepository;
     }
 
     private static final DateTimeFormatter VNPAY_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     @Transactional
-    public String createPaymentUrl(Long billingId, String orderInfo, HttpServletRequest request) {
+    public String createPaymentUrl(Long billingId, String orderInfo, HttpServletRequest request, String email) {
 
         Billing billing = billingRepository.findById(billingId)
                 .orElseThrow(() -> new BillingNotFoundException("Không tìm thấy hóa đơn với id: " + billingId));
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AccessDeniedException("Authenticated user not found"));
+        if (user.getRole() == Role.CUSTOMER
+                && !billing.getBooking().getCustomer().getEmail().equals(email)) {
+            throw new AccessDeniedException("Billing does not belong to the authenticated customer");
+        }
 
         BigDecimal bankingAmount = billing.getFinalAmount();
         if (billing.getDepositStatus().equals(DepositStatus.PENDING)) {

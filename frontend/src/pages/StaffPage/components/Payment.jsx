@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
     Steps, Card, Input, Button, Typography,
     Row, Col, Descriptions, Space, message, Result, Tag, Empty, Spin, Radio, Divider,
@@ -54,7 +54,7 @@ export default function StaffPayment() {
         }
     }, [isReturningFromVnpay]);
 
-    const fetchBillData = async () => {
+    const fetchBillData = useCallback(async () => {
         if (!bookingId) return;
         setLoading(true);
         try {
@@ -78,11 +78,11 @@ export default function StaffPayment() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [bookingId]);
 
     useEffect(() => {
         fetchBillData();
-    }, [bookingId]);
+    }, [fetchBillData]);
 
     // Xử lý kết quả trả về từ VNPay (chỉ xử lý 1 lần duy nhất)
     const vnpayProcessedRef = useRef(false);
@@ -116,7 +116,7 @@ export default function StaffPayment() {
             `${location.pathname}${newSearch ? `?${newSearch}` : ''}`,
             { replace: true, state: location.state }
         );
-    }, [location.search]);
+    }, [bayId, bookingId, location.pathname, location.search, location.state, navigate]);
 
     // === Loading state ===
     if (loading) {
@@ -178,9 +178,9 @@ export default function StaffPayment() {
 
     const services = [];
     if (billData.booking?.bookingDetails) {
-        billData.booking.bookingDetails.forEach(s => {
+        billData.booking.bookingDetails.forEach((s, index) => {
             services.push({
-                id: s.servicePriceId || Math.random(),
+                id: s.servicePriceId || index,
                 name: s.serviceName || 'Dịch vụ',
                 price: Number(s.priceAtBooking) || 0,
             });

@@ -1,4 +1,3 @@
-import React from 'react';
 import './PolicyModal.css';
 
 const PolicyModal = ({ isOpen, onClose }) => {

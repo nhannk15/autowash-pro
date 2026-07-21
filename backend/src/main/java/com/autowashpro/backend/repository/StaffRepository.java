@@ -38,7 +38,8 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
                 WHERE availableSlot.timeSlot.id = :timeSlotId AND
                     availableSlot.slotDate = :bookingDate
             )
-            AND staff.role = com.autowashpro.backend.model.enums.Role.WASH_STAFF
+            AND staff.role IN (com.autowashpro.backend.model.enums.Role.STAFF,
+                               com.autowashpro.backend.model.enums.Role.WASH_STAFF)
 
             """)
     List<Staff> findAvailableStaff(Long timeSlotId, LocalDate bookingDate);

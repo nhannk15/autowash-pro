@@ -57,19 +57,14 @@ public class JwtFilter extends OncePerRequestFilter {
             }
         }
 
-        if (accessToken == null) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         try {
-            if (jwtService.verifyToken(accessToken)) {
+            if (accessToken != null && jwtService.verifyToken(accessToken)) {
                 authenticateUser(accessToken);
             } else if (refreshToken != null && jwtService.verifyToken(refreshToken)) {
                 String email = jwtService.extractEmail(refreshToken);
                 User user = userRepository.findByEmail(email).orElse(null);
 
-                if (user.getRefreshToken().equals(refreshToken)) {
+                if (user != null && user.isActive() && refreshToken.equals(user.getRefreshToken())) {
                     String newAccessToken = jwtService.generateAccessToken(user);
                     Cookie newAccessCookie = new Cookie("access_token", newAccessToken);
                     newAccessCookie.setHttpOnly(true);
@@ -93,7 +88,7 @@ public class JwtFilter extends OncePerRequestFilter {
         String email = jwtService.extractEmail(accessToken);
 
         User user = userRepository.findByEmail(email).orElse(null);
-        if (user != null) {
+        if (user != null && user.isActive()) {
             UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                     email, // principal → getPrincipal() trả về String email
                     null,

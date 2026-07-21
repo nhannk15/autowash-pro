@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import './BlogDetail.css'
 
@@ -6,8 +6,6 @@ import './BlogDetail.css'
 import imgRuaXe from '../../assets/Service/RuaXeNgoaiThat.jpg'
 import imgNoiThat from '../../assets/Service/VeSinhNoiThat.jpg'
 import imgKhoangMay from '../../assets/Service/VeSinhKhoangMay.png'
-import imgKhuMui from '../../assets/Service/KhuMui.png'
-import imgCeramic from '../../assets/Service/PhuCeramic.png'
 
 const relatedPosts = [
     {

@@ -304,7 +304,6 @@ export default function Overview() {
             key: 'totalPrice',
             render: (_, record) => {
                 const finalAmount = record.billing?.finalAmount || 0;
-                const depositAmount = record.billing?.depositAmount || 0;
                 const remaining = Math.max(0, finalAmount);
                 return (
                     <Space direction="vertical" size={0}>
@@ -659,7 +658,7 @@ export default function Overview() {
                                                     const data = await getReward();
                                                     setRewards(data.data || []);
                                                     setIsRewardModalOpen(true);
-                                                } catch (error) {
+                                                } catch {
                                                     message.error("Không thể tải danh sách phần thưởng!");
                                                 }
                                             }}
@@ -675,7 +674,7 @@ export default function Overview() {
                                                     const data = await getVoucher();
                                                     setMyVouchers(data || []);
                                                     setIsMyVoucherModalOpen(true);
-                                                } catch (error) {
+                                                } catch {
                                                     message.error("Không thể tải danh sách voucher!");
                                                 }
                                             }}

@@ -1,0 +1,84 @@
+name: Quality and E2E
+
+on:
+  pull_request:
+  push:
+    branches: [develop]
+  schedule:
+    - cron: '0 19 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality-and-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            e2e/package-lock.json
+
+      - name: Backend tests
+        working-directory: backend
+        run: mvn --batch-mode test
+
+      - name: Frontend lint and build
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run lint
+          npm run build
+
+      - name: Install E2E dependencies and Chromium
+        working-directory: e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Start isolated E2E backend, MariaDB, and Mailpit
+        run: docker compose -f docker-compose.e2e.yml up -d --build --wait
+
+      - name: Run P0 suite on pull requests
+        if: github.event_name == 'pull_request'
+        working-directory: e2e
+        run: npm run test:p0
+
+      - name: Run full desktop and responsive suites
+        if: github.event_name != 'pull_request'
+        working-directory: e2e
+        run: |
+          npm test
+          npm run test:responsive
+
+      - name: Upload Playwright report and artifacts
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: playwright-artifacts-${{ github.run_attempt }}
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Show backend logs on failure
+        if: failure()
+        run: docker compose -f docker-compose.e2e.yml logs --no-color backend-e2e
+
+      - name: Clean E2E infrastructure
+        if: always()
+        run: docker compose -f docker-compose.e2e.yml down -v

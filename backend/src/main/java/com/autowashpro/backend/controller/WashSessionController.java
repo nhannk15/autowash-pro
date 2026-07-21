@@ -44,8 +44,11 @@ public class WashSessionController {
     }
 
     @PostMapping("/api/staff/v2/wash-sessions/start")
-    public ResponseEntity<List<WashSessionResponse>> startWashSession(@RequestParam("staffId") Long staffId, @RequestBody StartWashSessionRequest request) {
-        return ResponseEntity.status(HttpStatus.OK).body(service.startWashSessionAssigningStaff(request.getBookingId(), staffId));
+    public ResponseEntity<List<WashSessionResponse>> startWashSession(
+            @AuthenticationPrincipal String email,
+            @RequestParam(value = "staffId", required = false) Long ignoredStaffId,
+            @RequestBody StartWashSessionRequest request) {
+        return ResponseEntity.status(HttpStatus.OK).body(service.startWashSession(request.getBookingId(), email));
     }
 
     @PostMapping("/api/staff/v2/wash-sessions/complete")
@@ -54,7 +57,10 @@ public class WashSessionController {
     }
 
     @PostMapping("/api/staff/v3/wash-sessions/start")
-    public ResponseEntity<List<WashSessionResponse>> startWashSessionVersion3(@RequestParam("staffId") Long staffId, @RequestBody StartWashSessionRequest request) {
-        return ResponseEntity.status(HttpStatus.OK).body(service.startWashSessionAssigningStaffVersion3(request, staffId));
+    public ResponseEntity<List<WashSessionResponse>> startWashSessionVersion3(
+            @AuthenticationPrincipal String email,
+            @RequestParam(value = "staffId", required = false) Long ignoredStaffId,
+            @RequestBody StartWashSessionRequest request) {
+        return ResponseEntity.status(HttpStatus.OK).body(service.startWashSessionVersion2(request, email));
     }
 }

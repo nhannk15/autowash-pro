@@ -5,7 +5,7 @@ import {
 } from "antd";
 import {
     PlusOutlined, EditOutlined, DeleteOutlined,
-    SearchOutlined, GiftOutlined
+    SearchOutlined
 } from "@ant-design/icons";
 import {
     getRewards, createReward, updateReward, deleteReward, getServices

@@ -6,10 +6,13 @@ import java.util.List;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.autowashpro.backend.model.entity.AvailableSlot;
+
+import jakarta.persistence.LockModeType;
 
 public interface AvailableSlotRepository extends JpaRepository<AvailableSlot, Long> {
 
@@ -138,6 +141,19 @@ public interface AvailableSlotRepository extends JpaRepository<AvailableSlot, Lo
             @Param("slotsNeeded") int slotsNeeded,
             Pageable pageable);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT availableSlot FROM AvailableSlot availableSlot
+            WHERE availableSlot.slotDate = :date
+            AND availableSlot.timeSlot.startTime >= :startTime
+            AND availableSlot.timeSlot.startTime < :endTime
+            ORDER BY availableSlot.id
+            """)
+    List<AvailableSlot> lockCapacityForTimeRange(
+            @Param("date") LocalDate date,
+            @Param("startTime") LocalTime startTime,
+            @Param("endTime") LocalTime endTime);
+
     // @Query(value = """
     // SELECT a.* FROM available_slot a
     // WHERE a.date >= :date
@@ -187,8 +203,9 @@ public interface AvailableSlotRepository extends JpaRepository<AvailableSlot, Lo
             JOIN time_slot timeSlot ON availableSlot.time_slot_id = timeSlot.id
             JOIN wash_bay washBay ON availableSlot.wash_bay_id = washBay.id
             WHERE
-            	washBay.category = 'PREMIUM'
+             	washBay.category = 'PREMIUM'
                 AND washBay.status = 'ACTIVE'
+                AND availableSlot.booking_id IS NULL
                 AND
             		(
             			(timeSlot.start_time >= :startTime AND availableSlot.date = :date)

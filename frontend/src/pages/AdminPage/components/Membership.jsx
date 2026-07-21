@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
-    Card, Button, Modal, Form, InputNumber, Input,
+    Button, Modal, Form, InputNumber, Input,
     Space, Typography, message, Spin, Tooltip
 } from "antd";
 import {

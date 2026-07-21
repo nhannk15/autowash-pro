@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,25 +36,31 @@ public class PromotionController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<PromotionResponse>> findAllPromotions() {
         return ResponseEntity.status(HttpStatus.OK).body(promotionService.findAll());
     }
 
     @PostMapping
-    public ResponseEntity<PromotionResponse> createPromotion(@RequestBody CreatePromotionRequest request) {
-        Long staffId = 2L;
-        return ResponseEntity.status(HttpStatus.CREATED).body(promotionService.createPromotion(request, staffId));
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PromotionResponse> createPromotion(
+            @AuthenticationPrincipal String email,
+            @RequestBody CreatePromotionRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(promotionService.createPromotion(request, email));
     }
 
     @PutMapping("/{promotionId}")
-    public ResponseEntity<PromotionResponse> updatePromotion(@RequestBody CreatePromotionRequest request,
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<PromotionResponse> updatePromotion(
+            @AuthenticationPrincipal String email,
+            @RequestBody CreatePromotionRequest request,
             @PathVariable Long promotionId) {
-        Long staffId = 2L;
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(promotionService.updatePromotion(request, staffId, promotionId));
+                .body(promotionService.updatePromotion(request, email, promotionId));
     }
     
     @DeleteMapping("/{promotionId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PromotionResponse> deletePromotion(@PathVariable Long promotionId) {
         return ResponseEntity.status(HttpStatus.OK).body(promotionService.deletePromotion(promotionId));
     }

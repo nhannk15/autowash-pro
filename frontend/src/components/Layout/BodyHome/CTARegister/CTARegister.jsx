@@ -16,6 +16,8 @@ const benefits = [
     { icon: <StarOutlined />, text: 'Tích điểm đổi quà với mỗi lần sử dụng' },
 ]
 
+const SHOW_MEMBERSHIP_CARD = false
+
 export default function CTARegister() {
     return (
         <section className="cta-register" style={{ backgroundImage: `url(${ctaBg})` }}>
@@ -62,7 +64,7 @@ export default function CTARegister() {
 
                 {/* ── CỘT PHẢI: visual card ────────────────── */}
 
-                {false && (
+                {SHOW_MEMBERSHIP_CARD && (
                 <div className="cta-register__visual">
                     <div className="cta-register__card">
                         {/* Card header */}

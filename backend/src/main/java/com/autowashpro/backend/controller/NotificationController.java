@@ -55,8 +55,10 @@ public class NotificationController {
 
 
     @PutMapping("/api/notifications/{notificationId}/read")
-    public ResponseEntity<NotificationResponse> markNotificationAsRead(@PathVariable Long notificationId) {
-        return ResponseEntity.ok().body(notificationService.markAsRead(notificationId));
+    public ResponseEntity<NotificationResponse> markNotificationAsRead(
+            @AuthenticationPrincipal String email,
+            @PathVariable Long notificationId) {
+        return ResponseEntity.ok().body(notificationService.markAsRead(notificationId, email));
     }
 
     @PutMapping("/api/notifications/read-all")

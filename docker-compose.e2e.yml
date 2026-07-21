@@ -1,0 +1,76 @@
+name: autowash-pro-e2e
+
+services:
+  mysql-e2e:
+    image: mariadb:10.11
+    container_name: autowash-e2e-db
+    environment:
+      MARIADB_ROOT_PASSWORD: autowash_e2e_root
+      MARIADB_DATABASE: autowashpro_e2e
+      MARIADB_USER: autowash_e2e
+      MARIADB_PASSWORD: autowash_e2e
+    ports:
+      - "3307:3306"
+    volumes:
+      - autowash-e2e-db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 20s
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks:
+      - autowash-e2e
+
+  mailpit-e2e:
+    image: axllent/mailpit:v1.27
+    container_name: autowash-e2e-mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - autowash-e2e
+
+  backend-e2e:
+    build:
+      context: ./backend
+    container_name: autowash-e2e-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: e2e
+      E2E_DB_URL: jdbc:mysql://mysql-e2e:3306/autowashpro_e2e?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh
+      E2E_DB_USERNAME: autowash_e2e
+      E2E_DB_PASSWORD: autowash_e2e
+      E2E_MAIL_HOST: mailpit-e2e
+      E2E_MAIL_PORT: 1025
+      E2E_FRONTEND_URL: http://127.0.0.1:3000
+      E2E_CUSTOMER_EMAIL: ${E2E_CUSTOMER_EMAIL:-e2e.customer@gmail.com}
+      E2E_CUSTOMER_PASSWORD: ${E2E_CUSTOMER_PASSWORD:-e2e-password-123}
+      E2E_STAFF_EMAIL: ${E2E_STAFF_EMAIL:-e2e.staff@gmail.com}
+      E2E_STAFF_PASSWORD: ${E2E_STAFF_PASSWORD:-e2e-password-123}
+      E2E_ADMIN_EMAIL: ${E2E_ADMIN_EMAIL:-e2e.admin@gmail.com}
+      E2E_ADMIN_PASSWORD: ${E2E_ADMIN_PASSWORD:-e2e-password-123}
+      E2E_INACTIVE_EMAIL: ${E2E_INACTIVE_EMAIL:-e2e.inactive@gmail.com}
+      MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: "true"
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql-e2e:
+        condition: service_healthy
+      mailpit-e2e:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q '\"status\":\"UP\"'"]
+      start_period: 45s
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    networks:
+      - autowash-e2e
+
+volumes:
+  autowash-e2e-db:
+
+networks:
+  autowash-e2e:
+    driver: bridge

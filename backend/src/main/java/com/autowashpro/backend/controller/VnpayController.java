@@ -7,6 +7,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.autowashpro.backend.exception.UserNotFoundException;
-import com.autowashpro.backend.model.entity.User;
 import com.autowashpro.backend.model.enums.Role;
 import com.autowashpro.backend.repository.UserRepository;
 import com.autowashpro.backend.service.BillingService;
@@ -49,11 +49,12 @@ public class VnpayController {
 
     @PostMapping("/create")
     public ResponseEntity<CreatePaymentResponse> createPayment(
+            @AuthenticationPrincipal String email,
             @RequestBody CreatePaymentRequest request,
             HttpServletRequest httpRequest) {
 
         String paymentUrl = paymentService.createPaymentUrl(
-                request.billingId(), request.orderInfo(), httpRequest);
+                request.billingId(), request.orderInfo(), httpRequest, email);
 
         return ResponseEntity.ok(new CreatePaymentResponse(paymentUrl));
     }
@@ -61,24 +62,30 @@ public class VnpayController {
     @GetMapping("/return")
     public void handleReturn(@AuthenticationPrincipal String name, HttpServletRequest request,
             HttpServletResponse response) throws IOException {
-
-        User user = userRepository.findByEmail(name)
-                .orElseThrow(() -> new UserNotFoundException("Không tìm thấy người dùng"));
-
         Map<String, String> params = extractParams(request);
+        if (!paymentService.verifySignature(params)) {
+            response.sendError(HttpStatus.BAD_REQUEST.value(), "Invalid VNPay signature");
+            return;
+        }
+
         billingService.completeBankingPayment(params);
         String vnpTxnRef = params.get("vnp_TxnRef");
         String vnpTransactionStatus = params.get("vnp_TransactionStatus");
         String billingId = vnpTxnRef.substring(0, vnpTxnRef.indexOf("_"));
-        if (user.getRole().equals(Role.CUSTOMER)) {
+        Role role = name == null
+                ? Role.CUSTOMER
+                : userRepository.findByEmail(name)
+                        .orElseThrow(() -> new UserNotFoundException("Không tìm thấy người dùng"))
+                        .getRole();
+        if (role.equals(Role.CUSTOMER)) {
             response.sendRedirect(frontendBaseUrl + "/ca-nhan/tong-quan" + "?" + "status=" + vnpTransactionStatus
-                    + "&billing=" + billingId + "&role=" + user.getRole().toString());
-        } else if (user.getRole().equals(Role.STAFF)) {
+                    + "&billing=" + billingId + "&role=" + role);
+        } else if (role.equals(Role.STAFF)) {
             response.sendRedirect(frontendBaseUrl + "/staff/payment" + "?" + "status=" + vnpTransactionStatus
-                    + "&billing=" + billingId + "&role=" + user.getRole().toString());
+                    + "&billing=" + billingId + "&role=" + role);
         } else {
             response.sendRedirect(frontendBaseUrl + "?" + "status=" + vnpTransactionStatus + "&billing=" + billingId
-                    + "&role=" + user.getRole().toString());
+                    + "&role=" + role);
         }
     }
 

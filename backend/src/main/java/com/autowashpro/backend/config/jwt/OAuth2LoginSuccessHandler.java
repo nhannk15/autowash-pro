@@ -76,6 +76,11 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                     return customerRepository.save(newCustomer);
                 });
 
+        if (!user.isActive()) {
+            response.sendRedirect(FRONTEND_BASE_URL + "/login?error=inactive");
+            return;
+        }
+
         /**
          * Generate Access Token for that USER.
          */

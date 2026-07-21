@@ -121,6 +121,12 @@ public class PromotionService {
         return promotionMapper.toPromotionResponse(savedPromotion);
     }
 
+    public PromotionResponse createPromotion(CreatePromotionRequest request, String email) {
+        Staff staff = staffRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Không tìm thấy admin đang đăng nhập"));
+        return createPromotion(request, staff.getId());
+    }
+
     public PromotionResponse updatePromotion(CreatePromotionRequest request, Long staffId, Long promotionId) {
 
         Promotion promotion = promotionRepository
@@ -177,6 +183,12 @@ public class PromotionService {
         promotionMapper.updatePromotionFromRequest(newPromotion, promotion);
         Promotion savedPromotion = promotionRepository.save(promotion);
         return promotionMapper.toPromotionResponse(savedPromotion);
+    }
+
+    public PromotionResponse updatePromotion(CreatePromotionRequest request, String email, Long promotionId) {
+        Staff staff = staffRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Không tìm thấy admin đang đăng nhập"));
+        return updatePromotion(request, staff.getId(), promotionId);
     }
 
     public PromotionResponse deletePromotion(Long promotionId) {

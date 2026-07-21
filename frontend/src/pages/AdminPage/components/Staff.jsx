@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
     Table, Input, Button, Space, Modal,
     notification, Select, Tooltip, Badge, Form, DatePicker
@@ -21,19 +21,16 @@ export default function Staff() {
     const [searchInput, setSearchInput] = useState("");
     const [sortField, setSortField] = useState(null);
     const [sortOrder, setSortOrder] = useState("asc");
+    const { current: currentPage, pageSize } = pagination;
 
     const [modalOpen, setModalOpen] = useState(false);
     const [addLoading, setAddLoading] = useState(false);
     const [form] = Form.useForm();
 
-    useEffect(() => {
-        fetchStaffs();
-    }, [pagination.current, pagination.pageSize, searchName, sortField, sortOrder]);
-
-    const fetchStaffs = async () => {
+    const fetchStaffs = useCallback(async () => {
         setLoading(true);
         try {
-            const params = { page: pagination.current - 1, size: pagination.pageSize };
+            const params = { page: currentPage - 1, size: pageSize };
             if (searchName) params.search = searchName;
             if (sortField) params.sort = `${sortField},${sortOrder}`;
 
@@ -46,7 +43,11 @@ export default function Staff() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentPage, pageSize, searchName, sortField, sortOrder]);
+
+    useEffect(() => {
+        fetchStaffs();
+    }, [fetchStaffs]);
 
     const handleSearch = (value) => {
         setSearchName(value);

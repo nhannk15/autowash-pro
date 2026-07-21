@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.autowashpro.backend.exception.BillingNotFoundException;
@@ -143,16 +144,32 @@ public class BillingService {
         return billingMapper.toBillingResponses(billings);
     }
 
+    @Transactional
     public BillingResponse completeBillingUsingCashMethod(Long billingId) {
         Billing billing = billingRepository.findById(billingId)
                 .orElseThrow(() -> new BillingNotFoundException(
                         "Hóa đơn " + billingId + " không tồn tại"));
 
+        if (billing.getPaymentStatus().equals(PaymentStatus.PAID)) {
+            BillingResponse existing = billingMapper.toBillingResponse(billing);
+            existing.setPointsChange(0L);
+            return existing;
+        }
+        if (billing.getPaymentStatus().equals(PaymentStatus.CANCELLED)) {
+            throw new IllegalArgumentException("Không thể thanh toán hóa đơn đã hủy");
+        }
+
         billing.setPaymentStatus(PaymentStatus.PAID);
+        billing.setPaymentMethod(PaymentMethod.CASH);
         billing.setPaidAt(LocalDateTime.now());
+        billing.getBooking().setStatus(BookingStatus.COMPLETED);
+        bookingRepository.save(billing.getBooking());
 
         for (WashSession washSession : billing.getBooking().getWashSessions()) {
             washSession.setStatus(WashSessionStatus.PAID);
+            if (washSession.getStaff() != null) {
+                washSession.getStaff().setOccupied(false);
+            }
             washSessionRepository.save(washSession);
         }
         
@@ -168,10 +185,9 @@ public class BillingService {
             log.info("service {} has pointsMultiplier: {}", service.getServiceName(), service.getPointMultiplier());
             tempPointsChange = tempPointsChange.multiply(service.getPointMultiplier());
         }
+        tempPointsChange = tempPointsChange.multiply(customerTier.getPointEarnRate());
         Long pointsChange = tempPointsChange.divide(BigDecimal.valueOf(1000L)).longValue();
         log.info("pointsChange after getting services: {}", pointsChange);
-
-        pointsChange = pointsChange * customerTier.getPointEarnRate().longValue();
         log.info("pointsChange after applying membershipTier points earn rate: {}", pointsChange);
 
         customer.setCurrentPoints(customer.getCurrentPoints() + pointsChange);
@@ -202,12 +218,15 @@ public class BillingService {
     }
 
     public VoucherResponse applyVoucherForBilling(ApplyVoucherToBillingRequest request) {
-        customerRepository.findById(request.getCustomerId())
+        Customer customer = customerRepository.findById(request.getCustomerId())
                 .orElseThrow(() -> new UserNotFoundException(
                         "Không thể tìm thấy người dùng với id: " + request.getCustomerId()));
 
         Voucher voucher = voucherRepository.findByVoucherCode(request.getVoucherCode())
                 .orElseThrow(() -> new VoucherException("Không tìm thấy Voucher: " + request.getVoucherCode()));
+        if (!voucher.getCustomer().getId().equals(customer.getId())) {
+            throw new AccessDeniedException("Voucher không thuộc về khách hàng đã chọn");
+        }
         if (voucher.getStatus().equals(VoucherStatus.EXPIRED)) {
             throw new VoucherException("Voucher đã hết hạn sử dụng: " + request.getVoucherCode());
         } else if (voucher.getStatus().equals(VoucherStatus.USED)) {
@@ -217,6 +236,9 @@ public class BillingService {
         Billing billing = billingRepository.findById(request.getBillingId())
                 .orElseThrow(() -> new BillingNotFoundException(
                         "Không thể tìm thấy hóa đơn với id: " + request.getBillingId()));
+        if (!billing.getBooking().getCustomer().getId().equals(customer.getId())) {
+            throw new AccessDeniedException("Hóa đơn không thuộc về khách hàng đã chọn");
+        }
 
         log.info("applyVoucherForBilling() - start applying voucher {} for billingId: {}", voucher.getVoucherCode(),
                 billing.getId());
@@ -224,8 +246,9 @@ public class BillingService {
         if (voucher.getDiscountType().equals(RewardType.DISCOUNT_FLAT)) {
             log.info("applyVoucherForBilling() - billingId {}'s finalAmount {}", billing.getId(),
                     billing.getFinalAmount());
-            billing.setDiscountAmount(billing.getDiscountAmount().add(voucher.getDiscountValue()));
-            billing.setFinalAmount(billing.getFinalAmount().subtract(voucher.getDiscountValue()));
+            BigDecimal voucherDiscountValue = voucher.getDiscountValue().min(billing.getFinalAmount());
+            billing.setDiscountAmount(billing.getDiscountAmount().add(voucherDiscountValue));
+            billing.setFinalAmount(billing.getFinalAmount().subtract(voucherDiscountValue));
 
             log.info("applyVoucherForBilling() - billingId {}'s discountAmount {}", billing.getId(),
                     billing.getDiscountAmount());
@@ -241,7 +264,7 @@ public class BillingService {
             BigDecimal finalAmount = billing.getFinalAmount().subtract(voucherDiscountValue);
             billing.setFinalAmount(finalAmount);
         } else if (voucher.getDiscountType().equals(RewardType.FREE_WASH)) {
-            billing.setDiscountAmount(billing.getOriginalAmount());
+            billing.setDiscountAmount(billing.getDiscountAmount().add(billing.getFinalAmount()));
             billing.setFinalAmount(BigDecimal.ZERO);
         }
         Billing savedBilling = billingRepository.save(billing);
@@ -263,13 +286,25 @@ public class BillingService {
             log.info("completeBankingPayment() - keyValue: {} - {}", param, params.get(param));
         }
         String vnpTransactionStatus = params.get("vnp_TransactionStatus");
-        if (!vnpTransactionStatus.equals("00")) {
+        if (!"00".equals(vnpTransactionStatus)) {
             return null;
         }
-        Long billingId = Long.valueOf(params.get("vnp_TxnRef").split("_")[0]);
+        String transactionReference = params.get("vnp_TxnRef");
+        if (transactionReference == null || !transactionReference.contains("_")) {
+            throw new IllegalArgumentException("VNPay transaction reference is invalid");
+        }
+        Long billingId = Long.valueOf(transactionReference.split("_")[0]);
         Billing billing = billingRepository.findById(billingId)
                 .orElseThrow(() -> new BillingNotFoundException(
                         "Hóa đơn " + billingId + " không tồn tại"));
+        if (transactionReference.equals(billing.getReferenceCode())
+                || billing.getPaymentStatus().equals(PaymentStatus.PAID)) {
+            BillingResponse existing = billingMapper.toBillingResponse(billing);
+            existing.setPointsChange(0L);
+            return existing;
+        }
+        billing.setReferenceCode(transactionReference);
+        billing.setTransactionId(params.get("vnp_TransactionNo"));
         if (billing.getDepositStatus().equals(DepositStatus.PENDING)) {
             billing.setDepositStatus(DepositStatus.PAID);
             billing.setDepositPaidAt(LocalDateTime.now());
@@ -286,9 +321,14 @@ public class BillingService {
         billing.setPaymentStatus(PaymentStatus.PAID);
         billing.setPaymentMethod(PaymentMethod.BANK_TRANSFER);
         billing.setPaidAt(LocalDateTime.now());
+        billing.getBooking().setStatus(BookingStatus.COMPLETED);
+        bookingRepository.save(billing.getBooking());
 
         for (WashSession washSession : billing.getBooking().getWashSessions()) {
             washSession.setStatus(WashSessionStatus.PAID);
+            if (washSession.getStaff() != null) {
+                washSession.getStaff().setOccupied(false);
+            }
             washSessionRepository.save(washSession);
         }
 
@@ -304,12 +344,11 @@ public class BillingService {
             tempPointsChange = tempPointsChange.multiply(service.getPointMultiplier());
         }
         
-        Long pointsChange = billing.getFinalAmount().divide(BigDecimal.valueOf(1000L)).longValue();
+        tempPointsChange = tempPointsChange.multiply(customerTier.getPointEarnRate());
+        Long pointsChange = tempPointsChange.divide(BigDecimal.valueOf(1000L)).longValue();
 
         log.info("pointsChange after getting services: {}", pointsChange);
 
-        pointsChange = pointsChange * customerTier.getPointEarnRate().longValue();
-        
         log.info("pointsChange after applying membershipTier points earn rate: {}", pointsChange);
         customer.setCurrentPoints(customer.getCurrentPoints() + pointsChange);
         customer.setLifetimePoints(customer.getLifetimePoints() + pointsChange);

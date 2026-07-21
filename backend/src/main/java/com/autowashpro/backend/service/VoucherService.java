@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,6 +53,16 @@ public class VoucherService {
         this.codeGenerator = voucherCodeGenerator;
         this.pointTransactionRepository = pointTransactionRepository;
         this.voucherMapper = voucherMapper;
+    }
+
+    public VoucherResponse exchangeVoucherForCustomer(String email, ExchangeVoucherRequest request) {
+        Customer authenticatedCustomer = customerRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Authenticated customer not found"));
+        if (request.getCustomerId() != null && !request.getCustomerId().equals(authenticatedCustomer.getId())) {
+            throw new AccessDeniedException("Customer id does not match the authenticated user");
+        }
+        request.setCustomerId(authenticatedCustomer.getId());
+        return exchangeVoucherForCustomer(request);
     }
 
     public VoucherResponse exchangeVoucherForCustomer(ExchangeVoucherRequest request) {

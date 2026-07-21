@@ -58,7 +58,7 @@ public class StaffCustomerController {
     }
 
     @PostMapping("/quick-create")
-    public ResponseEntity<ApiResponse<QuickCreateResponse>> quickCreate(@RequestBody QuickCreateRequest request) {
+    public ResponseEntity<ApiResponse<QuickCreateResponse>> quickCreate(@Valid @RequestBody QuickCreateRequest request) {
         Customer customer;
         // Kiểm tra SĐT đã tồn tại chưa (phục vụ Tab B khách vãng lai nhanh)
         Optional<Customer> existingCustomer = customerRepository.findByPhoneNumber(request.getPhoneNumber());

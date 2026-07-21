@@ -145,6 +145,16 @@ function App() {
         <Route path="promotion" element={<Promotion />} />
         <Route path="profile" element={<Profile />} />
       </Route>
+      <Route path="*" element={
+        <MainLayout>
+          <section style={{ minHeight: '55vh', display: 'grid', placeItems: 'center', textAlign: 'center', padding: '48px 20px' }}>
+            <div>
+              <h1 style={{ fontSize: '64px', color: '#002b7f', margin: 0 }}>404</h1>
+              <p style={{ fontSize: '18px' }}>Không tìm thấy trang bạn yêu cầu.</p>
+            </div>
+          </section>
+        </MainLayout>
+      } />
     </Routes>
     </>
   )

@@ -4,6 +4,7 @@ backend/src/main/resources/application.properties
 
 # Target Folder Configuration
 backend/target
+backend/e2e-backend*.log
 
 frontend/.env
 
@@ -25,3 +26,10 @@ backups/
 logs/
 
 .vscode
+
+# Playwright E2E local state and artifacts
+e2e/.env.e2e
+e2e/.auth/
+e2e/playwright-report/
+e2e/test-results/
+e2e/blob-report/

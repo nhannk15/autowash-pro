@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Row, Col, Card, Statistic, Button,
@@ -7,7 +7,7 @@ import {
 } from 'antd';
 import {
     CarOutlined, DollarCircleOutlined, CheckCircleOutlined,
-    CalendarOutlined, UserAddOutlined, ArrowRightOutlined, BellOutlined,
+    CalendarOutlined, UserAddOutlined, ArrowRightOutlined,
     UserOutlined, CreditCardOutlined,
 } from '@ant-design/icons';
 import {
@@ -41,7 +41,6 @@ export default function StaffDashboard() {
     const [todayBookings, setTodayBookings] = useState([]);
     const [bookings, setBookings] = useState([]);
     const [loadingBays, setLoadingBays] = useState(true);
-    const [loadingTodayBookings, setLoadingTodayBookings] = useState(true);
     const [loadingUpcomingBookings, setLoadingUpcomingBookings] = useState(true);
 
     // === Modal 1: Tạo tài khoản / Thêm xe ===
@@ -82,8 +81,6 @@ export default function StaffDashboard() {
             setTodayBookings(data);
         } catch (error) {
             console.error('Failed to fetch today bookings', error);
-        } finally {
-            setLoadingTodayBookings(false);
         }
     }, []);
 
