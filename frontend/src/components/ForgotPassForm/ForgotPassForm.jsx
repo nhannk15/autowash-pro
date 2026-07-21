@@ -122,7 +122,7 @@ export default function ForgotPassForm() {
                 <>
                     <h2 className="forgotpass-title">Xác minh mã OTP</h2>
                     <p className="forgotpass-desc">
-                        Mã OTP đã được gửi đến<strong>{email}</strong>. Mã sẽ có hiệu lực trong 3 phút.
+                        Mã OTP đã được gửi đến <strong>{email}</strong>. Mã sẽ có hiệu lực trong 3 phút.
                     </p>
                     <Form
                         onFinish={handleVerifyOtp}

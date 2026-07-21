@@ -2,6 +2,7 @@ package com.autowashpro.backend.model.entity;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -33,13 +34,16 @@ public class AvailableSlot {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "booking_id")
+    @JsonIgnoreProperties({"availableSlots", "washSessions", "bookingDetails"})
     private Booking booking;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "time_slot_id", nullable = false)
+    @JsonIgnoreProperties("availableSlots")
     private TimeSlot timeSlot;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "wash_bay_id", nullable = false)
+    @JsonIgnoreProperties("availableSlots")
     private WashBay washBay;
 }

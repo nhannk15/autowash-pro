@@ -119,10 +119,74 @@
         width: 100%;
         border-right: none;
         border-bottom: 1px solid #eaeaea;
-        padding-bottom: 12px;
+        padding: 0;
+        position: sticky;
+        top: 64px; /* Dưới thanh Navbar (64px) */
+        background-color: #ffffff;
+        z-index: 99;
     }
-    
-    .customer-sidebar__link, .customer-sidebar__btn-logout {
-        padding: 10px 20px;
+
+    .customer-sidebar__menu {
+        display: flex;
+        flex-direction: row;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        padding: 0 12px;
+        gap: 4px;
+        scrollbar-width: none; /* Ẩn scrollbar Firefox */
+    }
+
+    .customer-sidebar__menu::-webkit-scrollbar {
+        display: none; /* Ẩn scrollbar Chrome/Safari/Opera */
+    }
+
+    .customer-sidebar__item {
+        margin-bottom: 0;
+        flex-shrink: 0;
+    }
+
+    .customer-sidebar__link, 
+    .customer-sidebar__btn-logout {
+        padding: 12px 16px;
+        font-size: 14px;
+        border-left: none;
+        border-bottom: 3px solid transparent;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border-radius: 0;
+        background-color: transparent !important;
+    }
+
+    .customer-sidebar__link:hover {
+        color: #002b7f;
+        background-color: transparent;
+    }
+
+    /* Active tab on mobile */
+    .customer-sidebar__link--active {
+        color: #002b7f !important;
+        font-weight: 600;
+        border-bottom-color: #002b7f;
+    }
+
+    .customer-sidebar__link--active .customer-sidebar__icon {
+        color: #002b7f !important;
+    }
+
+    .customer-sidebar__item--logout {
+        margin-top: 0;
+        border-top: none;
+        padding-top: 0;
+    }
+
+    .customer-sidebar__btn-logout {
+        color: #d32f2f;
+    }
+
+    .customer-sidebar__btn-logout:hover {
+        background-color: transparent !important;
+        color: #c62828;
     }
 }

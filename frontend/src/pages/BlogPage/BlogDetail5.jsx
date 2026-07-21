@@ -295,7 +295,7 @@ export default function BlogDetail5() {
                         <p className="blog-detail__cta-desc">
                             Bảo vệ sức khỏe gia đình, loại bỏ vi khuẩn nấm mốc với dịch vụ dọn dẹp nội thất ô tô chuyên sâu tại nhà.
                         </p>
-                        <Link to="/dich-vu" className="blog-detail__cta-btn">Xem Dịch Vụ</Link>
+                        <Link to="/service" className="blog-detail__cta-btn">Xem Dịch Vụ</Link>
                     </div>
                 </div>
             </div>

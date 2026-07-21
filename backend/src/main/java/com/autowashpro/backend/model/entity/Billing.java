@@ -1,11 +1,13 @@
 package com.autowashpro.backend.model.entity;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.time.LocalDateTime;
 
+import com.autowashpro.backend.model.enums.DepositStatus;
 import com.autowashpro.backend.model.enums.PaymentMethod;
 import com.autowashpro.backend.model.enums.PaymentStatus;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,10 +21,12 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -36,21 +40,23 @@ public class Billing {
     private Long id;
 
     @OneToOne
-    @JoinColumn(name = "session_id")
-    private WashSession session;
+    @JoinColumn(name = "booking_id", nullable = false)
+    @JsonIgnoreProperties({ "washSessions", "availableSlots", "bookingDetails", "billing" })
+    private Booking booking;
 
     @OneToOne(optional = true)
     @JoinColumn(name = "voucher_id", nullable = true)
+    @JsonIgnoreProperties({ "reward", "customer" })
     private Voucher voucher;
 
     @Column(precision = 10, scale = 2)
     private BigDecimal originalAmount;
 
     @Column(name = "discount_amount", nullable = true)
-    private BigInteger discountAmount;
+    private BigDecimal discountAmount;
 
     @Column(name = "final_amount", nullable = false)
-    private BigInteger finalAmount;
+    private BigDecimal finalAmount;
 
     @Column(name = "payment_method", nullable = false)
     @Enumerated(EnumType.STRING)
@@ -60,15 +66,41 @@ public class Billing {
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
 
-    @Column(name = "paid_at", nullable = false)
+    @Column(name = "paid_at", nullable = true)
     private LocalDateTime paidAt;
+
+    @Column(name = "deposit_paid_at", nullable = true)
+    private LocalDateTime depositPaidAt;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    /**
+     * Banking Transaction
+     */
+    @Column(name = "transaction_id", nullable = true, unique = true)
+    private String transactionId;
+
+    @Column(name = "reference_code", nullable = true, unique = true)
+    private String referenceCode;
+
+    @OneToOne(mappedBy = "billing")
+    private PointTransaction pointTransaction;
+
+    @Column(name = "deposit_amount", nullable = true)
+    private BigDecimal depositAmount;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "deposit_status", nullable = true)
+    private DepositStatus depositStatus;
+
+    @Column(name = "deposit_expiry", nullable = true)
+    private LocalDateTime depositExpiry;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        depositExpiry = createdAt.plusMinutes(10L);
     }
     /**
      * How to calculate discount_amount

@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import com.autowashpro.backend.model.enums.RewardType;
 import com.autowashpro.backend.model.enums.VoucherStatus;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -16,13 +17,16 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -38,7 +42,8 @@ public class Voucher {
     private String voucherCode;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reward_id")
+    @JoinColumn(name = "reward_id", nullable = true)
+    @JsonIgnoreProperties({"service"})
     private Reward reward;
 
     @Column(name = "discount_type", nullable = false)
@@ -50,6 +55,7 @@ public class Voucher {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id")
+    @JsonIgnoreProperties({"bookings", "vehicles", "washSessions"})
     private Customer customer;
 
     @Column(name = "status", nullable = false)
@@ -64,6 +70,9 @@ public class Voucher {
 
     @Column(name = "used_at", nullable = true)
     private LocalDateTime usedAt;
+
+    @OneToOne(mappedBy = "voucher")
+    private PointTransaction pointTransaction;
 
     @PrePersist
     protected void onCreate() {

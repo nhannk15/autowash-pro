@@ -1,5 +1,6 @@
 package com.autowashpro.backend.model.entity;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -20,6 +21,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import com.autowashpro.backend.model.enums.Role;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -41,10 +43,14 @@ public class User {
     private String googleId;
 
     @Column(name = "password_hash", nullable = true)
+    @JsonIgnore
     private String password;
 
     @Column(name = "full_name", nullable = false, columnDefinition = "NVARCHAR(150)")
     private String fullName;
+
+    @Column(name = "birthdate", nullable = true)
+    private LocalDate birthday;
 
     @Column(name = "phone_number", nullable = true)
     private String phoneNumber;
@@ -64,6 +70,9 @@ public class User {
 
     @Column(name = "updated_at", nullable = false, updatable = true)
     private LocalDateTime updatedAt; // new
+
+    @Column(name = "refresh_token", nullable = true, columnDefinition = "TEXT")
+    private String refreshToken;
 
      @PrePersist
     protected void onCreate() {

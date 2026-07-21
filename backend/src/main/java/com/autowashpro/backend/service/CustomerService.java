@@ -5,39 +5,57 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.autowashpro.backend.model.dto.CustomerRequest;
 
 import com.autowashpro.backend.exception.AccountExistedException;
+import com.autowashpro.backend.exception.UserNotFoundException;
+import com.autowashpro.backend.mapper.MembershipTierMapper;
+import com.autowashpro.backend.model.dto.CustomerAdminResponse;
+import com.autowashpro.backend.model.dto.MembershipTierSummaryResponse;
 import com.autowashpro.backend.model.dto.RegistrationRequest;
+import com.autowashpro.backend.model.dto.VehicleAdminResponse;
+import com.autowashpro.backend.model.dto.VehicleTypeItemResponse;
 import com.autowashpro.backend.model.entity.Customer;
 import com.autowashpro.backend.model.entity.MembershipTier;
 import com.autowashpro.backend.model.entity.User;
+import com.autowashpro.backend.model.entity.Vehicle;
+import com.autowashpro.backend.model.entity.VehicleType;
 import com.autowashpro.backend.model.enums.Role;
 import com.autowashpro.backend.repository.CustomerRepository;
 import com.autowashpro.backend.repository.MembershipTierRepository;
 import com.autowashpro.backend.repository.UserRepository;
 
 @Service
+@Transactional
 public class CustomerService {
 
-    private CustomerRepository repository;
-    private UserRepository userRepository;
-    private MembershipTierRepository membershipTierRepository;
-    private PasswordEncoder passwordEncoder;
-
-    public CustomerService() {
-    }
+    private final CustomerRepository repository;
+    private final UserRepository userRepository;
+    private final MembershipTierRepository membershipTierRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final MembershipTierMapper membershipTierMapper;
+    private final CustomerRepository customerRepository;
+    private final EmailService emailService;
 
     @Autowired
     public CustomerService(CustomerRepository repository,
             UserRepository userRepository,
             MembershipTierRepository membershipTierRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder, MembershipTierMapper membershipTierMapper, CustomerRepository customerRepository,
+            EmailService emailService) {
         this.repository = repository;
         this.userRepository = userRepository;
         this.membershipTierRepository = membershipTierRepository;
         this.passwordEncoder = passwordEncoder;
+        this.membershipTierMapper = membershipTierMapper;
+        this.customerRepository = customerRepository;
+        this.emailService = emailService;
     }
 
     public Customer register(RegistrationRequest request) {
@@ -83,11 +101,19 @@ public class CustomerService {
                 // Update customer-specific fields if the user is a Customer
                 if (user instanceof Customer customer) {
                     customer.setDateOfBirth(request.getDateOfBirth());
-                    return repository.save(customer);
+                    Customer savedCustomer = repository.save(customer);
+                    if (savedCustomer.getEmail() != null && !savedCustomer.getEmail().isBlank()) {
+                        emailService.sendWelcomeEmail(savedCustomer.getEmail(), savedCustomer.getFullName(), null);
+                    }
+                    return savedCustomer;
                 }
 
                 userRepository.save(user);
-                return repository.findByEmail(request.getEmail()).orElseThrow();
+                Customer linkedCustomer = repository.findByEmail(request.getEmail()).orElseThrow();
+                if (linkedCustomer.getEmail() != null && !linkedCustomer.getEmail().isBlank()) {
+                    emailService.sendWelcomeEmail(linkedCustomer.getEmail(), linkedCustomer.getFullName(), null);
+                }
+                return linkedCustomer;
             }
         }
 
@@ -109,31 +135,273 @@ public class CustomerService {
         customer.setCurrentPoints(0L);
         customer.setLifetimePoints(0L);
         customer.setTierStartDate(LocalDate.now());
-        customer.setTierEndDate(LocalDate.now().plusYears(1));
-        customer.setNextReviewDate(LocalDate.now().plusMonths(6));
 
-        return repository.save(customer);
+        applyCustomerDefaults(customer);
+        Customer savedCustomer = repository.save(customer);
+
+        // Gửi email chào mừng nếu có email
+        if (savedCustomer.getEmail() != null && !savedCustomer.getEmail().isBlank()) {
+            emailService.sendWelcomeEmail(savedCustomer.getEmail(), savedCustomer.getFullName(), null);
+        }
+
+        return savedCustomer;
     }
 
     public Customer createNew(Customer customer) {
-        return repository.save(customer);
+        // Validate unique phone number
+        if (customer.getPhoneNumber() != null && repository.existsByPhoneNumber(customer.getPhoneNumber())) {
+            throw new IllegalArgumentException("Số điện thoại đã được sử dụng!");
+        }
+        // Validate unique email
+        if (customer.getEmail() != null && !customer.getEmail().isBlank()) {
+            Optional<User> existingUser = userRepository.findByEmail(customer.getEmail());
+            if (existingUser.isPresent()) {
+                throw new AccountExistedException("Email đã tồn tại!");
+            }
+        }
+        // Set default password for walk-in customers
+        if (customer.getPassword() == null || customer.getPassword().isBlank()) {
+            customer.setPassword(passwordEncoder.encode("12345678"));
+        }
+        applyCustomerDefaults(customer);
+        Customer savedCustomer = repository.save(customer);
+
+        // Gửi email chào mừng nếu có email
+        if (savedCustomer.getEmail() != null && !savedCustomer.getEmail().isBlank()) {
+            emailService.sendWelcomeEmail(savedCustomer.getEmail(), savedCustomer.getFullName(), "12345678");
+        }
+
+        return savedCustomer;
     }
 
     public Customer findById(Long id) {
-        return repository.findById(id).get();
+        return repository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("Khách hàng không tồn tại!"));
     }
 
     public List<Customer> findAll() {
         return repository.findAll();
     }
 
+    public Page<Customer> searchCustomers(String search, Long tierId, Pageable pageable) {
+        return repository.searchCustomers(search, tierId, pageable);
+    }
+
+    public Page<CustomerAdminResponse> searchCustomersAdmin(String search, Long tierId, Pageable pageable) {
+        return repository.searchCustomers(search, tierId, pageable)
+                .map(this::toCustomerAdminResponse);
+    }
+
+    public CustomerAdminResponse toCustomerAdminResponse(Customer customer) {
+        return new CustomerAdminResponse(
+                customer.getId(),
+                customer.getEmail(),
+                customer.getGoogleId(),
+                customer.getFullName(),
+                customer.getPhoneNumber(),
+                customer.getAvatarUrl(),
+                customer.getRole(),
+                customer.isActive(),
+                customer.getCreatedAt(),
+                customer.getUpdatedAt(),
+                customer.getDateOfBirth(),
+                toMembershipTierSummaryResponse(customer.getTier()),
+                customer.getCurrentPoints(),
+                customer.getLifetimePoints(),
+                customer.getTierStartDate(),
+                customer.getLastReviewDate(),
+                customer.getVehicles() == null
+                        ? List.of()
+                        : customer.getVehicles().stream()
+                                .map(this::toVehicleAdminResponse)
+                                .toList());
+    }
+
+    private MembershipTierSummaryResponse toMembershipTierSummaryResponse(MembershipTier tier) {
+        if (tier == null) {
+            return null;
+        }
+
+        String nextTierName = "Đã đạt mức Rank cao nhất";
+
+        Optional<MembershipTier> nextTier = membershipTierRepository.findByTierLevel(tier.getTierLevel() + 1);
+        if (nextTier.isPresent()) {
+            nextTierName = nextTier.get().getTierName();
+        }
+
+        MembershipTierSummaryResponse newMembershipTierSummaryResponse = membershipTierMapper
+                .toMembershipTierSummaryResponse(tier);
+        newMembershipTierSummaryResponse.setNextTierName(nextTierName);
+        return newMembershipTierSummaryResponse;
+    }
+
+    private VehicleAdminResponse toVehicleAdminResponse(Vehicle vehicle) {
+        return new VehicleAdminResponse(
+                vehicle.getId(),
+                toVehicleTypeItemResponse(vehicle.getVehicleType()),
+                vehicle.getLicensePlate(),
+                vehicle.getBrand(),
+                vehicle.getModel(),
+                vehicle.getColor(),
+                vehicle.getImage(),
+                vehicle.isActive(),
+                vehicle.getCreatedAt(),
+                vehicle.getUpdatedAt());
+    }
+
+    private VehicleTypeItemResponse toVehicleTypeItemResponse(VehicleType vehicleType) {
+        if (vehicleType == null) {
+            return null;
+        }
+
+        return new VehicleTypeItemResponse(
+                vehicleType.getId(),
+                vehicleType.getTypeName(),
+                vehicleType.getDescription(),
+                vehicleType.isActive());
+    }
+
+    public Customer findByPhoneNumber(String phoneNumber) {
+        return repository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new UserNotFoundException("Không tìm thấy khách hàng với số điện thoại này!"));
+    }
+
+    public CustomerAdminResponse findStaffCustomerByPhoneNumber(String phoneNumber) {
+        return toCustomerAdminResponse(findByPhoneNumber(phoneNumber));
+    }
+
     public Customer update(Customer customer) {
+        Customer existing = findById(customer.getId());
+
+        // Check phone unique if changed
+        if (customer.getPhoneNumber() != null
+                && !customer.getPhoneNumber().equals(existing.getPhoneNumber())
+                && repository.existsByPhoneNumber(customer.getPhoneNumber())) {
+            throw new IllegalArgumentException("Số điện thoại đã được sử dụng!");
+        }
+
         return repository.save(customer);
     }
 
     public void delete(Long id) {
         Customer customer = findById(id);
-        repository.delete(customer);
+        customer.setActive(false);
+        repository.save(customer);
     }
 
+    // ==================== Admin-specific methods ====================
+
+    public Customer createByAdmin(CustomerRequest request) {
+        // Validate unique email
+        Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
+        if (existingUser.isPresent()) {
+            throw new AccountExistedException("Email đã tồn tại!");
+        }
+
+        // Validate unique phone number
+        if (request.getPhoneNumber() != null && repository.existsByPhoneNumber(request.getPhoneNumber())) {
+            throw new IllegalArgumentException("Số điện thoại đã được sử dụng!");
+        }
+
+        Customer customer = new Customer();
+        customer.setEmail(request.getEmail());
+        customer.setFullName(request.getFullName());
+        customer.setPhoneNumber(request.getPhoneNumber());
+        customer.setAvatarUrl(request.getAvatarUrl());
+        customer.setDateOfBirth(request.getDateOfBirth());
+
+        // Encode password if provided
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            customer.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+
+        // Set tier if specified, otherwise apply defaults
+        if (request.getTierId() != null) {
+            MembershipTier tier = membershipTierRepository.findById(request.getTierId())
+                    .orElseThrow(() -> new IllegalArgumentException("Hạng thành viên không tồn tại!"));
+            customer.setTier(tier);
+        }
+
+        applyCustomerDefaults(customer);
+        return repository.save(customer);
+    }
+
+    public Customer updateByAdmin(Long id, CustomerRequest request) {
+        Customer customer = findById(id);
+
+        // Validate unique phone number if changed
+        if (request.getPhoneNumber() != null
+                && !request.getPhoneNumber().equals(customer.getPhoneNumber())
+                && repository.existsByPhoneNumber(request.getPhoneNumber())) {
+            throw new IllegalArgumentException("Số điện thoại đã được sử dụng!");
+        }
+
+        // Update only non-null fields
+        if (request.getEmail() != null) {
+            customer.setEmail(request.getEmail());
+        }
+        if (request.getFullName() != null) {
+            customer.setFullName(request.getFullName());
+        }
+        if (request.getPhoneNumber() != null) {
+            customer.setPhoneNumber(request.getPhoneNumber());
+        }
+        if (request.getAvatarUrl() != null) {
+            customer.setAvatarUrl(request.getAvatarUrl());
+        }
+        if (request.getDateOfBirth() != null) {
+            customer.setDateOfBirth(request.getDateOfBirth());
+        }
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            customer.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+        if (request.getTierId() != null) {
+            MembershipTier tier = membershipTierRepository.findById(request.getTierId())
+                    .orElseThrow(() -> new IllegalArgumentException("Hạng thành viên không tồn tại!"));
+            customer.setTier(tier);
+        }
+
+        return repository.save(customer);
+    }
+
+    public void deactivate(Long id) {
+        Customer customer = findById(id);
+        customer.setActive(false);
+        repository.save(customer);
+    }
+
+    public void activate(Long id) {
+        Customer customer = findById(id);
+        customer.setActive(true);
+        repository.save(customer);
+    }
+
+    // ==================== Helper methods ====================
+
+    private void applyCustomerDefaults(Customer customer) {
+        if (customer.getRole() == null) {
+            customer.setRole(Role.CUSTOMER);
+        }
+        customer.setActive(true);
+        if (customer.getTier() == null) {
+            MembershipTier bronzeTier = membershipTierRepository.findByTierName("Bronze")
+                    .orElseThrow(() -> new RuntimeException("Default membership tier 'Bronze' not found"));
+            customer.setTier(bronzeTier);
+        }
+        if (customer.getCurrentPoints() == null) {
+            customer.setCurrentPoints(0L);
+        }
+        if (customer.getLifetimePoints() == null) {
+            customer.setLifetimePoints(0L);
+        }
+        if (customer.getTierStartDate() == null) {
+            customer.setTierStartDate(LocalDate.now());
+        }
+    }
+
+    public CustomerAdminResponse getCurrentInfo(String email) {
+        Customer customer = customerRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Không tìm thấy khách hàng với email: " + email));
+        return toCustomerAdminResponse(customer);
+    }
 }

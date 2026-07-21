@@ -38,7 +38,7 @@ export default function Footer() {
                 {/* Navigation Row */}
                 <nav className="footer__nav">
                     <a href="/" className="footer__nav-link footer__nav-link--active">Trang Chủ</a>
-                    <a href="/dich-vu" className="footer__nav-link">Dịch Vụ</a>
+                    <a href="/service" className="footer__nav-link">Dịch Vụ</a>
                     <a href="/blog" className="footer__nav-link">Blog</a>
                 </nav>
 

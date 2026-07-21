@@ -3,6 +3,7 @@ package com.autowashpro.backend.model.entity;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
@@ -24,11 +25,17 @@ public class Staff extends User {
     private LocalDate hiredDate;
 
     @OneToMany(mappedBy = "staff")
+    @JsonIgnoreProperties("staff")
     private List<WashSession> washSessions;
 
     @OneToMany(mappedBy = "staff")
+    @JsonIgnoreProperties("staff")
     private List<Promotion> promotions;
 
     @OneToMany(mappedBy = "staff")
+    @JsonIgnoreProperties("staff")
     private List<PointTransaction> pointTransactions;
+
+    @Column(name = "is_occupied")
+    private boolean isOccupied = false;
 }

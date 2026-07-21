@@ -6,3 +6,22 @@ backend/src/main/resources/application.properties
 backend/target
 
 frontend/.env
+
+# Environment variables (contains secrets)
+.env
+
+# Nginx deploy config + SSL certs (server only)
+nginx/
+
+# Documents ghi log AI
+docs/
+
+# MySQL data (bind mount local)
+docker-data/
+
+# Backup script (contains DB password)
+backup_db.sh
+backups/
+logs/
+
+.vscode

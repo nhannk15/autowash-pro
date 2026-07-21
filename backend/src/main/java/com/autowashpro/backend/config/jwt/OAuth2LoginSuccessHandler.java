@@ -30,17 +30,19 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     @Value("${frontend.base-url}")
     private String FRONTEND_BASE_URL;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final JwtService jwtService;
+    private final CustomerRepository customerRepository;
+    private final MembershipTierRepository membershipTierRepository;
 
     @Autowired
-    private JwtService jwtService;
-
-    @Autowired
-    private CustomerRepository customerRepository;
-
-    @Autowired
-    private MembershipTierRepository membershipTierRepository;
+    public OAuth2LoginSuccessHandler(UserRepository userRepository, JwtService jwtService,
+            CustomerRepository customerRepository, MembershipTierRepository membershipTierRepository) {
+        this.userRepository = userRepository;
+        this.jwtService = jwtService;
+        this.customerRepository = customerRepository;
+        this.membershipTierRepository = membershipTierRepository;
+    }
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -70,8 +72,6 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                     newCustomer.setCurrentPoints(0L);
                     newCustomer.setLifetimePoints(0L);
                     newCustomer.setTierStartDate(LocalDate.now());
-                    newCustomer.setTierEndDate(LocalDate.now().plusYears(1));
-                    newCustomer.setNextReviewDate(LocalDate.now().plusMonths(6));
 
                     return customerRepository.save(newCustomer);
                 });
@@ -80,8 +80,12 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
          * Generate Access Token for that USER.
          */
         String accessToken = null;
+        String refreshToken = null;
         try {
-            accessToken = jwtService.generateToken(user);
+            accessToken = jwtService.generateAccessToken(user);
+            refreshToken = jwtService.generateRefreshToken(user);
+            user.setRefreshToken(refreshToken);
+            userRepository.save(user);
         } catch (JOSEException ex) {
             ex.printStackTrace();
         }
@@ -90,8 +94,16 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         cookie.setHttpOnly(true);
         cookie.setSecure(false);
         cookie.setPath("/");
-        cookie.setMaxAge(60 * 60);
+        cookie.setMaxAge(60 * 15);
         response.addCookie(cookie);
+
+        Cookie refreshTokenCookie = new Cookie("refresh_token", refreshToken);
+        refreshTokenCookie.setHttpOnly(true);
+        refreshTokenCookie.setSecure(false);
+        refreshTokenCookie.setPath("/");
+        refreshTokenCookie.setMaxAge(60 * 60 * 24 * 7);
+        response.addCookie(refreshTokenCookie);
+
         response.sendRedirect(FRONTEND_BASE_URL);
         // response.sendRedirect("http://localhost:3000");
 

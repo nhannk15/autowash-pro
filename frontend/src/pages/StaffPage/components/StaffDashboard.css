@@ -1,0 +1,370 @@
+/* ===== Staff Dashboard ===== */
+
+.staff-dashboard {
+    padding: 12px;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* ===== Thống kê (Stats) ===== */
+.dashboard__stats-row {
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e8e8e8;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+}
+
+.stat-card .ant-card-body {
+    padding: 20px;
+}
+
+.stat-card .ant-statistic-title {
+    font-size: 13px;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-weight: 500;
+    color: #8c8c8c;
+    letter-spacing: 0.2px;
+}
+
+.stat-card .ant-statistic-content {
+    font-weight: 700;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 22px;
+    color: #1a1a2e;
+}
+
+.stat-icon {
+    margin-right: 12px;
+}
+
+.text-blue   { color: #2f54eb; }
+.text-orange { color: #fa8c16; }
+.text-green  { color: #52c41a; }
+.text-gold   { color: #faad14; }
+
+/* ===== Tình trạng khoang (Bays) ===== */
+.dashboard__bays-card {
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e8e8e8;
+    margin-bottom: 24px;
+}
+
+.dashboard__bays-card .ant-card-head-title {
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.dashboard__bays-card-title {
+    margin: 0 !important;
+}
+
+/* --- Bay Loading --- */
+.dashboard__bays-loading {
+    text-align: center;
+    padding: 40px;
+}
+
+/* --- Bay Card --- */
+.bay-card {
+    border: 1px solid #e8e8e8;
+    border-radius: 12px;
+    padding: 16px;
+    height: 270px;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.2s ease;
+    background: #fff;
+    position: relative;
+}
+
+.bay-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.bay-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.bay-card__name {
+    font-weight: 700;
+    font-size: 15px;
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #1a1a2e;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.bay-card__premium-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #ad6800;
+    background: #fff7e6;
+    border: 1px solid #ffd591;
+    border-radius: 999px;
+    padding: 1px 8px;
+    line-height: 1.6;
+}
+
+.bay-card__content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.bay-card__empty-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #bfbfbf;
+    font-style: italic;
+    font-family: system-ui, -apple-system, sans-serif;
+    text-align: center;
+    font-size: 14px;
+}
+
+.bay-card__occupied-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.bay-card__plate {
+    font-size: 16px;
+    font-weight: 700;
+    font-family: system-ui, -apple-system, sans-serif;
+    color: #1a1a2e;
+    text-align: center;
+    background: #f5f5f5;
+    border-radius: 6px;
+    padding: 2px;
+    margin-bottom: 5px;
+    border: 1px solid #d9d9d9;
+    letter-spacing: 1.5px;
+}
+
+.bay-card__details {
+    text-align: center;
+    margin-bottom: 5px;
+    line-height: 1.4;
+}
+
+.bay-card__vehicle-label {
+    margin-right: 4px;
+}
+
+.bay-card__customer-label {
+    margin-right: 4px;
+    font-size: 13px;
+}
+
+.bay-card__service-tag {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    margin-bottom: 4px;
+}
+
+.bay-card__tag {
+    margin: 2px;
+}
+
+.bay-card__tag--more {
+    margin: 2px;
+    cursor: pointer;
+}
+
+.bay-card__actions {
+    margin-top: auto;
+}
+
+.bay-card__complete-btn {
+    font-weight: 600;
+    font-family: system-ui, -apple-system, sans-serif;
+    border-radius: 6px;
+    font-size: 13px;
+    background: #2f54eb;
+    border: none;
+}
+
+.bay-card__complete-btn:hover {
+    background: #597ef7 !important;
+}
+
+.bay-card__payment-btn {
+    font-weight: 600;
+    font-family: system-ui, -apple-system, sans-serif;
+    border-radius: 6px;
+    font-size: 13px;
+    background: #52c41a;
+    border: none;
+}
+
+.bay-card__payment-btn:hover {
+    background: #73d13d !important;
+}
+
+.bay-card--completed {
+    border-color: #b7eb8f !important;
+    background-color: #f6ffed !important;
+}
+
+.bay-card--available {
+    background-color: #fafafa;
+    border-color: #e8e8e8;
+}
+
+.bay-card--occupied:not(.bay-card--completed) {
+    background-color: #fff;
+    border-color: #e8e8e8;
+}
+
+.bay-card--maintenance {
+    background-color: #fff2f0;
+    border-color: #ffccc7;
+}
+
+/* ===== Bay Premium ===== */
+/* Chỉ viền vàng mỏng, không ghi đè màu nền trạng thái (available/occupied/maintenance/completed) */
+.bay-card--premium {
+    border: 1.5px solid #faad14 !important;
+}
+
+/* ===== Right Column ===== */
+
+/* --- Quick Actions --- */
+.dashboard__quick-actions {
+    margin-bottom: 24px;
+}
+
+/* ===== Timeline & Cards ===== */
+.dashboard__timeline-card,
+.dashboard__actions-card,
+.dashboard__notifications-card {
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e8e8e8;
+    margin-bottom: 24px;
+}
+
+.dashboard__timeline-card .ant-divider-vertical {
+    border-color: #bfbfbf !important;
+}
+
+.dashboard__timeline-card .ant-card-head-title,
+.dashboard__notifications-card .ant-card-head-title {
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.dashboard__card-title {
+    margin: 0 !important;
+}
+
+.timeline-item-content {
+    padding-bottom: 8px;
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* --- Timeline Loading / Empty --- */
+.dashboard__timeline-loading {
+    text-align: center;
+    padding: 20px;
+}
+
+/* --- Notifications --- */
+.notifications-list__item {
+    padding: 12px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.notifications-list__message {
+    margin-bottom: 4px;
+}
+
+.notifications-list__message-text {
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.notifications-list__time {
+    font-size: 12px;
+}
+
+/* --- Action Buttons --- */
+.action-btn {
+    font-weight: 600;
+    font-family: system-ui, -apple-system, sans-serif;
+    border-radius: 8px;
+    height: 40px;
+}
+
+/* Nút "Tạo tài khoản / Thêm xe" */
+.action-btn--walkin {
+    background: #1b40d2 !important;
+    border: none;
+}
+
+.action-btn--walkin:hover {
+    background: #1939b7 !important;
+}
+
+/* Nút "Tạo lịch dịch vụ" */
+.action-btn--booking {
+    background: #1b40d2 !important;
+    border: none;
+}
+
+.action-btn--booking:hover {
+    background: #1939b7 !important;
+}
+
+/* --- Bay Card Staff Label --- */
+.bay-card__staff-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: #595959;
+}
+
+.bay-card__staff-name {
+    font-size: 12px !important;
+}
+/* ===== RESPONSIVE ===== */
+@media (max-width: 576px) {
+    .staff-dashboard {
+        padding: 8px;
+    }
+
+    .bay-card {
+        min-height: 210px;
+        padding: 12px;
+    }
+
+    .stat-card .ant-statistic-content {
+        font-size: 18px;
+    }
+}

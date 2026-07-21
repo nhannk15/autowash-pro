@@ -47,7 +47,7 @@
 
 /* ---- Mỗi card dịch vụ ---- */
 .service-card {
-    flex: 0 0 276px;         /* cố định chiều rộng */
+    flex: 0 0 252px;         /* cố định chiều rộng */
     height: 220px;
     border-radius: 12px;
     overflow: hidden;
@@ -170,4 +170,58 @@
     background-color: #e09318;
     transform: translateY(-2px);
     box-shadow: 0 6px 18px rgba(245, 166, 35, 0.4);
+}
+
+/* Media Query for Tablet & Mobile */
+@media (max-width: 768px) {
+    .services-section {
+        padding: 40px 16px 32px;
+    }
+
+    .services__title {
+        font-size: 1.3rem;
+        text-align: center;
+        line-height: 1.4;
+    }
+
+    .services-arrow {
+        display: none !important; /* Hide arrows on mobile */
+    }
+
+    .services-wrapper {
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 12px;
+    }
+
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    .services-wrapper::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Hide scrollbar for IE, Edge and Firefox */
+    .services-wrapper {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+    }
+
+    .services-track {
+        transform: none !important; /* Disable Javascript sliding translation on mobile */
+        gap: 12px;
+    }
+
+    .service-card {
+        flex: 0 0 240px !important;
+        height: 190px;
+        scroll-snap-align: start;
+    }
+
+    .services-dots {
+        display: none !important; /* Hide dots on mobile */
+    }
+
+    .services__footer {
+        margin-top: 20px;
+    }
 }

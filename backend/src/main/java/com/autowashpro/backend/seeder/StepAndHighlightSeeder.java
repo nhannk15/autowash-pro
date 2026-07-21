@@ -1,6 +1,7 @@
 package com.autowashpro.backend.seeder;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import com.autowashpro.backend.model.entity.Highlight;
@@ -11,17 +12,21 @@ import com.autowashpro.backend.repository.ServiceRepository;
 import com.autowashpro.backend.repository.StepRepository;
 
 @Component
-public class StepAndHighlightSeeder {
+@Order(4)
+public class StepAndHighlightSeeder implements Seeder {
+
+    private final ServiceRepository serviceRepository;
+    private final StepRepository stepRepository;
+    private final HightlightRepository hightlightRepository;
 
     @Autowired
-    private ServiceRepository serviceRepository;
+    public StepAndHighlightSeeder(ServiceRepository serviceRepository, StepRepository stepRepository, HightlightRepository hightlightRepository) {
+        this.serviceRepository = serviceRepository;
+        this.stepRepository = stepRepository;
+        this.hightlightRepository = hightlightRepository;
+    }
 
-    @Autowired
-    private StepRepository stepRepository;
-
-    @Autowired
-    private HightlightRepository hightlightRepository;
-
+    @Override
     public void seed() {
         if (stepRepository.count() > 0) return;
 

@@ -155,3 +155,56 @@
 .hero-dot:hover:not(.hero-dot--active) {
     background-color: rgba(255, 255, 255, 0.7);
 }
+
+/* Media Query for Tablet & Mobile */
+@media (max-width: 768px) {
+    .hero-slider {
+        height: 450px;
+    }
+
+    .hero-slide__title {
+        font-size: 1.8rem;
+        white-space: normal; /* wrap text naturally on smaller screens */
+    }
+
+    .hero-slide__desc {
+        font-size: 0.9rem;
+        max-width: 90%;
+    }
+
+    .hero-btn {
+        padding: 10px 20px;
+        font-size: 0.875rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-slider {
+        height: 350px;
+    }
+
+    .hero-slide__tag {
+        font-size: 0.75rem;
+        padding: 4px 12px;
+    }
+
+    .hero-slide__title {
+        font-size: 1.4rem;
+    }
+
+    .hero-slide__desc {
+        font-size: 0.8rem;
+        line-height: 1.4;
+    }
+
+    .hero-slide__buttons {
+        gap: 8px;
+    }
+
+    .hero-btn {
+        padding: 8px 16px;
+        font-size: 0.8rem;
+        width: 100%;
+        max-width: 220px;
+    }
+}

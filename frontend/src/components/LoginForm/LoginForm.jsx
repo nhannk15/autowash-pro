@@ -12,10 +12,19 @@ export function LoginForm() {
 
     const onFinish = async (values) => {
         try {
-            await login(values.email, values.password);
+            const userData = await login(values.email, values.password);
             message.success("Đăng nhập thành công!");
             setTimeout(() => {
-                navigate("/");
+                const role = userData?.role?.toUpperCase();
+                if (role === 'STAFF') {
+                    navigate("/staff");
+                } else if (role === 'ADMIN') {
+                    navigate("/admin");
+                } else {
+                    // Đặt flag để Home.jsx hiện thông báo chính sách
+                    sessionStorage.setItem("just_logged_in", "true");
+                    navigate("/");
+                }
             }, 1000);
         } catch (e) {
             const errorMsg = e.response?.data?.message || e.message || "Đăng nhập thất bại. Vui lòng thử lại!";

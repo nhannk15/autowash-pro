@@ -1,12 +1,17 @@
 import { useState, useEffect, useRef } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../context/AuthContext'
+import { MenuOutlined, CloseOutlined, InfoCircleOutlined } from '@ant-design/icons'
+import NotificationDropdown from '../../Notification/NotificationDropdown'
+import PolicyModal from '../../../pages/CustomerPage/components/PolicyModal'
 import './Navbar.css'
 
 export default function NavBar() {
     const { user, logout } = useAuth()
     const navigate = useNavigate()
     const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+    const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false)
     const dropdownRef = useRef(null)
 
     // Đóng dropdown khi click ra ngoài
@@ -20,6 +25,27 @@ export default function NavBar() {
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [])
 
+    // Đóng mobile menu khi resize màn hình lớn hơn 768px
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth > 768) {
+                setIsMobileMenuOpen(false)
+            }
+        }
+        window.addEventListener('resize', handleResize)
+        return () => window.removeEventListener('resize', handleResize)
+    }, [])
+
+    const handleCLick = () => {
+        if (user?.role?.toUpperCase() === "STAFF") {
+            navigate('/staff')
+        } else if (user?.role?.toUpperCase() === "ADMIN") {
+            navigate('/admin')
+        } else {
+            navigate('/')
+        }
+    }
+
     const handleLogout = async () => {
         try {
             await logout()
@@ -32,7 +58,7 @@ export default function NavBar() {
 
     const navLinks = [
         { label: 'Trang Chủ', to: '/' },
-        { label: 'Dịch Vụ', to: '/dich-vu' },
+        { label: 'Dịch Vụ', to: '/service' },
         { label: 'Blog', to: '/blog' },
     ]
 
@@ -44,73 +70,126 @@ export default function NavBar() {
     return (
         <nav className="navbar">
             <div className="navbar__container">
-                <div className="navbar__logo" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
+                <div className="navbar__logo" onClick={handleCLick} style={{ cursor: 'pointer' }}>
                     <span className="navbar__logo--bold">Autowash</span>
                     <span className="navbar__logo--accent">PRO</span>
                 </div>
 
-                <ul className="navbar__links">
-                    {navLinks.map((item) => (
-                        <li key={item.to}>
-                            <NavLink
-                                to={item.to}
-                                end={item.to === '/'}
-                                className={({ isActive }) =>
-                                    `navbar__link${isActive ? ' navbar_link--active' : ''}`
-                                }
-                            >
-                                {item.label}
-                            </NavLink>
-                        </li>
-                    ))}
-                </ul>
+                {user?.role?.toUpperCase() !== "STAFF" && user?.role?.toUpperCase() !== "ADMIN" && (
+                    <ul className={`navbar__links ${isMobileMenuOpen ? 'navbar__links--open' : ''}`}>
+                        {navLinks.map((item) => (
+                            <li key={item.to}>
+                                <NavLink
+                                    to={item.to}
+                                    end={item.to === '/'}
+                                    className={({ isActive }) =>
+                                        `navbar__link${isActive ? ' navbar_link--active' : ''}`
+                                    }
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    {item.label}
+                                </NavLink>
+                            </li>
+                        ))}
+                        {!user && (
+                            <li className="navbar__auth-mobile">
+                                <NavLink to="/login" className="navbar__btn navbar__btn--login" onClick={() => setIsMobileMenuOpen(false)}>Đăng Nhập</NavLink>
+                                <NavLink to="/signup" className="navbar__btn navbar__btn--signup" onClick={() => setIsMobileMenuOpen(false)}>Đăng Ký</NavLink>
+                            </li>
+                        )}
+                    </ul>
+                )}
 
                 <div className="navbar__auth">
                     {user ? (
-                        <div className="navbar__profile-container" ref={dropdownRef}>
-                            <div
-                                className="navbar__profile-trigger"
-                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                            >
-                                <span className="navbar__profile-name">{user.fullname}</span>
-                                <div className="navbar__avatar">
-                                    {user.avatar ? (
-                                        <img src={user.avatar} alt="Avatar" className="navbar__avatar-img" />
-                                    ) : (
-                                        <span className="navbar__avatar-placeholder">
-                                            {user.fullname ? user.fullname.charAt(0).toUpperCase() : 'U'}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-
-                            {isDropdownOpen && (
-                                <div className="navbar__dropdown">
-                                    <NavLink 
-                                        to="/ca-nhan/tong-quan" 
-                                        className="navbar__dropdown-item"
-                                        onClick={() => setIsDropdownOpen(false)}
-                                    >
-                                        Trang cá nhân
-                                    </NavLink>
-                                    <hr className="navbar__dropdown-divider" />
-                                    <button 
-                                        className="navbar__dropdown-item navbar__dropdown-item--logout" 
-                                        onClick={handleLogout}
-                                    >
-                                        Đăng xuất
-                                    </button>
-                                </div>
+                        <>
+                            {/* Bell thông báo - chỉ dành cho CUSTOMER */}
+                            {/* Bell thông báo - chỉ dành cho CUSTOMER */}
+                            {user?.role?.toUpperCase() === 'CUSTOMER' && (
+                                <NotificationDropdown />
                             )}
-                        </div>
+                            <div className="navbar__profile-container" ref={dropdownRef}>
+                                <div
+                                    className="navbar__profile-trigger"
+                                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                >
+                                    <span className="navbar__profile-name">{user.fullname}</span>
+                                    <div className="navbar__avatar">
+                                        {user.avatar ? (
+                                            <img src={user.avatar} alt="Avatar" className="navbar__avatar-img" />
+                                        ) : (
+                                            <span className="navbar__avatar-placeholder">
+                                                {user.fullname ? user.fullname.charAt(0).toUpperCase() : 'U'}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {user?.role?.toUpperCase() === 'STAFF' || user?.role?.toUpperCase() === 'ADMIN' ? (isDropdownOpen && (
+                                    <div className="navbar__dropdown">
+                                        <button
+                                            className="navbar__dropdown-item navbar__dropdown-item--logout"
+                                            onClick={handleLogout}
+                                        >
+                                            Đăng xuất
+                                        </button>
+                                    </div>
+                                )) : (isDropdownOpen && (
+                                    <div className="navbar__dropdown">
+                                        <NavLink
+                                            to="/ca-nhan/tong-quan"
+                                            className="navbar__dropdown-item"
+                                            onClick={() => {
+                                                setIsDropdownOpen(false)
+                                                setIsMobileMenuOpen(false)
+                                            }}
+                                        >
+                                            Trang cá nhân
+                                        </NavLink>
+                                        <button
+                                            className="navbar__dropdown-item"
+                                            style={{ textAlign: 'left', border: 'none', background: 'none', width: '100%', fontFamily: 'inherit', fontSize: 'inherit', color: 'inherit' }}
+                                            onClick={() => {
+                                                setIsPolicyModalOpen(true)
+                                                setIsDropdownOpen(false)
+                                            }}
+                                        >
+                                            Chính sách và quy định
+                                        </button>
+                                        <hr className="navbar__dropdown-divider" />
+                                        <button
+                                            className="navbar__dropdown-item navbar__dropdown-item--logout"
+                                            onClick={handleLogout}
+                                        >
+                                            Đăng xuất
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </>
                     ) : (
-                        <div className="navbar__auth">
-                            <NavLink to="/login" className="navbar__btn navbar__btn--login">Login</NavLink>
-                            <NavLink to="/signup" className="navbar__btn navbar__btn--signup">Sign Up</NavLink>
+                        <div className="navbar__auth-desktop" style={{ display: 'flex', gap: '5px' }}>
+                            <NavLink to="/login" className="navbar__btn navbar__btn--login">Đăng Nhập</NavLink>
+                            <NavLink to="/signup" className="navbar__btn navbar__btn--signup">Đăng Ký</NavLink>
                         </div>
                     )}
                 </div>
+
+                {user?.role?.toUpperCase() !== "STAFF" && user?.role?.toUpperCase() !== "ADMIN" && (
+                    <button
+                        className={`navbar__hamburger ${isMobileMenuOpen ? 'navbar__hamburger--open' : ''}`}
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        aria-label="Toggle menu"
+                    >
+                        {isMobileMenuOpen ? <CloseOutlined /> : <MenuOutlined />}
+                    </button>
+                )}
             </div>
+
+            <PolicyModal
+                isOpen={isPolicyModalOpen}
+                onClose={() => setIsPolicyModalOpen(false)}
+            />
         </nav>
     )
 }

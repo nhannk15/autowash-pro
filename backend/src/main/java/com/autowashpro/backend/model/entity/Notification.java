@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import com.autowashpro.backend.model.enums.NotificationType;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -17,10 +18,12 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -35,6 +38,7 @@ public class Notification {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
+    @JsonIgnoreProperties({"bookings", "vehicles", "washSessions"})
     private Customer customer;
 
     @Column(name = "notification_type", nullable = false)
@@ -54,7 +58,7 @@ public class Notification {
     private String refType;
 
     @Column(name = "is_read", nullable = false)
-    private boolean isRead = false;
+    private boolean isRead;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

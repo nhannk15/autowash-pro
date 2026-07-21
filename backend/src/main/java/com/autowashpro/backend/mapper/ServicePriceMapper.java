@@ -1,5 +1,7 @@
 package com.autowashpro.backend.mapper;
 
+import java.util.List;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -14,4 +16,6 @@ public interface ServicePriceMapper {
 
     @Mapping(source = "id", target = "servicePriceId")
     ServicePriceItemResponse toServicePriceItemResponse(ServicePrice servicePrice);
+
+    List<ServicePriceItemResponse> toServicePriceItemResponses(List<ServicePrice> servicePrices);
 }

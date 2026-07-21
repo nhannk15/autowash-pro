@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 
 import com.autowashpro.backend.model.enums.PromotionDiscountType;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -18,6 +19,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -28,6 +30,7 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "promotions")
+@Builder
 public class Promotion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -54,10 +57,12 @@ public class Promotion {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "service_id")
+    @JsonIgnoreProperties({"promotions", "servicePrices", "rewards", "steps", "highlights"})
     private Service service;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "min_tier_id")
+    @JsonIgnoreProperties({"promotions", "customers", "tierRule", "downgradedRules"})
     private MembershipTier membershipTier;
 
     @Column(name = "max_uses_total", nullable = false)
@@ -74,6 +79,7 @@ public class Promotion {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_staff_id")
+    @JsonIgnoreProperties({"washSessions", "promotions", "pointTransactions"})
     private Staff staff;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -82,5 +88,6 @@ public class Promotion {
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        active = true;
     }
 }

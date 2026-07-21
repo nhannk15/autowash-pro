@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.autowashpro.backend.model.enums.ServiceCategory;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,10 +20,12 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -52,15 +55,15 @@ public class Service {
     private ServiceCategory category;
 
     @Column(name = "is_active", nullable = false)
-    private boolean isActive = true;
+    private boolean isActive;
 
     @OneToMany(mappedBy = "service")
+    @JsonIgnoreProperties("service")
     private List<ServicePrice> servicePrices;
 
-    @OneToMany(mappedBy = "service")
-    private List<Reward> rewards;
 
     @OneToMany(mappedBy = "service")
+    @JsonIgnoreProperties("service")
     private List<Promotion> promotions;
 
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -70,9 +73,11 @@ public class Service {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "service", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties("service")
     private List<Step> steps;
-    
+
     @OneToMany(mappedBy = "service", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties("service")
     private List<Highlight> highlights;
 
     @Column(name = "image", nullable = true)
@@ -82,6 +87,7 @@ public class Service {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        isActive = true;
     }
 
     @PreUpdate

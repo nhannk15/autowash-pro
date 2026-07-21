@@ -3,6 +3,7 @@ package com.autowashpro.backend.seeder;
 import java.math.BigDecimal;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import com.autowashpro.backend.model.entity.Reward;
@@ -10,11 +11,17 @@ import com.autowashpro.backend.model.enums.RewardType;
 import com.autowashpro.backend.repository.RewardRepository;
 
 @Component
-public class RewardSeeder {
+@Order(12)
+public class RewardSeeder implements Seeder {
     
-    @Autowired
-    private RewardRepository rewardRepository;
+    private final RewardRepository rewardRepository;
 
+    @Autowired
+    RewardSeeder(RewardRepository rewardRepository) {
+        this.rewardRepository = rewardRepository;
+    }
+
+    @Override
     public void seed() {
         if (rewardRepository.count() > 0) return;
 

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './Service.css'
 import { useAuth } from '../../context/AuthContext';
-
 // Import các hình ảnh cục bộ từ assets
 import exteriorImg from '../../assets/Service/RuaXeNgoaiThat.jpg';
 import interiorImg from '../../assets/Service/VeSinhNoiThat.jpg';
@@ -11,6 +10,8 @@ import engineImg from '../../assets/Service/VeSinhKhoangMay.png';
 import odorImg from '../../assets/Service/KhuMui.png';
 import baoDuong from '../../assets/Service/baoDuong.jpg';
 import cachNhiet from '../../assets/Service/cachNhiet.jpg';
+import HeroImg from '../../assets/Service/HeroImageService.jpg';
+import { getService } from '../../service/customerService';
 
 // Bản đồ mapping tên dịch vụ -> hình ảnh cục bộ tương ứng
 const localImages = {
@@ -34,15 +35,13 @@ export default function Service() {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch("/api/services");
-            if (!response.ok) {
-                throw new Error("Không thể tải danh sách dịch vụ từ hệ thống.");
-            }
-            const result = await response.json();
-            const serviceList = result && result.data ? result.data : result;
+            const result = await getService()
+            const serviceList = result?.data || [];
 
             if (Array.isArray(serviceList)) {
-                const apiServices = serviceList.map(item => {
+                // Chỉ lấy các dịch vụ đang hoạt động
+                const activeServices = serviceList.filter(item => item.isActive !== false);
+                const apiServices = activeServices.map(item => {
                     const priceSedanItem = item.servicePrices?.find(sp => sp.vehicleType?.typeName === 'SEDAN');
                     const priceSuvItem = item.servicePrices?.find(sp => sp.vehicleType?.typeName === 'SUV');
 
@@ -62,8 +61,8 @@ export default function Service() {
                     const durationMinutes = item.duration || 0;
                     const durationText = durationMinutes < 60
                         ? `${durationMinutes} phút`
-                        : (durationMinutes % 60 === 0 
-                            ? `${durationMinutes / 60} giờ` 
+                        : (durationMinutes % 60 === 0
+                            ? `${durationMinutes / 60} giờ`
                             : `${Math.floor(durationMinutes / 60)} giờ ${durationMinutes % 60} phút`);
 
                     return {
@@ -88,7 +87,7 @@ export default function Service() {
                 throw new Error("Dữ liệu dịch vụ không đúng định dạng.");
             }
         } catch (err) {
-            setError(err.message);
+            setError(err.response?.data.message || err.message || 'không thể tải danh sách dịch vụ')
         } finally {
             setLoading(false);
         }
@@ -115,7 +114,7 @@ export default function Service() {
     return (
         <section className="dichvu-page">
             {/* BANNER HEADER */}
-            <div className="dichvu-header">
+            <div className="dichvu-header" style={{ backgroundImage: `url(${HeroImg})`, backgroundPosition: 'center', backgroundSize: 'cover', backgroundRepeat: 'no-repeat' }}>
                 <div className="dichvu-header__overlay" />
                 <div className="dichvu-header__content">
                     <h1 className="dichvu-header__title">

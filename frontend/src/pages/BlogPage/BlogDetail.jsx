@@ -124,7 +124,7 @@ export default function BlogDetail() {
                             </ul>
 
                             <div className="blog-detail__callout">
-                                Xem thêm: <Link to="/dich-vu">Quy trình Vệ sinh kính ô tô và Chăm sóc ngoại thất chuyên nghiệp tại nhà</Link>
+                                Xem thêm: <Link to="/service">Quy trình Vệ sinh kính ô tô và Chăm sóc ngoại thất chuyên nghiệp tại nhà</Link>
                             </div>
 
                             <h2 id="huong-dan">Hướng dẫn tẩy ố kính ô tô hiệu quả nhất</h2>
@@ -205,7 +205,7 @@ export default function BlogDetail() {
                         <p className="blog-detail__cta-desc">
                             Trải nghiệm dịch vụ chăm sóc xe tiêu chuẩn Detailing chuyên nghiệp ngay tại nhà của Car Wash Centre.
                         </p>
-                        <Link to="/dich-vu" className="blog-detail__cta-btn">Xem Dịch Vụ</Link>
+                        <Link to="/service" className="blog-detail__cta-btn">Xem Dịch Vụ</Link>
                     </div>
                 </div>
             </div>

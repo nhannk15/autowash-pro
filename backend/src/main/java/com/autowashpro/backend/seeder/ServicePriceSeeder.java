@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import com.autowashpro.backend.model.entity.Service;
@@ -15,17 +16,21 @@ import com.autowashpro.backend.repository.ServiceRepository;
 import com.autowashpro.backend.repository.VehicleTypeRepository;
 
 @Component
-public class ServicePriceSeeder {
+@Order(3)
+public class ServicePriceSeeder implements Seeder {
+
+    private final ServicePriceRepository servicePriceRepository;
+    private final ServiceRepository serviceRepository;
+    private final VehicleTypeRepository vehicleTypeRepository;
 
     @Autowired
-    private ServicePriceRepository servicePriceRepository;
+    public ServicePriceSeeder(ServicePriceRepository servicePriceRepository, ServiceRepository serviceRepository, VehicleTypeRepository vehicleTypeRepository) {
+        this.servicePriceRepository = servicePriceRepository;
+        this.serviceRepository = serviceRepository;
+        this.vehicleTypeRepository = vehicleTypeRepository;
+    }
 
-    @Autowired
-    private ServiceRepository serviceRepository;
-
-    @Autowired
-    private VehicleTypeRepository vehicleTypeRepository;
-
+    @Override
     public void seed() {
         if (servicePriceRepository.count() > 0)
             return;

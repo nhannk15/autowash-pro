@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -18,18 +19,21 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
 @ToString
 @Entity
-@Table(name = "service_prices", uniqueConstraints = @UniqueConstraint(columnNames = { "service_id", "vehicle_type_id" }))
+@Table(name = "service_prices", uniqueConstraints = @UniqueConstraint(columnNames = { "service_id",
+        "vehicle_type_id" }))
 public class ServicePrice {
 
     @Id
@@ -38,10 +42,12 @@ public class ServicePrice {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "service_id", nullable = false)
+    @JsonIgnoreProperties("servicePrices")
     private Service service;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vehicle_type_id", nullable = false)
+    @JsonIgnoreProperties({ "vehicles", "servicePrices" })
     private VehicleType vehicleType;
 
     @Column(name = "price", nullable = false, precision = 10, scale = 2)
@@ -57,12 +63,22 @@ public class ServicePrice {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "servicePrice")
+    @JsonIgnoreProperties("servicePrice")
     private List<BookingDetail> bookingDetails;
+
+    @OneToMany(mappedBy = "servicePrice")
+    @JsonIgnoreProperties("servicePrice")
+    private List<Reward> rewards;
+
+    @OneToMany(mappedBy = "servicePrice")
+    @JsonIgnoreProperties("servicePrice")
+    private List<WashSession> washSessions;
 
     @PrePersist
     public void onCreate() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
+        this.isActive = true;
     }
 
     @PreUpdate

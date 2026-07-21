@@ -1,17 +1,24 @@
 package com.autowashpro.backend.seeder;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import com.autowashpro.backend.model.entity.VehicleType;
 import com.autowashpro.backend.repository.VehicleTypeRepository;
 
 @Component
-public class VehicleTypeSeeder {
+@Order(1)
+public class VehicleTypeSeeder implements Seeder {
+
+    private final VehicleTypeRepository repository;
 
     @Autowired
-    private VehicleTypeRepository repository;
+    public VehicleTypeSeeder(VehicleTypeRepository repository) {
+        this.repository = repository;
+    }
 
+    @Override
     public void seed() {
         if (repository.count() > 0)
             return;

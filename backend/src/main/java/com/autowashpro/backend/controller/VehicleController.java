@@ -3,68 +3,66 @@ package com.autowashpro.backend.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.autowashpro.backend.mapper.VehicleMapper;
 import com.autowashpro.backend.model.dto.ApiResponse;
+import com.autowashpro.backend.model.dto.CreateVehicleRequest;
+import com.autowashpro.backend.model.dto.UpdateVehicleRequest;
 import com.autowashpro.backend.model.dto.VehicleResponse;
-import com.autowashpro.backend.model.entity.Vehicle;
 import com.autowashpro.backend.service.VehicleService;
 
 @RestController
 @RequestMapping("/api/vehicles")
 public class VehicleController {
 
-    @Autowired
-    private VehicleService service;
+    private final VehicleService vehicleService;
+    private final VehicleMapper vehicleMapper;
 
     @Autowired
-    private VehicleMapper vehicleMapper;
-
-    @GetMapping
-    public ResponseEntity<ApiResponse<List<Vehicle>>> findAllVehicles() {
-        List<Vehicle> vehicles = service.findAll();
-        return ResponseEntity.ok(ApiResponse.success(vehicles));
+    public VehicleController(VehicleService vehicleService, VehicleMapper vehicleMapper) {
+        this.vehicleService = vehicleService;
+        this.vehicleMapper = vehicleMapper;
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Vehicle>> findVehicleById(@PathVariable Long id) {
-        Vehicle vehicle = service.findById(id);
-        return ResponseEntity.ok(ApiResponse.success(vehicle));
+    @GetMapping
+    public ResponseEntity<?> getAllVehicles() {
+        return ResponseEntity.status(HttpStatus.OK).body(vehicleService.findAllVehicles());
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Vehicle>> addNewVehicle(@RequestBody Vehicle newVehicle) {
-        Vehicle created = service.createNew(newVehicle);
-        return ResponseEntity.ok(ApiResponse.created(created));
+    public ResponseEntity<ApiResponse<VehicleResponse>> addNewVehicle(@AuthenticationPrincipal String email,
+            @RequestBody CreateVehicleRequest request) {
+        VehicleResponse response = vehicleService.addNewVehicleForCustomer(email, request);
+        return ResponseEntity.ok(ApiResponse.created(response));
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<ApiResponse<Vehicle>> updateVehicle(@RequestBody Vehicle vehicle, @PathVariable Long id) {
-        Vehicle target = service.findById(id);
-        vehicleMapper.updateVehicleFromRequest(vehicle, target);
-        Vehicle updated = service.update(target);
-        return ResponseEntity.ok(ApiResponse.success(updated));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> deleteVehicle(@PathVariable Long id) {
-        service.delete(id);
-        return ResponseEntity.ok(ApiResponse.noContent());
-    }
-
-    @GetMapping("/user/{customerId}")
-    public ResponseEntity<ApiResponse<?>> findVehicleByUserId(@PathVariable Long customerId) {
-        List<VehicleResponse> vehicles = service.findByCustomerId(customerId);
+    @GetMapping("/user")
+    public ResponseEntity<ApiResponse<?>> findVehicleByUserId(@AuthenticationPrincipal String email) {
+        List<VehicleResponse> vehicles = vehicleService.findAllVehiclesForCustomer(email);
         return ResponseEntity.ok(ApiResponse.success(vehicles));
+    }
+
+    @DeleteMapping("/{carId}")
+    public ResponseEntity<?> deleteMyCar(@AuthenticationPrincipal String email, @PathVariable Long carId) {
+        vehicleService.deleteMyCar(carId, email);
+        return ResponseEntity.status(HttpStatus.OK).body(null);
+    }
+
+    @PutMapping("/{vehicleId}")
+    public ResponseEntity<?> updateMyCar(@AuthenticationPrincipal String email, @PathVariable Long vehicleId,
+            @RequestBody UpdateVehicleRequest request) {
+        return ResponseEntity.status(HttpStatus.OK).body(vehicleService.updateMyCar(email, vehicleId, request));
     }
 
 }

@@ -22,11 +22,14 @@ import com.autowashpro.backend.service.PromotionUsageService;
 @RequestMapping("/api/promotion-usages")
 public class PromotionUsageController {
 
-    @Autowired
-    private PromotionUsageService service;
+    private final PromotionUsageService service;
+    private final PromotionUsageMapper mapper;
 
     @Autowired
-    private PromotionUsageMapper mapper;
+    public PromotionUsageController(PromotionUsageService service, PromotionUsageMapper mapper) {
+        this.service = service;
+        this.mapper = mapper;
+    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<PromotionUsage>>> findAll() {

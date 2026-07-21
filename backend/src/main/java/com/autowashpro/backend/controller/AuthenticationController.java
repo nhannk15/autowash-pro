@@ -9,13 +9,19 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.autowashpro.backend.config.jwt.JwtService;
+import com.autowashpro.backend.exception.UserNotFoundException;
+import com.autowashpro.backend.exception.WrongPasswordException;
 import com.autowashpro.backend.model.dto.ApiResponse;
+import com.autowashpro.backend.model.dto.ForgotPasswordRequest;
 import com.autowashpro.backend.model.dto.LoginRequest;
 import com.autowashpro.backend.model.dto.LoginResponse;
 import com.autowashpro.backend.model.dto.RegistrationRequest;
+import com.autowashpro.backend.model.dto.ResetPasswordRequest;
+import com.autowashpro.backend.model.dto.VerifyOtpRequest;
 import com.autowashpro.backend.model.entity.User;
 import com.autowashpro.backend.repository.UserRepository;
 import com.autowashpro.backend.service.CustomerService;
+import com.autowashpro.backend.service.OtpService;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.oauth2.sdk.ParseException;
@@ -26,37 +32,52 @@ import jakarta.validation.Valid;
 
 @RestController
 public class AuthenticationController {
-    @Autowired
-    private UserRepository repository;
+
+    private final UserRepository repository;
+    private final JwtService jwtService;
+    private final PasswordEncoder passwordEncoder;
+    private final CustomerService customerService;
+    private final OtpService otpService;
 
     @Autowired
-    private JwtService jwtService;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
-    private CustomerService customerService;
+    public AuthenticationController(UserRepository repository, JwtService jwtService, PasswordEncoder passwordEncoder,
+            CustomerService customerService, OtpService otpService) {
+        this.repository = repository;
+        this.jwtService = jwtService;
+        this.passwordEncoder = passwordEncoder;
+        this.customerService = customerService;
+        this.otpService = otpService;
+    }
 
     @PostMapping("/auth/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response)
             throws KeyLengthException, JOSEException, ParseException {
         User user = repository.findByEmail(loginRequest.getEmail())
-                .orElseThrow(() -> new RuntimeException("Email not found"));
+                .orElseThrow(() -> new UserNotFoundException("Email not found"));
 
         boolean matched = passwordEncoder.matches(loginRequest.getPassword(), user.getPassword());
 
         if (!matched) {
-            throw new RuntimeException("Wrong password");
+            throw new WrongPasswordException("Wrong password");
         }
-        String token = jwtService.generateToken(user);
+        String token = jwtService.generateAccessToken(user);
+        String refreshToken = jwtService.generateRefreshToken(user);
 
         Cookie cookie = new Cookie("access_token", token);
         cookie.setHttpOnly(true);
         cookie.setSecure(false);
         cookie.setPath("/");
-        cookie.setMaxAge(60 * 60);
+        cookie.setMaxAge(60 * 15);
         response.addCookie(cookie);
+
+        Cookie refreshTokenCookie = new Cookie("refresh_token", refreshToken);
+        refreshTokenCookie.setHttpOnly(true);
+        refreshTokenCookie.setSecure(false);
+        refreshTokenCookie.setPath("/");
+        refreshTokenCookie.setMaxAge(60 * 60 * 24 * 7);
+        response.addCookie(refreshTokenCookie);
+        user.setRefreshToken(refreshToken);
+        repository.save(user);
         return ResponseEntity.ok(new LoginResponse(token, "Bearer", 3600));
     }
 
@@ -76,5 +97,23 @@ public class AuthenticationController {
         cookie.setMaxAge(0);
         response.addCookie(cookie);
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/auth/forgot-password")
+    public ResponseEntity<ApiResponse<Void>> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        otpService.forgotPassword(request);
+        return ResponseEntity.ok(new ApiResponse<>(200, "Mã OTP đã được gửi đến email của bạn!"));
+    }
+
+    @PostMapping("/auth/verify-otp")
+    public ResponseEntity<ApiResponse<Void>> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
+        otpService.verifyOtp(request);
+        return ResponseEntity.ok(new ApiResponse<>(200, "Mã OTP hợp lệ!"));
+    }
+
+    @PostMapping("/auth/reset-password")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        otpService.resetPassword(request);
+        return ResponseEntity.ok(new ApiResponse<>(200, "Đặt lại mật khẩu thành công!"));
     }
 }

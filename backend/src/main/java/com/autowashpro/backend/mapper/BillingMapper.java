@@ -1,12 +1,64 @@
 package com.autowashpro.backend.mapper;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
+import com.autowashpro.backend.model.dto.BillingResponse;
+import com.autowashpro.backend.model.dto.BookingBillingResponse;
+import com.autowashpro.backend.model.dto.RecentTransactionItem;
+import com.autowashpro.backend.model.dto.RevenueDataResponse;
 import com.autowashpro.backend.model.entity.Billing;
 
-@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, uses = {
+        VoucherMapper.class, BookingMapper.class, PromotionMapper.class })
 public interface BillingMapper {
     void updateBillingFromRequest(Billing source, @MappingTarget Billing target);
+
+    @Mapping(target = "billingId", source = "id")
+    @Mapping(target = "billingVoucherResponse", source = "voucher")
+    @Mapping(target = "pointsChange", ignore = true)
+    @Mapping(target = "bookingPromotionResponse", source = "booking.promotion")
+    @Mapping(target = "finalAmount", expression = "java(calculateFinalAmount(billing))")
+    BillingResponse toBillingResponse(Billing billing);
+
+    List<BillingResponse> toBillingResponses(List<Billing> billings);
+
+    @Mapping(target = "customer", source = "booking.customer.fullName")
+    @Mapping(target = "totalAmount", source = "finalAmount")
+    RecentTransactionItem toRecentTransactionItem(Billing billing);
+
+    List<RecentTransactionItem> toRecentTransactionItems(List<Billing> billings);
+
+    @Mapping(target = "day", expression = "java(toDate(billing))")
+    @Mapping(target = "revenue", source = "finalAmount")
+    @Mapping(target = "totalOrders", ignore = true)
+    RevenueDataResponse toRevenueDataResponse(Billing billing);
+
+    List<RevenueDataResponse> toRevenueDataResponses(List<Billing> billings);
+
+    BookingBillingResponse toBookingBillingResponse(Billing billing);
+
+    default LocalDate toDate(Billing billing) {
+        LocalDateTime paidAt = billing.getPaidAt();
+        LocalDateTime depositPaidAt = billing.getDepositPaidAt();
+        if (paidAt != null) {
+            return paidAt.toLocalDate();
+        } else if (depositPaidAt != null) {
+            return depositPaidAt.toLocalDate();
+        } else {
+            return null;
+        }
+    }
+
+    default BigDecimal calculateFinalAmount(Billing billing) {
+        return billing.getFinalAmount();
+    }
+
 }

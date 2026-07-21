@@ -22,11 +22,14 @@ import com.autowashpro.backend.service.ServicePriceService;
 @RequestMapping("/api/service-prices")
 public class ServicePriceController {
 
-    @Autowired
-    private ServicePriceService service;
+    private final ServicePriceService service;
+    private final ServicePriceMapper mapper;
 
     @Autowired
-    private ServicePriceMapper mapper;
+    public ServicePriceController(ServicePriceService service, ServicePriceMapper mapper) {
+        this.service = service;
+        this.mapper = mapper;
+    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<ServicePrice>>> findAll() {
