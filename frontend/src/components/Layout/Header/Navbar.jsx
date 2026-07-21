@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../context/AuthContext'
-import { MenuOutlined, CloseOutlined } from '@ant-design/icons'
+import { MenuOutlined, CloseOutlined, InfoCircleOutlined } from '@ant-design/icons'
 import NotificationDropdown from '../../Notification/NotificationDropdown'
 import PolicyModal from '../../../pages/CustomerPage/components/PolicyModal'
 import './Navbar.css'

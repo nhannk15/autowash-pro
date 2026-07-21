@@ -56,12 +56,10 @@ public class SecurityConfiguration {
                 (authorize) -> authorize
                         .requestMatchers("/auth/login", "/auth/logout", "/auth/register",
                                 "/auth/forgot-password", "/auth/verify-otp", "/auth/reset-password",
-                                "/api/services", "/api/payment/vnpay/return", "/api/all-membership-tiers")
+                                "/api/services", "/api/payment/vnpay/**", "/api/all-membership-tiers")
                         .permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/staff/**").hasAnyRole("STAFF", "ADMIN")
-                        .requestMatchers("/api/customer/all-staffs").hasAnyRole("CUSTOMER", "STAFF", "ADMIN")
-                        .requestMatchers("/api/customer/**").hasRole("CUSTOMER")
                         .anyRequest()
                         .authenticated());
         security.csrf((csrf) -> csrf.disable());

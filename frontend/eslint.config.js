@@ -17,16 +17,5 @@ export default defineConfig([
       globals: globals.browser,
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
-    rules: {
-      // Fetching data and synchronizing browser state in effects is intentional in this app.
-      'react-hooks/set-state-in-effect': 'off',
-    },
-  },
-  {
-    files: ['src/context/AuthContext.jsx'],
-    rules: {
-      // The context module intentionally exports both its provider and consumer hook.
-      'react-refresh/only-export-components': 'off',
-    },
   },
 ])

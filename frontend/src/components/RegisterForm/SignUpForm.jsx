@@ -10,14 +10,7 @@ export default function SignUpForm() {
 
     const onFinish = async (values) => {
         try {
-            await signup(
-                values.email,
-                values.password,
-                values.confirmPassword,
-                values.fullName,
-                values.dob.format("YYYY-MM-DD"),
-                values.phone,
-            );
+            await signup(values.email, values.password, values.confirmPassword, values.fullName, values.dob, values.phone);
             message.success("Đăng kí thành công!");
             setTimeout(() => {
                 navigate("/login");

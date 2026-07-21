@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.autowashpro.backend.exception.NotificationException;
@@ -147,20 +146,6 @@ public class NotificationService {
     public NotificationResponse markAsRead(Long notificationId) {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new NotificationException("Thông báo không tồn tại với id: " + notificationId));
-        return markAsRead(notification, null);
-    }
-
-    @Transactional
-    public NotificationResponse markAsRead(Long notificationId, String email) {
-        Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() -> new NotificationException("Thông báo không tồn tại với id: " + notificationId));
-        return markAsRead(notification, email);
-    }
-
-    private NotificationResponse markAsRead(Notification notification, String email) {
-        if (email != null && !notification.getCustomer().getEmail().equals(email)) {
-            throw new AccessDeniedException("Thông báo không thuộc về khách hàng đang đăng nhập");
-        }
         notification.setRead(true);
         Notification savedNotification = notificationRepository.save(notification);
         return notificationMapper.toNotificationResponse(savedNotification);

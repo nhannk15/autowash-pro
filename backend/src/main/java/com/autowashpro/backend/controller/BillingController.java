@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -31,25 +30,21 @@ public class BillingController {
     }
 
     @PostMapping("/api/billings")
-    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     public ResponseEntity<List<BillingResponse>> getAllBillingAccordingToListOfBookingIds(@RequestBody List<Long> bookingIds) {
         return ResponseEntity.status(HttpStatus.OK).body(billingService.getAllBillingAccordingToListOfBookingIds(bookingIds));
     }
 
     @PostMapping("/api/billings/complete/cash")
-    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     public ResponseEntity<BillingResponse> completeBillingUsingCashMethod(@RequestBody Long billingId) {
         return ResponseEntity.status(HttpStatus.OK).body(billingService.completeBillingUsingCashMethod(billingId));
     }
 
     @PostMapping("/api/billings/apply-voucher")
-    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     public ResponseEntity<VoucherResponse> applyVoucherForBilling(@RequestBody ApplyVoucherToBillingRequest request) {
         return ResponseEntity.status(HttpStatus.OK).body(billingService.applyVoucherForBilling(request));
     }
 
     @GetMapping("/api/billings/customer/billing-history")
-    @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<List<BillingResponse>> getCustomerBillingHistory(@AuthenticationPrincipal String email) {
         return ResponseEntity.status(HttpStatus.OK).body(billingService.getCustomerBillingHistory(email));
     }

@@ -4,7 +4,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { CarOutlined, UserOutlined } from '@ant-design/icons';
 import './Booking.css';
 import { message, Select } from 'antd';
-import { getAvailableSlot, getPremiumAvailableSlot, getApplicablePromotion as getApplicablePromotionAPI, getService, getVehicleByCustomer, createBooking, getVoucher, createVNPayPayment, getPendingDeposit, getAllStaffs } from '../../../service/customerService';
+import { getAvailableSlot, getPremiumAvailableSlot, getApplicablePromotion as getApplicablePromotionAPI, getService, getVehicleByCustomer, createBooking, getMembershipTier, getVoucher, createVNPayPayment, getPendingDeposit, getAllStaffs } from '../../../service/customerService';
 function VehicleImage({ src, alt, fallbackIcon }) {
     const [hasError, setHasError] = useState(false);
     // Mục đích: Dùng để ghi nhận xem ảnh của xe có bị lỗi khi tải hay không.
@@ -59,6 +59,7 @@ export default function BookingList() {
     const [errorSlots, setErrorSlots] = useState(null);
 
     // Thông tin khách hàng & khuyến mãi phục vụ tính tiền ở Frontend
+    const [customer, setCustomer] = useState(null);
     const [applicablePromotion, setApplicablePromotion] = useState(null);
     const [vouchers, setVouchers] = useState([]);
     // const [membershipTier, setMembershipTier] = useState();
@@ -1247,11 +1248,11 @@ export default function BookingList() {
                         <div className="success-details">
                             <div className="success-detail-item">
                                 <span>Khách hàng:</span>
-                                    <strong>{contactInfo.fullname}</strong>
+                                <strong>{customer ? customer.fullName : contactInfo.fullname}</strong>
                             </div>
                             <div className="success-detail-item">
                                 <span>Số điện thoại:</span>
-                                    <strong>{contactInfo.phone}</strong>
+                                <strong>{customer ? customer.phoneNumber : contactInfo.phone}</strong>
                             </div>
                             <div className="success-detail-item">
                                 <span>Xe chăm sóc:</span>

@@ -30,10 +30,8 @@ public class VoucherController {
     }
 
     @PostMapping("/api/voucher/exchange")
-    public ResponseEntity<VoucherResponse> exchangeVoucherForCustomer(
-            @AuthenticationPrincipal String email,
-            @RequestBody ExchangeVoucherRequest request) {
-        return ResponseEntity.status(HttpStatus.OK).body(voucherService.exchangeVoucherForCustomer(email, request));
+    public ResponseEntity<VoucherResponse> exchangeVoucherForCustomer(@RequestBody ExchangeVoucherRequest request) {
+        return ResponseEntity.status(HttpStatus.OK).body(voucherService.exchangeVoucherForCustomer(request));
     }
 
     @GetMapping("/api/vouchers")

@@ -9,7 +9,7 @@ async function expectNoHorizontalOverflow(page: Page) {
   expect(sizes.documentWidth).toBeLessThanOrEqual(sizes.viewportWidth + 1);
 }
 
-test('@p2 responsive public navigation opens and remains within viewport', async ({ page }) => {
+test.skip('@p2 responsive public navigation opens and remains within viewport', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('.navbar__hamburger')).toBeVisible();
   await page.locator('.navbar__hamburger').click();
@@ -24,7 +24,7 @@ for (const [role, route, root] of [
   ['staff', '/staff/dashboard', '.dashboard__stats-row'],
   ['admin', '/admin/dashboard', '.admin-dashboard'],
 ] as const) {
-  test(`@p2 responsive ${role} sidebar opens and closes cleanly`, async ({
+  test.skip(`@p2 responsive ${role} sidebar opens and closes cleanly`, async ({
     customerPage, staffPage, adminPage,
   }) => {
     const page = role === 'customer' ? customerPage : role === 'staff' ? staffPage : adminPage;

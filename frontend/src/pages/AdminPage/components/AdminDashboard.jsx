@@ -1,13 +1,13 @@
-﻿import { useState, useEffect, useMemo } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react';
 import dayjs from 'dayjs';
 import {
     Row, Col, Card, Statistic, Table, DatePicker, Segmented,
-    Tag, Badge, Typography, Spin, Timeline, Divider,
+    Tag, Badge, Alert, Typography, Space, Spin, Timeline, Divider,
     Tooltip as AntTooltip,
 } from 'antd';
 import {
     DollarCircleOutlined, CalendarOutlined, UserAddOutlined, CarOutlined,
-    UnorderedListOutlined,
+    UnorderedListOutlined, CrownOutlined, WarningOutlined, BellOutlined,
     CheckCircleOutlined, UserOutlined, FallOutlined,
     ArrowUpOutlined, ArrowDownOutlined, GiftOutlined,
 } from '@ant-design/icons';
@@ -31,6 +31,11 @@ const { Title, Text } = Typography;
 // ─── Helpers ───────────────────────────────────────────
 const getCurrentSession = (bay) => bay.currentSession ?? null;
 
+const getBookingRevenue = (record) => {
+    if (record.washSessionStatus !== 'PAID') return 0;
+    return (record.bookingDetails || []).reduce((sum, d) => sum + Number(d.finalPrice || 0), 0);
+};
+
 const getBayDisplayStatus = (bay) => {
     const session = getCurrentSession(bay);
     if (session?.status === 'IN_PROGRESS') return 'OCCUPIED';
@@ -45,6 +50,8 @@ const getBayStatusText = (s) => ({ COMPLETED: 'Hoàn thành', AVAILABLE: 'Trốn
 
 const formatCurrency = (value) =>
     new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+
+const ALERT_ICON = { info: <CrownOutlined />, warning: <BellOutlined />, error: <WarningOutlined /> };
 
 // ─── Transaction table columns ──────────────────────────
 const transactionColumns = [
@@ -124,6 +131,7 @@ const promotionUsageColumns = [
 // ─── Main Component ─────────────────────────────────────
 export default function AdminDashboard() {
     const [bays, setBays] = useState([]);
+    const [todayBookings, setTodayBookings] = useState([]);
     const [bookings, setBookings] = useState([]);
 
     const [dashboardData, setDashboardData] = useState([]);
@@ -131,6 +139,7 @@ export default function AdminDashboard() {
     const [servicesData, setServicesData] = useState([]);
     const [peakHours, setPeakHours] = useState([]);
     const [transactions, setTransactions] = useState([]);
+    const [alerts, setAlerts] = useState([]);
 
     // ── Doanh thu khấu trừ states ──
     const [deductionChart, setDeductionChart] = useState([]);
@@ -157,6 +166,8 @@ export default function AdminDashboard() {
         return {};
     }, [filterMode, dateRange, monthYear, year]);
 
+    const apiParamsKey = JSON.stringify(apiParams);
+
     const filterLabel = useMemo(() => {
         if (filterMode === 'all') return 'Tất cả';
         if (filterMode === 'range') return `${dateRange[0].format('DD/MM/YYYY')} – ${dateRange[1].format('DD/MM/YYYY')}`;
@@ -171,7 +182,7 @@ export default function AdminDashboard() {
     }, []);
 
     useEffect(() => {
-        getTodayBookings().catch(console.error).finally(() => setLoadingTodayBookings(false));
+        getTodayBookings().then(setTodayBookings).catch(console.error).finally(() => setLoadingTodayBookings(false));
     }, []);
 
     useEffect(() => {
@@ -180,7 +191,7 @@ export default function AdminDashboard() {
 
     useEffect(() => {
         getDashboardSummary(apiParams).then(setDashboardData).catch(console.error);
-    }, [apiParams]);
+    }, [apiParamsKey]);
 
     useEffect(() => {
         getServiceDistribution(apiParams).then((data) => {
@@ -192,10 +203,10 @@ export default function AdminDashboard() {
                 color: COLORS[i % COLORS.length],
             })));
         }).catch(console.error);
-    }, [apiParams]);
+    }, [apiParamsKey]);
 
-    useEffect(() => { getRevenueChart(apiParams).then(setRevenueWeek).catch(console.error); }, [apiParams]);
-    useEffect(() => { getPeakHours(apiParams).then(setPeakHours).catch(console.error); }, [apiParams]);
+    useEffect(() => { getRevenueChart(apiParams).then(setRevenueWeek).catch(console.error); }, [apiParamsKey]);
+    useEffect(() => { getPeakHours(apiParams).then(setPeakHours).catch(console.error); }, [apiParamsKey]);
     useEffect(() => {
         getRecentTransactions().then((data) => {
             setTransactions([...data].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
@@ -203,22 +214,22 @@ export default function AdminDashboard() {
     }, []);
 
     // ── Fetch dữ liệu khấu trừ (reactive theo filter) ──
-    useEffect(() => { getDeductionChart(apiParams).then(setDeductionChart).catch(console.error); }, [apiParams]);
-    useEffect(() => { getPromotionPerformance(apiParams).then(setPromotionPerformance).catch(console.error); }, [apiParams]);
-    useEffect(() => { getDeductionSummary(apiParams).then(setDeductionSummary).catch(console.error); }, [apiParams]);
+    useEffect(() => { getDeductionChart(apiParams).then(setDeductionChart).catch(console.error); }, [apiParamsKey]);
+    useEffect(() => { getPromotionPerformance(apiParams).then(setPromotionPerformance).catch(console.error); }, [apiParamsKey]);
+    useEffect(() => { getDeductionSummary(apiParams).then(setDeductionSummary).catch(console.error); }, [apiParamsKey]);
 
     // ── Fetch dữ liệu lượt sử dụng khuyến mãi (reactive theo filter) ──
     useEffect(() => {
         getPromotionUsages(apiParams).then((data) => {
             setPromotionUsages([...data].sort((a, b) => new Date(b.usedAt) - new Date(a.usedAt)));
         }).catch(console.error);
-    }, [apiParams]);
+    }, [apiParamsKey]);
 
     useEffect(() => {
         getPromotionUsageCount(apiParams).then((data) => {
             setPromotionUsageCount(data?.totalUsageCount ?? 0);
         }).catch(console.error);
-    }, [apiParams]);
+    }, [apiParamsKey]);
 
     // Tính breakdown cho PieChart từ dữ liệu summary (màu do FE quản lý)
     const deductionBreakdown = useMemo(() => {

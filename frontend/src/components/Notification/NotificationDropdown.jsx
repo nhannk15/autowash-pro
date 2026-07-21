@@ -165,6 +165,7 @@ function BellIcon() {
 const POLLING_INTERVAL = 5000; // 5 giây
 
 export default function NotificationDropdown() {
+    const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('all'); // 'all' | 'unread'
     const [notifications, setNotifications] = useState([]);
@@ -238,7 +239,7 @@ export default function NotificationDropdown() {
     // ── Mark single as read ──
     const handleMarkRead = useCallback(async (id) => {
         try {
-            await markNotificationRead(id);
+            const updated = await markNotificationRead(id);
             setNotifications((prev) =>
                 prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
             );

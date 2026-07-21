@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.autowashpro.backend.config.jwt.JwtService;
-import com.autowashpro.backend.exception.AccountInactiveException;
 import com.autowashpro.backend.exception.UserNotFoundException;
 import com.autowashpro.backend.exception.WrongPasswordException;
 import com.autowashpro.backend.model.dto.ApiResponse;
@@ -28,7 +27,6 @@ import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.oauth2.sdk.ParseException;
 
 import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
@@ -56,10 +54,6 @@ public class AuthenticationController {
             throws KeyLengthException, JOSEException, ParseException {
         User user = repository.findByEmail(loginRequest.getEmail())
                 .orElseThrow(() -> new UserNotFoundException("Email not found"));
-
-        if (!user.isActive()) {
-            throw new AccountInactiveException("Account is inactive");
-        }
 
         boolean matched = passwordEncoder.matches(loginRequest.getPassword(), user.getPassword());
 
@@ -95,46 +89,14 @@ public class AuthenticationController {
     }
 
     @PostMapping("/auth/logout")
-    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
-        String refreshToken = findCookie(request, "refresh_token");
-        if (refreshToken != null) {
-            try {
-                String email = jwtService.extractEmail(refreshToken);
-                repository.findByEmail(email)
-                        .filter(user -> refreshToken.equals(user.getRefreshToken()))
-                        .ifPresent(user -> {
-                            user.setRefreshToken(null);
-                            repository.save(user);
-                        });
-            } catch (java.text.ParseException ignored) {
-                // Invalid cookies are still removed below.
-            }
-        }
-
-        expireCookie(response, "access_token");
-        expireCookie(response, "refresh_token");
-        return ResponseEntity.ok().build();
-    }
-
-    private String findCookie(HttpServletRequest request, String name) {
-        if (request.getCookies() == null) {
-            return null;
-        }
-        for (Cookie cookie : request.getCookies()) {
-            if (name.equals(cookie.getName())) {
-                return cookie.getValue();
-            }
-        }
-        return null;
-    }
-
-    private void expireCookie(HttpServletResponse response, String name) {
-        Cookie cookie = new Cookie(name, "");
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+        Cookie cookie = new Cookie("access_token", null);
         cookie.setHttpOnly(true);
         cookie.setSecure(false);
         cookie.setPath("/");
         cookie.setMaxAge(0);
         response.addCookie(cookie);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/auth/forgot-password")

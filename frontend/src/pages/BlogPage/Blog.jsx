@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import './Blog.css'
 import heroImageBlog from '../../assets/Service/HeroImageBlog.jpg'
@@ -7,7 +7,9 @@ import heroImageBlog from '../../assets/Service/HeroImageBlog.jpg'
 import imgRuaXe from '../../assets/Service/RuaXeNgoaiThat.jpg'
 import imgNoiThat from '../../assets/Service/VeSinhNoiThat.jpg'
 import imgKhoangMay from '../../assets/Service/VeSinhKhoangMay.png'
+import imgKhuMui from '../../assets/Service/KhuMui.png'
 import imgBaoDuong from '../../assets/Service/BaoDuongNhanh.png'
+import imgCeramic from '../../assets/Service/PhuCeramic.png'
 import tayKinh from '../../assets/Service/tayKinh.jpg'
 
 const blogPosts = [

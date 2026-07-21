@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, Avatar, Typography, Divider, Descriptions, Tag, Row, Col } from "antd";
 import { IdcardOutlined, CalendarOutlined, PhoneOutlined, MailOutlined } from '@ant-design/icons';
 import { getStaffProfile } from '../../service/staffService.js';

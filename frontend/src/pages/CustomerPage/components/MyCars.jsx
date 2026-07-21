@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/AuthContext';
-import { Spin, Alert, Empty, Card, Button, Modal, Form, Input, Select, message, Upload, Dropdown } from 'antd';
+import { Spin, Alert, Empty, Card, Button, Modal, Form, Input, Select, message, Popconfirm, Upload, Dropdown } from 'antd';
 import { PlusOutlined, CarOutlined, DeleteOutlined, UploadOutlined, EditOutlined, SettingOutlined } from '@ant-design/icons';
 import './MyCars.css';
 import axios from 'axios';
@@ -44,7 +44,7 @@ export default function MyCars() {
     const [showAllVehicles, setShowAllVehicles] = useState(false); // Trạng thái "Xem thêm"
     const VEHICLES_INITIAL_LIMIT = 3; // Số xe hiển thị mặc định
     // Tải danh sách xe của khách hàng
-    const fetchVehicles = useCallback(async () => {
+    const fetchVehicles = async () => {
         if (!user) {
             setLoading(false);
             return;
@@ -99,10 +99,10 @@ export default function MyCars() {
         } finally {
             setLoading(false);
         }
-    }, [user]);
+    };
 
     // Tải danh sách phân khúc xe (Sedan, SUV...) để điền vào Form thêm xe
-    const fetchVehicleTypes = useCallback(async () => {
+    const fetchVehicleTypes = async () => {
         setTypesLoading(true)
         try {
             const result = await getVehicleType()
@@ -112,12 +112,12 @@ export default function MyCars() {
         } finally {
             setTypesLoading(false)
         }
-    }, []);
+    };
 
     useEffect(() => {
         fetchVehicles();
         fetchVehicleTypes();
-    }, [fetchVehicles, fetchVehicleTypes]);
+    }, [user]);
 
     // Xử lý Thêm xe mới
     const handleAddVehicle = async (values) => {

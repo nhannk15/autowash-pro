@@ -63,6 +63,7 @@ public interface BookingMapper {
     @Mapping(target = "washBay", source = "washSessions", qualifiedByName = "toWashBayName")
     @Mapping(target = "washSessionStatus", source = "washSessions", qualifiedByName = "toWashSessionStatus")
     @Mapping(target = "staffInfoDTO", source = "washSessions", qualifiedByName = "toStaffInfoDTO")
+    @Mapping(target = "staffNotes", source = "washSessions", qualifiedByName = "toStaffNotes")
     BookingResponse toBookingResponse(Booking booking);
 
     @Named("toStaffInfoDTO")
@@ -99,4 +100,10 @@ public interface BookingMapper {
     @Mapping(target = "billingId", source = "billing.id")
     PendingBookingResponse toPendingBookingResponse(Booking booking);
     List<PendingBookingResponse> toPendingBookingResponses(List<Booking> bookings);
+
+    @Named("toStaffNotes")
+    default String toStaffNotes(List<WashSession> washSessions) {
+        WashSession washSession = washSessions.getFirst();
+        return washSession.getStaffNote();
+    }
 }

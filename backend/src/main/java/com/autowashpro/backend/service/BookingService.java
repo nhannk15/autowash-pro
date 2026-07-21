@@ -14,13 +14,10 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.autowashpro.backend.exception.BookingNotFoundException;
-import com.autowashpro.backend.exception.CreateBookingException;
 import com.autowashpro.backend.exception.ExceedBookingWindowException;
 import com.autowashpro.backend.exception.SlotInavailabilityException;
 import com.autowashpro.backend.exception.UserNotFoundException;
@@ -32,7 +29,6 @@ import com.autowashpro.backend.model.dto.BookingResponse;
 import com.autowashpro.backend.model.dto.CancelBookingRequest;
 import com.autowashpro.backend.model.dto.CreateBookingRequest;
 import com.autowashpro.backend.model.dto.CreateBookingResponse;
-import com.autowashpro.backend.model.dto.PendingBookingResponse;
 import com.autowashpro.backend.model.dto.SlotAvailabilityByDateResponse;
 import com.autowashpro.backend.model.dto.TimeSlotAvailabilityResponse;
 import com.autowashpro.backend.model.dto.UpcomingBookingResponse;
@@ -207,7 +203,7 @@ public class BookingService {
                 .toList();
     }
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
+    @Transactional
     public CreateBookingResponse createBooking(CreateBookingRequest createBookingRequest) {
         log.info("BookingService - start creating booking.");
         Customer customer = customerRepository.findById(createBookingRequest.getCustomerId())
@@ -230,11 +226,11 @@ public class BookingService {
                 .orElseThrow(() -> new SlotInavailabilityException("Không tìm thấy slot phù hợp"));
 
         if (bookingDay.equals(now)) {
-            LocalTime minStartTime = LocalTime.now().plusMinutes(15L);
-            if (startTimeSlot.getStartTime().isBefore(minStartTime)) {
-                throw new SlotInavailabilityException(
-                        "Giờ đặt lịch phải sau thời điểm hiện tại ít nhất 15 phút");
-            }
+            // LocalTime minStartTime = LocalTime.now().plusMinutes(15L);
+            // if (startTimeSlot.getStartTime().isBefore(minStartTime)) {
+            // throw new SlotInavailabilityException(
+            // "Giờ đặt lịch phải trước thời điểm hiện tại ít nhất 15 phút");
+            // }
         }
         long dayBeetween = ChronoUnit.DAYS.between(now, bookingDay);
         if (bookingWindowDays < dayBeetween) {
@@ -252,16 +248,11 @@ public class BookingService {
          */
         List<ServicePrice> servicePrices = servicePriceRepository
                 .findAllById(createBookingRequest.getServicePriceIds());
-        validateServiceCombination(createBookingRequest.getServicePriceIds(), servicePrices);
         int totalDuration = servicePrices.stream()
                 .mapToInt(sp -> sp.getService().getDurationMinutes())
                 .sum();
         int slotsNeeded = (int) Math.ceil((double) totalDuration / SLOT_DURATION);
         log.info("createBooking() - slotsNeeded: {}", slotsNeeded);
-        availableSlotRepository.lockCapacityForTimeRange(
-                bookingDay,
-                startTimeSlot.getStartTime(),
-                startTimeSlot.getStartTime().plusMinutes((long) slotsNeeded * SLOT_DURATION));
 
         /**
          * Step 3. Get all the succcessive/consecutive slots start from the selected
@@ -270,7 +261,7 @@ public class BookingService {
         List<AvailableSlot> consecutiveSlots = new ArrayList<>();
         boolean checkIfPremiumServiceExist = false;
         for (ServicePrice servicePrice : servicePrices) {
-            if (ServiceCategory.PREMIUM.equals(servicePrice.getService().getCategory())) {
+            if (servicePrice.getService().getCategory().equals(ServiceCategory.PREMIUM)) {
                 checkIfPremiumServiceExist = true;
                 break;
             }
@@ -331,9 +322,6 @@ public class BookingService {
          */
         Vehicle vehicle = vehicleRepository.findById(createBookingRequest.getVehicleId())
                 .orElseThrow(() -> new RuntimeException("Vehicle not found"));
-        if (!vehicle.getCustomer().getId().equals(customer.getId())) {
-            throw new AccessDeniedException("Vehicle does not belong to the selected customer");
-        }
         log.info("creatingBooking() - creating PENDING booking");
         Booking booking = Booking
                 .builder()
@@ -570,10 +558,6 @@ public class BookingService {
     }
 
     public void cancelCustomerBooking(CancelBookingRequest request) {
-        cancelCustomerBooking(null, request);
-    }
-
-    public void cancelCustomerBooking(String email, CancelBookingRequest request) {
         String bookingCode = request.getBookingCode();
         String cancelReason = request.getCancelReason();
 
@@ -581,9 +565,6 @@ public class BookingService {
                 cancelReason);
         Booking booking = bookingRepository.findByBookingCodeForCanceling(bookingCode)
                 .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy mã đặt lịch: " + bookingCode));
-        if (email != null && !booking.getCustomer().getEmail().equals(email)) {
-            throw new BookingNotFoundException("Booking not found");
-        }
         if (booking.getStatus().equals(BookingStatus.COMPLETED)) {
             throw new RuntimeException("Không thể hủy lịch đặt đã hoàn thành");
         } else if (booking.getStatus().equals(BookingStatus.CANCELLED)) {
@@ -593,10 +574,7 @@ public class BookingService {
         Billing billing = booking.getBilling();
         Customer customer = booking.getCustomer();
         MembershipTier customerMembershipTier = customer.getTier();
-        long minCancelHours = customerMembershipTier.getMinCancelHours() == null
-                ? Long.MAX_VALUE
-                : customerMembershipTier.getMinCancelHours();
-        boolean depositWasPaid = billing.getDepositStatus().equals(DepositStatus.PAID);
+        long minCancelHours = customerMembershipTier.getMinCancelHours().longValue();
 
         if (billing.getDepositStatus().equals(DepositStatus.PENDING)) {
             billing.setDepositStatus(DepositStatus.CANCELLED);
@@ -609,9 +587,7 @@ public class BookingService {
         log.info("cancelCustomerBooking() - It's {} hours till the booking's wash session starts.",
                 hoursFromNowToBookingDate);
         log.info("cancelCustomerBooking() - the minimum time to get deposit is {}.", minCancelHours);
-        if (!depositWasPaid) {
-            log.info("cancelCustomerBooking() - deposit was not paid, skipping refund voucher");
-        } else if (hoursFromNowToBookingDate < minCancelHours) {
+        if (hoursFromNowToBookingDate < minCancelHours) {
             log.info("cancelCustomerBooking() - too late for deposit refund, better luck next time!");
         } else {
             BigDecimal depositAmount = billing.getDepositAmount();
@@ -672,23 +648,18 @@ public class BookingService {
     }
 
     @Transactional(readOnly = true)
-    public List<PendingBookingResponse> getCustomerDepositPendingBookings(String email) {
+    public List<BookingResponse> getCustomerDepositPendingBookings(String email) {
         Customer customer = customerRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("Không tìm thấy khách hàng với email: " + email));
         List<Booking> pendingDepositBookings = bookingRepository.getPendingDepositBookings(customer.getId());
-        return bookingMapper.toPendingBookingResponses(pendingDepositBookings);
+        return bookingMapper.toBookingResponses(pendingDepositBookings);
     }
 
-    @Transactional(isolation = Isolation.READ_COMMITTED)
-    public CreateBookingResponse createBookingWithStaff(String email, Long staffId,
-            CreateBookingRequest createBookingRequest) {
+    @Transactional
+    public CreateBookingResponse createBookingWithStaff(Long staffId, CreateBookingRequest createBookingRequest) {
         log.info("BookingService - start creating booking.");
-        Customer customer = customerRepository.findByEmail(email)
+        Customer customer = customerRepository.findById(createBookingRequest.getCustomerId())
                 .orElseThrow(() -> new UserNotFoundException("Customer not found!"));
-        if (createBookingRequest.getCustomerId() != null
-                && !createBookingRequest.getCustomerId().equals(customer.getId())) {
-            throw new AccessDeniedException("Customer id does not match the authenticated user");
-        }
         /**
          * Step 1. Check booking day (booking windows, travel to the past).
          */
@@ -729,16 +700,11 @@ public class BookingService {
          */
         List<ServicePrice> servicePrices = servicePriceRepository
                 .findAllById(createBookingRequest.getServicePriceIds());
-        validateServiceCombination(createBookingRequest.getServicePriceIds(), servicePrices);
         int totalDuration = servicePrices.stream()
                 .mapToInt(sp -> sp.getService().getDurationMinutes())
                 .sum();
         int slotsNeeded = (int) Math.ceil((double) totalDuration / SLOT_DURATION);
         log.info("createBooking() - slotsNeeded: {}", slotsNeeded);
-        availableSlotRepository.lockCapacityForTimeRange(
-                bookingDay,
-                startTimeSlot.getStartTime(),
-                startTimeSlot.getStartTime().plusMinutes((long) slotsNeeded * SLOT_DURATION));
 
         /**
          * Step 3. Get all the succcessive/consecutive slots start from the selected
@@ -808,9 +774,6 @@ public class BookingService {
          */
         Vehicle vehicle = vehicleRepository.findById(createBookingRequest.getVehicleId())
                 .orElseThrow(() -> new RuntimeException("Vehicle not found"));
-        if (!vehicle.getCustomer().getId().equals(customer.getId())) {
-            throw new AccessDeniedException("Vehicle does not belong to the authenticated customer");
-        }
         log.info("creatingBooking() - creating PENDING booking");
         Booking booking = Booking
                 .builder()
@@ -867,8 +830,12 @@ public class BookingService {
          * Step 9. Immediately create WashSession for each BookingDetail in PENDING
          * status.
          */
-        Staff staff = staffId == null ? null : staffRepository.findById(staffId).orElse(null);
-        log.info("createBookingWithStaff() - staff: {}", staff == null ? "auto-assign" : staff.getFullName());
+        Staff staff = null;
+        if (staffId != null) {
+            staff = staffRepository.findById(staffId)
+                    .orElse(null);
+        }
+        log.info("createBookingWithStaff() - staff: {}", staff == null ? "Chưa chọn nhân viên" : staff.getFullName());
         log.info("savedDetails length: {}", savedDetails.size());
         for (BookingDetail bookingDetail : savedDetails) {
             WashSession washSession = WashSession.builder()
@@ -973,7 +940,7 @@ public class BookingService {
                                 ? createBookingRequest.getVoucherCode()
                                 : null)
                 .depositAmount(totalFinalPrice.multiply(DEPOSIT_PERCENTAGE).divide(new BigDecimal(100L)))
-                .staffName(staff == null ? null : staff.getFullName())
+                .staffName(staff == null ? "Chưa chọn nhân viên rửa xe" : staff.getFullName())
                 .build();
 
         /**
@@ -1012,18 +979,6 @@ public class BookingService {
         Booking booking = bookingRepository.findById(id)
                 .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy Lịch đặt với id: " + id));
         return bookingMapper.toBookingResponse(booking);
-    }
-
-    private void validateServiceCombination(List<Long> requestedIds, List<ServicePrice> servicePrices) {
-        if (requestedIds == null || requestedIds.isEmpty() || servicePrices.size() != requestedIds.size()) {
-            throw new CreateBookingException("Danh sách dịch vụ không hợp lệ");
-        }
-        long premiumCount = servicePrices.stream()
-                .filter(servicePrice -> ServiceCategory.PREMIUM.equals(servicePrice.getService().getCategory()))
-                .count();
-        if (premiumCount > 1 || (premiumCount == 1 && servicePrices.size() > 1)) {
-            throw new CreateBookingException("Dịch vụ premium phải được đặt riêng và chỉ chọn một dịch vụ");
-        }
     }
 }
 

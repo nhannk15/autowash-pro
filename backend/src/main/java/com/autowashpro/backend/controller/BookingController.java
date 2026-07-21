@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,7 +18,6 @@ import com.autowashpro.backend.model.dto.BookingResponse;
 import com.autowashpro.backend.model.dto.CancelBookingRequest;
 import com.autowashpro.backend.model.dto.CreateBookingRequest;
 import com.autowashpro.backend.model.dto.CreateBookingResponse;
-import com.autowashpro.backend.model.dto.PendingBookingResponse;
 import com.autowashpro.backend.model.dto.SlotAvailabilityByDateResponse;
 import com.autowashpro.backend.model.dto.UpcomingBookingResponse;
 import com.autowashpro.backend.service.BookingService;
@@ -50,7 +48,6 @@ public class BookingController {
     }
 
     @PostMapping("/api/bookings")
-    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     public ResponseEntity<CreateBookingResponse> createBooking(@RequestBody CreateBookingRequest request) {
         log.info("BookingController - start creating booking.");
         log.info("promotionId: {}", request.getPromotionId());
@@ -59,14 +56,10 @@ public class BookingController {
     }
 
     @PostMapping("/api/v2/bookings")
-    @PreAuthorize("hasRole('CUSTOMER')")
-    public ResponseEntity<CreateBookingResponse> createBooking(
-            @AuthenticationPrincipal String email,
-            @RequestParam(name = "staffId", required = false) Long staffId,
-            @RequestBody CreateBookingRequest request) {
+    public ResponseEntity<CreateBookingResponse> createBooking(@RequestParam(name = "staffId", required = false) Long staffId, @RequestBody CreateBookingRequest request) {
         log.info("BookingController - start creating booking.");
         log.info("promotionId: {}", request.getPromotionId());
-        CreateBookingResponse response = bookingService.createBookingWithStaff(email, staffId, request);
+        CreateBookingResponse response = bookingService.createBookingWithStaff(staffId, request);
         return ResponseEntity.ok(response);
     }
 
@@ -76,7 +69,6 @@ public class BookingController {
     }
 
     @GetMapping("/api/bookings/booking-code")
-    @PreAuthorize("hasAnyRole('STAFF', 'ADMIN')")
     public ResponseEntity<BookingResponse> findBookingByBookingCode(@RequestParam String bookingCode, @AuthenticationPrincipal String email) {
         return ResponseEntity.status(HttpStatus.OK).body(bookingService.getBookingByBookingCode(email, bookingCode));
     }
@@ -97,16 +89,13 @@ public class BookingController {
     }
 
     @PostMapping("/api/cancel-booking")
-    @PreAuthorize("hasRole('CUSTOMER')")
-    public ResponseEntity<Void> cancleBooking(@AuthenticationPrincipal String email,
-            @RequestBody CancelBookingRequest request) {
-        bookingService.cancelCustomerBooking(email, request);
+    public ResponseEntity<Void> cancleBooking(@RequestBody CancelBookingRequest request) {
+        bookingService.cancelCustomerBooking(request);
         return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 
     @GetMapping("/api/bookings/pending-deposit")
-    @PreAuthorize("hasRole('CUSTOMER')")
-    public ResponseEntity<List<PendingBookingResponse>> getAllDepositPendingBookings(@AuthenticationPrincipal String email) {
+    public ResponseEntity<List<BookingResponse>> getAllDepositPendingBookings(@AuthenticationPrincipal String email) {
         return ResponseEntity.ok().body(bookingService.getCustomerDepositPendingBookings(email));
     }
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     List, Input, Button, Space, Tag, Modal,
     notification, Select, Badge, Form,
@@ -54,7 +54,9 @@ export default function Service() {
     const [detailOpen, setDetailOpen] = useState(false);
     const [selectedService, setSelectedService] = useState(null);
 
-    const fetchServices = useCallback(async () => {
+    useEffect(() => { fetchServices(); }, []);
+
+    const fetchServices = async () => {
         setLoading(true);
         try {
             const response = await getAllServices();
@@ -67,9 +69,7 @@ export default function Service() {
         } finally {
             setLoading(false);
         }
-    }, []);
-
-    useEffect(() => { fetchServices(); }, [fetchServices]);
+    };
 
     const getFilteredData = () => {
         let result = Array.isArray(allData) ? [...allData] : [];

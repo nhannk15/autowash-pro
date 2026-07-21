@@ -54,9 +54,7 @@ public class WashSessionService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy Booking với id: " + bookingId));
 
-        validateCheckinStatus(booking);
-        validateSessionsCanStart(bookingId);
-        booking.setStatus(BookingStatus.CONFIRMED);
+        booking.setStatus(BookingStatus.COMPLETED);
         bookingRepository.save(booking);
 
         List<WashSession> washSessions = repository.findByBookingId(bookingId);
@@ -83,9 +81,7 @@ public class WashSessionService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy Booking với id: " + bookingId));
 
-        validateCheckinStatus(booking);
-        validateSessionsCanStart(bookingId);
-        booking.setStatus(BookingStatus.CONFIRMED);
+        booking.setStatus(BookingStatus.COMPLETED);
         bookingRepository.save(booking);
 
         List<WashSession> washSessions = repository.findByBookingId(bookingId);
@@ -117,11 +113,6 @@ public class WashSessionService {
         }
 
         List<WashSession> savedWashSessions = repository.findByBookingId(bookingId);
-
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy Booking với id: " + bookingId));
-        booking.setStatus(BookingStatus.COMPLETED);
-        bookingRepository.save(booking);
 
         /**
          * Create Billing immediately.
@@ -156,9 +147,7 @@ public class WashSessionService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy Booking với id: " + bookingId));
 
-        validateCheckinStatus(booking);
-        validateSessionsCanStart(bookingId);
-        booking.setStatus(BookingStatus.CONFIRMED);
+        booking.setStatus(BookingStatus.COMPLETED);
         bookingRepository.save(booking);
 
         List<WashSession> washSessions = repository.findByBookingId(bookingId);
@@ -187,9 +176,7 @@ public class WashSessionService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy Booking với id: " + bookingId));
 
-        validateCheckinStatus(booking);
-        validateSessionsCanStart(bookingId);
-        booking.setStatus(BookingStatus.CONFIRMED);
+        booking.setStatus(BookingStatus.COMPLETED);
         bookingRepository.save(booking);
 
         List<WashSession> washSessions = repository.findByBookingId(bookingId);
@@ -217,11 +204,6 @@ public class WashSessionService {
 
         List<WashSession> savedWashSessions = repository.findByBookingId(bookingId);
 
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy Booking với id: " + bookingId));
-        booking.setStatus(BookingStatus.COMPLETED);
-        bookingRepository.save(booking);
-
         /**
          * Create Billing immediately.
          */
@@ -229,17 +211,4 @@ public class WashSessionService {
         return washSessionMapper.toResponseList(savedWashSessions);
     }
 
-    private void validateCheckinStatus(Booking booking) {
-        if (!booking.getStatus().equals(BookingStatus.CONFIRMED)) {
-            throw new IllegalArgumentException("Booking không ở trạng thái có thể check-in");
-        }
-    }
-
-    private void validateSessionsCanStart(Long bookingId) {
-        List<WashSession> sessions = repository.findByBookingId(bookingId);
-        if (sessions.isEmpty() || sessions.stream()
-                .anyMatch(session -> !WashSessionStatus.PENDING.equals(session.getStatus()))) {
-            throw new IllegalArgumentException("Booking đã được check-in hoặc không có phiên rửa hợp lệ");
-        }
-    }
 }

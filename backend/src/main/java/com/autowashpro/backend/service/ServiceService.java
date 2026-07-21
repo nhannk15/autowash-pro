@@ -230,11 +230,4 @@ public class ServiceService {
         return serviceMapper.toServiceAdminResponse(savedService);
     }
 
-    public ServiceAdminResponse activateService(Long serviceId) {
-        Service targetService = serviceRepository.findById(serviceId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy Service với id " + serviceId));
-        targetService.setActive(true);
-        return serviceMapper.toServiceAdminResponse(serviceRepository.save(targetService));
-    }
-
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Button, Typography, Modal, Form, Input, message } from 'antd';
 import { useAuth } from '../../../context/AuthContext';
 import { checkPasswordApi, changePasswordApi, forgotPasswordApi, verifyOtpApi, resetPasswordApi } from '../../../service/authService';

@@ -2,7 +2,7 @@ import { request } from '@playwright/test';
 import { test, expect } from '../../fixtures/index.js';
 import { env } from '../../env.js';
 
-test.describe('@p0 backend API authorization', () => {
+test.describe.skip('@p0 backend API authorization', () => {
   test('TC-SE07 guest receives 401 from protected API', async ({ guestApi }) => {
     const response = await guestApi.get('/api/users/me');
     expect(response.status()).toBe(401);

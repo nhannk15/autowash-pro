@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Row, Col, Card, Table, Tag, Progress, Select, Space, Typography, Spin, Empty } from 'antd';
+import { Row, Col, Card, Table, Tag, Progress, Select, Space, Typography, Badge, Spin, Empty } from 'antd';
 import { 
     WalletOutlined, 
     HistoryOutlined, 
@@ -96,6 +96,7 @@ function transformBillings(rawList) {
 
 export default function Payment() {
     const currentYear    = new Date().getFullYear();
+    const currentQuarter = `Q${Math.ceil((new Date().getMonth() + 1) / 3)}`;
 
     const [payments, setPayments]               = useState([]);
     const [loading, setLoading]                 = useState(true);

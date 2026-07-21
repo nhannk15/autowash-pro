@@ -15,7 +15,6 @@ import lombok.Setter;
 public class PendingBookingResponse {
 
     private Long id;
-    private String bookingCode;
     private LocalDate slotDate;
     private LocalTime startTime;
     private LocalTime endTime;

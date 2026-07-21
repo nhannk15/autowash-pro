@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     Steps, Card, Input, Button, Table, Typography,
-    Row, Col, Descriptions, Space, message, Tag, Select, Spin
+    Row, Col, Descriptions, Space, message, Tag, Select, Avatar, Spin
 } from 'antd';
 import {
     QrcodeOutlined,
@@ -32,26 +32,6 @@ export default function Checkin() {
     const qrInputRef = useRef(null);
     const scannerRef = useRef(null);
     const scannerContainerRef = useRef(null);
-
-    const doSearch = useCallback(async (code) => {
-        if (!code) {
-            message.warning('Vui lòng quét mã QR hoặc nhập mã đặt lịch!');
-            return;
-        }
-        try {
-            const response = await searchBookingByQR(code);
-            const data = Array.isArray(response) ? response
-                : Array.isArray(response?.data) ? response.data
-                    : response ? [response] : [];
-            setSearchResults(data);
-            if (data.length === 0) {
-                message.info('Không tìm thấy thông tin đặt lịch cho mã QR này.');
-            }
-        } catch (error) {
-            console.error('Failed to search booking by QR', error);
-            message.error('Lỗi khi tìm kiếm thông tin đặt lịch!');
-        }
-    }, []);
 
     // Auto-focus the QR input field when stage 1 is active
     useEffect(() => {
@@ -148,7 +128,7 @@ export default function Checkin() {
         });
 
         return () => cancelAnimationFrame(id);
-    }, [cameraOpen, doSearch]);
+    }, [cameraOpen]);
 
     const stopCamera = () => {
         if (scannerRef.current) {
@@ -168,12 +148,33 @@ export default function Checkin() {
         };
     }, []);
 
+    const doSearch = async (code) => {
+        if (!code) {
+            message.warning('Vui lòng quét mã QR hoặc nhập mã đặt lịch!');
+            return;
+        }
+        try {
+            const response = await searchBookingByQR(code);
+            const data = Array.isArray(response) ? response
+                : Array.isArray(response?.data) ? response.data
+                    : response ? [response] : [];
+            setSearchResults(data);
+            if (data.length === 0) {
+                message.info('Không tìm thấy thông tin đặt lịch cho mã QR này.');
+            }
+        } catch (error) {
+            console.error('Failed to search booking by QR', error);
+            message.error('Lỗi khi tìm kiếm thông tin đặt lịch!');
+        }
+    };
+
     // === Helper: Trích xuất dữ liệu từ booking record ===
     const getCustomerName = (r) => r.customer?.fullName || 'N/A';
     const getCustomerPhone = (r) => r.customer?.phoneNumber || 'N/A';
     const getCustomerEmail = (r) => r.customer?.email || '';
     const getLicensePlate = (r) => r.vehicle?.licensePlate || 'N/A';
     const getVehicleModel = (r) => `${r.vehicle?.brand || ''} ${r.vehicle?.model || ''}`.trim() || 'N/A';
+    const getVehicleType = (r) => r.vehicle?.typeName || '';
     const getBayName = (r) => r.washBay || 'Chưa phân khoang';
 
     const getServices = (record) =>

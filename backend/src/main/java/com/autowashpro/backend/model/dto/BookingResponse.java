@@ -39,6 +39,8 @@ public class BookingResponse {
     private String notes;
 
     private StaffInfoDTO staffInfoDTO;
+    private String staffNotes;
+
 
     
 }

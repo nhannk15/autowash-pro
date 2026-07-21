@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Table, Input, Button, Space, Tag, Modal,
     notification, Select, Tooltip, Badge
@@ -21,14 +21,17 @@ export default function Customer() {
     const [searchInput, setSearchInput] = useState('');
     const [sortField, setSortField] = useState(null);
     const [sortOrder, setSortOrder] = useState('asc');
-    const { current: currentPage, pageSize } = pagination;
 
-    const fetchCustomers = useCallback(async () => {
+    useEffect(() => {
+        fetchCustomers();
+    }, [pagination.current, pagination.pageSize, searchName, sortField, sortOrder]);
+
+    const fetchCustomers = async () => {
         setLoading(true);
         try {
             const params = {
-                page: currentPage - 1,
-                size: pageSize,
+                page: pagination.current - 1,
+                size: pagination.pageSize,
             };
             if (searchName) params.search = searchName;
             if (sortField) params.sort = `${sortField},${sortOrder}`;
@@ -40,7 +43,7 @@ export default function Customer() {
                 ...prev,
                 total: pageData?.totalElements || 0,
             }));
-        } catch {
+        } catch (error) {
             notification.error({
                 message: 'Lỗi',
                 description: 'Không thể tải danh sách khách hàng',
@@ -48,11 +51,7 @@ export default function Customer() {
         } finally {
             setLoading(false);
         }
-    }, [currentPage, pageSize, searchName, sortField, sortOrder]);
-
-    useEffect(() => {
-        fetchCustomers();
-    }, [fetchCustomers]);
+    };
 
     const getTierColor = (tierName) => {
         switch (tierName?.toLowerCase()) {

@@ -489,12 +489,5 @@
 
     .dashboard-layout__content {
         padding: 16px;
-        min-width: 0;
-        width: 100%;
-    }
-
-    .dashboard-layout--light .sidebar + .dashboard-layout__content,
-    .dashboard-layout--light .sidebar--collapsed + .dashboard-layout__content {
-        margin-left: 0;
     }
 }
