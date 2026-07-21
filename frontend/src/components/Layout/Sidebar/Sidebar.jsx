@@ -6,7 +6,7 @@ import { useAuth } from '../../../context/AuthContext';
 import './Sidebar.css';
 
 export default function Sidebar({ menuItems, children, theme = 'dark' }) {
-    const [collapsed, setCollapsed] = useState(true);
+    const [collapsed, setCollapsed] = useState(false);
     // Trên mobile, sidebar hoạt động như drawer off-canvas, tách riêng khỏi
     // trạng thái collapsed (thu gọn icon) dùng cho desktop/tablet.
     const [isMobile, setIsMobile] = useState(

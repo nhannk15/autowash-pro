@@ -208,7 +208,6 @@ export default function StaffPayment() {
             : (billData.checkinTime || 'N/A');
 
     const billId = billData.billingId || billData.id || null;
-    const staffNote = billData.booking?.notes || billData.session?.note || billData.staffNote || '';
 
     const bookingPromotion = billData.bookingPromotionResponse || billData.booking?.promotion || null;
 
@@ -433,12 +432,6 @@ export default function StaffPayment() {
                                     </Col>
                                 </Row>
                             </div>
-
-                            {staffNote && (
-                                <div className="payment-note">
-                                    <Text type="secondary"><strong>Ghi chú:</strong> {staffNote}</Text>
-                                </div>
-                            )}
                         </Card>
                     </Col>
 

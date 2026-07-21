@@ -10,7 +10,7 @@ import {
     CameraOutlined, CloseCircleOutlined, TeamOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { searchBookingByQR, confirmBookingV2, getWashStaffsForBooking } from '../../../service/staffService';
+import { searchBookingByQR, confirmBookingV3, getWashStaffsForBooking } from '../../../service/staffService';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import './Checkin.css';
 
@@ -45,8 +45,14 @@ export default function Checkin() {
     const handleSelectCustomer = async (record) => {
         setSelectedCustomer(record);
         setStaffNote('');
-        setSelectedStaffId(null);
+
+        // Kiểm tra nếu booking đã có sẵn nhân viên (do khách tự chọn)
+        const preassignedStaffId = record.staffInfoDTO?.id || record.staffId || record.staff?.id || null;
+        const preassignedStaffName = record.staffInfoDTO?.fullName || record.staffName || record.staff?.fullName || null;
+
+        setSelectedStaffId(preassignedStaffId);
         setCurrentStep(1);
+
         // Load danh sách wash staff dựa vào ngày và giờ của booking
         try {
             setLoadingStaffs(true);
@@ -54,6 +60,14 @@ export default function Checkin() {
             const startTime = record.startTime; // e.g. "08:00:00" or "08:00"
             const data = await getWashStaffsForBooking(slotDate, startTime);
             const list = Array.isArray(data) ? data : data?.data || [];
+
+            // Nếu có preassignedStaffId nhưng không có trong list khả dụng, add thêm vào để hiển thị Select đúng
+            if (preassignedStaffId && !list.find(s => s.id === preassignedStaffId)) {
+                list.push({
+                    id: preassignedStaffId,
+                    fullName: preassignedStaffName || `Nhân viên (ID: ${preassignedStaffId})`
+                });
+            }
             setWashStaffs(list);
         } catch (err) {
             console.error('Failed to load wash staffs', err);
@@ -75,7 +89,7 @@ export default function Checkin() {
             return;
         }
         try {
-            await confirmBookingV2(selectedCustomer.id, selectedStaffId);
+            await confirmBookingV3(selectedCustomer.id, selectedStaffId, staffNote);
             message.success('Đã xác nhận check-in! Bắt đầu dịch vụ.');
             navigate('/staff/dashboard');
         } catch (error) {
@@ -384,6 +398,12 @@ export default function Checkin() {
                                     <Descriptions.Item label="Khoang thực hiện">
                                         <Text strong>{getBayName(selectedCustomer)}</Text>
                                     </Descriptions.Item>
+                                    <Descriptions.Item label="Nhân viên rửa xe">
+                                        <Text strong>{selectedCustomer.staffInfoDTO?.fullName || selectedCustomer.staff?.fullName || 'Chưa phân công'}</Text>
+                                    </Descriptions.Item>
+                                    <Descriptions.Item label="Ghi chú của khách">
+                                        <Text>{selectedCustomer.notes || 'Không có'}</Text>
+                                    </Descriptions.Item>
                                     <Descriptions.Item label="Dịch vụ đã chọn">
                                         <ul className="service-list">
                                             {services.map(s => (
@@ -445,35 +465,63 @@ export default function Checkin() {
                                     </div>
                                 ) : (
                                     <>
-                                        <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
-                                            Chọn nhân viên sẽ thực hiện rửa xe cho booking này. Bắt buộc phải chọn.
-                                        </Text>
-                                        <Select
-                                            className="staff-select"
-                                            style={{ width: '100%' }}
-                                            placeholder="-- Chọn nhân viên rửa xe --"
-                                            value={selectedStaffId}
-                                            onChange={(val) => setSelectedStaffId(val)}
-                                            size="large"
-                                            showSearch
-                                            optionFilterProp="label"
-                                        >
-                                            {washStaffs.map(s => (
-                                                <Select.Option key={s.id} value={s.id} label={s.fullName}>
-                                                    <div className="staff-option">
-                                                        <span className="staff-option-name">{s.fullName}</span>
-                                                        {s.phoneNumber && (
-                                                            <span className="staff-option-phone">{s.phoneNumber}</span>
-                                                        )}
-                                                    </div>
-                                                </Select.Option>
-                                            ))}
-                                        </Select>
-                                        {washStaffs.length === 0 && !loadingStaffs && (
-                                            <Text type="warning" style={{ marginTop: 8, display: 'block' }}>
-                                                ⚠️ Không có nhân viên rỮa xe nào khả dụng trong khung giờ này.
-                                                Hãy chọn lại hoặc liên hệ quản lý.
-                                            </Text>
+                                        {(selectedCustomer?.staffInfoDTO || selectedCustomer?.staffId || selectedCustomer?.staff) ? (
+                                            <>
+                                                <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
+                                                    Khách hàng đã chọn nhân viên thực hiện dịch vụ này.
+                                                </Text>
+                                                <Select
+                                                    className="staff-select"
+                                                    style={{ width: '100%' }}
+                                                    value={selectedStaffId}
+                                                    disabled={true}
+                                                    size="large"
+                                                >
+                                                    {washStaffs.map(s => (
+                                                        <Select.Option key={s.id} value={s.id} label={s.fullName}>
+                                                            <div className="staff-option">
+                                                                <span className="staff-option-name">{s.fullName}</span>
+                                                                {s.phoneNumber && (
+                                                                    <span className="staff-option-phone">{s.phoneNumber}</span>
+                                                                )}
+                                                            </div>
+                                                        </Select.Option>
+                                                    ))}
+                                                </Select>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
+                                                    Chọn nhân viên sẽ thực hiện rửa xe cho booking này. Bắt buộc phải chọn.
+                                                </Text>
+                                                <Select
+                                                    className="staff-select"
+                                                    style={{ width: '100%' }}
+                                                    placeholder="-- Chọn nhân viên rửa xe --"
+                                                    value={selectedStaffId}
+                                                    onChange={(val) => setSelectedStaffId(val)}
+                                                    size="large"
+                                                    showSearch
+                                                    optionFilterProp="label"
+                                                >
+                                                    {washStaffs.map(s => (
+                                                        <Select.Option key={s.id} value={s.id} label={s.fullName}>
+                                                            <div className="staff-option">
+                                                                <span className="staff-option-name">{s.fullName}</span>
+                                                                {s.phoneNumber && (
+                                                                    <span className="staff-option-phone">{s.phoneNumber}</span>
+                                                                )}
+                                                            </div>
+                                                        </Select.Option>
+                                                    ))}
+                                                </Select>
+                                                {washStaffs.length === 0 && !loadingStaffs && (
+                                                    <Text type="warning" style={{ marginTop: 8, display: 'block' }}>
+                                                        ⚠️ Không có nhân viên rửa xe nào khả dụng trong khung giờ này.
+                                                        Hãy chọn lại hoặc liên hệ quản lý.
+                                                    </Text>
+                                                )}
+                                            </>
                                         )}
                                     </>
                                 )}
