@@ -1,6 +1,6 @@
 export const env = {
   baseURL: process.env.E2E_BASE_URL ?? 'http://127.0.0.1:3000',
-  backendURL: process.env.E2E_BACKEND_URL ?? 'http://127.0.0.1:8080',
+  backendURL: process.env.E2E_BACKEND_URL ?? 'http://127.0.0.1:8081',
   mailpitURL: process.env.E2E_MAILPIT_URL ?? 'http://127.0.0.1:8025',
   customer: {
     email: process.env.E2E_CUSTOMER_EMAIL ?? 'e2e.customer@gmail.com',

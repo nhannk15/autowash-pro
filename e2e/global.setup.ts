@@ -6,11 +6,21 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(here, '.env.e2e') });
 
 export default async function globalSetup() {
-  const backendURL = process.env.E2E_BACKEND_URL ?? 'http://127.0.0.1:8080';
+  const backendURL = process.env.E2E_BACKEND_URL ?? 'http://127.0.0.1:8081';
 
-  const healthResponse = await fetch(`${backendURL}/actuator/health`);
-  if (!healthResponse.ok) {
-    throw new Error(`E2E backend health check failed with HTTP ${healthResponse.status}`);
+  let healthResponse;
+  for (let i = 0; i < 30; i++) {
+    try {
+      healthResponse = await fetch(`${backendURL}/actuator/health`);
+      if (healthResponse.ok) break;
+    } catch (e) {
+      // Ignore network errors while starting
+    }
+    await new Promise(r => setTimeout(r, 1000));
+  }
+
+  if (!healthResponse || !healthResponse.ok) {
+    throw new Error(`E2E backend health check failed`);
   }
   const health = await healthResponse.json() as { status?: string };
   if (health.status !== 'UP') {
