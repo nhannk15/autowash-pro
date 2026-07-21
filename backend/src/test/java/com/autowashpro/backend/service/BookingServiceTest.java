@@ -43,7 +43,6 @@ import com.autowashpro.backend.model.entity.WashBay;
 import com.autowashpro.backend.model.enums.BayStatus;
 import com.autowashpro.backend.model.enums.BookingStatus;
 import com.autowashpro.backend.model.enums.PromotionDiscountType;
-import com.autowashpro.backend.model.enums.ServiceCategory;
 import com.autowashpro.backend.repository.AvailableSlotRepository;
 import com.autowashpro.backend.repository.BookingDetailRepository;
 import com.autowashpro.backend.repository.BookingRepository;
@@ -166,7 +165,6 @@ public class BookingServiceTest {
         service.setId(1L);
         service.setServiceName("Rửa xe nội thất");
         service.setDurationMinutes(45);
-        service.setCategory(ServiceCategory.BASIC);
 
         servicePrice = new ServicePrice();
         servicePrice.setService(service);
