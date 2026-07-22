@@ -260,10 +260,19 @@ export default function History() {
                                 <Descriptions.Item label="Loại xe">
                                     {selectedHistory.vehicle?.brand} {selectedHistory.vehicle?.model}
                                 </Descriptions.Item>
-                                <Descriptions.Item label="Thời gian kết thúc" span={2}>
-                                    <Text strong>
+                                <Descriptions.Item label="Thời gian kết thúc">
+                                    <Text>
                                         {selectedHistory.endTime?.substring(0, 5)} {selectedHistory.slotDate}
                                     </Text>
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Nhân viên rửa xe">
+                                    {selectedHistory.staffInfoDTO?.fullName || 'Chưa phân công'}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Ghi chú của khách" span={2}>
+                                    <Text >{selectedHistory.notes || 'Không có'}</Text>
+                                </Descriptions.Item>
+                                <Descriptions.Item label="Ghi chú của nhân viên" span={2}>
+                                    <Text >{selectedHistory.staffNotes || 'Không có'}</Text>
                                 </Descriptions.Item>
                             </Descriptions>
 
