@@ -980,6 +980,10 @@ public class BookingService {
                 .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy Lịch đặt với id: " + id));
         return bookingMapper.toBookingResponse(booking);
     }
+
+    public boolean checkVehicleSchedulingConflict(Long vehicleId, Long timeSlotId) {
+        return false;
+    }
 }
 
 /**
