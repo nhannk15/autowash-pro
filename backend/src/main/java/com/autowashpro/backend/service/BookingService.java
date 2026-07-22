@@ -1,6 +1,8 @@
 package com.autowashpro.backend.service;
 
 import com.autowashpro.backend.repository.VoucherRepository;
+import com.autowashpro.backend.repository.WashBayRepository;
+
 import java.math.BigDecimal;
 import java.time.DateTimeException;
 import java.time.LocalDate;
@@ -21,6 +23,7 @@ import com.autowashpro.backend.exception.BookingNotFoundException;
 import com.autowashpro.backend.exception.ExceedBookingWindowException;
 import com.autowashpro.backend.exception.SlotInavailabilityException;
 import com.autowashpro.backend.exception.UserNotFoundException;
+import com.autowashpro.backend.exception.VehicleInSlotConflictException;
 import com.autowashpro.backend.exception.WashBayInavailableException;
 import com.autowashpro.backend.mapper.BookingMapper;
 import com.autowashpro.backend.model.dto.ApplyVoucherToBillingRequest;
@@ -110,6 +113,7 @@ public class BookingService {
     private final RewardRepository rewardRepository;
     private final NotificationService notificationService;
     private final StaffRepository staffRepository;
+    private final WashBayRepository washBayRepository;
 
     @Autowired
     public BookingService(CustomerRepository customerRepository, ServicePriceRepository servicePriceRepository,
@@ -122,7 +126,8 @@ public class BookingService {
             UserRepository userRepository, PromotionService promotionService, BillingService billingService,
             BillingRepository billingRepository, VoucherRepository voucherRepository,
             VoucherCodeGenerator voucherCodeGenerator, RewardRepository rewardRepository,
-            NotificationService notificationService, StaffRepository staffRepository) {
+            NotificationService notificationService, StaffRepository staffRepository,
+            WashBayRepository washBayRepository) {
         this.customerRepository = customerRepository;
         this.servicePriceRepository = servicePriceRepository;
         this.availableSlotRepository = availableSlotRepository;
@@ -145,6 +150,7 @@ public class BookingService {
         this.rewardRepository = rewardRepository;
         this.notificationService = notificationService;
         this.staffRepository = staffRepository;
+        this.washBayRepository = washBayRepository;
     }
 
     public SlotAvailabilityByDateResponse getAvailableTimeSlots(LocalDate date) {
@@ -706,6 +712,9 @@ public class BookingService {
         int slotsNeeded = (int) Math.ceil((double) totalDuration / SLOT_DURATION);
         log.info("createBooking() - slotsNeeded: {}", slotsNeeded);
 
+        checkVehicleSchedulingConflict(startTimeSlot.getStartTime(), createBookingRequest.getVehicleId(), slotsNeeded,
+                bookingDay);
+
         /**
          * Step 3. Get all the succcessive/consecutive slots start from the selected
          * slot.
@@ -981,8 +990,35 @@ public class BookingService {
         return bookingMapper.toBookingResponse(booking);
     }
 
-    public boolean checkVehicleSchedulingConflict(Long vehicleId, Long timeSlotId) {
-        return false;
+    @Transactional(readOnly = true)
+    private void checkVehicleSchedulingConflict(LocalTime startTime, Long vehicleId, int slotsNeed,
+            LocalDate bookingDate) {
+        log.info("checkVehicleSchedulingConflict() - startTime: {}", startTime);
+        log.info("checkVehicleSchedulingConflict() - vehicleId: {}", vehicleId);
+        log.info("checkVehicleSchedulingConflict() - slotsNeed: {}", slotsNeed);
+        log.info("checkVehicleSchedulingConflict() - bookingDate: {}", bookingDate);
+        List<WashBay> washBays = washBayRepository.findByStatus(BayStatus.ACTIVE);
+        for (WashBay washBay : washBays) {
+            List<AvailableSlot> consecutiveSlots = availableSlotRepository
+                    .findAllBookedSlotsForCheckingVehicleConfliction(bookingDate, startTime, washBay.getId(),
+                            PageRequest.of(0, slotsNeed));
+            log.info("checkVehicleSchedulingConflict() - consecutiveSlots of washBay {} is {}}", washBay.getId(), consecutiveSlots.size());
+            if (consecutiveSlots.isEmpty()) {
+                return;
+            } else {
+                for (AvailableSlot slot : consecutiveSlots) {
+                    if (slot.getBooking() != null) {
+                        Booking booking = slot.getBooking();
+                        Vehicle vehicle = booking.getVehicle();
+                        if (vehicle.getId().equals(vehicleId)) {
+                            throw new VehicleInSlotConflictException(String.format("Xe %s đã trùng lịch ở %sh, ngày %s",
+                                    vehicle.getLicensePlate(), slot.getTimeSlot().getStartTime().getHour(),
+                                    slot.getSlotDate().toString()));
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

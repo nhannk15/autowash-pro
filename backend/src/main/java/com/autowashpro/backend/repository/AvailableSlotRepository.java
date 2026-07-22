@@ -200,4 +200,24 @@ public interface AvailableSlotRepository extends JpaRepository<AvailableSlot, Lo
             @Param("date") LocalDate date,
             @Param("startTime") LocalTime startTime, Pageable pageable);
 
+    @Query(value = """
+            SELECT availableSlot.*
+            FROM available_slot availableSlot
+            JOIN time_slot timeSlot ON availableSlot.time_slot_id = timeSlot.id
+            JOIN wash_bay washBay ON availableSlot.wash_bay_id = washBay.id
+            WHERE
+                washBay.status = 'ACTIVE'
+                AND washBay.id = :washBayId
+                AND availableSlot.booking_id IS NOT NULL
+                AND
+            		(
+            			(timeSlot.start_time >= :startTime AND availableSlot.date = :date)
+            			OR	(timeSlot.start_time >= '07:00:00.000000' AND availableSlot.date > :date)
+            		)
+            ORDER BY availableSlot.date, timeSlot.start_time
+                        """, nativeQuery = true)
+    List<AvailableSlot> findAllBookedSlotsForCheckingVehicleConfliction(
+            @Param("date") LocalDate date,
+            @Param("startTime") LocalTime startTime, @Param("washBayId") Long washBayId, Pageable pageable);
+
 }
