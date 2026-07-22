@@ -1,12 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Row, Col, Card, Table, Tag, Progress, Select, Space, Typography, Badge, Spin, Empty } from 'antd';
+import { Row, Col, Card, Table, Tag, Progress, Select, Space, Typography, Badge, Spin, Empty, Modal, Divider, Descriptions } from 'antd';
 import { 
     WalletOutlined, 
     HistoryOutlined, 
     PayCircleOutlined,
     PieChartOutlined,
     CheckCircleOutlined,
-    CloseCircleOutlined
+    CloseCircleOutlined,
+    CalendarOutlined,
+    ClockCircleOutlined,
+    CarOutlined,
+    ToolOutlined,
+    FileTextOutlined,
+    DollarOutlined,
+    ProfileOutlined,
+    UserOutlined,
 } from '@ant-design/icons';
 import { getCustomerBillingHistory } from '../../../service/customerService';
 import './Payment.css';
@@ -72,27 +80,50 @@ function transformBillings(rawList) {
 
             const v = booking.vehicle;
             const vehicle = v ? `${v.brand} ${v.model} (${v.licensePlate})` : '—';
+            const staffName = booking.staffInfoDTO ? booking.staffInfoDTO.fullName : 'Chưa xếp';
 
             return {
-                key:         String(billing.billingId ?? idx),
-                bookingCode: booking.bookingCode ?? '—',
-                dateDisplay: formatDateDisplay(rawDate),
+                key:              String(billing.billingId ?? idx),
+                bookingCode:      booking.bookingCode ?? '—',
+                dateDisplay:      formatDateDisplay(rawDate),
                 rawDate,
                 vehicle,
-                services:    (booking.bookingDetails ?? []).map(d => d.serviceName),
+                staffName,
+                services:         (booking.bookingDetails ?? []).map(d => d.serviceName),
                 paymentMethod,
                 amount,
                 originalAmount,
-                discount:    discountAmount,
-                status:      billing.paymentStatus === 'PAID' ? 'SUCCESS' : 'CANCELLED',
+                depositAmount,
+                finalAmount,
+                discount:         discountAmount,
+                status:           billing.paymentStatus === 'PAID' ? 'SUCCESS' : 'CANCELLED',
                 isForfeited,
-                quarter:     month ? getQuarter(month) : null,
+                quarter:          month ? getQuarter(month) : null,
                 year,
+                // Thông tin phiên rửa xe
+                slotDate:         booking.slotDate ?? null,
+                startTime:        booking.startTime ?? null,
+                endTime:          booking.endTime ?? null,
+                washSessionStatus: booking.washSessionStatus ?? null,
+                // Thông tin bổ sung cho modal
+                notes:            booking.notes ?? null,
+                promotionName:    booking.promotion?.promotionName ?? null,
+                promotionDiscount: discountAmount,
+                // Raw object để truy cập thêm nếu cần
+                _raw:             billing,
             };
         });
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
+
+// ── Wash Session Status Label ─────────────────────────────────────────────────
+const WASH_SESSION_LABEL = {
+    NOT_STARTED:  { label: 'Chưa bắt đầu',   color: 'default'  },
+    IN_PROGRESS:  { label: 'Đang thực hiện',  color: 'processing' },
+    COMPLETED:    { label: 'Đã hoàn thành',   color: 'success'  },
+    CANCELLED:    { label: 'Đã hủy',          color: 'error'    },
+};
 
 export default function Payment() {
     const currentYear    = new Date().getFullYear();
@@ -103,6 +134,7 @@ export default function Payment() {
     const [error, setError]                     = useState(null);
     const [selectedQuarter, setSelectedQuarter] = useState('ALL');
     const [selectedYear, setSelectedYear]       = useState(currentYear);
+    const [selectedRecord, setSelectedRecord]   = useState(null);
 
     useEffect(() => {
         let isMounted = true;
@@ -157,7 +189,11 @@ export default function Payment() {
             title: 'Mã Đặt Lịch',
             dataIndex: 'bookingCode',
             key: 'bookingCode',
-            render: (text) => <Text strong style={{ color: '#002B7F' }}>{text}</Text>,
+            render: (text) => (
+                <Text strong style={{ color: '#002B7F', cursor: 'pointer' }}>
+                    {text}
+                </Text>
+            ),
         },
         {
             title: 'Ngày thanh toán',
@@ -170,6 +206,12 @@ export default function Payment() {
             dataIndex: 'vehicle',
             key: 'vehicle',
             render: (text) => <Text style={{ fontWeight: '500' }}>{text}</Text>
+        },
+        {
+            title: 'Kĩ thuật viên',
+            dataIndex: 'staffName',
+            key: 'staffName',
+            render: (text) => text === 'Chưa xếp' ? <Text type="secondary">{text}</Text> : <Text strong>{text}</Text>
         },
         {
             title: 'Dịch vụ',
@@ -250,6 +292,7 @@ export default function Payment() {
     }
 
     return (
+        <>
         <div className="payment-container">
             {/* Header */}
             <div className="payment-header">
@@ -381,10 +424,149 @@ export default function Payment() {
                             scroll={{ x: 'max-content' }}
                             className="payment-table"
                             locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Bạn chưa có giao dịch nào." /> }}
+                            onRow={(record) => ({
+                                onClick: () => setSelectedRecord(record),
+                                style: { cursor: 'pointer' },
+                            })}
                         />
                     </Card>
                 </Col>
             </Row>
         </div>
+
+        {/* ── MODAL CHI TIẾT BOOKING ─────────────────────────────── */}
+        <Modal
+            open={!!selectedRecord}
+            onCancel={() => setSelectedRecord(null)}
+            footer={null}
+            width={900}
+            title={
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <ProfileOutlined style={{ fontSize: '1.1rem', color: '#002B7F' }} />
+                    <span style={{ fontWeight: 700, color: '#002B7F', fontSize: '1rem' }}>
+                        Chi tiết lịch hẹn: <span style={{ color: '#1890ff' }}>{selectedRecord?.bookingCode}</span>
+                    </span>
+                </div>
+            }
+            styles={{ body: { padding: '16px 24px 24px' } }}
+        >
+            {selectedRecord && (() => {
+                const r = selectedRecord;
+                const sessionInfo = WASH_SESSION_LABEL[r.washSessionStatus] ?? { label: r.washSessionStatus ?? '—', color: 'default' };
+
+                // Ghép ngày + giờ để hiển thị
+                const formatSlotDate = (dateStr) => {
+                    if (!dateStr) return null;
+                    const parts = String(dateStr).split('-');
+                    if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                    return dateStr;
+                };
+                const formatTime = (t) => t ? String(t).substring(0, 5) : '—';
+                const slotDateDisplay = formatSlotDate(r.slotDate);
+
+                return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+
+                        {/* TRẠNG THÁI - full width */}
+                        <div style={{ padding: '10px 16px', backgroundColor: r.status === 'SUCCESS' ? '#f0fdf4' : '#fff1f0', borderRadius: '10px', border: `1px solid ${r.status === 'SUCCESS' ? '#4ade80' : '#ffa39e'}` }}>
+                            <Text type="secondary" style={{ fontSize: '0.72rem', display: 'block', marginBottom: '3px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Trạng thái đơn</Text>
+                            {r.status === 'SUCCESS'
+                                ? <Tag color="success" style={{ borderRadius: '8px', fontWeight: 600 }}>✅ Thành công</Tag>
+                                : <Tag color="error" style={{ borderRadius: '8px', fontWeight: 600 }}>❌ Bị hủy{r.isForfeited ? ' (Mất cọc)' : ''}</Tag>
+                            }
+                        </div>
+
+                        {/* 2 CỘT CHÍNH */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', alignItems: 'start' }}>
+
+                            {/* CỘT TRÁI */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+
+                                {/* LỊCH HẸN */}
+                                <div>
+                                    <Text strong style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700, display: 'block', marginBottom: '8px' }}><CalendarOutlined style={{ marginRight: '6px' }} />Thông tin lịch hẹn</Text>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                        <div style={{ backgroundColor: '#f8fafc', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                                            <Text style={{ fontSize: '0.72rem', display: 'block', marginBottom: '3px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Ngày thanh toán</Text>
+                                            <Text strong style={{ fontSize: '0.85rem', color: '#0d1b4b' }}>{r.dateDisplay}</Text>
+                                        </div>
+                                        <div style={{ backgroundColor: '#f8fafc', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                                            <Text style={{ fontSize: '0.72rem', display: 'block', marginBottom: '3px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Ngày đặt lịch</Text>
+                                            <Text strong style={{ fontSize: '0.85rem', color: '#0d1b4b' }}>{slotDateDisplay ?? '—'}</Text>
+                                        </div>
+                                        <div style={{ backgroundColor: '#e0f2fe', padding: '10px 12px', borderRadius: '8px', border: '1px solid #7dd3fc' }}>
+                                            <Text style={{ fontSize: '0.72rem', display: 'block', marginBottom: '3px', color: '#0369a1', textTransform: 'uppercase', letterSpacing: '0.04em' }}><ClockCircleOutlined style={{ marginRight: '4px' }} />Giờ bắt đầu phiên rửa</Text>
+                                            <Text strong style={{ fontSize: '1.05rem', color: '#0369a1' }}>{formatTime(r.startTime)}</Text>
+                                        </div>
+                                        <div style={{ backgroundColor: '#ede9fe', padding: '10px 12px', borderRadius: '8px', border: '1px solid #c4b5fd' }}>
+                                            <Text style={{ fontSize: '0.72rem', display: 'block', marginBottom: '3px', color: '#6d28d9', textTransform: 'uppercase', letterSpacing: '0.04em' }}><ClockCircleOutlined style={{ marginRight: '4px' }} />Giờ kết thúc phiên rửa</Text>
+                                            <Text strong style={{ fontSize: '1.05rem', color: '#6d28d9' }}>{formatTime(r.endTime)}</Text>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* XE & KTV */}
+                                <div>
+                                    <Text strong style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700, display: 'block', marginBottom: '8px' }}><CarOutlined style={{ marginRight: '6px' }} />Xe & Kỹ thuật viên</Text>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <div style={{ backgroundColor: '#f8fafc', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                                            <Text style={{ fontSize: '0.72rem', display: 'block', marginBottom: '3px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}><CarOutlined style={{ marginRight: '4px' }} />Xe chăm sóc</Text>
+                                            <Text strong style={{ fontSize: '0.88rem', color: '#0d1b4b' }}>{r.vehicle}</Text>
+                                        </div>
+                                        <div style={{ backgroundColor: '#f8fafc', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                                            <Text style={{ fontSize: '0.72rem', display: 'block', marginBottom: '3px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}><UserOutlined style={{ marginRight: '4px' }} />Kỹ thuật viên thực hiện</Text>
+                                            <Text strong style={{ fontSize: '0.88rem', color: r.staffName === 'Chưa xếp' ? '#94a3b8' : '#0d1b4b' }}>{r.staffName}</Text>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* DỊCH VỤ */}
+                                <div>
+                                    <Text strong style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700, display: 'block', marginBottom: '8px' }}><ToolOutlined style={{ marginRight: '6px' }} />Dịch vụ đã sử dụng</Text>
+                                    <Text style={{ fontSize: '0.88rem', color: '#334155', lineHeight: '1.6' }}>
+                                        {r.services.length > 0
+                                            ? r.services.join(' • ')
+                                            : <Text type="secondary">—</Text>
+                                        }
+                                    </Text>
+                                </div>
+
+                                {/* GHI CHÚ */}
+                                {r.notes && (
+                                    <div style={{ backgroundColor: '#fffbeb', padding: '10px 12px', borderRadius: '8px', border: '1px dashed #fbbf24' }}>
+                                        <Text style={{ fontSize: '0.72rem', display: 'block', marginBottom: '3px', color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.04em' }}><FileTextOutlined style={{ marginRight: '4px' }} />Ghi chú</Text>
+                                        <Text style={{ color: '#78350f', fontSize: '0.88rem' }}>{r.notes}</Text>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* CỘT PHẢI: THANH TOÁN */}
+                            <div>
+                                <Text strong style={{ color: '#64748b', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700, display: 'block', marginBottom: '8px' }}><DollarOutlined style={{ marginRight: '6px' }} />Chi tiết thanh toán</Text>
+                                <div style={{ backgroundColor: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                                    {[
+                                        { label: 'Giá gốc',        value: formatCurrency(r.originalAmount), color: '#64748b' },
+                                        r.discount > 0 && { label: `Giảm giá${r.promotionName ? ` (${r.promotionName})` : ''}`, value: `-${formatCurrency(r.discount)}`, color: '#10b981' },
+                                        { label: 'Đặt cọc',        value: formatCurrency(r.depositAmount),  color: '#0369a1' },
+                                        { label: 'Phương thức TT', value: r.paymentMethod,                  color: '#334155' },
+                                    ].filter(Boolean).map((row, i) => (
+                                        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderBottom: '1px solid #e2e8f0' }}>
+                                            <Text type="secondary" style={{ fontSize: '0.85rem' }}>{row.label}</Text>
+                                            <Text strong style={{ fontSize: '0.9rem', color: row.color }}>{row.value}</Text>
+                                        </div>
+                                    ))}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', backgroundColor: r.status === 'SUCCESS' ? '#f0fdf4' : '#fff1f0' }}>
+                                        <Text strong style={{ fontSize: '0.95rem', color: r.status === 'SUCCESS' ? '#15803d' : '#cf1322' }}>Tổng thanh toán</Text>
+                                        <Text strong style={{ fontSize: '1.2rem', color: r.status === 'SUCCESS' ? '#15803d' : '#cf1322' }}>{formatCurrency(r.amount)}</Text>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>{/* end 2-col */}
+                    </div>
+                );
+            })()}
+        </Modal>
+        </>
     );
 }

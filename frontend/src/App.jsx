@@ -15,7 +15,7 @@ import LoginPage from './pages/LoginPage/LoginPage.jsx'
 import CustomerPage from './pages/CustomerPage/CustomerPage.jsx'
 import Overview from './pages/CustomerPage/components/Overview.jsx'
 import MyCars from './pages/CustomerPage/components/MyCars.jsx'
-import BookingList from './pages/CustomerPage/components/BookingList.jsx'
+import Booking from './pages/CustomerPage/components/Booking.jsx'
 import Payment from './pages/CustomerPage/components/Payment.jsx'
 import PersonalProfile from './pages/CustomerPage/components/PersonalProfile.jsx'
 import RegisterPage from './pages/RegisterPage/RegisterPage.jsx'
@@ -110,7 +110,7 @@ function App() {
         <Route index element={<Navigate to="ho-so" replace />} />
         <Route path="tong-quan" element={<Overview />} />
         <Route path="xe-cua-toi" element={<MyCars />} />
-        <Route path="dat-lich" element={<BookingList />} />
+        <Route path="dat-lich" element={<Booking />} />
         <Route path="thanh-toan" element={<Payment />} />
         <Route path="ho-so" element={<PersonalProfile />} />
       </Route>

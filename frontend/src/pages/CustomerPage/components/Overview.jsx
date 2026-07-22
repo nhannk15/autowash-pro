@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Row, Col, Card, Table, Tag, Progress, Button, Empty, Space, Typography, Badge, Spin, Modal, message, Tooltip } from 'antd';
 import { CalendarOutlined, TrophyOutlined, CrownOutlined, ArrowRightOutlined, GiftOutlined, StarOutlined, WalletOutlined, RiseOutlined, InfoCircleOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { getMembershipTier, getUpcomingBooking, getReward, exchangeVoucher, getVoucher, getRecentActivities, getPendingDeposit, cancelBooking } from '../../../service/customerService';
 import axios from 'axios';
@@ -56,6 +56,7 @@ const CountdownCell = ({ expiryTime, onExpire }) => {
 export default function Overview() {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
 
     //State cho dữ liệu deposit pending
     const [depositPending, setDepositPending] = useState([])
@@ -175,6 +176,27 @@ export default function Overview() {
         };
     }, []);
 
+    // Đọc ?action= param từ notification click
+    useEffect(() => {
+        const action = searchParams.get('action');
+        if (!action) return;
+
+        if (action === 'bookings') {
+            // Đợi data load xong rồi mới mở modal
+            if (!loading) {
+                setIsModalOpen(true);
+                setSearchParams({}, { replace: true });
+            }
+        } else if (action === 'points') {
+            // Scroll đến bảng lịch sử điểm
+            const el = document.getElementById('point-history-section');
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            setSearchParams({}, { replace: true });
+        }
+    }, [searchParams, loading, setSearchParams]);
+
 
     // Lịch đặt gần nhất (sắp diễn ra đầu tiên)
     const nearestBooking = upcomingBookings.length > 0 ? upcomingBookings[0] : null;
@@ -282,6 +304,11 @@ export default function Overview() {
             dataIndex: 'slotDate',
             key: 'slotDate',
             render: (date) => date ? date.split('-').reverse().join('/') : '',
+        },
+        {
+            title: 'KĨ THUẬT VIÊN',
+            key: 'staff',
+            render: (_, record) => record.staffInfoDTO ? <Text strong>{record.staffInfoDTO.fullName}</Text> : <Text type="secondary">Chưa xếp</Text>,
         },
         {
             title: 'DỊCH VỤ',
@@ -432,6 +459,11 @@ export default function Overview() {
             render: (date) => date ? date.split('-').reverse().join('/') : '',
         },
         {
+            title: 'KĨ THUẬT VIÊN',
+            key: 'staff',
+            render: (_, record) => record.staffInfoDTO ? <Text strong>{record.staffInfoDTO.fullName}</Text> : <Text type="secondary">Chưa xếp</Text>,
+        },
+        {
             title: 'DỊCH VỤ',
             key: 'services',
             render: (_, record) => (
@@ -470,7 +502,6 @@ export default function Overview() {
                 return (
                     <Button
                         type="primary"
-                        danger
                         size="small"
                         disabled={isExpired}
                         onClick={() => handlePayDeposit(record)}
@@ -519,9 +550,9 @@ export default function Overview() {
                                         </div>
                                     )}
                                     <Button
-                                        type="primary"
+                                        type="default"
                                         icon={<ArrowRightOutlined />}
-                                        className="action-btn"
+                                        className="action-btn-outline"
                                         onClick={() => setIsModalOpen(true)}
                                     >
                                         Xem tất cả ({upcomingBookings.length})
@@ -575,7 +606,6 @@ export default function Overview() {
                                     <Space style={{ width: '100%', marginTop: '8px' }} direction="vertical" size={8}>
                                         <Button
                                             type="primary"
-                                            danger
                                             block
                                             style={{ height: '36px', fontWeight: '600', borderRadius: '6px' }}
                                             disabled={nearestPending?.billing?.depositExpiry ? new Date(nearestPending.billing.depositExpiry) <= new Date() : false}
@@ -586,7 +616,8 @@ export default function Overview() {
                                         <Button
                                             type="default"
                                             block
-                                            style={{ height: '36px', fontWeight: '600', borderRadius: '6px', borderColor: '#d9d9d9', color: '#595959' }}
+                                            className="action-btn-outline"
+                                            style={{ height: '36px', fontWeight: '600', borderRadius: '6px', margin: 0 }}
                                             onClick={() => setIsPendingModalOpen(true)}
                                         >
                                             Xem tất cả ({depositPending.length})
@@ -777,7 +808,7 @@ export default function Overview() {
             </Row>
 
             {/* Hàng 2: Bảng LỊCH SỬ GIAO DỊCH ĐIỂM */}
-            <div className="activity-section">
+            <div className="activity-section" id="point-history-section">
                 <div className="activity-header">
                     <Title level={4} className="activity-title">
                         <GiftOutlined style={{ marginRight: '8px', color: '#002b7f' }} /> LỊCH SỬ GIAO DỊCH ĐIỂM
