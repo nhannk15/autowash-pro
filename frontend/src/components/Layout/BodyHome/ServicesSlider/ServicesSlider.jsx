@@ -92,8 +92,10 @@ export default function ServicesSlider() {
                                         style={{
                                             backgroundImage: `url(${imageSrc})`,
                                             backgroundSize: 'cover',
-                                            backgroundPosition: 'center'
+                                            backgroundPosition: 'center',
+                                            cursor: 'pointer'
                                         }}
+                                        onClick={() => navigate('/service', { state: { highlightServiceId: service.serviceId } })}
                                     >
                                         {/* Vùng ảnh */}
                                         <div className="service-card__visual">

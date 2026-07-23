@@ -1,7 +1,19 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import './Service.css'
 import { useAuth } from '../../context/AuthContext';
+import { 
+    ClockCircleOutlined, 
+    DollarOutlined, 
+    RightOutlined, 
+    WarningOutlined, 
+    CarOutlined, 
+    BarChartOutlined, 
+    TrophyOutlined, 
+    CheckOutlined, 
+    FileTextOutlined,
+    CloseOutlined
+} from '@ant-design/icons';
 // Import các hình ảnh cục bộ từ assets
 import exteriorImg from '../../assets/Service/RuaXeNgoaiThat.jpg';
 import interiorImg from '../../assets/Service/VeSinhNoiThat.jpg';
@@ -25,6 +37,8 @@ const localImages = {
 };
 
 export default function Service() {
+    const navigate = useNavigate();
+    const location = useLocation();
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -100,6 +114,18 @@ export default function Service() {
         return () => clearTimeout(timer);
     }, []);
 
+    // Tự động hiển thị modal chi tiết dịch vụ khi nhảy qua từ slider trang chủ
+    useEffect(() => {
+        if (services.length > 0 && location.state?.highlightServiceId) {
+            const matched = services.find(s => s.id === location.state.highlightServiceId);
+            if (matched) {
+                setSelectedService(matched);
+                // Xoá state để reload trang không tự động bật lại modal
+                window.history.replaceState({}, document.title);
+            }
+        }
+    }, [services, location]);
+
     const filteredServices = services.filter(service => {
         if (activeTab === 'all') return true;
         if (activeTab === 'basic') {
@@ -140,7 +166,7 @@ export default function Service() {
                         className={`dichvu-filter-btn ${activeTab === 'premium' ? 'active' : ''}`}
                         onClick={() => setActiveTab('premium')}
                     >
-                        ✨ Cao cấp <span className="tab-count">{premiumCount}</span>
+                        <TrophyOutlined style={{ marginRight: 6 }} /> Cao cấp <span className="tab-count">{premiumCount}</span>
                     </button>
                     <button
                         className={`dichvu-filter-btn ${activeTab === 'basic' ? 'active' : ''}`}
@@ -160,7 +186,7 @@ export default function Service() {
                     </div>
                 ) : error ? (
                     <div className="dichvu-error">
-                        <div className="dichvu-error-icon">⚠️</div>
+                        <div className="dichvu-error-icon"><WarningOutlined /></div>
                         <h3 className="dichvu-error-title">Không thể tải dữ liệu</h3>
                         <p className="dichvu-error-desc">{error}</p>
                         <button className="dichvu-retry-btn" onClick={fetchServices}>
@@ -190,7 +216,7 @@ export default function Service() {
                                         <span className="dichvu-row__badge-id">Dịch vụ #0{service.id}</span>
                                         {service.type === 'premium' ? (
                                             <span className="dichvu-row__badge-tag dichvu-row__badge-tag--premium">
-                                                ✨ Dịch Vụ Cao Cấp
+                                                <TrophyOutlined style={{ marginRight: 6 }} /> Dịch Vụ Cao Cấp
                                             </span>
                                         ) : (
                                             <span className="dichvu-row__badge-tag dichvu-row__badge-tag--basic">
@@ -203,11 +229,11 @@ export default function Service() {
 
                                     <div className="dichvu-row__meta">
                                         <div className="dichvu-row__meta-item">
-                                            <span className="icon">⏱</span>
+                                            <span className="icon"><ClockCircleOutlined /></span>
                                             <span className="text">Thời gian: <strong>{service.duration}</strong></span>
                                         </div>
                                         <div className="dichvu-row__meta-item">
-                                            <span className="icon">💵</span>
+                                            <span className="icon"><DollarOutlined /></span>
                                             <span className="text">Giá chỉ từ: <strong>{service.priceSedan}</strong></span>
                                         </div>
                                     </div>
@@ -216,7 +242,7 @@ export default function Service() {
                                         className="dichvu-row__btn"
                                         onClick={() => setSelectedService(service)}
                                     >
-                                        Tìm hiểu chi tiết <span className="arrow">▶</span>
+                                        Tìm hiểu chi tiết <span className="arrow"><RightOutlined /></span>
                                     </button>
                                 </div>
                             </div>
@@ -261,7 +287,7 @@ function ServiceModal({ service, onClose }) {
             <div className="service-modal">
                 {/* Nút đóng */}
                 <button className="service-modal__close" onClick={onClose} aria-label="Close modal">
-                    &times;
+                    <CloseOutlined />
                 </button>
 
                 {/* Phần Header Row: Chia 2 cột */}
@@ -279,7 +305,7 @@ function ServiceModal({ service, onClose }) {
                         <p className="service-modal__short-desc">{service.shortDesc}</p>
 
                         <div className="service-modal__duration-box">
-                            <span className="icon">⏱</span>
+                            <span className="icon"><ClockCircleOutlined /></span>
                             <span className="text">
                                 Thời gian thực hiện: <strong>{service.duration}</strong>
                             </span>
@@ -294,15 +320,15 @@ function ServiceModal({ service, onClose }) {
                     {/* Bảng giá dự kiến */}
                     <div className="service-modal__section">
                         <h3 className="service-modal__section-title">
-                            <span className="icon">📊</span> Bảng giá dịch vụ dự kiến
+                            <span className="icon"><BarChartOutlined /></span> Bảng giá dịch vụ dự kiến
                         </h3>
                         <div className="service-modal__price-table">
                             <div className="price-row">
-                                <span className="vehicle-type">🚗 Xe 4 - 5 chỗ (Sedan / Hatchback)</span>
+                                <span className="vehicle-type"><CarOutlined style={{ marginRight: 6 }} /> Xe 4 - 5 chỗ (Sedan / Hatchback)</span>
                                 <span className="price-val">{service.priceSedan}</span>
                             </div>
                             <div className="price-row">
-                                <span className="vehicle-type">🚙 Xe 7 chỗ / Bán tải (SUV / Crossover)</span>
+                                <span className="vehicle-type"><CarOutlined style={{ marginRight: 6 }} /> Xe 7 chỗ / Bán tải (SUV / Crossover)</span>
                                 <span className="price-val">{service.priceSuv}</span>
                             </div>
                         </div>
@@ -315,12 +341,12 @@ function ServiceModal({ service, onClose }) {
                     {service.highlights && service.highlights.length > 0 && (
                         <div className="service-modal__section">
                             <h3 className="service-modal__section-title">
-                                <span className="icon">✨</span> Ưu thế vượt trội
+                                <span className="icon"><TrophyOutlined /></span> Ưu thế vượt trội
                             </h3>
                             <ul className="service-modal__highlights">
                                 {service.highlights.map((highlight, idx) => (
                                     <li key={idx}>
-                                        <span className="bullet">✓</span> {highlight}
+                                        <span className="bullet"><CheckOutlined /></span> {highlight}
                                     </li>
                                 ))}
                             </ul>
@@ -331,7 +357,7 @@ function ServiceModal({ service, onClose }) {
                     {service.steps && service.steps.length > 0 && (
                         <div className="service-modal__section">
                             <h3 className="service-modal__section-title">
-                                <span className="icon">📝</span> Quy trình thực hiện tiêu chuẩn
+                                <span className="icon"><FileTextOutlined /></span> Quy trình thực hiện tiêu chuẩn
                             </h3>
                             <div className="service-modal__steps">
                                 {service.steps.map((step, idx) => (
