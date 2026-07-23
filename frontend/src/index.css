@@ -12,4 +12,9 @@ body {
     Helvetica,
     Arial,
     sans-serif;
+  overflow-x: hidden;
+}
+
+html {
+  overflow-x: hidden;
 }

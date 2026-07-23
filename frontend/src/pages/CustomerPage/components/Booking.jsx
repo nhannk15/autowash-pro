@@ -34,7 +34,7 @@ function VehicleImage({ src, alt, fallbackIcon }) {
 
 
 
-export default function BookingList() {
+export default function Booking() {
     const { user } = useAuth();
     const navigate = useNavigate();
 
@@ -431,7 +431,8 @@ export default function BookingList() {
                 servicePriceIds: servicePriceIds,
                 notes: contactInfo.notes,
                 promotionId: appPromo ? appPromo.id : null,
-                voucherCode: selectedVoucher ? selectedVoucher.voucherCode : null
+                voucherCode: selectedVoucher ? selectedVoucher.voucherCode : null,
+                staffId: selectedStaff ? selectedStaff.id : null // null = bất kỳ kỹ thuật viên
             };
 
             const newBooking = await createBooking(payload);
@@ -1117,6 +1118,7 @@ export default function BookingList() {
                                 const depositAmount = totalAfterPromo * 0.3;
                                 const remainingBeforeVoucher = totalAfterPromo - depositAmount;
 
+
                                 let voucherDiscount = 0;
                                 if (selectedVoucher) {
                                     const rType = selectedVoucher.reward.rewardType;
@@ -1132,7 +1134,7 @@ export default function BookingList() {
                                 }
 
                                 const finalTotal = remainingBeforeVoucher - voucherDiscount;
-
+                                const finalAfterProAndVou = finalTotal + depositAmount;
 
                                 return (
                                     <div className="sidebar-total-row" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', marginBottom: '16px' }}>
@@ -1182,7 +1184,7 @@ export default function BookingList() {
                                         <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', borderTop: '1px solid #e2e8f0', paddingTop: '6px' }}>
                                             <span className="sidebar-total-label" style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '0.95rem' }}>Tổng thanh toán</span>
                                             <span className="sidebar-total-value" style={{ color: '#ef4444', fontSize: '1.3rem', fontWeight: 'bold' }}>
-                                                {formatCurrency(totalAfterPromo)}
+                                                {formatCurrency(finalAfterProAndVou)}
                                             </span>
                                         </div>
                                     </div>
@@ -1311,6 +1313,7 @@ export default function BookingList() {
                                 }
 
                                 const finalTotal = remainingBeforeVoucher - voucherDiscount;
+                                const finalAfterProAndVou = finalTotal + depositAmount;
 
                                 return (
                                     <>
@@ -1332,7 +1335,7 @@ export default function BookingList() {
                                         )}
                                         <div className="success-detail-item" style={{ fontWeight: 'bold', color: '#ef4444' }}>
                                             <span>Tổng thanh toán:</span>
-                                            <strong>{formatCurrency(finalTotal)}</strong>
+                                            <strong>{formatCurrency(finalAfterProAndVou)}</strong>
                                         </div>
                                     </>
                                 );

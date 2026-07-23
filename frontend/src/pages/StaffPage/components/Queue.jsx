@@ -315,8 +315,14 @@ export default function Queue() {
                                     {selectedBooking.startTime?.substring(0, 5)} - {selectedBooking.endTime?.substring(0, 5)}
                                 </Text>
                             </Descriptions.Item>
-                            <Descriptions.Item label="Khoang rửa" span={2}>
+                            <Descriptions.Item label="Khoang rửa">
                                 {selectedBooking.washBay || 'Chưa phân bổ'}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Nhân viên rửa xe">
+                                {selectedBooking.staffInfoDTO?.fullName || 'Chưa phân công'}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Ghi chú của khách" span={2}>
+                                <Text >{selectedBooking.notes || 'Không có'}</Text>
                             </Descriptions.Item>
                         </Descriptions>
 

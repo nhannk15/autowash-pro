@@ -52,4 +52,9 @@ public class WashSessionController {
     public ResponseEntity<List<WashSessionResponse>> completeWashSession(@RequestBody StartWashSessionRequest request) {
         return ResponseEntity.status(HttpStatus.OK).body(service.completeWashSessionVersion2(request.getBookingId()));
     }
+
+    @PostMapping("/api/staff/v3/wash-sessions/start")
+    public ResponseEntity<List<WashSessionResponse>> startWashSessionVersion3(@RequestParam("staffId") Long staffId, @RequestBody StartWashSessionRequest request) {
+        return ResponseEntity.status(HttpStatus.OK).body(service.startWashSessionAssigningStaffVersion3(request, staffId));
+    }
 }

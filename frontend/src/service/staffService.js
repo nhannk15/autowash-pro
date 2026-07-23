@@ -65,10 +65,10 @@ export async function searchBookingByQR(bookingCode) {
     return response.data;
 }
 
-export async function confirmBookingV2(bookingId, staffId) {
+export async function confirmBookingV3(bookingId, staffId, staffNote) {
     const response = await axios.post(
-        `${API}/api/staff/v2/wash-sessions/start?staffId=${staffId}`,
-        { bookingId },
+        `${API}/api/staff/v3/wash-sessions/start?staffId=${staffId}`,
+        { bookingId, staffNote },
         { withCredentials: true }
     );
     return response.data;

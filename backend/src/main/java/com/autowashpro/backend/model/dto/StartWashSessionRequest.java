@@ -15,4 +15,6 @@ public class StartWashSessionRequest {
     @NotNull(message = "ID lịch đặt không được là null")
     @Min(value = 1, message = "ID lịch đặt phải lớn hơn 0")
     private Long bookingId;
+
+    private String staffNote;
 }

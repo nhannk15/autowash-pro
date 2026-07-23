@@ -144,9 +144,9 @@ export default function MembershipTier() {
                                     </ul>
 
                                     {/* Điểm duy trì */}
-                                    <p className="tier-card__highlight">
+                                    {/* <p className="tier-card__highlight">
                                         DUY TRÌ: {tier.minPointsToMaintain.toLocaleString()} ĐIỂM / QUÝ
-                                    </p>
+                                    </p> */}
                                 </div>
                             )
                         })

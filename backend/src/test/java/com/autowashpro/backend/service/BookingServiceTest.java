@@ -165,6 +165,7 @@ public class BookingServiceTest {
         service.setId(1L);
         service.setServiceName("Rửa xe nội thất");
         service.setDurationMinutes(45);
+        service.setCategory(com.autowashpro.backend.model.enums.ServiceCategory.BASIC);
 
         servicePrice = new ServicePrice();
         servicePrice.setService(service);
@@ -214,7 +215,7 @@ public class BookingServiceTest {
         when(timeSlotRepository.findById(1L)).thenReturn(Optional.of(timeSlot));
         when(servicePriceRepository.findAllById((any()))).thenReturn(List.of(servicePrice));
         when(availableSlotRepository.findConsecutiveSlotsFromDate(any(), any(), anyInt(), any(Pageable.class)))
-                .thenReturn(List.of(availableSlot));
+                .thenReturn(List.of(availableSlot, availableSlot));
         when(vehicleRepository.findById(1L)).thenReturn(Optional.of(vehicle));
         when(bookingRepository.saveAndFlush(any())).thenReturn(savedBooking);
         when(bookingCodeGenerator.generate()).thenReturn("ABCXYZ");
@@ -355,6 +356,7 @@ public class BookingServiceTest {
         LocalTime startTimeSlot = LocalTime.now().minusMinutes(1);
         timeSlot.setStartTime(startTimeSlot);
         when(timeSlotRepository.findById(1L)).thenReturn(Optional.of(timeSlot));
+        when(servicePriceRepository.findAllById(any())).thenReturn(List.of(servicePrice));
 
         // Act + Assert
         assertThrows(SlotInavailabilityException.class, () -> {
@@ -407,7 +409,7 @@ public class BookingServiceTest {
         when(servicePriceRepository.findAllById(List.of(1L)))
                 .thenReturn(List.of(servicePrice));
         when(availableSlotRepository.findConsecutiveSlotsFromDate(any(), any(), anyInt(), any(Pageable.class)))
-                .thenReturn(List.of(availableSlot));
+                .thenReturn(List.of(availableSlot, availableSlot));
         when(vehicleRepository.findById(1L))
                 .thenReturn(Optional.empty());
 
@@ -446,7 +448,7 @@ public class BookingServiceTest {
         when(servicePriceRepository.findAllById(List.of(1L)))
                 .thenReturn(List.of(servicePrice));
         when(availableSlotRepository.findConsecutiveSlotsFromDate(any(), any(), anyInt(), any(Pageable.class)))
-                .thenReturn(List.of(availableSlot));
+                .thenReturn(List.of(availableSlot, availableSlot));
         assertThrows(SlotInavailabilityException.class, () -> {
             bookingService.createBooking(request);
         });

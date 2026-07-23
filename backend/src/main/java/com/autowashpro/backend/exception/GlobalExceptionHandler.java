@@ -130,6 +130,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    @ExceptionHandler(VehicleInSlotConflictException.class)
+    public ResponseEntity<ErrorResponse> handleVehicleInSlotConflictException(VehicleInSlotConflictException ex, WebRequest request) {
+        ErrorResponse error = createErrorResponse(HttpStatus.BAD_REQUEST, ex.getClass().getSimpleName(), ex.getMessage(), request);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
     /**
      * Billing Exceptions
      * @param ex

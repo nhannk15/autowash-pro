@@ -436,6 +436,10 @@
 
 /* Mobile: sidebar biến thành drawer off-canvas, ẩn/hiện bằng transform */
 @media (max-width: 576px) {
+    .dashboard-layout {
+        overflow-x: hidden;
+    }
+
     .dashboard-layout__body {
         position: relative;
     }
@@ -489,5 +493,7 @@
 
     .dashboard-layout__content {
         padding: 16px;
+        min-width: 0;
+        max-width: 100%;
     }
 }
