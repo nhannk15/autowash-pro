@@ -459,6 +459,12 @@
     overflow: hidden;
 }
 
+@media (max-width: 576px) {
+    .table-card {
+        overflow-x: auto;
+    }
+}
+
 .custom-table .ant-table-thead > tr > th {
     background-color: #f8fafc !important;
     color: #333333 !important;
@@ -481,6 +487,8 @@
 @media (max-width: 768px) {
     .overview-container {
         padding: 16px;
+        max-width: 100%;
+        overflow-x: hidden;
     }
     .points-number {
         font-size: 32px;

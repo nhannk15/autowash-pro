@@ -1,0 +1,2 @@
+org.springframework.boot.env.EnvironmentPostProcessor=\
+com.autowashpro.backend.config.E2eEnvironmentSafetyPostProcessor

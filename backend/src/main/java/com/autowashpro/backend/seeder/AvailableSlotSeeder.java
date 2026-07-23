@@ -64,7 +64,11 @@ public class AvailableSlotSeeder implements Seeder {
         List<TimeSlot> timeSlots = timeSlotRepository.findAll();
         List<WashBay> washBays = washBayRepository.findAll();
 
-        AvailableSlot lastAvailableSlot = availableSlotRepository.findAll().getLast();
+        List<AvailableSlot> allSlots = availableSlotRepository.findAll();
+        if (allSlots.isEmpty()) {
+            return;
+        }
+        AvailableSlot lastAvailableSlot = allSlots.getLast();
         LocalDate lastDate = lastAvailableSlot.getSlotDate();
         long days = ChronoUnit.DAYS.between(LocalDate.now(), lastDate);
         long moreDaysWeNeed = MAX_WINDOW_DAY - days;
