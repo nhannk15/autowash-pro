@@ -220,4 +220,10 @@ public interface AvailableSlotRepository extends JpaRepository<AvailableSlot, Lo
             @Param("date") LocalDate date,
             @Param("startTime") LocalTime startTime, @Param("washBayId") Long washBayId, Pageable pageable);
 
+    @Query("""
+            SELECT availableSlot FROM AvailableSlot availableSlot
+            WHERE availableSlot.slotDate = :bookingDate AND availableSlot.timeSlot.id = :timeSlotId
+            """)
+    List<AvailableSlot> findByIdAndBookingdate(@Param("timeSlotId") Long timeSlotId,
+            @Param("bookingDate") LocalDate bookingDate);
 }
