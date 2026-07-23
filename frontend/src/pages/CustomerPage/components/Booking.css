@@ -214,7 +214,7 @@
     padding: 14px;
     border: none;
     border-radius: 10px;
-    background-color: #0d1b4b;
+    background-color: #002b7f;
     color: #ffffff;
     font-weight: 700;
     font-size: 0.95rem;
@@ -224,10 +224,10 @@
 }
 
 .sidebar-btn-next:hover:not(:disabled) {
-    background-color: #f5a623;
-    color: #0d1b4b;
+    background-color: #001f5c;
+    color: #ffffff;
     transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(245, 166, 35, 0.3);
+    box-shadow: 0 6px 16px rgba(13, 27, 75, 0.25);
 }
 
 .sidebar-btn-next:disabled {
@@ -242,20 +242,20 @@
     padding: 14px;
     border: none;
     border-radius: 10px;
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    background: linear-gradient(135deg, #002b7f 0%, #1e40af 100%);
     color: #ffffff;
     font-weight: 700;
     font-size: 1rem;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+    box-shadow: 0 4px 12px rgba(13, 27, 75, 0.2);
     margin-bottom: 8px;
 }
 
 .sidebar-btn-confirm:hover:not(:disabled) {
-    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    background: linear-gradient(135deg, #001f5c 0%, #1a365d 100%);
     transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.45);
+    box-shadow: 0 6px 16px rgba(13, 27, 75, 0.35);
 }
 
 .sidebar-btn-confirm:disabled {
@@ -621,7 +621,6 @@
 }
 
 .booking-service-card--premium {
-    border-top: 3px solid #f5a623;
     background: linear-gradient(to bottom, #fffdfb, #ffffff);
 }
 

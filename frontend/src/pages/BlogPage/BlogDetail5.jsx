@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import './BlogDetail.css'
+import { UserOutlined, CalendarOutlined, OrderedListOutlined, ArrowLeftOutlined, PhoneOutlined, EnvironmentOutlined } from '@ant-design/icons'
 
 // Import service images for thumbnails and illustrations
 import imgRuaXe from '../../assets/Service/RuaXeNgoaiThat.jpg'
@@ -62,15 +63,11 @@ export default function BlogDetail5() {
                         
                         <div className="blog-detail__post-meta">
                             <div className="blog-detail__meta-item">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16" style={{color: '#a0aec0'}}>
-                                    <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A9.75 9.75 0 0112 22.5a9.75 9.75 0 01-8.314-1.7a.75.75 0 01-.437-.695z" clipRule="evenodd" />
-                                </svg>
+                                <UserOutlined style={{color: '#a0aec0'}} />
                                 <span>Đăng bởi: Car Wash Centre Team</span>
                             </div>
                             <div className="blog-detail__meta-item">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16" style={{color: '#a0aec0'}}>
-                                    <path fillRule="evenodd" d="M6.75 2.25A.75.75 0 017.5 3v1.5h9V3A.75.75 0 0118 3v1.5h.75a3 3 0 013 3v11.25a3 3 0 01-3 3H5.25a3 3 0 01-3-3V7.5a3 3 0 013-3H6V3a.75.75 0 01.75-.75zm13.5 9H3.75v7.5a1.5 1.5 0 001.5 1.5h13.5a1.5 1.5 0 001.5-1.5v-7.5zm-15-3h15V7.5a1.5 1.5 0 00-1.5-1.5H5.25A1.5 1.5 0 003.75 7.5v.75z" clipRule="evenodd" />
-                                </svg>
+                                <CalendarOutlined style={{color: '#a0aec0'}} />
                                 <span>15/04/2026</span>
                             </div>
                         </div>
@@ -86,9 +83,7 @@ export default function BlogDetail5() {
                             {/* Table of Contents Box */}
                             <div className="blog-detail__toc">
                                 <div className="blog-detail__toc-title">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18" style={{color: '#f5a623'}}>
-                                        <path fillRule="evenodd" d="M2.625 6A3.375 3.375 0 016 2.625h12A3.375 3.375 0 0121.375 6v12A3.375 3.375 0 0118 21.375H6A3.375 3.375 0 012.625 18V6zm3 3.375a.75.75 0 01.75-.75h11.25a.75.75 0 010 1.5H6.375a.75.75 0 01-.75-.75zM6 12a.75.75 0 000 1.5h12a.75.75 0 000-1.5H6zm-.375 3.75a.75.75 0 01.75-.75h11.25a.75.75 0 010 1.5H6.375a.75.75 0 01-.75-.75z" clipRule="evenodd" />
-                                    </svg>
+                                    <OrderedListOutlined style={{color: '#f5a623'}} />
                                     <span>Mục lục nội dung</span>
                                 </div>
                                 <ol className="blog-detail__toc-list">
@@ -253,20 +248,18 @@ export default function BlogDetail5() {
                             </p>
                             
                             <div className="blog-detail__callout">
-                                📍 <strong>Địa chỉ liên hệ:</strong> Số 1A Đường Phú Thuận, phường Phú Thuận, Quận 7, TP. HCM
+                                <EnvironmentOutlined style={{ marginRight: 6, color: '#3182ce' }} /> <strong>Địa chỉ liên hệ:</strong> Số 1A Đường Phú Thuận, phường Phú Thuận, Quận 7, TP. HCM
                                 <br />
-                                📞 <strong>Đặt lịch chăm sóc xe tại nhà:</strong> 07 64 64 64 16
+                                <PhoneOutlined style={{ marginRight: 6, color: '#e53e3e' }} /> <strong>Đặt lịch chăm sóc xe tại nhà:</strong> 07 64 64 64 16
                                 <br />
-                                📞 <strong>Đường dây nóng hỗ trợ:</strong> 0784 7676 79 / 0911 811 247
+                                <PhoneOutlined style={{ marginRight: 6, color: '#e53e3e' }} /> <strong>Đường dây nóng hỗ trợ:</strong> 0784 7676 79 / 0911 811 247
                             </div>
                         </div>
                     </article>
 
                     {/* Back Button */}
                     <Link to="/blog" className="blog-detail__back-btn">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-                            <path fillRule="evenodd" d="M11.03 3.97a.75.75 0 010 1.06l-6.22 6.22H21a.75.75 0 010 1.5H4.81l6.22 6.22a.75.75 0 11-1.06 1.06l-7.5-7.5a.75.75 0 010-1.06l7.5-7.5a.75.75 0 011.06 0z" clipRule="evenodd" />
-                        </svg>
+                        <ArrowLeftOutlined />
                         <span>Quay lại Blog</span>
                     </Link>
                 </div>

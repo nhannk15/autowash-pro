@@ -13,7 +13,7 @@ const slides = [
         title: 'Đặt Lịch Rửa Xe\nNgay Hôm Hôm Nay',
         desc: 'Nhanh chóng - Tận tâm - Chuyên nghiệp. Xe sạch bóng trong 30 phút!',
         btn1: 'Đặt Lịch Ngay',
-        btn2: 'Gọi Ngay: 0909 123 456',
+        btn2: 'Gọi Ngay: 0945692584',
     },
     {
         id: 2,
@@ -68,13 +68,13 @@ export default function HeroSlider() {
                         <h1 className="hero-slide__title">{slide.title}</h1>
                         <p className="hero-slide__desc">{slide.desc}</p>
                         <div className="hero-slide__buttons">
-                            <button 
+                            <button
                                 className="hero-btn hero-btn--primary"
                                 onClick={() => handleButtonClick(slide.btn1)}
                             >
                                 {slide.btn1}
                             </button>
-                            <button 
+                            <button
                                 className="hero-btn hero-btn--outline"
                                 onClick={() => handleButtonClick(slide.btn2)}
                             >
