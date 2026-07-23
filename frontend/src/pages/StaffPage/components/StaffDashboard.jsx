@@ -605,7 +605,7 @@ export default function StaffDashboard() {
                     {/* THAO TÁC NHANH */}
                     <div className="dashboard__quick-actions">
                         <Row gutter={[12, 12]}>
-                            <Col span={12}>
+                            <Col xs={24} sm={12} lg={24} xl={12}>
                                 <Button
                                     type="primary"
                                     icon={<UserAddOutlined />}
@@ -616,7 +616,7 @@ export default function StaffDashboard() {
                                     Tạo tài khoản / Thêm xe
                                 </Button>
                             </Col>
-                            <Col span={12}>
+                            <Col xs={24} sm={12} lg={24} xl={12}>
                                 <Button
                                     type="primary"
                                     icon={<CalendarOutlined />}
