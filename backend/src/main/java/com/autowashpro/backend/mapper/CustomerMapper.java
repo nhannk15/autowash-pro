@@ -6,6 +6,7 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import com.autowashpro.backend.model.dto.CustomerTierResponse;
+import com.autowashpro.backend.model.dto.CustomerVehicleDTO;
 import com.autowashpro.backend.model.dto.WashBayCustomerResponse;
 import com.autowashpro.backend.model.entity.Customer;
 
@@ -20,5 +21,7 @@ public interface CustomerMapper {
     @Mapping(target = "membershipTierSummaryResponse", source = "tier")
     @Mapping(target = "deltaPoints", ignore = true)
     CustomerTierResponse toCustomerTierResponse(Customer customer);
+
+    CustomerVehicleDTO toCustomerVehicleDTO(Customer customer);
 
 }
