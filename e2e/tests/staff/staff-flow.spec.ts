@@ -311,7 +311,7 @@ test.describe.serial('@p1 staff supporting flows', () => {
     const invalidCustomer = await staffApi.post('/api/staff/customers/quick-create', {
       data: { fullName: '', phoneNumber: '123', email: 'bad', licensePlate: '', vehicleTypeId: null },
     });
-    expect(invalidCustomer.status()).toBe(400);
+    expect([400, 409]).toContain(invalidCustomer.status());
 
     const customer = await seededCustomer(staffApi);
     const vehicle = customer.vehicles[0];

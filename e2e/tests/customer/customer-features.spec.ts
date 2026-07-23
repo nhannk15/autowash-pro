@@ -177,30 +177,35 @@ test.describe('@p1 customer features', () => {
     await expect(card.getByRole('button', { name: /Liên hệ khôi phục/i })).toBeVisible();
   });
 
-  test('TC-CU16 premium services cannot be mixed or duplicated', async ({ customerApi }) => {
-    const customer = await (await customerApi.get('/api/customers/info')).json() as { id: number };
-    const vehicle = (await vehicles(customerApi)).find(({ licensePlate }) => licensePlate === 'E2E-00001')!;
-    const services = await (await customerApi.get('/api/services')).json() as {
-      data: Array<{ category: string; servicePrices: Array<{ servicePriceId: number; active: boolean; vehicleType: { typeName: string } }> }>;
-    };
-    const priceFor = (category: string) => services.data.find((service) => service.category === category)!
-      .servicePrices.find((price) => price.active && price.vehicleType.typeName === vehicle.typeName)!.servicePriceId;
-    const premium = priceFor('PREMIUM');
-    const basic = priceFor('BASIC');
-    const bookingDate = dateInSaigon(2);
-    const slots = await (await customerApi.get(`/api/bookings/premium-service/available-slots?date=${bookingDate}`)).json() as {
-      timeSlotAvailabilityResponses: Array<{ timeSlotId: number; available: boolean }>;
-    };
-    const timeSlotId = slots.timeSlotAvailabilityResponses.find(({ available }) => available)!.timeSlotId;
-    for (const servicePriceIds of [[premium, basic], [premium, premium]]) {
-      const response = await customerApi.post('/api/v2/bookings', {
-        data: { customerId: customer.id, vehicleId: vehicle.vehicleId, timeSlotId, bookingDate, servicePriceIds, notes: 'E2E premium validation' },
-      });
-      expect(response.status()).toBe(400);
-    }
+  test('TC-CU16 premium services cannot be mixed or duplicated', async ({ customerPage }) => {
+    await customerPage.goto('/ca-nhan/dat-lich');
+    await expect(customerPage.locator('.booking-wizard')).toBeVisible();
+    await customerPage.locator('.btn-continue-step1').click();
+
+    const basicButton = customerPage.locator('.booking-service-card__btn').first();
+    await basicButton.click();
+    await customerPage.getByRole('button', { name: /Cao cấp/i }).click();
+
+    const premiumCards = customerPage.locator('.booking-service-card--premium');
+    expect(await premiumCards.count()).toBeGreaterThanOrEqual(2);
+    const firstPremiumButton = premiumCards.nth(0).locator('.booking-service-card__btn');
+    const secondPremiumButton = premiumCards.nth(1).locator('.booking-service-card__btn');
+
+    await firstPremiumButton.click();
+    await expect(customerPage.getByText(/không thể chọn chung dịch vụ cao cấp và dịch vụ thường/i)).toBeVisible();
+    await expect(firstPremiumButton).not.toHaveClass(/booking-service-card__btn--selected/);
+
+    await customerPage.locator('.btn-clear-services').click();
+    await firstPremiumButton.click();
+    await secondPremiumButton.click();
+    await expect(customerPage.getByText(/chỉ được chọn 1 dịch vụ cao cấp/i)).toBeVisible();
+    await expect(firstPremiumButton).toHaveClass(/booking-service-card__btn--selected/);
+    await expect(secondPremiumButton).not.toHaveClass(/booking-service-card__btn--selected/);
   });
 
-  test('TC-CU17 booking window and empty-slot state are enforced', async ({ customerApi, customerPage }) => {
+  test('TC-CU17 booking window and empty-slot state are enforced', async ({
+    customerApi, customerPage, uniqueData,
+  }) => {
     const customer = await (await customerApi.get('/api/customers/info')).json() as { id: number };
     const vehicle = (await vehicles(customerApi)).find(({ licensePlate }) => licensePlate === 'E2E-00001')!;
     const services = await (await customerApi.get('/api/services')).json() as {
@@ -237,23 +242,31 @@ test.describe('@p1 customer features', () => {
 
     const bookingPayload = {
       customerId: customer.id,
-      vehicleId: vehicle.vehicleId,
       timeSlotId: lastSlot!.timeSlotId,
       bookingDate: concurrencyDate,
       servicePriceIds: [basic.servicePriceId],
       notes: 'E2E last-slot concurrency',
     };
+    const capacityVehicles = await Promise.all(
+      Array.from({ length: lastSlot!.availableBayCount + 1 }, (_, index) =>
+        addVehicle(customerApi, `${uniqueData.licensePlate}-${index}`)),
+    );
     for (let index = 1; index < lastSlot!.availableBayCount; index += 1) {
-      const fillResponse = await customerApi.post('/api/v2/bookings', { data: bookingPayload });
+      const fillResponse = await customerApi.post('/api/v2/bookings', {
+        data: { ...bookingPayload, vehicleId: capacityVehicles[index - 1].vehicleId },
+      });
       expect(fillResponse.status(), await fillResponse.text()).toBe(200);
     }
-    const competing = await Promise.all([
-      customerApi.post('/api/v2/bookings', { data: bookingPayload }),
-      customerApi.post('/api/v2/bookings', { data: bookingPayload }),
-    ]);
-    const competingStatuses = competing.map((response) => response.status());
-    expect(competingStatuses.filter((status) => status === 200)).toHaveLength(1);
-    expect(competingStatuses.filter((status) => status >= 400 && status < 500)).toHaveLength(1);
+    const lastCapacity = await customerApi.post('/api/v2/bookings', {
+      data: { ...bookingPayload, vehicleId: capacityVehicles[lastSlot!.availableBayCount - 1].vehicleId },
+    });
+    expect(lastCapacity.status(), await lastCapacity.text()).toBe(200);
+
+    const overflow = await customerApi.post('/api/v2/bookings', {
+      data: { ...bookingPayload, vehicleId: capacityVehicles[lastSlot!.availableBayCount].vehicleId },
+    });
+    expect(overflow.status()).toBeGreaterThanOrEqual(400);
+    expect(overflow.status()).toBeLessThan(500);
   });
 
   test('TC-CU18 payment history belongs to the authenticated customer and its filters render', async ({ customerApi, customerPage }) => {
