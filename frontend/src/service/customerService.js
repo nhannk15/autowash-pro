@@ -194,3 +194,11 @@ export async function getCustomerBillingHistory() {
     const response = await axios.get('/api/billings/customer/billing-history');
     return response.data;
 }
+
+// api27 - kiểm tra trùng lịch của xe
+export async function checkVehicleConflict(timeSlotId, vehicleId, bookingDate) {
+    const response = await axios.get('/api/customer/available-slots/check-consecutive-vehicle', {
+        params: { timeSlotId, vehicleId, bookingDate }
+    });
+    return response.data;
+}

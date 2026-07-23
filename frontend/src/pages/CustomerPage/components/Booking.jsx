@@ -4,7 +4,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { CarOutlined, UserOutlined, CheckOutlined, TrophyOutlined, ClockCircleOutlined, CalendarOutlined, FileTextOutlined, WarningOutlined, CloseOutlined, ToolOutlined, DollarOutlined } from '@ant-design/icons';
 import './Booking.css';
 import { message, Select } from 'antd';
-import { getAvailableSlot, getPremiumAvailableSlot, getApplicablePromotion as getApplicablePromotionAPI, getService, getVehicleByCustomer, createBooking, getMembershipTier, getVoucher, createVNPayPayment, getPendingDeposit, getAllStaffs } from '../../../service/customerService';
+import { getAvailableSlot, getPremiumAvailableSlot, getApplicablePromotion as getApplicablePromotionAPI, getService, getVehicleByCustomer, createBooking, getMembershipTier, getVoucher, createVNPayPayment, getPendingDeposit, getAllStaffs, checkVehicleConflict } from '../../../service/customerService';
 function VehicleImage({ src, alt, fallbackIcon }) {
     const [hasError, setHasError] = useState(false);
     // Mục đích: Dùng để ghi nhận xem ảnh của xe có bị lỗi khi tải hay không.
@@ -66,6 +66,7 @@ export default function Booking() {
     const [submitting, setSubmitting] = useState(false);
     const [bookingError, setBookingError] = useState(null);
     const [selectedVoucher, setSelectedVoucher] = useState(null);
+    const [conflictError, setConflictError] = useState(null);
 
     // Danh sách xe của khách hàng từ API thực tế
     const [userVehicles, setUserVehicles] = useState([]);
@@ -303,6 +304,26 @@ export default function Booking() {
         };
         fetchAvailableSlots();
     }, [selectedDate, currentStep, selectedServices]);
+
+    // api27 - Kiểm tra trùng lịch xe ngay tại bước chọn slot
+    useEffect(() => {
+        if (!selectedTimeSlotId || !selectedVehicle || !selectedDate) {
+            setConflictError(null);
+            return;
+        }
+
+        const checkConflict = async () => {
+            try {
+                const vehicleId = selectedVehicle.vehicleId;
+                await checkVehicleConflict(selectedTimeSlotId, vehicleId, selectedDate);
+                setConflictError(null);
+            } catch (err) {
+                setConflictError(err.response?.data?.message || err.message || "Xe đã trùng lịch!");
+            }
+        };
+
+        checkConflict();
+    }, [selectedTimeSlotId, selectedVehicle, selectedDate]);
 
     // Phân loại các slot theo buổi (Sáng, Chiều, Tối)
     const getSlotsForPeriod = (period) => {
@@ -922,6 +943,26 @@ export default function Booking() {
                             </div>
                         )}
 
+                        {conflictError && (
+                            <div className="sidebar-conflict-warning" style={{
+                                marginTop: '12px',
+                                padding: '10px 12px',
+                                backgroundColor: '#fff2f0',
+                                border: '1px solid #ffccc7',
+                                borderRadius: '8px',
+                                color: '#ff4d4f',
+                                fontSize: '0.85rem',
+                                display: 'flex',
+                                alignItems: 'flex-start',
+                                gap: '8px',
+                                fontWeight: '500',
+                                lineHeight: '1.4'
+                            }}>
+                                <WarningOutlined style={{ marginTop: '2px', flexShrink: 0 }} />
+                                <span>{conflictError}</span>
+                            </div>
+                        )}
+
                         <hr className="sidebar-divider" />
 
                         <div className="sidebar-total-row">
@@ -942,7 +983,7 @@ export default function Booking() {
                             <button
                                 type="button"
                                 className="sidebar-btn-next"
-                                disabled={!selectedDate || !selectedTime}
+                                disabled={!selectedDate || !selectedTime || !!conflictError}
                                 onClick={handleNextStep}
                             >
                                 TIẾP TỤC
