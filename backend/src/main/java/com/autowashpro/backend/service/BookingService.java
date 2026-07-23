@@ -684,11 +684,11 @@ public class BookingService {
                 .orElseThrow(() -> new SlotInavailabilityException("Không tìm thấy slot phù hợp"));
 
         if (bookingDay.equals(now)) {
-            // LocalTime minStartTime = LocalTime.now().plusMinutes(15L);
-            // if (startTimeSlot.getStartTime().isBefore(minStartTime)) {
-            // throw new SlotInavailabilityException(
-            // "Giờ đặt lịch phải trước thời điểm hiện tại ít nhất 15 phút");
-            // }
+            LocalTime minStartTime = LocalTime.now().plusMinutes(5L);
+            if (startTimeSlot.getStartTime().isBefore(minStartTime)) {
+                throw new SlotInavailabilityException(
+                        "Giờ đặt lịch phải sau thời điểm hiện tại trễ nhất 5 phút");
+            }
         }
         long dayBeetween = ChronoUnit.DAYS.between(now, bookingDay);
         if (bookingWindowDays < dayBeetween) {
@@ -1002,7 +1002,8 @@ public class BookingService {
             List<AvailableSlot> consecutiveSlots = availableSlotRepository
                     .findAllBookedSlotsForCheckingVehicleConfliction(bookingDate, startTime, washBay.getId(),
                             PageRequest.of(0, slotsNeed));
-            log.info("checkVehicleSchedulingConflict() - consecutiveSlots of washBay {} is {}}", washBay.getId(), consecutiveSlots.size());
+            log.info("checkVehicleSchedulingConflict() - consecutiveSlots of washBay {} is {}}", washBay.getId(),
+                    consecutiveSlots.size());
             if (consecutiveSlots.isEmpty()) {
                 return;
             } else {
