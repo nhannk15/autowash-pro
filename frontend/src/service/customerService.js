@@ -15,7 +15,7 @@ import axios from "axios";
 // Cách thức hoạt động: Khi bạn gọi API với đường dẫn /api/vehicles/user, trình duyệt sẽ gửi request tới Server Frontend (http://localhost:3000/api/vehicles/user).
 // Vite phát hiện request bắt đầu bằng /api, nó sẽ tự động đứng ra làm trung gian gửi tiếp (proxy) request này sang server backend thực tế là http://localhost:8080/api/vehicles/user và trả lại kết quả cho frontend.
 
-// BookingList.jsx sử dụng
+// Booking.jsx sử dụng
 export async function getVehicleByCustomer() {
     const response = await axios.get(`/api/vehicles/user`);
     // Khi dùng đường dẫn tương đối /api/vehicles/user: Trình duyệt coi đây là yêu cầu cùng nguồn (Same-Origin) nên sẽ tự động đính kèm Cookie chứa mã JWT của bạn gửi lên Server.

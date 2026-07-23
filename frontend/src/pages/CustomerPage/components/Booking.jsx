@@ -34,7 +34,7 @@ function VehicleImage({ src, alt, fallbackIcon }) {
 
 
 
-export default function BookingList() {
+export default function Booking() {
     const { user } = useAuth();
     const navigate = useNavigate();
 

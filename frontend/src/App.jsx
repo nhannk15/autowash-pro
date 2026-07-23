@@ -15,7 +15,7 @@ import LoginPage from './pages/LoginPage/LoginPage.jsx'
 import CustomerPage from './pages/CustomerPage/CustomerPage.jsx'
 import Overview from './pages/CustomerPage/components/Overview.jsx'
 import MyCars from './pages/CustomerPage/components/MyCars.jsx'
-import BookingList from './pages/CustomerPage/components/BookingList.jsx'
+import Booking from './pages/CustomerPage/components/Booking.jsx'
 import Payment from './pages/CustomerPage/components/Payment.jsx'
 import PersonalProfile from './pages/CustomerPage/components/PersonalProfile.jsx'
 import RegisterPage from './pages/RegisterPage/RegisterPage.jsx'
@@ -118,6 +118,7 @@ function App() {
         <Route path="/staff" element={
           <ProtectedRoute allowedRoles={["STAFF"]}>
             <Navbar />
+
             <StaffPage />
           </ProtectedRoute>
         }>
@@ -129,6 +130,7 @@ function App() {
           <Route path="history" element={<History />} />
           <Route path="profile" element={<Profile />} />
         </Route>
+
 
         <Route path="/admin" element={
           <ProtectedRoute allowedRoles={["ADMIN"]}>

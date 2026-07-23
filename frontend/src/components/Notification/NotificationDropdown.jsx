@@ -74,20 +74,32 @@ function TypeBadge({ type }) {
     );
 }
 
+// Mapping notification type sang URL action
+const NOTIF_ACTION_MAP = {
+    BOOKING_CONFIRMED: '/ca-nhan/tong-quan?action=bookings',
+    BOOKING_REMINDER:  '/ca-nhan/tong-quan?action=bookings',
+    POINTS_EARN:       '/ca-nhan/tong-quan?action=points',
+    POINTS_EXPIRY:     '/ca-nhan/tong-quan?action=points',
+    POINTS_ADJUST:     '/ca-nhan/tong-quan?action=points',
+    TIER_UPGRADE:      '/ca-nhan/tong-quan',
+    TIER_DOWNGRADE:    '/ca-nhan/tong-quan',
+};
+
 function NotificationItem({ notification, onRead, onClose }) {
     const navigate = useNavigate();
 
-    const handleClick = () => {
-        if (!notification.isRead) {
-            onRead(notification.id);
+    const handleClick = async () => {
+        if (!(notification.isRead || notification.read)) {
+            await onRead(notification.id); // Đợi API hoàn tất trước khi đóng và navigate
         }
+        const target = NOTIF_ACTION_MAP[notification.notificationType] ?? '/ca-nhan/tong-quan';
         onClose();
-        navigate('/ca-nhan/tong-quan');
+        navigate(target);
     };
 
     return (
         <div
-            className={`notif-item ${notification.isRead ? '' : 'unread'}`}
+            className={`notif-item ${notification.isRead || notification.read ? '' : 'unread'}`}
             onClick={handleClick}
             role="button"
             tabIndex={0}
@@ -102,7 +114,7 @@ function NotificationItem({ notification, onRead, onClose }) {
                     <span className="notif-item__time">
                         {formatRelativeTime(notification.createdAt)}
                     </span>
-                    {!notification.isRead && <span className="notif-unread-dot" />}
+                    {!(notification.isRead || notification.read) && <span className="notif-unread-dot" />}
                 </div>
             </div>
         </div>
@@ -176,6 +188,8 @@ export default function NotificationDropdown() {
 
     const wrapperRef = useRef(null);
     const pollingRef = useRef(null);
+    // Lưu các ID đã đánh dấu đọc cục bộ để không bị ghi đè khi re-fetch
+    const locallyReadIdsRef = useRef(new Set());
 
     // ── Fetch unread count (polling) ──
     const fetchUnreadCount = useCallback(async () => {
@@ -194,7 +208,12 @@ export default function NotificationDropdown() {
             const data = activeTab === 'unread'
                 ? await getUnreadNotifications()
                 : await getAllNotifications();
-            setNotifications(data);
+            // Apply local read overrides: không bao giờ hiện lại chấm xanh
+            // cho các notification đã được click dù backend chưa kịp cập nhật
+            const merged = data.map((n) =>
+                locallyReadIdsRef.current.has(n.id) ? { ...n, isRead: true } : n
+            );
+            setNotifications(merged);
         } catch (err) {
             console.error('fetchNotifications error:', err);
         } finally {
@@ -238,14 +257,23 @@ export default function NotificationDropdown() {
 
     // ── Mark single as read ──
     const handleMarkRead = useCallback(async (id) => {
+        // Ghi nhớ cục bộ ngay lập tức
+        locallyReadIdsRef.current.add(id);
+        // Optimistic update: cập nhật UI ngay, không đợi API
+        setNotifications((prev) =>
+            prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+        );
+        setUnreadCount((prev) => Math.max(0, prev - 1));
         try {
-            const updated = await markNotificationRead(id);
-            setNotifications((prev) =>
-                prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-            );
-            setUnreadCount((prev) => Math.max(0, prev - 1));
+            await markNotificationRead(id);
         } catch (err) {
             console.error('markNotificationRead error:', err);
+            // Rollback nếu API thất bại
+            locallyReadIdsRef.current.delete(id);
+            setNotifications((prev) =>
+                prev.map((n) => (n.id === id ? { ...n, isRead: false } : n))
+            );
+            setUnreadCount((prev) => prev + 1);
         }
     }, []);
 
@@ -254,7 +282,11 @@ export default function NotificationDropdown() {
         if (unreadCount === 0) return;
         try {
             await markAllNotificationsRead();
-            setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+            // Ghi nhớ tất cả ID hiện tại vào local set
+            setNotifications((prev) => {
+                prev.forEach((n) => locallyReadIdsRef.current.add(n.id));
+                return prev.map((n) => ({ ...n, isRead: true }));
+            });
             setUnreadCount(0);
         } catch (err) {
             console.error('markAllNotificationsRead error:', err);
