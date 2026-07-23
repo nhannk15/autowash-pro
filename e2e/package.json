@@ -1,0 +1,25 @@
+{
+  "name": "autowash-pro-e2e",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "e2e:env:up": "docker compose -f ../docker-compose.e2e.yml up -d --build --wait",
+    "e2e:env:down": "docker compose -f ../docker-compose.e2e.yml down -v",
+    "infra:up": "npm run e2e:env:up",
+    "infra:down": "docker compose -f ../docker-compose.e2e.yml down",
+    "test": "playwright test --project=chromium",
+    "test:p0": "playwright test --project=chromium --grep @p0",
+    "test:responsive": "playwright test --project=mobile-chromium",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "report": "playwright show-report",
+    "install:browsers": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "@types/node": "^26.1.1",
+    "dotenv": "^17.4.2",
+    "typescript": "^7.0.2"
+  }
+}

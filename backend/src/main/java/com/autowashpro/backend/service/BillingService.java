@@ -148,6 +148,13 @@ public class BillingService {
                 .orElseThrow(() -> new BillingNotFoundException(
                         "Hóa đơn " + billingId + " không tồn tại"));
 
+        if (billing.getPaymentStatus() == PaymentStatus.PAID) {
+            log.warn("completeBillingUsingCashMethod() - billing {} already paid, returning idempotent response", billingId);
+            BillingResponse billingResponse = billingMapper.toBillingResponse(billing);
+            billingResponse.setPointsChange(0L);
+            return billingResponse;
+        }
+
         billing.setPaymentStatus(PaymentStatus.PAID);
         billing.setPaidAt(LocalDateTime.now());
 
@@ -283,6 +290,14 @@ public class BillingService {
             notificationService.createBookingConfirmedNotification(savedBooking);
             return billingMapper.toBillingResponse(savedBilling);
         }
+
+        if (billing.getPaymentStatus() == PaymentStatus.PAID) {
+            log.warn("completeBankingPayment() - billing {} already paid, returning idempotent response", billingId);
+            BillingResponse billingResponse = billingMapper.toBillingResponse(billing);
+            billingResponse.setPointsChange(0L);
+            return billingResponse;
+        }
+
         billing.setPaymentStatus(PaymentStatus.PAID);
         billing.setPaymentMethod(PaymentMethod.BANK_TRANSFER);
         billing.setPaidAt(LocalDateTime.now());

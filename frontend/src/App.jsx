@@ -27,6 +27,7 @@ import Checkin from './pages/StaffPage/components/Checkin.jsx'
 import StaffPayment from './pages/StaffPage/components/Payment.jsx'
 import History from './pages/StaffPage/components/History.jsx'
 import Profile from './components/Profile/Profile.jsx'
+import NotFoundPage from './pages/NotFoundPage/NotFoundPage.jsx'
 import AdminPage from './pages/AdminPage/AdminPage.jsx'
 import AdminDashboard from './pages/AdminPage/components/AdminDashboard.jsx'
 import Customer from './pages/AdminPage/components/Customer.jsx'
@@ -131,25 +132,29 @@ function App() {
           <Route path="profile" element={<Profile />} />
         </Route>
 
+      <Route path="/admin" element={
+        <ProtectedRoute allowedRoles={["ADMIN"]}>
+          <Navbar />
+          <AdminPage />
+        </ProtectedRoute>
+      }>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="customer" element={<Customer />} />
+        <Route path="staff" element={<Staff />} />
+        <Route path="membership" element={<Membership />} />
+        <Route path="rewards" element={<Reward />} />
+        <Route path="service" element={<ServiceCRUD />} />
+        <Route path="bookings-history" element={<BookingsHistory />} />
+        <Route path="promotion" element={<Promotion />} />
+        <Route path="profile" element={<Profile />} />
+      </Route>
 
-        <Route path="/admin" element={
-          <ProtectedRoute allowedRoles={["ADMIN"]}>
-            <Navbar />
-            <AdminPage />
-          </ProtectedRoute>
-        }>
-          <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="customer" element={<Customer />} />
-          <Route path="staff" element={<Staff />} />
-          <Route path="membership" element={<Membership />} />
-          <Route path="rewards" element={<Reward />} />
-          <Route path="service" element={<ServiceCRUD />} />
-          <Route path="bookings-history" element={<BookingsHistory />} />
-          <Route path="promotion" element={<Promotion />} />
-          <Route path="profile" element={<Profile />} />
-        </Route>
-      </Routes>
+      {/* Catch-all 404 */}
+      <Route path="*" element={
+        <MainLayout><NotFoundPage /></MainLayout>
+      } />
+    </Routes>
     </>
   )
 }
