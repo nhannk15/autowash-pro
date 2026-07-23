@@ -104,4 +104,9 @@ public class BookingController {
         return ResponseEntity.ok().body(bookingService.findBookingById(bookingId));
     }
 
+    @GetMapping("/api/customer/check-conflict-vehicle-slot") 
+    public ResponseEntity<Void> checkIfCustomerVehicleForBookingIsNotInSlotsConfliction(@RequestParam("timeSlotId") Long timeSlotId, @RequestParam("vehicleId") Long vehicleId) {
+        return ResponseEntity.noContent().build();
+    }
+
 }

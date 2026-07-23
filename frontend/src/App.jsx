@@ -34,6 +34,7 @@ import Staff from './pages/AdminPage/components/Staff.jsx'
 import Membership from './pages/AdminPage/components/Membership.jsx'
 import Reward from './pages/AdminPage/components/Reward.jsx'
 import ServiceCRUD from './pages/AdminPage/components/Service.jsx'
+import BookingsHistory from './pages/AdminPage/components/BookingsHistory.jsx'
 import Promotion from './pages/AdminPage/components/Promotion.jsx'
 
 // Layout chung: Navbar + nội dung + Footer
@@ -53,99 +54,102 @@ function App() {
       <ScrollToTop />
       <Routes>
         {/* Các trang công khai (Guest hoặc Customer) */}
-      <Route element={<ProtectedRoute allowedRoles={["CUSTOMER"]} requireAuth={false} />}>
-        <Route path="/" element={
-          <MainLayout><Home /></MainLayout>
-        } />
-        <Route path="/service" element={
-          <MainLayout><Service /></MainLayout>
-        } />
-        <Route path="/blog" element={
-          <MainLayout><Blog /></MainLayout>
-        } />
-        <Route path="/blog/huong-dan-tay-o-kinh-o-to" element={
-          <MainLayout><BlogDetail /></MainLayout>
-        } />
-        <Route path="/blog/bang-gia-ve-sinh-noi-that-o-to-tai-nha" element={
-          <MainLayout><BlogDetail2 /></MainLayout>
-        } />
-        <Route path="/blog/cach-cham-soc-ngoai-that-o-to-tai-nha" element={
-          <MainLayout><BlogDetail3 /></MainLayout>
-        } />
-        <Route path="/blog/tieu-chi-danh-gia-trung-tam-rua-xe-o-to" element={
-          <MainLayout><BlogDetail4 /></MainLayout>
-        } />
-        <Route path="/blog/cach-cham-soc-noi-that-o-to-tai-nha" element={
-          <MainLayout><BlogDetail5 /></MainLayout>
-        } />
-        <Route path="/login" element={
-          <>
-            <LoginPage />
-            <Footer />
-          </>
-        } />
-        <Route path="/signup" element={
-          <>
-            <RegisterPage />
-            <Footer />
-          </>
-        } />
-        <Route path="/forgotpass" element={
-          <>
-            <ForgotPassPage />
-            <Footer />
-          </>
-        } />
-      </Route>
-      {/* Trang Cá nhân (Customer Dashboard) */}
-      <Route path="/ca-nhan" element={
-        <ProtectedRoute allowedRoles={["CUSTOMER"]}>
-          <>
+        <Route element={<ProtectedRoute allowedRoles={["CUSTOMER"]} requireAuth={false} />}>
+          <Route path="/" element={
+            <MainLayout><Home /></MainLayout>
+          } />
+          <Route path="/service" element={
+            <MainLayout><Service /></MainLayout>
+          } />
+          <Route path="/blog" element={
+            <MainLayout><Blog /></MainLayout>
+          } />
+          <Route path="/blog/huong-dan-tay-o-kinh-o-to" element={
+            <MainLayout><BlogDetail /></MainLayout>
+          } />
+          <Route path="/blog/bang-gia-ve-sinh-noi-that-o-to-tai-nha" element={
+            <MainLayout><BlogDetail2 /></MainLayout>
+          } />
+          <Route path="/blog/cach-cham-soc-ngoai-that-o-to-tai-nha" element={
+            <MainLayout><BlogDetail3 /></MainLayout>
+          } />
+          <Route path="/blog/tieu-chi-danh-gia-trung-tam-rua-xe-o-to" element={
+            <MainLayout><BlogDetail4 /></MainLayout>
+          } />
+          <Route path="/blog/cach-cham-soc-noi-that-o-to-tai-nha" element={
+            <MainLayout><BlogDetail5 /></MainLayout>
+          } />
+          <Route path="/login" element={
+            <>
+              <LoginPage />
+              <Footer />
+            </>
+          } />
+          <Route path="/signup" element={
+            <>
+              <RegisterPage />
+              <Footer />
+            </>
+          } />
+          <Route path="/forgotpass" element={
+            <>
+              <ForgotPassPage />
+              <Footer />
+            </>
+          } />
+        </Route>
+        {/* Trang Cá nhân (Customer Dashboard) */}
+        <Route path="/ca-nhan" element={
+          <ProtectedRoute allowedRoles={["CUSTOMER"]}>
+            <>
+              <Navbar />
+              <CustomerPage />
+              <Footer />
+            </>
+          </ProtectedRoute>
+        }>
+          <Route index element={<Navigate to="ho-so" replace />} />
+          <Route path="tong-quan" element={<Overview />} />
+          <Route path="xe-cua-toi" element={<MyCars />} />
+          <Route path="dat-lich" element={<BookingList />} />
+          <Route path="thanh-toan" element={<Payment />} />
+          <Route path="ho-so" element={<PersonalProfile />} />
+        </Route>
+        <Route path="/staff" element={
+          <ProtectedRoute allowedRoles={["STAFF"]}>
             <Navbar />
-            <CustomerPage />
-            <Footer />
-          </>
-        </ProtectedRoute>
-      }>
-        <Route index element={<Navigate to="ho-so" replace />} />
-        <Route path="tong-quan" element={<Overview />} />
-        <Route path="xe-cua-toi" element={<MyCars />} />
-        <Route path="dat-lich" element={<Booking />} />
-        <Route path="thanh-toan" element={<Payment />} />
-        <Route path="ho-so" element={<PersonalProfile />} />
-      </Route>
-      <Route path="/staff" element={
-        <ProtectedRoute allowedRoles={["STAFF"]}>
-          <Navbar />
-          <StaffPage />
-        </ProtectedRoute>
-      }>
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<StaffDashboard />} />
-        <Route path="queue" element={<Queue />} />
-        <Route path="checkin" element={<Checkin />} />
-        <Route path="payment" element={<StaffPayment />} />
-        <Route path="history" element={<History />} />
-        <Route path="profile" element={<Profile />} />
-      </Route>
 
-      <Route path="/admin" element={
-        <ProtectedRoute allowedRoles={["ADMIN"]}>
-          <Navbar />
-          <AdminPage />
-        </ProtectedRoute>
-      }>
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<AdminDashboard />} />
-        <Route path="customer" element={<Customer />} />
-        <Route path="staff" element={<Staff />} />
-        <Route path="membership" element={<Membership />} />
-        <Route path="rewards" element={<Reward />} />
-        <Route path="service" element={<ServiceCRUD />} />
-        <Route path="promotion" element={<Promotion />} />
-        <Route path="profile" element={<Profile />} />
-      </Route>
-    </Routes>
+            <StaffPage />
+          </ProtectedRoute>
+        }>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<StaffDashboard />} />
+          <Route path="queue" element={<Queue />} />
+          <Route path="checkin" element={<Checkin />} />
+          <Route path="payment" element={<StaffPayment />} />
+          <Route path="history" element={<History />} />
+          <Route path="profile" element={<Profile />} />
+        </Route>
+
+
+        <Route path="/admin" element={
+          <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <Navbar />
+            <AdminPage />
+          </ProtectedRoute>
+        }>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="customer" element={<Customer />} />
+          <Route path="staff" element={<Staff />} />
+          <Route path="membership" element={<Membership />} />
+          <Route path="rewards" element={<Reward />} />
+          <Route path="service" element={<ServiceCRUD />} />
+          <Route path="bookings-history" element={<BookingsHistory />} />
+          <Route path="promotion" element={<Promotion />} />
+          <Route path="profile" element={<Profile />} />
+        </Route>
+      </Routes>
     </>
   )
 }

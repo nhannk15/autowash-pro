@@ -194,6 +194,13 @@ export async function deleteService(serviceId) {
     return response.data;
 }
 
+export async function getBookingsHistory({ startDate, endDate, month, year }) {
+    const response = await axios.post(`${API}/api/admin/dashboard/booking-list`, {
+        startDate, endDate, month, year
+    }, { withCredentials: true });
+    return response.data;
+}
+
 // Lấy danh sách tất cả khuyến mãi
 export async function getPromotions() {
     const response = await axios.get(`${API}/api/promotions`, { withCredentials: true });
