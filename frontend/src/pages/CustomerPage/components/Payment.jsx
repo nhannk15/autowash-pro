@@ -440,6 +440,7 @@ export default function Payment() {
                 onCancel={() => setSelectedRecord(null)}
                 footer={null}
                 width={900}
+                centered
                 title={
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <ProfileOutlined style={{ fontSize: '1.1rem', color: '#002B7F' }} />
