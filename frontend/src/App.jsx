@@ -111,7 +111,7 @@ function App() {
           <Route index element={<Navigate to="ho-so" replace />} />
           <Route path="tong-quan" element={<Overview />} />
           <Route path="xe-cua-toi" element={<MyCars />} />
-          <Route path="dat-lich" element={<BookingList />} />
+          <Route path="dat-lich" element={<Booking />} />
           <Route path="thanh-toan" element={<Payment />} />
           <Route path="ho-so" element={<PersonalProfile />} />
         </Route>
