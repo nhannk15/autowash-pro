@@ -207,8 +207,7 @@ export default function StaffPayment() {
             ? new Date(billData.session.startTime).toLocaleString('vi-VN')
             : (billData.checkinTime || 'N/A');
 
-    const billId = billData.billingId || billData.id || 'N/A';
-    const staffNote = billData.booking?.notes || billData.session?.note || billData.staffNote || '';
+    const billId = billData.billingId || billData.id || null;
 
     const bookingPromotion = billData.bookingPromotionResponse || billData.booking?.promotion || null;
 
@@ -247,6 +246,10 @@ export default function StaffPayment() {
     const handleProceedPayment = () => setCurrentStep(1);
 
     const handlePayment = async () => {
+        if (!billId) {
+            message.error('Không xác định được hóa đơn để thanh toán!');
+            return;
+        }
         if (!bookingId) {
             message.error('Không xác định được booking để xác nhận thanh toán!');
             return;
@@ -429,12 +432,6 @@ export default function StaffPayment() {
                                     </Col>
                                 </Row>
                             </div>
-
-                            {staffNote && (
-                                <div className="payment-note">
-                                    <Text type="secondary"><strong>Ghi chú:</strong> {staffNote}</Text>
-                                </div>
-                            )}
                         </Card>
                     </Col>
 

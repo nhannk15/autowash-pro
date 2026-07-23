@@ -1,0 +1,67 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${E2E_DB_URL:jdbc:mysql://127.0.0.1:3307/autowashpro_e2e?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh}
+    username: ${E2E_DB_USERNAME:autowash_e2e}
+    password: ${E2E_DB_PASSWORD:autowash_e2e}
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: e2e-google-client
+            client-secret: e2e-google-secret
+  mail:
+    host: ${E2E_MAIL_HOST:127.0.0.1}
+    port: ${E2E_MAIL_PORT:1025}
+
+logging:
+  level:
+    org.springframework.security: INFO
+
+jwt:
+  secret-key: ${E2E_JWT_SECRET:test-only-secret-key-that-is-long-enough-for-hs512-signing-1234567890}
+
+frontend:
+  base-url: ${E2E_FRONTEND_URL:http://127.0.0.1:3000}
+
+email:
+  sendbooking: no
+
+vnpay:
+  tmn-code: E2E
+  hash-secret: e2e-vnpay-secret
+  pay-url: ${E2E_VNPAY_PAY_URL:http://127.0.0.1:9999/vnpay/pay}
+  return-url: ${E2E_VNPAY_RETURN_URL:http://127.0.0.1:8080/api/payment/vnpay/return}
+  ipn-url: ${E2E_VNPAY_IPN_URL:http://127.0.0.1:8080/api/payment/vnpay/ipn}
+  version: 2.1.0
+  command: pay
+  curr-code: VND
+  locale: vn
+
+management:
+  info:
+    env:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+info:
+  autowash:
+    profile: e2e
+
+e2e:
+  seed:
+    customer-email: ${E2E_CUSTOMER_EMAIL:e2e.customer@gmail.com}
+    customer-password: ${E2E_CUSTOMER_PASSWORD:e2e-password-123}
+    staff-email: ${E2E_STAFF_EMAIL:e2e.staff@gmail.com}
+    staff-password: ${E2E_STAFF_PASSWORD:e2e-password-123}
+    admin-email: ${E2E_ADMIN_EMAIL:e2e.admin@gmail.com}
+    admin-password: ${E2E_ADMIN_PASSWORD:e2e-password-123}
+    inactive-email: ${E2E_INACTIVE_EMAIL:e2e.inactive@gmail.com}

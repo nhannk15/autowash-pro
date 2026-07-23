@@ -137,11 +137,12 @@ export default function PersonalProfile() {
             </div>
 
             <Modal
-                title={isForgotFlow ? "Quên mật khẩu" : "Đổi mật khẩu"}
+                title={<span style={{ color: '#002b7f', fontWeight: 700, fontSize: '18px' }}>{isForgotFlow ? "Quên mật khẩu" : "Đổi mật khẩu"}</span>}
                 open={isPasswordModalVisible}
                 onCancel={handleCloseModal}
                 footer={null}
                 destroyOnClose
+                className="profile-modal"
             >
                 {!isForgotFlow ? (
                     // CHANGE PASSWORD FORM

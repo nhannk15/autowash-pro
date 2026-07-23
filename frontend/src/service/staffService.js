@@ -50,7 +50,7 @@ export async function searchCustomerByPhone(phone) {
 }
 
 export async function completeSession(bookingId) {
-    const response = await axios.post(`${API}/api/staff/wash-sessions/complete`,
+    const response = await axios.post(`${API}/api/staff/v2/wash-sessions/complete`,
         { bookingId },
         { withCredentials: true }
     );
@@ -65,10 +65,41 @@ export async function searchBookingByQR(bookingCode) {
     return response.data;
 }
 
-export async function confirmBooking(bookingId) {
-    const response = await axios.post(`${API}/api/staff/wash-sessions/start`, {
-        bookingId,
-    }, { withCredentials: true });
+export async function confirmBookingV3(bookingId, staffId, staffNote) {
+    const response = await axios.post(
+        `${API}/api/staff/v3/wash-sessions/start?staffId=${staffId}`,
+        { bookingId, staffNote },
+        { withCredentials: true }
+    );
+    return response.data;
+}
+
+export async function getWashStaffsForBooking(slotDate, startTime) {
+    // B1: Lấy danh sách slots theo ngày để tìm timeSlotId tương ứng với startTime của booking
+    const slotsRes = await axios.get(`${API}/api/bookings/available-slots`, {
+        params: { date: slotDate },
+        withCredentials: true,
+    });
+    // SlotAvailabilityByDateResponse trả thẳng object { date, timeSlotAvailabilityResponses }
+    const allSlots = slotsRes.data?.timeSlotAvailabilityResponses || [];
+
+    // Tìm slot có startTime khớp (so sánh HH:mm)
+    const bookingStartTime = typeof startTime === 'string' ? startTime.substring(0, 5) : null;
+    const matchedSlot = allSlots.find(s => {
+        const slotStart = typeof s.startTime === 'string'
+            ? s.startTime.substring(0, 5)
+            : null;
+        return slotStart === bookingStartTime;
+    }) || allSlots[0]; // fallback sang slot đầu tiên nếu không tìm thấy
+
+    if (!matchedSlot) throw new Error('Không tìm thấy khung giờ phù hợp');
+
+    // B2: Lấy danh sách wash staff theo timeSlotId và ngày
+    const response = await axios.get(`${API}/api/customer/all-staffs`, {
+        params: { timeSlotId: matchedSlot.timeSlotId, bookingDate: slotDate },
+        withCredentials: true,
+    });
+    // /api/customer/all-staffs trả thẳng List<StaffInfoResponse>
     return response.data;
 }
 

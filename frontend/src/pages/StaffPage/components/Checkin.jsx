@@ -1,17 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
     Steps, Card, Input, Button, Table, Typography,
-    Row, Col, Descriptions, Space, message, Tag
+    Row, Col, Descriptions, Space, message, Tag, Select, Avatar, Spin
 } from 'antd';
 import {
     QrcodeOutlined,
     UserOutlined, SendOutlined, ArrowLeftOutlined,
     IdcardOutlined, ScanOutlined, InfoCircleOutlined, EditOutlined,
-    CameraOutlined, CloseCircleOutlined
+    CameraOutlined, CloseCircleOutlined, TeamOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../context/AuthContext';
-import { searchBookingByQR, confirmBooking } from '../../../service/staffService';
+import { searchBookingByQR, confirmBookingV3, getWashStaffsForBooking } from '../../../service/staffService';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import './Checkin.css';
 
@@ -26,11 +25,13 @@ export default function Checkin() {
     const [staffNote, setStaffNote] = useState('');
     const [cameraOpen, setCameraOpen] = useState(false);
     const [scanning, setScanning] = useState(false);
+    const [washStaffs, setWashStaffs] = useState([]);
+    const [selectedStaffId, setSelectedStaffId] = useState(null);
+    const [loadingStaffs, setLoadingStaffs] = useState(false);
     const navigate = useNavigate();
     const qrInputRef = useRef(null);
     const scannerRef = useRef(null);
     const scannerContainerRef = useRef(null);
-    const { user } = useAuth();
 
     // Auto-focus the QR input field when stage 1 is active
     useEffect(() => {
@@ -41,15 +42,54 @@ export default function Checkin() {
 
     const handleSearch = () => doSearch(qrCode);
 
-    const handleSelectCustomer = (record) => {
+    const handleSelectCustomer = async (record) => {
         setSelectedCustomer(record);
         setStaffNote('');
+
+        // Kiểm tra nếu booking đã có sẵn nhân viên (do khách tự chọn)
+        const preassignedStaffId = record.staffInfoDTO?.id || record.staffId || record.staff?.id || null;
+        const preassignedStaffName = record.staffInfoDTO?.fullName || record.staffName || record.staff?.fullName || null;
+
+        setSelectedStaffId(preassignedStaffId);
         setCurrentStep(1);
+
+        // Load danh sách wash staff dựa vào ngày và giờ của booking
+        try {
+            setLoadingStaffs(true);
+            const slotDate = record.slotDate; // e.g. "2026-07-17"
+            const startTime = record.startTime; // e.g. "08:00:00" or "08:00"
+            const data = await getWashStaffsForBooking(slotDate, startTime);
+            const list = Array.isArray(data) ? data : data?.data || [];
+
+            // Nếu có preassignedStaffId nhưng không có trong list khả dụng, add thêm vào để hiển thị Select đúng
+            if (preassignedStaffId && !list.find(s => s.id === preassignedStaffId)) {
+                list.push({
+                    id: preassignedStaffId,
+                    fullName: preassignedStaffName || `Nhân viên (ID: ${preassignedStaffId})`
+                });
+            }
+            setWashStaffs(list);
+        } catch (err) {
+            console.error('Failed to load wash staffs', err);
+            message.warning('Không thể tải danh sách nhân viên rửa xe.');
+        } finally {
+            setLoadingStaffs(false);
+        }
+    };
+
+    const handleGoBack = () => {
+        setCurrentStep(0);
+        setSelectedStaffId(null);
+        setWashStaffs([]);
     };
 
     const handleConfirm = async () => {
+        if (!selectedStaffId) {
+            message.warning('Vui lòng chọn nhân viên thực hiện rửa xe!');
+            return;
+        }
         try {
-            await confirmBooking(selectedCustomer.id, staffNote);
+            await confirmBookingV3(selectedCustomer.id, selectedStaffId, staffNote);
             message.success('Đã xác nhận check-in! Bắt đầu dịch vụ.');
             navigate('/staff/dashboard');
         } catch (error) {
@@ -334,7 +374,7 @@ export default function Checkin() {
                                 className="checkin-card customer-info-card"
                                 title={<span><UserOutlined style={{ marginRight: 8 }} /> Hồ Sơ Dịch Vụ</span>}
                                 extra={
-                                    <Button type="text" className="back-btn" onClick={() => setCurrentStep(0)}>
+                                    <Button type="text" className="back-btn" onClick={handleGoBack}>
                                         <ArrowLeftOutlined /> Quay lại
                                     </Button>
                                 }
@@ -357,6 +397,12 @@ export default function Checkin() {
                                     </Descriptions.Item>
                                     <Descriptions.Item label="Khoang thực hiện">
                                         <Text strong>{getBayName(selectedCustomer)}</Text>
+                                    </Descriptions.Item>
+                                    <Descriptions.Item label="Nhân viên rửa xe">
+                                        <Text strong>{selectedCustomer.staffInfoDTO?.fullName || selectedCustomer.staff?.fullName || 'Chưa phân công'}</Text>
+                                    </Descriptions.Item>
+                                    <Descriptions.Item label="Ghi chú của khách">
+                                        <Text>{selectedCustomer.notes || 'Không có'}</Text>
                                     </Descriptions.Item>
                                     <Descriptions.Item label="Dịch vụ đã chọn">
                                         <ul className="service-list">
@@ -405,6 +451,80 @@ export default function Checkin() {
                                         )}
                                     </Descriptions.Item>
                                 </Descriptions>
+                            </Card>
+
+                            {/* Chọn Nhân Viên Rửa Xe */}
+                            <Card
+                                className="checkin-card staff-selector-card"
+                                title={<span><TeamOutlined style={{ marginRight: 8 }} /> Nhân viên thực hiện rửa xe</span>}
+                            >
+                                {loadingStaffs ? (
+                                    <div style={{ textAlign: 'center', padding: '16px' }}>
+                                        <Spin />
+                                        <Text type="secondary" style={{ marginLeft: 8 }}>Đang tải danh sách nhân viên...</Text>
+                                    </div>
+                                ) : (
+                                    <>
+                                        {(selectedCustomer?.staffInfoDTO || selectedCustomer?.staffId || selectedCustomer?.staff) ? (
+                                            <>
+                                                <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
+                                                    Khách hàng đã chọn nhân viên thực hiện dịch vụ này.
+                                                </Text>
+                                                <Select
+                                                    className="staff-select"
+                                                    style={{ width: '100%' }}
+                                                    value={selectedStaffId}
+                                                    disabled={true}
+                                                    size="large"
+                                                >
+                                                    {washStaffs.map(s => (
+                                                        <Select.Option key={s.id} value={s.id} label={s.fullName}>
+                                                            <div className="staff-option">
+                                                                <span className="staff-option-name">{s.fullName}</span>
+                                                                {s.phoneNumber && (
+                                                                    <span className="staff-option-phone">{s.phoneNumber}</span>
+                                                                )}
+                                                            </div>
+                                                        </Select.Option>
+                                                    ))}
+                                                </Select>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
+                                                    Chọn nhân viên sẽ thực hiện rửa xe cho booking này. Bắt buộc phải chọn.
+                                                </Text>
+                                                <Select
+                                                    className="staff-select"
+                                                    style={{ width: '100%' }}
+                                                    placeholder="-- Chọn nhân viên rửa xe --"
+                                                    value={selectedStaffId}
+                                                    onChange={(val) => setSelectedStaffId(val)}
+                                                    size="large"
+                                                    showSearch
+                                                    optionFilterProp="label"
+                                                >
+                                                    {washStaffs.map(s => (
+                                                        <Select.Option key={s.id} value={s.id} label={s.fullName}>
+                                                            <div className="staff-option">
+                                                                <span className="staff-option-name">{s.fullName}</span>
+                                                                {s.phoneNumber && (
+                                                                    <span className="staff-option-phone">{s.phoneNumber}</span>
+                                                                )}
+                                                            </div>
+                                                        </Select.Option>
+                                                    ))}
+                                                </Select>
+                                                {washStaffs.length === 0 && !loadingStaffs && (
+                                                    <Text type="warning" style={{ marginTop: 8, display: 'block' }}>
+                                                        ⚠️ Không có nhân viên rửa xe nào khả dụng trong khung giờ này.
+                                                        Hãy chọn lại hoặc liên hệ quản lý.
+                                                    </Text>
+                                                )}
+                                            </>
+                                        )}
+                                    </>
+                                )}
                             </Card>
 
                             {/* Staff Notes */}

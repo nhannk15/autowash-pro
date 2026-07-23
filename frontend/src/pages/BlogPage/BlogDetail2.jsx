@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import './BlogDetail.css'
+import { UserOutlined, CalendarOutlined, OrderedListOutlined, ArrowLeftOutlined } from '@ant-design/icons'
 
 // Import service images for thumbnails
 import imgRuaXe from '../../assets/Service/RuaXeNgoaiThat.jpg'
@@ -58,18 +59,14 @@ export default function BlogDetail2() {
                     <article>
                         <span className="blog-detail__post-category">Bảng giá dịch vụ</span>
                         <h1 className="blog-detail__post-title">Bảng Giá Vệ Sinh Nội Thất Ô Tô Tại Nhà TPHCM Chất Lượng Cao</h1>
-                        
+
                         <div className="blog-detail__post-meta">
                             <div className="blog-detail__meta-item">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16" style={{color: '#a0aec0'}}>
-                                    <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A9.75 9.75 0 0112 22.5a9.75 9.75 0 01-8.314-1.7a.75.75 0 01-.437-.695z" clipRule="evenodd" />
-                                </svg>
+                                <UserOutlined style={{ color: '#a0aec0' }} />
                                 <span>Đăng bởi: Car Wash Centre Team</span>
                             </div>
                             <div className="blog-detail__meta-item">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16" style={{color: '#a0aec0'}}>
-                                    <path fillRule="evenodd" d="M6.75 2.25A.75.75 0 017.5 3v1.5h9V3A.75.75 0 0118 3v1.5h.75a3 3 0 013 3v11.25a3 3 0 01-3 3H5.25a3 3 0 01-3-3V7.5a3 3 0 013-3H6V3a.75.75 0 01.75-.75zm13.5 9H3.75v7.5a1.5 1.5 0 001.5 1.5h13.5a1.5 1.5 0 001.5-1.5v-7.5zm-15-3h15V7.5a1.5 1.5 0 00-1.5-1.5H5.25A1.5 1.5 0 003.75 7.5v.75z" clipRule="evenodd" />
-                                </svg>
+                                <CalendarOutlined style={{ color: '#a0aec0' }} />
                                 <span>12/05/2026</span>
                             </div>
                         </div>
@@ -82,9 +79,7 @@ export default function BlogDetail2() {
                             {/* Table of Contents Box */}
                             <div className="blog-detail__toc">
                                 <div className="blog-detail__toc-title">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18" style={{color: '#f5a623'}}>
-                                        <path fillRule="evenodd" d="M2.625 6A3.375 3.375 0 016 2.625h12A3.375 3.375 0 0121.375 6v12A3.375 3.375 0 0118 21.375H6A3.375 3.375 0 012.625 18V6zm3 3.375a.75.75 0 01.75-.75h11.25a.75.75 0 010 1.5H6.375a.75.75 0 01-.75-.75zM6 12a.75.75 0 000 1.5h12a.75.75 0 000-1.5H6zm-.375 3.75a.75.75 0 01.75-.75h11.25a.75.75 0 010 1.5H6.375a.75.75 0 01-.75-.75z" clipRule="evenodd" />
-                                    </svg>
+                                    <OrderedListOutlined style={{ color: '#f5a623' }} />
                                     <span>Mục lục nội dung</span>
                                 </div>
                                 <ol className="blog-detail__toc-list">
@@ -128,73 +123,73 @@ export default function BlogDetail2() {
                             </p>
 
                             {/* Beautiful Styling Table matching the standard blog */}
-                            <div style={{overflowX: 'auto', margin: '24px 0'}}>
-                                <table style={{width: '100%', borderCollapse: 'collapse', fontSize: '0.95rem', border: '1px solid #edf2f7'}}>
+                            <div style={{ overflowX: 'auto', margin: '24px 0' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.95rem', border: '1px solid #edf2f7' }}>
                                     <thead>
-                                        <tr style={{backgroundColor: '#0d1b4b', color: '#ffffff'}}>
-                                            <th style={{padding: '12px 16px', border: '1px solid #edf2f7', textAlign: 'left'}}>Hạng mục / Dòng xe</th>
-                                            <th style={{padding: '12px 16px', border: '1px solid #edf2f7', textAlign: 'center'}}>Dòng Sedan (4 - 5 chỗ)</th>
-                                            <th style={{padding: '12px 16px', border: '1px solid #edf2f7', textAlign: 'center'}}>Dòng SUV (5 chỗ)</th>
-                                            <th style={{padding: '12px 16px', border: '1px solid #edf2f7', textAlign: 'center'}}>Dòng SUV / MPV (7 chỗ)</th>
+                                        <tr style={{ backgroundColor: '#0d1b4b', color: '#ffffff' }}>
+                                            <th style={{ padding: '12px 16px', border: '1px solid #edf2f7', textAlign: 'left' }}>Hạng mục / Dòng xe</th>
+                                            <th style={{ padding: '12px 16px', border: '1px solid #edf2f7', textAlign: 'center' }}>Dòng Sedan (4 - 5 chỗ)</th>
+                                            <th style={{ padding: '12px 16px', border: '1px solid #edf2f7', textAlign: 'center' }}>Dòng SUV (5 chỗ)</th>
+                                            <th style={{ padding: '12px 16px', border: '1px solid #edf2f7', textAlign: 'center' }}>Dòng SUV / MPV (7 chỗ)</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr>
-                                            <td style={{padding: '12px 16px', border: '1px solid #edf2f7', fontWeight: 'bold'}}>Gói hút bụi & lau dọn Basic</td>
-                                            <td style={{padding: '12px 16px', border: '1px solid #edf2f7', textAlign: 'center'}}>50.000 VNĐ</td>
-                                            <td style={{padding: '12px 16px', border: '1px solid #edf2f7', textAlign: 'center'}}>60.000 VNĐ</td>
-                                            <td style={{padding: '12px 16px', border: '1px solid #edf2f7', textAlign: 'center'}}>70.000 VNĐ</td>
+                                            <td style={{ padding: '12px 16px', border: '1px solid #edf2f7', fontWeight: 'bold' }}>Gói hút bụi & lau dọn Basic</td>
+                                            <td style={{ padding: '12px 16px', border: '1px solid #edf2f7', textAlign: 'center' }}>50.000 VNĐ</td>
+                                            <td style={{ padding: '12px 16px', border: '1px solid #edf2f7', textAlign: 'center' }}>60.000 VNĐ</td>
+                                            <td style={{ padding: '12px 16px', border: '1px solid #edf2f7', textAlign: 'center' }}>70.000 VNĐ</td>
                                         </tr>
-                                        <tr style={{backgroundColor: '#f7fafc'}}>
-                                            <td style={{padding: '12px 16px', border: '1px solid #edf2f7', fontWeight: 'bold'}}>Gói vệ sinh chuyên sâu VIP</td>
-                                            <td style={{padding: '12px 16px', border: '1px solid #edf2f7', textAlign: 'center'}}>300.000 - 1.200.000 VNĐ</td>
-                                            <td style={{padding: '12px 16px', border: '1px solid #edf2f7', textAlign: 'center'}}>400.000 - 1.500.000 VNĐ</td>
-                                            <td style={{padding: '12px 16px', border: '1px solid #edf2f7', textAlign: 'center'}}>500.000 - 1.800.000 VNĐ</td>
+                                        <tr style={{ backgroundColor: '#f7fafc' }}>
+                                            <td style={{ padding: '12px 16px', border: '1px solid #edf2f7', fontWeight: 'bold' }}>Gói vệ sinh chuyên sâu VIP</td>
+                                            <td style={{ padding: '12px 16px', border: '1px solid #edf2f7', textAlign: 'center' }}>300.000 - 1.200.000 VNĐ</td>
+                                            <td style={{ padding: '12px 16px', border: '1px solid #edf2f7', textAlign: 'center' }}>400.000 - 1.500.000 VNĐ</td>
+                                            <td style={{ padding: '12px 16px', border: '1px solid #edf2f7', textAlign: 'center' }}>500.000 - 1.800.000 VNĐ</td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
 
-                            <div className="blog-detail__callout">
+                            {/* <div className="blog-detail__callout">
                                 🎁 <strong>Ưu đãi cực khủng:</strong> Giảm ngay đến 30% cho khách hàng đặt lịch vệ sinh chuyên sâu VIP lần đầu qua website, miễn phí công di chuyển khu vực Quận 7. Hotline tư vấn: <a href="tel:0764646416">07 64 64 64 16</a>.
-                            </div>
+                            </div> */}
 
                             <h2 id="so-sanh">So sánh vệ sinh nội thất tại nhà và tại trung tâm chăm sóc xe</h2>
-                            <div style={{overflowX: 'auto', margin: '24px 0'}}>
-                                <table style={{width: '100%', borderCollapse: 'collapse', fontSize: '0.95rem', border: '1px solid #edf2f7'}}>
+                            <div style={{ overflowX: 'auto', margin: '24px 0' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.95rem', border: '1px solid #edf2f7' }}>
                                     <thead>
-                                        <tr style={{backgroundColor: '#edf2f7', color: '#2d3748', borderBottom: '2px solid #cbd5e0'}}>
-                                            <th style={{padding: '12px 16px', border: '1px solid #edf2f7', textAlign: 'left'}}>Tiêu chí</th>
-                                            <th style={{padding: '12px 16px', border: '1px solid #edf2f7', textAlign: 'left'}}>Dịch vụ tại nhà</th>
-                                            <th style={{padding: '12px 16px', border: '1px solid #edf2f7', textAlign: 'left'}}>Thực hiện tại Trung tâm</th>
+                                        <tr style={{ backgroundColor: '#edf2f7', color: '#2d3748', borderBottom: '2px solid #cbd5e0' }}>
+                                            <th style={{ padding: '12px 16px', border: '1px solid #edf2f7', textAlign: 'left' }}>Tiêu chí</th>
+                                            <th style={{ padding: '12px 16px', border: '1px solid #edf2f7', textAlign: 'left' }}>Dịch vụ tại nhà</th>
+                                            <th style={{ padding: '12px 16px', border: '1px solid #edf2f7', textAlign: 'left' }}>Thực hiện tại Trung tâm</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr>
-                                            <td style={{padding: '12px 16px', border: '1px solid #edf2f7', fontWeight: 'bold'}}>Mức độ làm sạch</td>
-                                            <td style={{padding: '12px 16px', border: '1px solid #edf2f7'}}>Đạt hiệu quả đến 95%.</td>
-                                            <td style={{padding: '12px 16px', border: '1px solid #edf2f7'}}>Đạt 98 - 99% nhờ máy móc cố định công suất cực lớn.</td>
+                                            <td style={{ padding: '12px 16px', border: '1px solid #edf2f7', fontWeight: 'bold' }}>Mức độ làm sạch</td>
+                                            <td style={{ padding: '12px 16px', border: '1px solid #edf2f7' }}>Đạt hiệu quả đến 95%.</td>
+                                            <td style={{ padding: '12px 16px', border: '1px solid #edf2f7' }}>Đạt 98 - 99% nhờ máy móc cố định công suất cực lớn.</td>
                                         </tr>
-                                        <tr style={{backgroundColor: '#f7fafc'}}>
-                                            <td style={{padding: '12px 16px', border: '1px solid #edf2f7', fontWeight: 'bold'}}>Trang bị máy móc</td>
-                                            <td style={{padding: '12px 16px', border: '1px solid #edf2f7'}}>Máy hút bụi cơ động, máy hơi nước nóng cầm tay chuyên dụng.</td>
-                                            <td style={{padding: '12px 16px', border: '1px solid #edf2f7'}}>Đầy đủ cầu nâng, phòng sấy chuyên dụng, máy bắn đá CO2.</td>
+                                        <tr style={{ backgroundColor: '#f7fafc' }}>
+                                            <td style={{ padding: '12px 16px', border: '1px solid #edf2f7', fontWeight: 'bold' }}>Trang bị máy móc</td>
+                                            <td style={{ padding: '12px 16px', border: '1px solid #edf2f7' }}>Máy hút bụi cơ động, máy hơi nước nóng cầm tay chuyên dụng.</td>
+                                            <td style={{ padding: '12px 16px', border: '1px solid #edf2f7' }}>Đầy đủ cầu nâng, phòng sấy chuyên dụng, máy bắn đá CO2.</td>
                                         </tr>
                                         <tr>
-                                            <td style={{padding: '12px 16px', border: '1px solid #edf2f7', fontWeight: 'bold'}}>Sự tiện lợi</td>
-                                            <td style={{padding: '12px 16px', border: '1px solid #edf2f7'}}><strong>Tối đa.</strong> Bạn ở nhà nghỉ ngơi hoặc làm việc khác trong khi thi công.</td>
-                                            <td style={{padding: '12px 16px', border: '1px solid #edf2f7'}}>Thấp hơn. Phải lái xe đi gửi và chờ đợi nhận lại xe.</td>
+                                            <td style={{ padding: '12px 16px', border: '1px solid #edf2f7', fontWeight: 'bold' }}>Sự tiện lợi</td>
+                                            <td style={{ padding: '12px 16px', border: '1px solid #edf2f7' }}><strong>Tối đa.</strong> Bạn ở nhà nghỉ ngơi hoặc làm việc khác trong khi thi công.</td>
+                                            <td style={{ padding: '12px 16px', border: '1px solid #edf2f7' }}>Thấp hơn. Phải lái xe đi gửi và chờ đợi nhận lại xe.</td>
                                         </tr>
-                                        <tr style={{backgroundColor: '#f7fafc'}}>
-                                            <td style={{padding: '12px 16px', border: '1px solid #edf2f7', fontWeight: 'bold'}}>Chi phí</td>
-                                            <td style={{padding: '12px 16px', border: '1px solid #edf2f7'}}>Tương đương tại tiệm (có thể phụ thu phí đi lại tuỳ xa gần).</td>
-                                            <td style={{padding: '12px 16px', border: '1px solid #edf2f7'}}>Giá niêm yết cố định của cơ sở.</td>
+                                        <tr style={{ backgroundColor: '#f7fafc' }}>
+                                            <td style={{ padding: '12px 16px', border: '1px solid #edf2f7', fontWeight: 'bold' }}>Chi phí</td>
+                                            <td style={{ padding: '12px 16px', border: '1px solid #edf2f7' }}>Tương đương tại tiệm (có thể phụ thu phí đi lại tuỳ xa gần).</td>
+                                            <td style={{ padding: '12px 16px', border: '1px solid #edf2f7' }}>Giá niêm yết cố định của cơ sở.</td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
 
-                            <p style={{marginTop: '32px'}}>
+                            <p style={{ marginTop: '32px' }}>
                                 Tóm lại, dịch vụ dọn vệ sinh nội thất xe tại nhà là giải pháp tuyệt vời cho các chủ xe mong muốn sự linh hoạt, tiết kiệm thời gian mà vẫn đảm bảo cabin được khử trùng sạch sẽ, thơm tho. Đừng ngần ngại liên hệ với Car Wash Centre để nhận sự phục vụ chu đáo nhất!
                             </p>
                         </div>
@@ -202,9 +197,7 @@ export default function BlogDetail2() {
 
                     {/* Back Button */}
                     <Link to="/blog" className="blog-detail__back-btn">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-                            <path fillRule="evenodd" d="M11.03 3.97a.75.75 0 010 1.06l-6.22 6.22H21a.75.75 0 010 1.5H4.81l6.22 6.22a.75.75 0 11-1.06 1.06l-7.5-7.5a.75.75 0 010-1.06l7.5-7.5a.75.75 0 011.06 0z" clipRule="evenodd" />
-                        </svg>
+                        <ArrowLeftOutlined />
                         <span>Quay lại Blog</span>
                     </Link>
                 </div>

@@ -4,16 +4,17 @@ backend/src/main/resources/application.properties
 
 # Target Folder Configuration
 backend/target
+backend/e2e-backend*.log
 
 frontend/.env
 
 # Environment variables (contains secrets)
 .env
 
-# Nginx deploy config + SSL certs (server only)
-nginx/
+# Nginx deploy config is versioned; private SSL material stays server-only
+nginx/ssl/
 
-# Documents ghi log AI
+# Documents 
 docs/
 
 # MySQL data (bind mount local)
@@ -22,5 +23,14 @@ docker-data/
 # Backup script (contains DB password)
 backup_db.sh
 backups/
+logs/
 
 .vscode
+
+# Playwright E2E local state and artifacts
+e2e/.env.e2e
+e2e/.auth/
+e2e/playwright-report/
+e2e/test-results/
+e2e/blob-report/
+e2e/node_modules/

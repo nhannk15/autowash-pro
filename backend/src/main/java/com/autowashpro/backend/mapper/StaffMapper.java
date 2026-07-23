@@ -1,9 +1,12 @@
 package com.autowashpro.backend.mapper;
 
+import java.util.List;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
+import com.autowashpro.backend.model.dto.StaffInfoDTO;
 import com.autowashpro.backend.model.dto.StaffInfoResponse;
 import com.autowashpro.backend.model.entity.Staff;
 
@@ -12,4 +15,7 @@ public interface StaffMapper {
     void updateStaffFromRequest(Staff source, @MappingTarget Staff target);
 
     StaffInfoResponse toStaffInfoResponse(Staff staff);
+    List<StaffInfoResponse> toStaffInfoResponses(List<Staff> staffs);
+
+    StaffInfoDTO toStaffInfoDTO(Staff staff);
 }

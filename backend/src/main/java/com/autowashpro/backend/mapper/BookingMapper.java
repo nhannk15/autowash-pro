@@ -15,18 +15,20 @@ import com.autowashpro.backend.model.dto.PendingBookingResponse;
 import com.autowashpro.backend.model.dto.UpcomingBookingResponse;
 import com.autowashpro.backend.model.entity.AvailableSlot;
 import com.autowashpro.backend.model.entity.Booking;
+import com.autowashpro.backend.model.entity.Staff;
 import com.autowashpro.backend.model.entity.WashSession;
 import com.autowashpro.backend.model.enums.WashSessionStatus;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, uses = {
         VehicleMapper.class, CustomerMapper.class, BookingDetailMapper.class, PromotionMapper.class,
-        VoucherMapper.class })
+        VoucherMapper.class, StaffMapper.class })
 public interface BookingMapper {
     void updateBookingFromRequest(Booking source, @MappingTarget Booking target);
 
     @Mapping(target = "slotDate", source = "availableSlots", qualifiedByName = "toSlotDate")
     @Mapping(target = "startTime", source = "availableSlots", qualifiedByName = "toStartTime")
     @Mapping(target = "endTime", source = "availableSlots", qualifiedByName = "toEndTime")
+    @Mapping(target = "staffInfoDTO", source = "washSessions", qualifiedByName = "toStaffInfoDTO")
     UpcomingBookingResponse toUpcomingBookingResponse(Booking booking);
 
     @Named("toSlotDate")
@@ -60,7 +62,19 @@ public interface BookingMapper {
     @Mapping(target = "endTime", source = "availableSlots", qualifiedByName = "toEndTime")
     @Mapping(target = "washBay", source = "washSessions", qualifiedByName = "toWashBayName")
     @Mapping(target = "washSessionStatus", source = "washSessions", qualifiedByName = "toWashSessionStatus")
+    @Mapping(target = "staffInfoDTO", source = "washSessions", qualifiedByName = "toStaffInfoDTO")
+    @Mapping(target = "staffNotes", source = "washSessions", qualifiedByName = "toStaffNotes")
     BookingResponse toBookingResponse(Booking booking);
+
+    @Named("toStaffInfoDTO")
+    default Staff toStaff(List<WashSession> washSessions) {
+        WashSession washSession = washSessions.getFirst();
+        if (washSession.getStaff() != null) {
+            return washSession.getStaff();
+        } else {
+            return null;
+        }
+    }
 
     @Named("toWashBayName")
     default String toWashBayName(List<WashSession> washSessions) {
@@ -86,4 +100,10 @@ public interface BookingMapper {
     @Mapping(target = "billingId", source = "billing.id")
     PendingBookingResponse toPendingBookingResponse(Booking booking);
     List<PendingBookingResponse> toPendingBookingResponses(List<Booking> bookings);
+
+    @Named("toStaffNotes")
+    default String toStaffNotes(List<WashSession> washSessions) {
+        WashSession washSession = washSessions.getFirst();
+        return washSession.getStaffNote();
+    }
 }

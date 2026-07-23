@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Row, Col, Card, Table, Tag, Progress, Button, Empty, Space, Typography, Badge, Spin, Modal, message, Tooltip } from 'antd';
-import { CalendarOutlined, TrophyOutlined, CrownOutlined, ArrowRightOutlined, GiftOutlined, StarOutlined, WalletOutlined, RiseOutlined, InfoCircleOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { CalendarOutlined, TrophyOutlined, CrownOutlined, ArrowRightOutlined, GiftOutlined, StarOutlined, WalletOutlined, RiseOutlined, InfoCircleOutlined, ClockCircleOutlined, CarOutlined, DollarOutlined, SafetyOutlined, CheckOutlined } from '@ant-design/icons';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { getMembershipTier, getUpcomingBooking, getReward, exchangeVoucher, getVoucher, getRecentActivities, getPendingDeposit, cancelBooking } from '../../../service/customerService';
 import axios from 'axios';
@@ -56,6 +56,7 @@ const CountdownCell = ({ expiryTime, onExpire }) => {
 export default function Overview() {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
 
     //State cho dữ liệu deposit pending
     const [depositPending, setDepositPending] = useState([])
@@ -175,6 +176,27 @@ export default function Overview() {
         };
     }, []);
 
+    // Đọc ?action= param từ notification click
+    useEffect(() => {
+        const action = searchParams.get('action');
+        if (!action) return;
+
+        if (action === 'bookings') {
+            // Đợi data load xong rồi mới mở modal
+            if (!loading) {
+                setIsModalOpen(true);
+                setSearchParams({}, { replace: true });
+            }
+        } else if (action === 'points') {
+            // Scroll đến bảng lịch sử điểm
+            const el = document.getElementById('point-history-section');
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            setSearchParams({}, { replace: true });
+        }
+    }, [searchParams, loading, setSearchParams]);
+
 
     // Lịch đặt gần nhất (sắp diễn ra đầu tiên)
     const nearestBooking = upcomingBookings.length > 0 ? upcomingBookings[0] : null;
@@ -259,8 +281,38 @@ export default function Overview() {
         const name = tierName?.toLowerCase() || '';
         if (name.includes('bạc') || name.includes('silver')) return 'silver';
         if (name.includes('vàng') || name.includes('gold')) return 'gold';
-        if (name.includes('kim cương') || name.includes('diamond')) return 'diamond';
+        if (name.includes('kim cương') || name.includes('diamond') || name.includes('platinum')) return 'diamond';
         return 'bronze';
+    };
+
+    const getTierIcon = (tierName) => {
+        const name = tierName?.toLowerCase() || '';
+        if (name.includes('bạc') || name.includes('silver')) {
+            return (
+                <div className="tier-icon-wrapper tier-icon--silver">
+                    <SafetyOutlined />
+                </div>
+            );
+        }
+        if (name.includes('vàng') || name.includes('gold')) {
+            return (
+                <div className="tier-icon-wrapper tier-icon--gold">
+                    <TrophyOutlined />
+                </div>
+            );
+        }
+        if (name.includes('kim cương') || name.includes('diamond') || name.includes('platinum')) {
+            return (
+                <div className="tier-icon-wrapper tier-icon--diamond">
+                    <CrownOutlined />
+                </div>
+            );
+        }
+        return (
+            <div className="tier-icon-wrapper tier-icon--bronze">
+                <StarOutlined />
+            </div>
+        );
     };
 
     // Định nghĩa các cột cho bảng hiển thị tất cả lịch đặt sắp tới trong Modal
@@ -282,6 +334,11 @@ export default function Overview() {
             dataIndex: 'slotDate',
             key: 'slotDate',
             render: (date) => date ? date.split('-').reverse().join('/') : '',
+        },
+        {
+            title: 'KĨ THUẬT VIÊN',
+            key: 'staff',
+            render: (_, record) => record.staffInfoDTO ? <Text strong>{record.staffInfoDTO.fullName}</Text> : <Text type="secondary">Chưa xếp</Text>,
         },
         {
             title: 'DỊCH VỤ',
@@ -432,6 +489,11 @@ export default function Overview() {
             render: (date) => date ? date.split('-').reverse().join('/') : '',
         },
         {
+            title: 'KĨ THUẬT VIÊN',
+            key: 'staff',
+            render: (_, record) => record.staffInfoDTO ? <Text strong>{record.staffInfoDTO.fullName}</Text> : <Text type="secondary">Chưa xếp</Text>,
+        },
+        {
             title: 'DỊCH VỤ',
             key: 'services',
             render: (_, record) => (
@@ -470,7 +532,6 @@ export default function Overview() {
                 return (
                     <Button
                         type="primary"
-                        danger
                         size="small"
                         disabled={isExpired}
                         onClick={() => handlePayDeposit(record)}
@@ -508,10 +569,10 @@ export default function Overview() {
                                 <div className="booking-info">
                                     <div className="booking-service">{nearestBookingServiceName}</div>
                                     <div className="booking-detail">
-                                        📅 {nearestBookingDate} | 🕒 {nearestBookingTime}
+                                        <CalendarOutlined style={{ marginRight: 4 }} /> {nearestBookingDate} | <ClockCircleOutlined style={{ marginRight: 4 }} /> {nearestBookingTime}
                                     </div>
                                     <div className="booking-car">
-                                        🚗 Biển số: <strong>{nearestBookingLicensePlate}</strong>
+                                        <CarOutlined style={{ marginRight: 6 }} /> Biển số: <strong>{nearestBookingLicensePlate}</strong>
                                     </div>
                                     {otherBookingsCount > 0 && (
                                         <div className="other-bookings-alert">
@@ -519,9 +580,9 @@ export default function Overview() {
                                         </div>
                                     )}
                                     <Button
-                                        type="primary"
+                                        type="default"
                                         icon={<ArrowRightOutlined />}
-                                        className="action-btn"
+                                        className="action-btn-outline"
                                         onClick={() => setIsModalOpen(true)}
                                     >
                                         Xem tất cả ({upcomingBookings.length})
@@ -533,7 +594,7 @@ export default function Overview() {
                                     description="Bạn không có lịch đặt sắp tới"
                                     className="compact-empty"
                                 >
-                                    <Button type="primary" onClick={() => navigate('/ca-nhan/dat-lich')}>
+                                    <Button type="primary" style={{ backgroundColor: '#002b7f', borderColor: '#002b7f' }} onClick={() => navigate('/ca-nhan/dat-lich')}>
                                         Đặt lịch ngay
                                     </Button>
                                 </Empty>
@@ -558,13 +619,13 @@ export default function Overview() {
                                 <div className="booking-info">
                                     <div className="booking-service">{nearestPendingServiceName}</div>
                                     <div className="booking-detail">
-                                        📅 {nearestPendingDate} | 🕒 {nearestPendingTime}
+                                        <CalendarOutlined style={{ marginRight: 4 }} /> {nearestPendingDate} | <ClockCircleOutlined style={{ marginRight: 4 }} /> {nearestPendingTime}
                                     </div>
                                     <div className="booking-car">
-                                        🚗 Biển số: <strong>{nearestPendingLicensePlate}</strong>
+                                        <CarOutlined style={{ marginRight: 6 }} /> Biển số: <strong>{nearestPendingLicensePlate}</strong>
                                     </div>
                                     <div className="booking-deposit" style={{ margin: '4px 0', fontSize: '13px', fontWeight: 'bold', color: '#ff4d4f', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span>💵 Tiền cọc: {nearestPendingDeposit.toLocaleString()} VND</span>
+                                        <span><DollarOutlined style={{ marginRight: 6 }} /> Tiền cọc: {nearestPendingDeposit.toLocaleString()} VND</span>
                                         <CountdownCell expiryTime={nearestPending?.billing?.depositExpiry} />
                                     </div>
                                     {otherPendingCount > 0 && (
@@ -575,7 +636,6 @@ export default function Overview() {
                                     <Space style={{ width: '100%', marginTop: '8px' }} direction="vertical" size={8}>
                                         <Button
                                             type="primary"
-                                            danger
                                             block
                                             style={{ height: '36px', fontWeight: '600', borderRadius: '6px' }}
                                             disabled={nearestPending?.billing?.depositExpiry ? new Date(nearestPending.billing.depositExpiry) <= new Date() : false}
@@ -586,7 +646,8 @@ export default function Overview() {
                                         <Button
                                             type="default"
                                             block
-                                            style={{ height: '36px', fontWeight: '600', borderRadius: '6px', borderColor: '#d9d9d9', color: '#595959' }}
+                                            className="action-btn-outline"
+                                            style={{ height: '36px', fontWeight: '600', borderRadius: '6px', margin: 0 }}
                                             onClick={() => setIsPendingModalOpen(true)}
                                         >
                                             Xem tất cả ({depositPending.length})
@@ -619,21 +680,23 @@ export default function Overview() {
                             ) : (
                                 <>
                                     {/* Lifetime Point */}
-                                    <div className="point-row lifetime-row">
-                                        <div className="point-row-header">
-                                            <StarOutlined className="point-row-icon lifetime-icon" />
-                                            <Text className="point-row-label">Tổng điểm tích lũy</Text>
-                                            <Tooltip title="Tổng điểm bạn đã đạt được từ trước đến nay, chỉ tăng, không giảm">
-                                                <InfoCircleOutlined className="point-info-icon" />
-                                            </Tooltip>
+                                    {false && (
+                                        <div className="point-row lifetime-row">
+                                            <div className="point-row-header">
+                                                <StarOutlined className="point-row-icon lifetime-icon" />
+                                                <Text className="point-row-label">Tổng điểm tích lũy</Text>
+                                                <Tooltip title="Tổng điểm bạn đã đạt được từ trước đến nay, chỉ tăng, không giảm">
+                                                    <InfoCircleOutlined className="point-info-icon" />
+                                                </Tooltip>
+                                            </div>
+                                            <div className="point-row-value lifetime-value">
+                                                {lifetimePoints.toLocaleString()}
+                                                <span className="point-row-unit">điểm</span>
+                                            </div>
                                         </div>
-                                        <div className="point-row-value lifetime-value">
-                                            {lifetimePoints.toLocaleString()}
-                                            <span className="point-row-unit">điểm</span>
-                                        </div>
-                                    </div>
+                                    )}
 
-                                    <div className="points-divider" />
+                                    {false && <div className="points-divider" />}
 
                                     {/* Current Point */}
                                     <div className="point-row current-row">
@@ -692,92 +755,92 @@ export default function Overview() {
 
                 {/* Cột 4: Hạng thành viên + Delta Point */}
                 <Col xs={24} sm={12} xl={6}>
-                    <Card className="dashboard-card tier-card" hoverable>
-                        <Space className="card-header">
-                            <CrownOutlined className="card-icon icon-silver" />
-                            <Text className="card-title">HẠNG THÀNH VIÊN</Text>
-                        </Space>
-                        <div className="card-body">
-                            {loading ? (
+                    <Card className={`dashboard-card tier-card tier-card--${getTierClass(currentTierName)}`} hoverable>
+                        {loading ? (
+                            <div className="card-body">
                                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100px' }}>
                                     <Spin size="small" />
                                 </div>
-                            ) : (
-                                <>
-                                    <div className="tier-display">
-                                        <div className={`tier-badge ${getTierClass(currentTierName)}`}>
-                                            {currentTierName.toUpperCase()}
-                                        </div>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginBottom: '16px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        {getTierIcon(currentTierName)}
+                                        <Text className="card-title">HẠNG THÀNH VIÊN</Text>
                                     </div>
+                                    <div className={`tier-badge ${getTierClass(currentTierName)}`} style={{ margin: 0 }}>
+                                        {currentTierName.toUpperCase()}
+                                    </div>
+                                </div>
+                                <div className="card-body">
 
                                     {/* Delta Point Section */}
-                                    <div className="delta-section">
-                                        <div className="delta-header">
-                                            <RiseOutlined className="delta-icon" />
-                                            <Text className="delta-label">Điểm quý hiện tại</Text>
-                                            <Tooltip title="Điểm được tính theo quý, quyết định duy trì hoặc nâng hạng thành viên">
-                                                <InfoCircleOutlined className="point-info-icon" />
-                                            </Tooltip>
-                                        </div>
-                                        <div className="delta-value">
-                                            {deltaPoints.toLocaleString()}
-                                            <span className="delta-unit">điểm</span>
-                                        </div>
+                                    <div className="delta-header">
+                                        <RiseOutlined className="delta-icon" />
+                                        <Text className="delta-label">Điểm quý hiện tại</Text>
+                                        <Tooltip title="Điểm được tính theo quý, quyết định duy trì hoặc nâng hạng thành viên">
+                                            <InfoCircleOutlined className="point-info-icon" />
+                                        </Tooltip>
+                                    </div>
+                                    <div className="delta-value">
+                                        {deltaPoints.toLocaleString()}
+                                        <span className="delta-unit">điểm</span>
+                                    </div>
 
-                                        {/* Progress: Duy trì rank */}
+                                    {/* Progress: Duy trì rank */}
+                                    <div className="delta-progress-group">
+                                        <div className="delta-progress-label">
+                                            <span><SafetyOutlined style={{ marginRight: 6 }} /> Duy trì {currentTierName}</span>
+                                            <span className={deltaPoints >= minPointsToMaintain ? 'delta-status-ok' : 'delta-status-warn'}>
+                                                {deltaPoints}/{minPointsToMaintain}
+                                            </span>
+                                        </div>
+                                        <Progress
+                                            percent={deltaPercentMaintain}
+                                            strokeColor={deltaPoints >= minPointsToMaintain ? '#52c41a' : '#ff4d4f'}
+                                            trailColor="#f0f0f0"
+                                            showInfo={false}
+                                            size="small"
+                                        />
+                                    </div>
+
+                                    {/* Progress: Nâng rank */}
+                                    {nextTierPoints > 0 && (
                                         <div className="delta-progress-group">
                                             <div className="delta-progress-label">
-                                                <span>🛡️ Duy trì {currentTierName}</span>
-                                                <span className={deltaPoints >= minPointsToMaintain ? 'delta-status-ok' : 'delta-status-warn'}>
-                                                    {deltaPoints}/{minPointsToMaintain}
+                                                <span><RiseOutlined style={{ marginRight: 6 }} /> Lên {nextTierName}</span>
+                                                <span className={deltaPoints >= nextTierPoints ? 'delta-status-ok' : 'delta-status-neutral'}>
+                                                    {deltaPoints}/{nextTierPoints}
                                                 </span>
                                             </div>
                                             <Progress
-                                                percent={deltaPercentMaintain}
-                                                strokeColor={deltaPoints >= minPointsToMaintain ? '#52c41a' : '#ff4d4f'}
+                                                percent={deltaPercentUpgrade}
+                                                strokeColor="#52c41a"
                                                 trailColor="#f0f0f0"
                                                 showInfo={false}
                                                 size="small"
                                             />
                                         </div>
+                                    )}
 
-                                        {/* Progress: Nâng rank */}
-                                        {nextTierPoints > 0 && (
-                                            <div className="delta-progress-group">
-                                                <div className="delta-progress-label">
-                                                    <span>🚀 Lên {nextTierName}</span>
-                                                    <span className={deltaPoints >= nextTierPoints ? 'delta-status-ok' : 'delta-status-neutral'}>
-                                                        {deltaPoints}/{nextTierPoints}
-                                                    </span>
-                                                </div>
-                                                <Progress
-                                                    percent={deltaPercentUpgrade}
-                                                    strokeColor={{
-                                                        '0%': '#faad14',
-                                                        '100%': '#52c41a',
-                                                    }}
-                                                    trailColor="#f0f0f0"
-                                                    showInfo={false}
-                                                    size="small"
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <ul className="tier-benefits">
+                                    {/* <ul className="tier-benefits">
                                         {tierBenefits.map((benefit, index) => (
-                                            <li key={index}>✨ {benefit}</li>
+                                            <li key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <CheckOutlined style={{ color: '#52c41a' }} />
+                                                <span>{benefit}</span>
+                                            </li>
                                         ))}
-                                    </ul>
-                                </>
-                            )}
-                        </div>
+                                    </ul> */}
+                                </div>
+                            </>
+                        )}
                     </Card>
                 </Col>
             </Row>
 
             {/* Hàng 2: Bảng LỊCH SỬ GIAO DỊCH ĐIỂM */}
-            <div className="activity-section">
+            <div className="activity-section" id="point-history-section">
                 <div className="activity-header">
                     <Title level={4} className="activity-title">
                         <GiftOutlined style={{ marginRight: '8px', color: '#002b7f' }} /> LỊCH SỬ GIAO DỊCH ĐIỂM
@@ -796,13 +859,13 @@ export default function Overview() {
 
             {/* Modal hiển thị danh sách tất cả các lịch đặt sắp tới */}
             <Modal
-                title={<span style={{ color: '#002b7f', fontWeight: 700, fontSize: '18px' }}>DANH SÁCH LỊCH ĐẶT SẮP TỚI</span>}
+                title={<span style={{ color: '#0d1b4b', fontWeight: 700, fontSize: '18px' }}>DANH SÁCH LỊCH ĐẶT SẮP TỚI</span>}
                 open={isModalOpen}
                 onCancel={() => setIsModalOpen(false)}
                 footer={null}
                 width={850}
             >
-                <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#f0f5ff', border: '1px solid #d6e4ff', borderRadius: '8px', fontSize: '14px', color: '#002b7f' }}>
+                <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#f0f5ff', border: '1px solid #d6e4ff', borderRadius: '8px', fontSize: '14px', color: '#0d1b4b' }}>
                     <InfoCircleOutlined style={{ marginRight: '8px' }} />
                     Để đảm bảo quyền lợi, vui lòng tham khảo <span style={{ fontWeight: 'bold', textDecoration: 'underline', cursor: 'pointer' }} onClick={() => setIsPolicyModalOpen(true)}>Chính sách & Quy định đặt lịch</span> của chúng tôi.
                 </div>
@@ -818,7 +881,7 @@ export default function Overview() {
             </Modal>
             {/* Modal hiển thị danh sách tất cả các lịch đặt chờ cọc */}
             <Modal
-                title={<span style={{ color: '#002b7f', fontWeight: 700, fontSize: '18px' }}>DANH SÁCH LỊCH CHỜ ĐẶT CỌC</span>}
+                title={<span style={{ color: '#0d1b4b', fontWeight: 700, fontSize: '18px' }}>DANH SÁCH LỊCH CHỜ ĐẶT CỌC</span>}
                 open={isPendingModalOpen}
                 onCancel={() => setIsPendingModalOpen(false)}
                 footer={null}
@@ -835,7 +898,7 @@ export default function Overview() {
                 />
             </Modal>
             <Modal
-                title={<span style={{ color: '#002b7f', fontWeight: 700, fontSize: '18px' }}>DANH SÁCH VOUCHER QUY ĐỔI</span>}
+                title={<span style={{ color: '#0d1b4b', fontWeight: 700, fontSize: '18px' }}>DANH SÁCH VOUCHER QUY ĐỔI</span>}
                 open={isRewardModalOpen}
                 onCancel={() => setIsRewardModalOpen(false)}
                 footer={null}
@@ -852,7 +915,7 @@ export default function Overview() {
                             title: 'TÊN PHẦN THƯỞNG',
                             dataIndex: 'rewardName',
                             key: 'rewardName',
-                            render: (text) => <Text strong style={{ color: '#002b7f' }}>{text}</Text>
+                            render: (text) => <Text strong style={{ color: '#0d1b4b' }}>{text}</Text>
                         },
                         {
                             title: 'MÔ TẢ',
@@ -873,7 +936,7 @@ export default function Overview() {
                                     type="primary"
                                     onClick={() => handleExchange(record)}
                                     disabled={currentPoints < record.pointCost || exchanging}
-                                    style={{ backgroundColor: currentPoints >= record.pointCost ? '#faad14' : undefined, borderColor: currentPoints >= record.pointCost ? '#faad14' : undefined }}
+                                    style={{ backgroundColor: currentPoints >= record.pointCost ? '#002b7f' : undefined, borderColor: currentPoints >= record.pointCost ? '#002b7f' : undefined }}
                                 >
                                     Đổi điểm
                                 </Button>
@@ -883,7 +946,7 @@ export default function Overview() {
                 />
             </Modal>
             <Modal
-                title={<span style={{ color: '#002b7f', fontWeight: 700, fontSize: '18px' }}>DANH SÁCH VOUCHER CỦA BẠN</span>}
+                title={<span style={{ color: '#0d1b4b', fontWeight: 700, fontSize: '18px' }}>DANH SÁCH VOUCHER CỦA BẠN</span>}
                 open={isMyVoucherModalOpen}
                 onCancel={() => setIsMyVoucherModalOpen(false)}
                 footer={null}
@@ -900,7 +963,7 @@ export default function Overview() {
                             title: 'MÃ VOUCHER',
                             dataIndex: 'voucherCode',
                             key: 'voucherCode',
-                            render: (text) => <Text copyable strong style={{ color: '#002b7f' }}>{text}</Text>
+                            render: (text) => <Text copyable strong style={{ color: '#0d1b4b' }}>{text}</Text>
                         },
                         {
                             title: 'TÊN PHẦN THƯỞNG',

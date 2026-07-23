@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.autowashpro.backend.mapper.WashSessionMapper;
@@ -40,5 +41,20 @@ public class WashSessionController {
     @PostMapping("/api/staff/wash-sessions/cancel")
     public ResponseEntity<List<WashSessionResponse>> cancelWashSession(@AuthenticationPrincipal String email, @RequestBody StartWashSessionRequest request) {
         return ResponseEntity.status(HttpStatus.OK).body(service.cancleWashSession(request.getBookingId(), email));
+    }
+
+    @PostMapping("/api/staff/v2/wash-sessions/start")
+    public ResponseEntity<List<WashSessionResponse>> startWashSession(@RequestParam("staffId") Long staffId, @RequestBody StartWashSessionRequest request) {
+        return ResponseEntity.status(HttpStatus.OK).body(service.startWashSessionAssigningStaff(request.getBookingId(), staffId));
+    }
+
+    @PostMapping("/api/staff/v2/wash-sessions/complete")
+    public ResponseEntity<List<WashSessionResponse>> completeWashSession(@RequestBody StartWashSessionRequest request) {
+        return ResponseEntity.status(HttpStatus.OK).body(service.completeWashSessionVersion2(request.getBookingId()));
+    }
+
+    @PostMapping("/api/staff/v3/wash-sessions/start")
+    public ResponseEntity<List<WashSessionResponse>> startWashSessionVersion3(@RequestParam("staffId") Long staffId, @RequestBody StartWashSessionRequest request) {
+        return ResponseEntity.status(HttpStatus.OK).body(service.startWashSessionAssigningStaffVersion3(request, staffId));
     }
 }

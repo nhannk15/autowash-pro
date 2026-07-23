@@ -40,4 +40,6 @@ public class CreateBookingResponse {
 
     private String voucherCode;
     private BigDecimal depositAmount;
+
+    private String staffName;
 }

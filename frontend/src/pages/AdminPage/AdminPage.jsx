@@ -9,7 +9,8 @@ import {
     TagOutlined,
     RubyOutlined,
     GiftOutlined,
-    AuditOutlined
+    AuditOutlined,
+    BarsOutlined
 } from '@ant-design/icons';
 
 export default function AdminPage() {
@@ -29,6 +30,7 @@ export default function AdminPage() {
         getItem('Khách hàng', '/admin/customer', <TeamOutlined />),
         getItem('Nhân viên', '/admin/staff', <AuditOutlined />),
         getItem('Dịch vụ', '/admin/service', <ContainerOutlined />),
+        getItem('Lịch sử cuộc hẹn', '/admin/bookings-history', <BarsOutlined />),
         getItem('Hạng thành viên', '/admin/membership', <RubyOutlined />),
         getItem('Đổi thưởng', '/admin/rewards', <GiftOutlined />),
         getItem('Khuyến mãi', '/admin/promotion', <TagOutlined />),

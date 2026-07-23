@@ -9,7 +9,7 @@
 }
 
 .welcome-title {
-    color: #002b7f !important;
+    color: #0d1b4b !important;
     font-weight: 700 !important;
     margin-bottom: 4px !important;
 }
@@ -31,8 +31,8 @@
 
 .dashboard-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 12px 20px rgba(0, 43, 127, 0.08) !important;
-    border-color: rgba(0, 43, 127, 0.2) !important;
+    box-shadow: 0 12px 20px rgba(13, 27, 75, 0.08) !important;
+    border-color: rgba(13, 27, 75, 0.2) !important;
 }
 
 .card-header {
@@ -49,7 +49,7 @@
 
 .icon-blue {
     background-color: #f0f5ff;
-    color: #002b7f;
+    color: #0d1b4b;
 }
 
 .icon-gold {
@@ -113,7 +113,7 @@
 
 .other-bookings-alert .ant-badge-status-text {
     font-size: 12px !important;
-    color: #002b7f !important;
+    color: #0d1b4b !important;
     font-weight: 600 !important;
 }
 
@@ -246,15 +246,15 @@
     width: 100%;
     height: 36px !important;
     font-weight: 600 !important;
-    background-color: #faad14 !important;
-    border-color: #faad14 !important;
+    background-color: #002b7f !important;
+    border-color: #002b7f !important;
     border-radius: 6px !important;
     transition: all 0.3s !important;
 }
 
 .voucher-btn:hover {
-    background-color: #d48806 !important;
-    border-color: #d48806 !important;
+    background-color: #001f5c !important;
+    border-color: #001f5c !important;
 }
 
 .exchange-voucher-btn-custom {
@@ -262,16 +262,16 @@
     flex: 1;
     height: 36px !important;
     font-weight: 600 !important;
-    background-color: #faad14 !important;
-    border-color: #faad14 !important;
+    background-color: #002b7f !important;
+    border-color: #002b7f !important;
     color: #ffffff !important;
     border-radius: 6px !important;
     transition: all 0.3s !important;
 }
 
 .exchange-voucher-btn-custom:hover {
-    background-color: #d48806 !important;
-    border-color: #d48806 !important;
+    background-color: #001f5c !important;
+    border-color: #001f5c !important;
 }
 
 .my-voucher-btn-custom {
@@ -280,16 +280,16 @@
     height: 36px !important;
     font-weight: 600 !important;
     background-color: #ffffff !important;
-    border-color: #faad14 !important;
-    color: #faad14 !important;
+    border-color: #002b7f !important;
+    color: #002b7f !important;
     border-radius: 6px !important;
     transition: all 0.3s !important;
 }
 
 .my-voucher-btn-custom:hover {
-    background-color: #fff7e6 !important;
-    color: #d48806 !important;
-    border-color: #d48806 !important;
+    background-color: #f0f5ff !important;
+    color: #001f5c !important;
+    border-color: #001f5c !important;
 }
 
 .points-actions {
@@ -307,54 +307,137 @@
     flex: none;
 }
 
-/* Card 3: Membership Tier + Delta */
-.tier-display {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 10px;
-}
-
+/* Card 3: Membership Tier styling (Dynamic by rank) */
 .tier-badge {
-    padding: 6px 20px;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 800;
-    letter-spacing: 1px;
+    padding: 4px 12px !important;
+    border-radius: 12px !important;
+    font-size: 11px !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.5px !important;
     text-align: center;
     width: fit-content;
 }
 
-.tier-badge.silver {
-    background-color: #cbd5e1;
-    color: #1e293b;
-    border: 1px solid #94a3b8;
+.tier-badge.bronze {
+    background-color: #ffedd5 !important;
+    color: #c2410c !important;
+    border: 1.5px solid #fdba74 !important;
 }
 
-.tier-badge.bronze {
-    background-color: #ffedd5;
-    color: #9a3412;
-    border: 1px solid #f97316;
+.tier-badge.silver {
+    background-color: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1.5px solid #cbd5e1 !important;
 }
 
 .tier-badge.gold {
-    background-color: #fef9c3;
-    color: #854d0e;
-    border: 1px solid #eab308;
+    background-color: #fef9c3 !important;
+    color: #a16207 !important;
+    border: 1.5px solid #facc15 !important;
 }
 
 .tier-badge.diamond {
-    background-color: #fae8ff;
-    color: #86198f;
-    border: 1px solid #d946ef;
+    background-color: #f3e8ff !important;
+    color: #7e22ce !important;
+    border: 1.5px solid #d8b4fe !important;
 }
 
-/* Delta Point Section */
-.delta-section {
-    background-color: #f8fafc;
-    border: 1px solid #e8edf2;
-    border-radius: 8px;
-    padding: 10px 12px;
-    margin-bottom: 10px;
+/* Tier icon styling */
+.tier-icon-wrapper {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.tier-icon--bronze {
+    background-color: #ffedd5 !important;
+    color: #c2410c !important;
+}
+
+.tier-icon--silver {
+    background-color: #f1f5f9 !important;
+    color: #475569 !important;
+}
+
+.tier-icon--gold {
+    background-color: #fef9c3 !important;
+    color: #a16207 !important;
+}
+
+.tier-icon--diamond {
+    background-color: #f3e8ff !important;
+    color: #7e22ce !important;
+}
+
+/* Card backgrounds and borders per tier */
+.tier-card--bronze {
+    background-color: #fff7ed !important;
+    border: 2px solid #fdba74 !important;
+}
+.tier-card--bronze .card-title {
+    color: #c2410c !important;
+}
+.tier-card--bronze:hover {
+    border-color: #f97316 !important;
+}
+
+.tier-card--silver {
+    background-color: #f8fafc !important;
+    border: 2px solid #cbd5e1 !important;
+}
+.tier-card--silver .card-title {
+    color: #475569 !important;
+}
+.tier-card--silver:hover {
+    border-color: #94a3b8 !important;
+}
+
+.tier-card--gold {
+    background-color: #fefce8 !important;
+    border: 2px solid #facc15 !important;
+}
+.tier-card--gold .card-title {
+    color: #a16207 !important;
+}
+.tier-card--gold:hover {
+    border-color: #eab308 !important;
+}
+
+.tier-card--diamond {
+    background-color: #faf5ff !important;
+    border: 2px solid #d8b4fe !important;
+}
+.tier-card--diamond .card-title {
+    color: #7e22ce !important;
+}
+.tier-card--diamond:hover {
+    border-color: #a855f7 !important;
+}
+
+/* Tier-specific style overrides for Delta text colors */
+.tier-card--bronze .delta-icon,
+.tier-card--bronze .delta-value {
+    color: #c2410c !important;
+}
+
+.tier-card--silver .delta-icon,
+.tier-card--silver .delta-value {
+    color: #475569 !important;
+}
+
+.tier-card--gold .delta-icon,
+.tier-card--gold .delta-value {
+    color: #a16207 !important;
+}
+
+.tier-card--diamond .delta-icon,
+.tier-card--diamond .delta-value {
+    color: #7e22ce !important;
 }
 
 .delta-header {
@@ -365,29 +448,29 @@
 }
 
 .delta-icon {
-    font-size: 14px;
-    color: #1890ff;
+    font-size: 16px;
+    color: #002b7f;
 }
 
 .delta-label {
-    font-size: 12px !important;
+    font-size: 14px !important;
     font-weight: 600 !important;
     color: #333333 !important;
 }
 
 .delta-value {
-    font-size: 24px;
+    font-size: 34px;
     font-weight: 800;
-    color: #1890ff;
+    color: #002b7f;
     line-height: 1.2;
     margin-bottom: 8px;
 }
 
 .delta-unit {
-    font-size: 12px;
-    color: #8c8c8c;
+    font-size: 16px;
+    color: #64748b;
     font-weight: 600;
-    margin-left: 4px;
+    margin-left: 6px;
 }
 
 .delta-progress-group {
@@ -401,10 +484,10 @@
 .delta-progress-label {
     display: flex;
     justify-content: space-between;
-    font-size: 11px;
-    color: #666666;
+    font-size: 13px;
+    color: #4b5563;
     font-weight: 600;
-    margin-bottom: 2px;
+    margin-bottom: 4px;
 }
 
 .delta-status-ok {
@@ -447,7 +530,7 @@
 }
 
 .activity-title {
-    color: #002b7f !important;
+    color: #0d1b4b !important;
     font-weight: 700 !important;
     margin: 0 !important;
 }
@@ -457,6 +540,12 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02) !important;
     border: 1px solid #cbd5e1 !important;
     overflow: hidden;
+}
+
+@media (max-width: 576px) {
+    .table-card {
+        overflow-x: auto;
+    }
 }
 
 .custom-table .ant-table-thead > tr > th {
@@ -481,6 +570,8 @@
 @media (max-width: 768px) {
     .overview-container {
         padding: 16px;
+        max-width: 100%;
+        overflow-x: hidden;
     }
     .points-number {
         font-size: 32px;

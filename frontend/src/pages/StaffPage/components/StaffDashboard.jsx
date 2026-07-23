@@ -142,10 +142,6 @@ export default function StaffDashboard() {
             }));
     }, [bookings]);
 
-    const [notifications] = useState([
-        { id: 1, message: 'Hệ thống hoạt động bình thường', type: 'info', time: 'Vừa xong' },
-    ]);
-
     // Xử lý khi quay lại từ Payment
     const processedRef = useRef(false);
     useEffect(() => {
@@ -366,7 +362,7 @@ export default function StaffDashboard() {
     };
 
     const handleVehicleSelect = (vehicleId) => {
-        const vehicle = foundCustomer?.vehicles.find(v => v.id === vehicleId);
+        const vehicle = foundCustomer?.vehicles?.find(v => v.id === vehicleId);
         setSelectedVehicleTypeId(vehicle?.vehicleType?.id || null);
         bookingForm.setFieldsValue({ services: undefined });
     };
@@ -536,6 +532,14 @@ export default function StaffDashboard() {
                                                                     <UserOutlined className="bay-card__customer-label" />
                                                                     {session.customer?.fullName || 'N/A'}
                                                                 </Text>
+                                                                {session.staffName && (
+                                                                    <>
+                                                                        <br />
+                                                                        <Text type="secondary" className="bay-card__staff-label">
+                                                                            Nhân viên: <Text type="secondary" className="bay-card__staff-name">{session.staffName}</Text>
+                                                                        </Text>
+                                                                    </>
+                                                                )}
                                                             </div>
                                                             <div className="bay-card__service-tag">
                                                                 {session.services?.length > 0 ? (
@@ -601,7 +605,7 @@ export default function StaffDashboard() {
                     {/* THAO TÁC NHANH */}
                     <div className="dashboard__quick-actions">
                         <Row gutter={[12, 12]}>
-                            <Col span={12}>
+                            <Col xs={24} sm={12} lg={24} xl={12}>
                                 <Button
                                     type="primary"
                                     icon={<UserAddOutlined />}
@@ -612,7 +616,7 @@ export default function StaffDashboard() {
                                     Tạo tài khoản / Thêm xe
                                 </Button>
                             </Col>
-                            <Col span={12}>
+                            <Col xs={24} sm={12} lg={24} xl={12}>
                                 <Button
                                     type="primary"
                                     icon={<CalendarOutlined />}
@@ -656,30 +660,6 @@ export default function StaffDashboard() {
                         ) : (
                             <Text type="secondary">Không có lịch hẹn sắp tới</Text>
                         )}
-                    </Card>
-
-                    {/* THÔNG BÁO */}
-                    <Card
-                        title={<Title level={4} className="dashboard__card-title"><BellOutlined /> Thông báo</Title>}
-                        className="dashboard__notifications-card"
-                    >
-                        <div className="notifications-list">
-                            {notifications.map(item => (
-                                <div key={item.id} className="notifications-list__item">
-                                    <div className="notifications-list__message">
-                                        <Text
-                                            type={item.type === 'warning' ? 'danger' : 'default'}
-                                            className="notifications-list__message-text"
-                                        >
-                                            {item.message}
-                                        </Text>
-                                    </div>
-                                    <Text type="secondary" className="notifications-list__time">
-                                        {item.time}
-                                    </Text>
-                                </div>
-                            ))}
-                        </div>
                     </Card>
                 </Col>
             </Row>

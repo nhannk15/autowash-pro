@@ -92,8 +92,10 @@ export default function ServicesSlider() {
                                         style={{
                                             backgroundImage: `url(${imageSrc})`,
                                             backgroundSize: 'cover',
-                                            backgroundPosition: 'center'
+                                            backgroundPosition: 'center',
+                                            cursor: 'pointer'
                                         }}
+                                        onClick={() => navigate('/service', { state: { highlightServiceId: service.serviceId } })}
                                     >
                                         {/* Vùng ảnh */}
                                         <div className="service-card__visual">
@@ -134,7 +136,7 @@ export default function ServicesSlider() {
                 {/* NÚT XEM THÊM */}
                 <div className="services__footer">
                     <button className="services__view-more" onClick={handleViewMore}>
-                        Xem CHI TIẾT
+                        Xem Chi Tiết
                     </button>
                 </div>
 

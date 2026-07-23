@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import './BlogDetail.css'
+import { UserOutlined, CalendarOutlined, OrderedListOutlined, ArrowLeftOutlined } from '@ant-design/icons'
 
 // Import service images for related posts
 import imgRuaXe from '../../assets/Service/RuaXeNgoaiThat.jpg'
@@ -60,18 +61,14 @@ export default function BlogDetail() {
                     <article>
                         <span className="blog-detail__post-category">Kinh nghiệm chăm sóc xe</span>
                         <h1 className="blog-detail__post-title">Hướng dẫn tẩy ố kính ô tô: Kinh nghiệm và cách xử lý vết ố</h1>
-                        
+
                         <div className="blog-detail__post-meta">
                             <div className="blog-detail__meta-item">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16" style={{color: '#a0aec0'}}>
-                                    <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A9.75 9.75 0 0112 22.5a9.75 9.75 0 01-8.314-1.7a.75.75 0 01-.437-.695z" clipRule="evenodd" />
-                                </svg>
+                                <UserOutlined style={{ color: '#a0aec0' }} />
                                 <span>Đăng bởi: Car Wash Centre</span>
                             </div>
                             <div className="blog-detail__meta-item">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16" style={{color: '#a0aec0'}}>
-                                    <path fillRule="evenodd" d="M6.75 2.25A.75.75 0 017.5 3v1.5h9V3A.75.75 0 0118 3v1.5h.75a3 3 0 013 3v11.25a3 3 0 01-3 3H5.25a3 3 0 01-3-3V7.5a3 3 0 013-3H6V3a.75.75 0 01.75-.75zm13.5 9H3.75v7.5a1.5 1.5 0 001.5 1.5h13.5a1.5 1.5 0 001.5-1.5v-7.5zm-15-3h15V7.5a1.5 1.5 0 00-1.5-1.5H5.25A1.5 1.5 0 003.75 7.5v.75z" clipRule="evenodd" />
-                                </svg>
+                                <CalendarOutlined style={{ color: '#a0aec0' }} />
                                 <span>18/05/2026</span>
                             </div>
                         </div>
@@ -84,9 +81,7 @@ export default function BlogDetail() {
                             {/* Table of Contents Box */}
                             <div className="blog-detail__toc">
                                 <div className="blog-detail__toc-title">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18" style={{color: '#f5a623'}}>
-                                        <path fillRule="evenodd" d="M2.625 6A3.375 3.375 0 016 2.625h12A3.375 3.375 0 0121.375 6v12A3.375 3.375 0 0118 21.375H6A3.375 3.375 0 012.625 18V6zm3 3.375a.75.75 0 01.75-.75h11.25a.75.75 0 010 1.5H6.375a.75.75 0 01-.75-.75zM6 12a.75.75 0 000 1.5h12a.75.75 0 000-1.5H6zm-.375 3.75a.75.75 0 01.75-.75h11.25a.75.75 0 010 1.5H6.375a.75.75 0 01-.75-.75z" clipRule="evenodd" />
-                                    </svg>
+                                    <OrderedListOutlined style={{ color: '#f5a623' }} />
                                     <span>Mục lục nội dung</span>
                                 </div>
                                 <ol className="blog-detail__toc-list">
@@ -123,9 +118,9 @@ export default function BlogDetail() {
                                 <li><strong>Hóa chất rửa xe không đạt chuẩn:</strong> Xà phòng hoặc dung dịch rửa xe kém chất lượng, có độ pH quá cao hoặc quá thấp dễ ăn mòn và để lại dấu vết trên kính.</li>
                             </ul>
 
-                            <div className="blog-detail__callout">
+                            {/* <div className="blog-detail__callout">
                                 Xem thêm: <Link to="/service">Quy trình Vệ sinh kính ô tô và Chăm sóc ngoại thất chuyên nghiệp tại nhà</Link>
-                            </div>
+                            </div> */}
 
                             <h2 id="huong-dan">Hướng dẫn tẩy ố kính ô tô hiệu quả nhất</h2>
                             <p>
@@ -166,7 +161,7 @@ export default function BlogDetail() {
                                 <li><strong>Sử dụng khăn Microfiber mềm:</strong> Khăn lau thô cứng hoặc bám cát dăm sẽ làm trầy xước kính. Hãy chuẩn bị các loại khăn vi sợi chuyên dụng mềm mịn, thấm hút tốt.</li>
                             </ul>
 
-                            <p style={{marginTop: '32px'}}>
+                            <p style={{ marginTop: '32px' }}>
                                 Hy vọng bài viết đã cung cấp những kiến thức bổ ích giúp bạn tự tin xử lý vết ố kính tại nhà đúng kỹ thuật, giữ cho kính lái luôn trong suốt và an toàn trên mọi nẻo đường!
                             </p>
                         </div>
@@ -174,9 +169,7 @@ export default function BlogDetail() {
 
                     {/* Back Button */}
                     <Link to="/blog" className="blog-detail__back-btn">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-                            <path fillRule="evenodd" d="M11.03 3.97a.75.75 0 010 1.06l-6.22 6.22H21a.75.75 0 010 1.5H4.81l6.22 6.22a.75.75 0 11-1.06 1.06l-7.5-7.5a.75.75 0 010-1.06l7.5-7.5a.75.75 0 011.06 0z" clipRule="evenodd" />
-                        </svg>
+                        <ArrowLeftOutlined />
                         <span>Quay lại Blog</span>
                     </Link>
                 </div>

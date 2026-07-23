@@ -1,5 +1,6 @@
 package com.autowashpro.backend.service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -160,5 +161,11 @@ public class StaffService {
         Staff staff = repository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("Không tìm thấy staff với email: " + email));
         return staffMapper.toStaffInfoResponse(staff);
+    }
+
+    @Transactional
+    public List<StaffInfoResponse> getAvailableStaffsForASpecificDay(Long timeSlotId, LocalDate bookingDate) {
+        List<Staff> staffs = repository.findAvailableStaff(timeSlotId, bookingDate);
+        return staffMapper.toStaffInfoResponses(staffs);
     }
 }

@@ -36,5 +36,11 @@ public class BookingResponse {
     //--- Final data from Billing.
     private BookingBillingResponse billing;
 
+    private String notes;
+
+    private StaffInfoDTO staffInfoDTO;
+    private String staffNotes;
+
+
     
 }

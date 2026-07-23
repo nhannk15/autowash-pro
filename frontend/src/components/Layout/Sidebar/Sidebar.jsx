@@ -6,7 +6,7 @@ import { useAuth } from '../../../context/AuthContext';
 import './Sidebar.css';
 
 export default function Sidebar({ menuItems, children, theme = 'dark' }) {
-    const [collapsed, setCollapsed] = useState(true);
+    const [collapsed, setCollapsed] = useState(false);
     // Trên mobile, sidebar hoạt động như drawer off-canvas, tách riêng khỏi
     // trạng thái collapsed (thu gọn icon) dùng cho desktop/tablet.
     const [isMobile, setIsMobile] = useState(
@@ -71,7 +71,7 @@ export default function Sidebar({ menuItems, children, theme = 'dark' }) {
         : (collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />);
 
     return (
-        <div className="dashboard-layout">
+        <div className={`dashboard-layout${theme === 'light' ? ' dashboard-layout--light' : ''}`}>
             {/* Thanh trigger mở sidebar trên mobile - nằm trong luồng bình thường,
                 ngay dưới Navbar, không dùng fixed để tránh đè lên Navbar */}
             {isMobile && (

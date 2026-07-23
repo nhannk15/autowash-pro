@@ -55,6 +55,14 @@ public class BookingController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/api/v2/bookings")
+    public ResponseEntity<CreateBookingResponse> createBooking(@RequestParam(name = "staffId", required = false) Long staffId, @RequestBody CreateBookingRequest request) {
+        log.info("BookingController - start creating booking.");
+        log.info("promotionId: {}", request.getPromotionId());
+        CreateBookingResponse response = bookingService.createBookingWithStaff(staffId, request);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/api/staff/upcoming-bookings")
     public ResponseEntity<List<UpcomingBookingResponse>> getUpcomingBookings() {
         return ResponseEntity.status(HttpStatus.OK).body(bookingService.getUpcomingBookings());
@@ -89,6 +97,16 @@ public class BookingController {
     @GetMapping("/api/bookings/pending-deposit")
     public ResponseEntity<List<BookingResponse>> getAllDepositPendingBookings(@AuthenticationPrincipal String email) {
         return ResponseEntity.ok().body(bookingService.getCustomerDepositPendingBookings(email));
+    }
+
+    @GetMapping("/api/admin/booking-detail")
+    public ResponseEntity<BookingResponse> getDetailedBookingForAdmin(@RequestParam("bookingId") Long bookingId) {
+        return ResponseEntity.ok().body(bookingService.findBookingById(bookingId));
+    }
+
+    @GetMapping("/api/customer/check-conflict-vehicle-slot") 
+    public ResponseEntity<Void> checkIfCustomerVehicleForBookingIsNotInSlotsConfliction(@RequestParam("timeSlotId") Long timeSlotId, @RequestParam("vehicleId") Long vehicleId) {
+        return ResponseEntity.noContent().build();
     }
 
 }
