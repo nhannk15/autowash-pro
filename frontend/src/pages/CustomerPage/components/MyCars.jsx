@@ -308,9 +308,7 @@ export default function MyCars() {
                                                 src={vehicle.image}
                                                 alt={`${vehicle.brand} ${vehicle.model}`}
                                                 fallbackIcon={
-                                                    <div className="mycar-card__icon-wrapper">
-                                                        {isSedan ? <CarOutlined /> : <span style={{ fontSize: '24px' }}>🚙</span>}
-                                                    </div>
+                                                    <CarOutlined style={{ fontSize: '32px' }} />
                                                 }
                                             />
                                         </div>

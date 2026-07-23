@@ -12,21 +12,24 @@ export function LoginForm() {
 
     const onFinish = async (values) => {
         try {
+            // Set flag ngay lập tức trước khi gọi login để tránh race condition khi bị redirect sớm
+            sessionStorage.setItem("just_logged_in", "true");
             const userData = await login(values.email, values.password);
             message.success("Đăng nhập thành công!");
             setTimeout(() => {
                 const role = userData?.role?.toUpperCase();
                 if (role === 'STAFF') {
+                    sessionStorage.removeItem("just_logged_in");
                     navigate("/staff");
                 } else if (role === 'ADMIN') {
+                    sessionStorage.removeItem("just_logged_in");
                     navigate("/admin");
                 } else {
-                    // Đặt flag để Home.jsx hiện thông báo chính sách
-                    sessionStorage.setItem("just_logged_in", "true");
                     navigate("/");
                 }
             }, 1000);
         } catch (e) {
+            sessionStorage.removeItem("just_logged_in");
             const errorMsg = e.response?.data?.message || e.message || "Đăng nhập thất bại. Vui lòng thử lại!";
             message.error(errorMsg);
         }
@@ -103,7 +106,10 @@ export function LoginForm() {
                     block
                     icon={<img src={googleIcon} />}
                     className="google-btn"
-                    onClick={loginGoogle}
+                    onClick={() => {
+                        sessionStorage.setItem("just_logged_in", "true");
+                        loginGoogle();
+                    }}
                     size="large"
                 >
                     Đăng nhập với Google

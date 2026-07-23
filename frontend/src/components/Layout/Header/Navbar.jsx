@@ -127,12 +127,12 @@ export default function NavBar() {
 
                                 {user?.role?.toUpperCase() === 'STAFF' || user?.role?.toUpperCase() === 'ADMIN' ? (isDropdownOpen && (
                                     <div className="navbar__dropdown">
-                                        <button
+                                        <div
                                             className="navbar__dropdown-item navbar__dropdown-item--logout"
                                             onClick={handleLogout}
                                         >
                                             Đăng xuất
-                                        </button>
+                                        </div>
                                     </div>
                                 )) : (isDropdownOpen && (
                                     <div className="navbar__dropdown">
@@ -146,23 +146,22 @@ export default function NavBar() {
                                         >
                                             Trang cá nhân
                                         </NavLink>
-                                        <button
+                                        <div
                                             className="navbar__dropdown-item"
-                                            style={{ textAlign: 'left', border: 'none', background: 'none', width: '100%', fontFamily: 'inherit', fontSize: 'inherit', color: 'inherit' }}
                                             onClick={() => {
                                                 setIsPolicyModalOpen(true)
                                                 setIsDropdownOpen(false)
                                             }}
                                         >
                                             Chính sách và quy định
-                                        </button>
+                                        </div>
                                         <hr className="navbar__dropdown-divider" />
-                                        <button
+                                        <div
                                             className="navbar__dropdown-item navbar__dropdown-item--logout"
                                             onClick={handleLogout}
                                         >
                                             Đăng xuất
-                                        </button>
+                                        </div>
                                     </div>
                                 ))}
                             </div>

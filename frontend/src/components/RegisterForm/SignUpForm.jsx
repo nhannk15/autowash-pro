@@ -11,7 +11,7 @@ export default function SignUpForm() {
     const onFinish = async (values) => {
         try {
             await signup(values.email, values.password, values.confirmPassword, values.fullName, values.dob, values.phone);
-            message.success("Đăng kí thành công!");
+            message.success("Đăng ký thành công!");
             setTimeout(() => {
                 navigate("/login");
             }, 1000);
@@ -27,7 +27,7 @@ export default function SignUpForm() {
 
     return (
         <div className="signup-container">
-            <h2 className="signup-title">Đăng kí Autowash Pro</h2>
+            <h2 className="signup-title">Đăng ký Autowash Pro</h2>
             <Form
                 onFinish={onFinish}
                 onFinishFailed={onFinishFailed}

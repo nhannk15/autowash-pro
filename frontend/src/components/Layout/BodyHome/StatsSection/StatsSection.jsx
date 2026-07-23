@@ -164,72 +164,66 @@ export default function StatsSection() {
                 ))}
             </div>
 
-            {/* ── DIVIDER ───────────────────────────────── */}
-            <div className="stats-section__divider" />
+            {/* ── TESTIMONIALS (tạm ẩn - đặt null && để bật lại) ─── */}
+            {null && (
+                <>
+                    <div className="stats-section__divider" />
 
-            {/* ── TESTIMONIALS ──────────────────────────── */}
-            <div className="stats-section__header">
-                <span className="stats-section__badge">ĐÁNH GIÁ THỰC TẾ</span>
-                <h2 className="stats-section__title">Khách Hàng Nói Gì Về Chúng Tôi?</h2>
-            </div>
+                    <div className="stats-section__header">
+                        <span className="stats-section__badge">ĐÁNH GIÁ THỰC TẾ</span>
+                        <h2 className="stats-section__title">Khách Hàng Nói Gì Về Chúng Tôi?</h2>
+                    </div>
 
-            <div className="testimonials">
-                {/* Nút prev */}
-                <button className="testimonials__arrow testimonials__arrow--prev" onClick={prev} aria-label="Trước">
-                    ‹
-                </button>
+                    <div className="testimonials">
+                        <button className="testimonials__arrow testimonials__arrow--prev" onClick={prev} aria-label="Trước">
+                            ‹
+                        </button>
 
-                {/* Slider wrapper */}
-                <div className="testimonials__wrapper">
-                    <div
-                        className="testimonials__track"
-                        style={{ transform: `translateX(-${activeIndex * 100}%)` }}
-                    >
-                        {testimonials.map(t => (
-                            <div key={t.id} className="testimonial-card">
-                                {/* Stars */}
-                                <div className="testimonial-card__stars">
-                                    {'★'.repeat(t.rating)}
-                                </div>
-
-                                {/* Quote */}
-                                <p className="testimonial-card__text">"{t.text}"</p>
-
-                                {/* Author */}
-                                <div className="testimonial-card__author">
-                                    <div
-                                        className="testimonial-card__avatar"
-                                        style={{ backgroundColor: t.avatarColor }}
-                                    >
-                                        {t.avatar}
+                        <div className="testimonials__wrapper">
+                            <div
+                                className="testimonials__track"
+                                style={{ transform: `translateX(-${activeIndex * 100}%)` }}
+                            >
+                                {testimonials.map(t => (
+                                    <div key={t.id} className="testimonial-card">
+                                        <div className="testimonial-card__stars">
+                                            {'★'.repeat(t.rating)}
+                                        </div>
+                                        <p className="testimonial-card__text">"{t.text}"</p>
+                                        <div className="testimonial-card__author">
+                                            <div
+                                                className="testimonial-card__avatar"
+                                                style={{ backgroundColor: t.avatarColor }}
+                                            >
+                                                {t.avatar}
+                                            </div>
+                                            <div>
+                                                <div className="testimonial-card__name">{t.name}</div>
+                                                <div className="testimonial-card__role">{t.role}</div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <div className="testimonial-card__name">{t.name}</div>
-                                        <div className="testimonial-card__role">{t.role}</div>
-                                    </div>
-                                </div>
+                                ))}
                             </div>
+                        </div>
+
+                        <button className="testimonials__arrow testimonials__arrow--next" onClick={next} aria-label="Tiếp">
+                            ›
+                        </button>
+                    </div>
+
+                    <div className="testimonials__dots">
+                        {testimonials.map((_, i) => (
+                            <button
+                                key={i}
+                                className={`testimonials__dot ${i === activeIndex ? 'testimonials__dot--active' : ''}`}
+                                onClick={() => setActiveIndex(i)}
+                                aria-label={`Slide ${i + 1}`}
+                            />
                         ))}
                     </div>
-                </div>
-
-                {/* Nút next */}
-                <button className="testimonials__arrow testimonials__arrow--next" onClick={next} aria-label="Tiếp">
-                    ›
-                </button>
-            </div>
-
-            {/* Dots */}
-            <div className="testimonials__dots">
-                {testimonials.map((_, i) => (
-                    <button
-                        key={i}
-                        className={`testimonials__dot ${i === activeIndex ? 'testimonials__dot--active' : ''}`}
-                        onClick={() => setActiveIndex(i)}
-                        aria-label={`Slide ${i + 1}`}
-                    />
-                ))}
-            </div>
+                </>
+            )}
 
         </section>
     )

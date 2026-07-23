@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import './Blog.css'
 import heroImageBlog from '../../assets/Service/HeroImageBlog.jpg'
+import { CalendarOutlined, ArrowRightOutlined, PlusOutlined } from '@ant-design/icons'
 
 // Import service images for blog thumbnails
 import imgRuaXe from '../../assets/Service/RuaXeNgoaiThat.jpg'
@@ -102,9 +103,7 @@ export default function Blog() {
 
                                 <div className="blog-item__meta">
                                     <span className="blog-item__meta-icon">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-                                            <path fillRule="evenodd" d="M6.75 2.25A.75.75 0 017.5 3v1.5h9V3A.75.75 0 0118 3v1.5h.75a3 3 0 013 3v11.25a3 3 0 01-3 3H5.25a3 3 0 01-3-3V7.5a3 3 0 013-3H6V3a.75.75 0 01.75-.75zm13.5 9H3.75v7.5a1.5 1.5 0 001.5 1.5h13.5a1.5 1.5 0 001.5-1.5v-7.5zm-15-3h15V7.5a1.5 1.5 0 00-1.5-1.5H5.25A1.5 1.5 0 003.75 7.5v.75z" clipRule="evenodd" />
-                                        </svg>
+                                        <CalendarOutlined />
                                     </span>
                                     <span>{post.date}</span>
                                 </div>
@@ -114,9 +113,7 @@ export default function Blog() {
                                 <div className="blog-item__action">
                                     <span>Đọc thêm</span>
                                     <span className="blog-item__action-arrow">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
-                                            <path fillRule="evenodd" d="M12.97 3.97a.75.75 0 011.06 0l7.5 7.5a.75.75 0 010 1.06l-7.5 7.5a.75.75 0 11-1.06-1.06l6.22-6.22H3a.75.75 0 010-1.5h16.19l-6.22-6.22a.75.75 0 010-1.06z" clipRule="evenodd" />
-                                        </svg>
+                                        <ArrowRightOutlined />
                                     </span>
                                 </div>
                             </div>
@@ -132,9 +129,7 @@ export default function Blog() {
                         >
                             Xem thêm bài viết
                             <span className="load-more-icon">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-                                    <path fillRule="evenodd" d="M12 5.25a.75.75 0 01.75.75v5.25H18a.75.75 0 010 1.5h-5.25V18a.75.75 0 01-1.5 0v-5.25H6a.75.75 0 010-1.5h5.25V6a.75.75 0 01.75-.75z" clipRule="evenodd" />
-                                </svg>
+                                <PlusOutlined />
                             </span>
                         </button>
                     </div>

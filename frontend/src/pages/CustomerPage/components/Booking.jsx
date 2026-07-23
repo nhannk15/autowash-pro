@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import { CarOutlined, UserOutlined } from '@ant-design/icons';
+import { CarOutlined, UserOutlined, CheckOutlined, TrophyOutlined, ClockCircleOutlined, CalendarOutlined, FileTextOutlined, WarningOutlined, CloseOutlined, ToolOutlined, DollarOutlined } from '@ant-design/icons';
 import './Booking.css';
 import { message, Select } from 'antd';
 import { getAvailableSlot, getPremiumAvailableSlot, getApplicablePromotion as getApplicablePromotionAPI, getService, getVehicleByCustomer, createBooking, getMembershipTier, getVoucher, createVNPayPayment, getPendingDeposit, getAllStaffs } from '../../../service/customerService';
@@ -62,7 +62,7 @@ export default function Booking() {
     const [customer, setCustomer] = useState(null);
     const [applicablePromotion, setApplicablePromotion] = useState(null);
     const [vouchers, setVouchers] = useState([]);
-    // const [membershipTier, setMembershipTier] = useState();
+    const [bookingWindowDays, setBookingWindowDays] = useState(30); // mặc định 30 ngày
     const [submitting, setSubmitting] = useState(false);
     const [bookingError, setBookingError] = useState(null);
     const [selectedVoucher, setSelectedVoucher] = useState(null);
@@ -80,7 +80,7 @@ export default function Booking() {
     const [loadingStaffs, setLoadingStaffs] = useState(false);
     const [selectedStaff, setSelectedStaff] = useState(null); // null = "Bất kỳ kỹ thuật viên"
 
-    // Lấy danh sách xe của khách hàng từ API thực tế
+    // api1 - lấy danh sách xe của khách hàng từ API thực tế
     useEffect(() => {
         const fetchVehicles = async () => {
             if (!user) return;
@@ -133,20 +133,24 @@ export default function Booking() {
     //         }
     //     };
     //     fetchCustomerInfo();
-    // useEffect(() => {
-    //     const fetchMembershipTier = async () => {
-    //         try {
-    //             const result = await getMembershipTier()
-    //             setMembershipTier(result || undefined)
-    //         } catch (err) {
-    //             console.error("Failed to fetch membershipTier:", err);
-    //             message.warning(err.response?.data.message || err.message || "không thể tải membership tier")
-    //         }
-    //     }
-    //     fetchMembershipTier()
-    // }, [])
+    // Lấy bookingWindowDays từ membership tier của khách hàng để giới hạn ngày đặt lịch
+    useEffect(() => {
+        const fetchMembershipTier = async () => {
+            try {
+                const result = await getMembershipTier();
+                const days = result?.membershipTierSummaryResponse?.bookingWindowDays;
+                if (days && days > 0) {
+                    setBookingWindowDays(days);
+                }
+            } catch (err) {
+                console.error("Failed to fetch membershipTier:", err);
+            }
+        };
+        fetchMembershipTier();
+    }, []);
 
-    // Lấy chương trình khuyến mãi tự động áp dụng dựa trên thời gian hẹn
+
+    // api2 - lấy chương trình khuyến mãi tự động áp dụng dựa trên thời gian hẹn
     useEffect(() => {
         const fetchApplicablePromotion = async () => {
             if (!selectedDate || !selectedTime) {
@@ -165,7 +169,7 @@ export default function Booking() {
         fetchApplicablePromotion();
     }, [selectedDate, selectedTime]);
 
-    // Lấy danh sách voucher của người dùng
+    // api11 - lấy danh sách voucher của người dùng
     useEffect(() => {
         const fetchVoucher = async () => {
             try {
@@ -208,7 +212,7 @@ export default function Booking() {
         }
     }, [user]);
 
-    // Lấy dữ liệu dịch vụ từ API hệ thống thực tế
+    // api3 - lấy dữ liệu dịch vụ từ API hệ thống thực tế
     useEffect(() => {
         const fetchServices = async () => {
             setLoadingServices(true);
@@ -256,7 +260,7 @@ export default function Booking() {
         fetchServices();
     }, []);
 
-    // Lấy danh sách kỹ thuật viên rảnh khi vào Bước 4
+    // api10 - lấy danh sách kỹ thuật viên rảnh khi vào Bước 4
     useEffect(() => {
         if (currentStep !== 4 || !selectedTimeSlotId || !selectedDate) return;
         const fetchStaffs = async () => {
@@ -274,7 +278,7 @@ export default function Booking() {
         fetchStaffs();
     }, [currentStep, selectedTimeSlotId, selectedDate]);
 
-    // Lấy dữ liệu khung giờ trống khi ngày thay đổi hoặc khi người dùng quay lại màn hình chọn giờ (Bước 3)
+    // api4 / api5 - lấy danh sách khung giờ còn trống (api4: dịch vụ thường | api5: dịch vụ cao cấp)
     useEffect(() => {
         if (!selectedDate || currentStep !== 3) return;
         const fetchAvailableSlots = async () => {
@@ -435,9 +439,10 @@ export default function Booking() {
                 staffId: selectedStaff ? selectedStaff.id : null // null = bất kỳ kỹ thuật viên
             };
 
+            // api6 - tạo lịch đặt xe, gửi toàn bộ thông tin lên backend
             const newBooking = await createBooking(payload);
 
-            // Mẹo: Gọi getPendingDeposit để lấy thông tin hóa đơn (có chứa billingId) của lịch hẹn vừa tạo
+            // api9 - lấy hóa đơn đặt cọc vừa tạo (để lấy billingId cho bước thanh toán VNPay)
             try {
                 const pendingList = await getPendingDeposit();
                 const matchedBooking = pendingList.find(b => b.bookingCode === newBooking.bookingCode);
@@ -467,6 +472,7 @@ export default function Booking() {
                 return;
             }
             message.loading({ content: 'Đang tạo link thanh toán...', key: 'vnpay' });
+            // api8 - tạo link thanh toán đặt cọc qua VNPay, sau đó redirect người dùng
             const response = await createVNPayPayment({
                 billingId: billingId,
                 orderInfo: `Dat coc lich hen ${booking.bookingCode}`
@@ -526,7 +532,7 @@ export default function Booking() {
                             type="button"
                         >
                             <div className="booking-step-circle">
-                                {isCompleted ? '✓' : step.num}
+                                {isCompleted ? <CheckOutlined /> : step.num}
                             </div>
                             <span className="booking-step-label">{step.label}</span>
                         </button>
@@ -568,10 +574,8 @@ export default function Booking() {
                                                     src={vehicle.image}
                                                     alt={`${vehicle.brand} ${vehicle.model}`}
                                                     fallbackIcon={
-                                                        // Thuộc tính fallbackIcon ở dòng 460 được dùng làm ảnh/biểu tượng thay thế dự phòng khi ảnh chính của xe không thể hiển thị được.
-                                                        // Nếu bạn nhìn lên phần định nghĩa component VehicleImage ở đầu file (từ dòng 7 đến dòng 23):
                                                         <div className="vehicle-card__icon-wrapper">
-                                                            {isSedan ? <CarOutlined /> : <span style={{ fontSize: '24px' }}>🚙</span>}
+                                                            {isSedan ? <CarOutlined /> : <CarOutlined style={{ fontSize: '24px' }} />}
                                                         </div>
                                                     }
                                                 />
@@ -597,7 +601,7 @@ export default function Booking() {
                                                 </div>
                                             </div>
 
-                                            {isSelected && <span className="vehicle-card__badge">✓ Đã chọn</span>}
+                                            {isSelected && <span className="vehicle-card__badge"><CheckOutlined /> Đã chọn</span>}
                                         </div>
                                     );
                                 })}
@@ -664,7 +668,7 @@ export default function Booking() {
                                             className={`booking-filter-btn ${activeTab === 'premium' ? 'active' : ''}`}
                                             onClick={() => setActiveTab('premium')}
                                         >
-                                            ✨ Cao cấp <span className="tab-count">{premiumCount}</span>
+                                            <TrophyOutlined style={{ marginRight: 4 }} /> Cao cấp <span className="tab-count">{premiumCount}</span>
                                         </button>
                                     </div>
 
@@ -701,7 +705,7 @@ export default function Booking() {
                                                             <span className="booking-service-card__price">{formatCurrency(priceVal)}</span>
                                                         </div>
                                                         <div style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: '500' }}>
-                                                            ⏱ <span>Thời gian: {service.duration} phút</span>
+                                                            <ClockCircleOutlined style={{ marginRight: 4 }} /> <span>Thời gian: {service.duration} phút</span>
                                                         </div>
                                                         <p className="booking-service-card__desc">{service.shortDesc}</p>
                                                         <button
@@ -756,6 +760,11 @@ export default function Booking() {
                                                     setMaxUnlockedStep(3); // Reset step progress to Step 3 (chọn giờ)
                                                 }}
                                                 min={new Date().toISOString().split('T')[0]}
+                                                max={(() => {
+                                                    const maxDate = new Date();
+                                                    maxDate.setDate(maxDate.getDate() + bookingWindowDays);
+                                                    return maxDate.toISOString().split('T')[0];
+                                                })()}
                                             />
                                         </div>
                                     </div>
@@ -870,6 +879,7 @@ export default function Booking() {
                                                     )}
                                                 </>
                                             )}
+
                                         </div>
                                     </div>
                                 </div>
@@ -882,7 +892,7 @@ export default function Booking() {
                         <h3 className="sidebar-summary-title">Tạm tính</h3>
 
                         <div className="sidebar-car-info">
-                            <span>🚗 Xe chăm sóc:</span>
+                            <span><CarOutlined style={{ marginRight: 4 }} /> Xe chăm sóc:</span>
                             {selectedVehicle ? (
                                 <strong>
                                     {selectedVehicle.brand} {selectedVehicle.model} ({selectedVehicle.licensePlate})
@@ -907,7 +917,7 @@ export default function Booking() {
 
                         {currentStep === 3 && selectedDate && selectedTime && (
                             <div className="sidebar-car-info" style={{ backgroundColor: '#fffdf5', border: '1.5px dashed #f5a623', color: '#b45309' }}>
-                                <span>⏱ Hẹn:</span>
+                                <span><ClockCircleOutlined style={{ marginRight: 4 }} /> Hẹn:</span>
                                 <strong>{selectedTime} - {selectedDate.split('-').reverse().join('/')}</strong>
                             </div>
                         )}
@@ -960,7 +970,7 @@ export default function Booking() {
 
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '24px' }}>
                                 <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                                    <h4 style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0', fontWeight: 'bold' }}>🚗 Xe chăm sóc</h4>
+                                    <h4 style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0', fontWeight: 'bold' }}><CarOutlined style={{ marginRight: 6 }} /> Xe chăm sóc</h4>
                                     <div style={{ fontSize: '1rem', fontWeight: '700', color: '#0d1b4b' }}>
                                         {selectedVehicle ? (
                                             `${selectedVehicle.brand} ${selectedVehicle.model} (${selectedVehicle.licensePlate})`
@@ -973,7 +983,7 @@ export default function Booking() {
                                     </div>
                                 </div>
                                 <div style={{ backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                                    <h4 style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0', fontWeight: 'bold' }}>📅 Lịch hẹn</h4>
+                                    <h4 style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0', fontWeight: 'bold' }}><CalendarOutlined style={{ marginRight: 6 }} /> Lịch hẹn</h4>
                                     <div style={{ fontSize: '1rem', fontWeight: '700', color: '#0d1b4b' }}>
                                         {selectedTime} — {selectedDate ? selectedDate.split('-').reverse().join('/') : ''}
                                     </div>
@@ -984,7 +994,7 @@ export default function Booking() {
                             </div>
 
                             <div style={{ backgroundColor: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0', marginBottom: '24px' }}>
-                                <h4 style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 12px 0', fontWeight: 'bold' }}>🛠 Dịch vụ đã chọn</h4>
+                                <h4 style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 12px 0', fontWeight: 'bold' }}><ToolOutlined style={{ marginRight: 6 }} /> Dịch vụ đã chọn</h4>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                     {selectedServices.map(service => (
                                         <div key={service.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.92rem', color: '#334155' }}>
@@ -1073,7 +1083,7 @@ export default function Booking() {
 
                             {/* GHI CHÚ / YÊU CẦU THÊM DỜI SANG CỘT TRÁI ĐỂ CỘT PHẢI CỰC KỲ GỌN GÀNG */}
                             <div style={{ backgroundColor: '#ffffff', borderTop: '1px solid #e2e8f0', paddingTop: '20px' }}>
-                                <h4 style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0', fontWeight: 'bold' }}>📝 Ghi chú / Yêu cầu thêm</h4>
+                                <h4 style={{ fontSize: '0.85rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0', fontWeight: 'bold' }}><FileTextOutlined style={{ marginRight: 6 }} /> Ghi chú / Yêu cầu thêm</h4>
                                 <textarea
                                     name="notes"
                                     className="form-input form-textarea"
@@ -1202,7 +1212,7 @@ export default function Booking() {
                                     fontSize: '0.85rem',
                                     fontWeight: '500'
                                 }}>
-                                    ⚠️ {bookingError}
+                                    <WarningOutlined style={{ marginRight: 6 }} /> {bookingError}
                                 </div>
                             )}
 
@@ -1237,9 +1247,9 @@ export default function Booking() {
                             onClick={handleResetBooking}
                             aria-label="Close"
                         >
-                            ✕
+                            <CloseOutlined />
                         </button>
-                        <div className="success-icon-circle">✓</div>
+                        <div className="success-icon-circle"><CheckOutlined style={{ fontSize: '32px', color: '#10b981' }} /></div>
                         <h2 className="success-title">Đặt lịch thành công!</h2>
                         <p className="success-message">
                             Cảm ơn bạn đã lựa chọn Autowash PRO. Đơn đặt lịch của bạn đã được ghi nhận thành công, chúng tôi sẽ liên hệ sớm nhất để xác nhận.
@@ -1345,7 +1355,7 @@ export default function Booking() {
                         {createdBooking && createdBooking.billing && createdBooking.billing.depositAmount > 0 && (
                             <div style={{ marginTop: '12px', padding: '12px', backgroundColor: '#fff2f0', border: '1px solid #ffccc7', borderRadius: '8px', textAlign: 'center' }}>
                                 <div style={{ color: '#cf1322', fontWeight: 'bold', fontSize: '15px', marginBottom: '8px' }}>
-                                    ⚠️ Vui lòng thanh toán cọc để hệ thống giữ chỗ cho bạn.
+                                    <WarningOutlined style={{ marginRight: 6 }} /> Vui lòng thanh toán cọc để hệ thống giữ chỗ cho bạn.
                                 </div>
                                 <div style={{ fontSize: '14px', marginBottom: '16px' }}>
                                     Số tiền cần cọc: <strong style={{ color: '#cf1322', fontSize: '18px' }}>

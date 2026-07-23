@@ -80,3 +80,37 @@
 .forgot-flow-container p {
     color: #64748b;
 }
+
+/* Custom Profile Modal styling */
+.profile-modal .ant-modal-title {
+    color: #002b7f !important;
+    font-weight: 700 !important;
+}
+
+.profile-modal .ant-btn-primary {
+    background-color: #002b7f !important;
+    border-color: #002b7f !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    transition: all 0.3s ease !important;
+}
+
+.profile-modal .ant-btn-primary:hover {
+    background-color: #001f5c !important;
+    border-color: #001f5c !important;
+}
+
+/* outline cancel buttons inside modal */
+.profile-modal .ant-btn-default {
+    border-color: #cbd5e1 !important;
+    color: #475569 !important;
+    border-radius: 6px !important;
+    transition: all 0.3s ease !important;
+}
+
+.profile-modal .ant-btn-default:hover {
+    border-color: #002b7f !important;
+    color: #002b7f !important;
+    background-color: #f0f5ff !important;
+}

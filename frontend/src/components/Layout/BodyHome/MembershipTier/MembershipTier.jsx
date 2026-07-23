@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import { useAuth } from '../../../../context/AuthContext'
 import {
     StarOutlined,
     SafetyCertificateOutlined,
@@ -56,6 +57,7 @@ function parsePerks(perksDescription) {
 
 export default function MembershipTier() {
     const navigate = useNavigate()
+    const { user } = useAuth()
     const [tiers, setTiers] = useState([])
     const [loading, setLoading] = useState(true)
 
@@ -74,14 +76,16 @@ export default function MembershipTier() {
         <section className="membership">
             <div className="membership__container">
 
-                {/* TRÁI: Tiêu đề + mô tả */}
-                <div className="membership__intro">
-                    <h2 className="membership__title">CHƯƠNG TRÌNH<br />THÀNH VIÊN</h2>
-                    <p className="membership__desc">
-                        Nâng tầm trải nghiệm chăm sóc xe với những ưu đãi đặc quyền dành riêng cho khách hàng thân thiết.
-                    </p>
-                    <button className="membership__cta" onClick={() => navigate('/signup')}>ĐĂNG KÝ NGAY</button>
-                </div>
+                {/* TRÁI: Tiêu đề + mô tả (ẩn khi đã đăng nhập) */}
+                {!user && (
+                    <div className="membership__intro">
+                        <h2 className="membership__title">CHƯƠNG TRÌNH<br />THÀNH VIÊN</h2>
+                        <p className="membership__desc">
+                            Nâng tầm trải nghiệm chăm sóc xe với những ưu đãi đặc quyền dành riêng cho khách hàng thân thiết.
+                        </p>
+                        <button className="membership__cta" onClick={() => navigate('/signup')}>ĐĂNG KÝ NGAY</button>
+                    </div>
+                )}
 
                 {/* PHẢI: Danh sách tier cards */}
                 <div className="membership__cards">

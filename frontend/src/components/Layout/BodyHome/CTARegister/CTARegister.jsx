@@ -8,6 +8,7 @@ import {
     BellOutlined,
     StarOutlined
 } from '@ant-design/icons';
+import { useAuth } from '../../../../context/AuthContext'
 const benefits = [
     { icon: <CalendarOutlined />, text: 'Đặt lịch rửa xe nhanh chóng, tiện lợi' },
     { icon: <FileTextOutlined />, text: 'Theo dõi lịch sử dịch vụ toàn bộ xe' },
@@ -17,6 +18,7 @@ const benefits = [
 ]
 
 export default function CTARegister() {
+    const { user } = useAuth()
     return (
         <section className="cta-register" style={{ backgroundImage: `url(${ctaBg})` }}>
             {/* Decorative blobs */}
@@ -49,15 +51,17 @@ export default function CTARegister() {
                         ))}
                     </ul>
 
-                    {/* Buttons */}
-                    <div className="cta-register__actions">
-                        <Link to="/signup" className="cta-register__btn cta-register__btn--primary">
-                            Đăng Ký Miễn Phí
-                        </Link>
-                        <Link to="/login" className="cta-register__btn cta-register__btn--secondary">
-                            Đã Có Tài Khoản? Đăng Nhập
-                        </Link>
-                    </div>
+                    {/* Buttons (Ẩn khi đã đăng nhập) */}
+                    {!user && (
+                        <div className="cta-register__actions">
+                            <Link to="/signup" className="cta-register__btn cta-register__btn--primary">
+                                Đăng Ký Miễn Phí
+                            </Link>
+                            <Link to="/login" className="cta-register__btn cta-register__btn--secondary">
+                                Đã Có Tài Khoản? Đăng Nhập
+                            </Link>
+                        </div>
+                    )}
                 </div>
 
                 {/* ── CỘT PHẢI: visual card ────────────────── */}
