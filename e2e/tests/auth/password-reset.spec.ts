@@ -4,7 +4,7 @@ import { env } from '../../env.js';
 
 type MailpitMessage = {
   ID: string;
-  To: Array<{ Address: string }>;
+  To: Array<{ Address: string }> | null;
 };
 
 test('@p0 TC-AU13 reset password using OTP captured by Mailpit', async ({ page, guestApi, uniqueData }) => {
@@ -35,7 +35,7 @@ test('@p0 TC-AU13 reset password using OTP captured by Mailpit', async ({ page, 
   expect(listResponse.status()).toBe(200);
   const messages = (await listResponse.json()) as { messages: MailpitMessage[] };
   const message = messages.messages.find((candidate) =>
-    candidate.To.some((recipient) => recipient.Address === uniqueData.email));
+    candidate.To?.some((recipient) => recipient.Address === uniqueData.email) ?? false);
   expect(message, `No reset email found for ${uniqueData.email}`).toBeTruthy();
 
   const detailResponse = await mailpit.get(`/api/v1/message/${message!.ID}`);

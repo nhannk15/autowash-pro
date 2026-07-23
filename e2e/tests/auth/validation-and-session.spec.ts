@@ -74,10 +74,10 @@ test('@p1 TC-AU11 forgot-password resend creates a new mail without exposing OTP
 }) => {
   const mailpit = await request.newContext({ baseURL: env.mailpitURL });
   const before = await (await mailpit.get('/api/v1/messages?limit=100')).json() as {
-    messages: Array<{ To: Array<{ Address: string }> }>;
+    messages: Array<{ To: Array<{ Address: string }> | null }>;
   };
   const beforeCount = before.messages.filter((message) =>
-    message.To.some(({ Address }) => Address === env.customer.email)).length;
+    message.To?.some(({ Address }) => Address === env.customer.email) ?? false).length;
 
   await page.goto('/forgotpass');
   await page.locator('#forgotpass-email_email').fill(env.customer.email);
@@ -92,10 +92,10 @@ test('@p1 TC-AU11 forgot-password resend creates a new mail without exposing OTP
 
   await expect.poll(async () => {
     const list = await (await mailpit.get('/api/v1/messages?limit=100')).json() as {
-      messages: Array<{ To: Array<{ Address: string }> }>;
+      messages: Array<{ To: Array<{ Address: string }> | null }>;
     };
     return list.messages.filter((message) =>
-      message.To.some(({ Address }) => Address === env.customer.email)).length;
+      message.To?.some(({ Address }) => Address === env.customer.email) ?? false).length;
   }).toBeGreaterThanOrEqual(beforeCount + 2);
   await mailpit.dispose();
 });
