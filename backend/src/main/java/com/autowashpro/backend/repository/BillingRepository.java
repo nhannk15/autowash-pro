@@ -99,7 +99,6 @@ public interface BillingRepository extends JpaRepository<Billing, Long> {
             FROM Billing billing
             JOIN billing.booking booking
             WHERE booking.customer.id = :customerId
-            AND billing.depositStatus = com.autowashpro.backend.model.enums.DepositStatus.PAID
             ORDER BY 
                 CASE
                     WHEN billing.depositStatus = com.autowashpro.backend.model.enums.DepositStatus.PAID
@@ -108,5 +107,20 @@ public interface BillingRepository extends JpaRepository<Billing, Long> {
                 END DESC
             """)
     List<Billing> findCustomerBillingHistory(Long customerId);
+
+    // @Query("""
+    //         SELECT billing
+    //         FROM Billing billing
+    //         JOIN billing.booking booking
+    //         WHERE booking.customer.id = :customerId
+    //         AND billing.depositStatus = com.autowashpro.backend.model.enums.DepositStatus.PAID
+    //         ORDER BY 
+    //             CASE
+    //                 WHEN billing.depositStatus = com.autowashpro.backend.model.enums.DepositStatus.PAID
+    //                     THEN billing.depositPaidAt
+    //                 ELSE billing.paidAt
+    //             END DESC
+    //         """)
+    // List<Billing> findCustomerBillingHistory(Long customerId);
 
 }
