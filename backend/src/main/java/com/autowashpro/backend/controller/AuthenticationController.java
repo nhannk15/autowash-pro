@@ -58,7 +58,7 @@ public class AuthenticationController {
         boolean matched = passwordEncoder.matches(loginRequest.getPassword(), user.getPassword());
 
         if (!matched) {
-            throw new WrongPasswordException("Wrong password");
+            throw new WrongPasswordException("Sai thông tin xác thực");
         }
         String token = jwtService.generateAccessToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);

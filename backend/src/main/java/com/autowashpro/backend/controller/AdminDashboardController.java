@@ -1,5 +1,6 @@
 package com.autowashpro.backend.controller;
 
+import com.autowashpro.backend.service.BillingService;
 import com.autowashpro.backend.service.PromotionUsageService;
 import java.util.HashMap;
 import java.util.List;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.autowashpro.backend.model.dto.BillingHistoryDTO;
 import com.autowashpro.backend.model.dto.BookingResponse;
 import com.autowashpro.backend.model.dto.DashboardSummaryResponse;
 import com.autowashpro.backend.model.dto.DeductionChartItem;
@@ -27,13 +29,15 @@ import com.autowashpro.backend.service.AdminDashboardService;
 @RestController
 public class AdminDashboardController {
     
+    private final BillingService billingService;
     private final PromotionUsageService promotionUsageService;
     private final AdminDashboardService adminDashboardService;
     
     @Autowired
-    public AdminDashboardController(AdminDashboardService adminDashboardService, PromotionUsageService promotionUsageService) {
+    public AdminDashboardController(AdminDashboardService adminDashboardService, PromotionUsageService promotionUsageService, BillingService billingService) {
         this.adminDashboardService = adminDashboardService;
         this.promotionUsageService = promotionUsageService;
+        this.billingService = billingService;
     }
 
     @GetMapping("/api/admin/dashboard/recent-transactions")
@@ -89,6 +93,11 @@ public class AdminDashboardController {
     @PostMapping("/api/admin/dashboard/booking-list")
     public ResponseEntity<List<BookingResponse>> getBookingList(@RequestBody RevenueDataRequest request) {
         return ResponseEntity.ok().body(adminDashboardService.getBookingList(request));
+    }
+
+    @PostMapping("/api/admin/billings/billing-history")
+    public ResponseEntity<List<BillingHistoryDTO>> getAllBillingHistory(@RequestBody RevenueDataRequest request) {
+        return ResponseEntity.ok().body(adminDashboardService.getAllBillingHistory(request));
     }
     
 }
