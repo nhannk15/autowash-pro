@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.autowashpro.backend.mapper.StaffMapper;
 import com.autowashpro.backend.model.dto.ApiResponse;
+import com.autowashpro.backend.model.dto.StaffAndTotalSlotQueryResponse;
 import com.autowashpro.backend.model.dto.StaffInfoResponse;
 import com.autowashpro.backend.model.entity.Staff;
 import com.autowashpro.backend.service.StaffService;
@@ -71,4 +72,15 @@ public class StaffController {
             @RequestParam("bookingDate") LocalDate bookingDate) {
         return ResponseEntity.ok().body(service.getAvailableStaffsForASpecificDay(timeSlotId, bookingDate));
     }
+
+    @GetMapping("/api/test-get-algorithmed-staffs")
+    public ResponseEntity<List<StaffAndTotalSlotQueryResponse>> getAlgorithmedStaff(@RequestParam LocalDate bookingDate) {
+        return ResponseEntity.ok().body(service.getAlgorithmedStaffs(bookingDate));
+    }
+
+    @GetMapping("/api/test-getspecific-algorithmed-staffs")
+    public ResponseEntity<StaffInfoResponse> getSpecificAlgorithmedStaffInfoResponse(@RequestParam LocalDate bookingDate) {
+        return ResponseEntity.ok().body(service.getSpecificAlgorithmedStaffInfoResponse(bookingDate));
+    }
+    
 }

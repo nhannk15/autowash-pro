@@ -39,7 +39,50 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
                     availableSlot.slotDate = :bookingDate
             )
             AND staff.role = com.autowashpro.backend.model.enums.Role.WASH_STAFF
-
+            AND staff.isActive = true
             """)
     List<Staff> findAvailableStaff(Long timeSlotId, LocalDate bookingDate);
+
+    @Query("""
+            SELECT staff FROM Staff staff
+            WHERE staff.id NOT IN (
+                SELECT staff2.id FROM Booking booking
+                JOIN booking.availableSlots availableSlot
+                JOIN booking.washSessions washSession
+                JOIN washSession.staff staff2
+                WHERE availableSlot.timeSlot.id = :timeSlotId AND
+                    availableSlot.slotDate = :bookingDate
+            )
+            AND staff.role = com.autowashpro.backend.model.enums.Role.WASH_STAFF
+            """)
+    List<Staff> findUnOccupiedStaffInTheCurrent(Long timeSlotId, LocalDate bookingDate);
+
+    @Query(value = """
+            SELECT 
+                staff.id,
+                COUNT(availableSlot.id) AS total_slot
+            FROM staff staff
+            LEFT JOIN wash_sessions washSession ON staff.id = washSession.staff_id
+            LEFT JOIN bookings booking ON washSession.booking_id = booking.id
+            LEFT JOIN available_slot availableSlot ON
+                booking.id = availableSlot.booking_id
+                AND availableSlot.date = :bookingDate
+            LEFT JOIN users user ON user.id = staff.id
+            WHERE user.role = 'WASH_STAFF'
+            GROUP BY staff.id
+            HAVING total_slot = (
+                SELECT 
+                    COUNT(availableSlot.id) AS total_slot
+                FROM staff
+                LEFT JOIN wash_sessions washSession ON staff.id = washSession.staff_id
+                LEFT JOIN bookings booking ON washSession.booking_id = booking.id
+                LEFT JOIN available_slot availableSlot 
+                    ON booking.id = availableSlot.booking_id
+                    AND availableSlot.date = :bookingDate
+                LEFT JOIN users user ON user.id = staff.id
+                GROUP BY staff.id
+                LIMIT 1
+            )
+            """, nativeQuery = true)
+    List<Object[]> findLeastJobsStaff(@Param("bookingDate") LocalDate bookingDate);
 }

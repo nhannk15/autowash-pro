@@ -64,6 +64,12 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query("""
             SELECT booking FROM Booking booking
+            WHERE booking.bookingCode = :bookingCode
+            """)
+    Optional<Booking> findByBookingCodeForInvalidVNPay(String bookingCode);
+
+    @Query("""
+            SELECT booking FROM Booking booking
             JOIN booking.availableSlots availableSlot
             WHERE availableSlot.slotDate = :today
             """)

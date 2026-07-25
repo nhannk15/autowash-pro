@@ -364,8 +364,19 @@ public class BillingService {
         return billingMapper.toBillingResponses(customerBillings);
     }
 
+    public BillingResponse completeBankingPaymentWhenVNPayProviderIsInvalidUsingBookingCode(String bookingCode) {
+        Booking booking = bookingRepository.findByBookingCodeForInvalidVNPay(bookingCode)
+                .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy lịch hẹn: " + bookingCode));
+        Billing billing = booking.getBilling();
+        if (billing != null) {
+            return completeBankingPaymentWhenVNPayProviderIsInvalid(billing.getId());
+        } else {
+            throw new RuntimeException("Lỗi không tồn tại hóa đơn");
+        }
+    }
+
     @Transactional
-    public BillingResponse completeBankingPaymentWhenVNPayProviderIsInvalid(Long billingId) {
+    private BillingResponse completeBankingPaymentWhenVNPayProviderIsInvalid(Long billingId) {
         Billing billing = billingRepository.findById(billingId)
                 .orElseThrow(() -> new BillingNotFoundException(
                         "Hóa đơn " + billingId + " không tồn tại"));

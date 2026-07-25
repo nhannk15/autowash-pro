@@ -57,4 +57,9 @@ public class WashSessionController {
     public ResponseEntity<List<WashSessionResponse>> startWashSessionVersion3(@RequestParam("staffId") Long staffId, @RequestBody StartWashSessionRequest request) {
         return ResponseEntity.status(HttpStatus.OK).body(service.startWashSessionAssigningStaffVersion3(request, staffId));
     }
+
+    @PostMapping("/api/staff/v4/wash-sessions/start")
+    public ResponseEntity<List<WashSessionResponse>> startWashSessionAssigningNullStaff(@RequestParam(name = "staffId", required = false) Long staffId, @RequestBody StartWashSessionRequest request) {
+        return ResponseEntity.status(HttpStatus.OK).body(service.startWashSessionAssigningNullStaff(request, staffId));
+    }
 }

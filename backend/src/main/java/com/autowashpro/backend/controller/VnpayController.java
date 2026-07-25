@@ -94,9 +94,10 @@ public class VnpayController {
     }
 
     @GetMapping("/when-vnpay-invalid")
-    public void handleWhenVnpayInvalid(@RequestParam Long id) throws IOException {
+    public void handleWhenVnpayInvalid(@RequestParam String bookingCode) throws IOException {
 
-        billingService.completeBankingPaymentWhenVNPayProviderIsInvalid(id);
+        billingService.completeBankingPaymentWhenVNPayProviderIsInvalidUsingBookingCode(bookingCode);
+        
     }
 
 }
