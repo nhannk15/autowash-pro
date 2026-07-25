@@ -1,6 +1,7 @@
 package com.autowashpro.backend.service;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.autowashpro.backend.exception.BookingNotFoundException;
+import com.autowashpro.backend.exception.EarlyWashSessionException;
 import com.autowashpro.backend.exception.UserNotFoundException;
 import com.autowashpro.backend.mapper.WashSessionMapper;
 import com.autowashpro.backend.model.dto.StartWashSessionRequest;
@@ -54,6 +56,15 @@ public class WashSessionService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy Booking với id: " + bookingId));
 
+        /**
+         * For Eazy Testing, we commented these statements...
+         */
+        // LocalTime scheduledStartTime = booking.getAvailableSlots().getFirst().getTimeSlot().getStartTime();
+        // LocalTime now = LocalTime.now();
+        // if (!now.isAfter(scheduledStartTime.minusMinutes(5L))) {
+        //     throw new EarlyWashSessionException("Chỉ có thể bắt đầu phiên rửa xe trước 5 phút");
+        // }
+
         booking.setStatus(BookingStatus.COMPLETED);
         bookingRepository.save(booking);
 
@@ -80,6 +91,14 @@ public class WashSessionService {
 
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy Booking với id: " + bookingId));
+        /**
+         * For Eazy Testing, we commented these statements...
+         */
+        // LocalTime scheduledStartTime = booking.getAvailableSlots().getFirst().getTimeSlot().getStartTime();
+        // LocalTime now = LocalTime.now();
+        // if (!now.isAfter(scheduledStartTime.minusMinutes(5L))) {
+        //     throw new EarlyWashSessionException("Chỉ có thể bắt đầu phiên rửa xe trước 5 phút");
+        // }
 
         booking.setStatus(BookingStatus.COMPLETED);
         bookingRepository.save(booking);
@@ -147,6 +166,15 @@ public class WashSessionService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy Booking với id: " + bookingId));
 
+        /**
+         * For Eazy Testing, we commented these statements...
+         */
+        // LocalTime scheduledStartTime = booking.getAvailableSlots().getFirst().getTimeSlot().getStartTime();
+        // LocalTime now = LocalTime.now();
+        // if (!now.isAfter(scheduledStartTime.minusMinutes(5L))) {
+        //     throw new EarlyWashSessionException("Chỉ có thể bắt đầu phiên rửa xe trước 5 phút");
+        // }
+
         booking.setStatus(BookingStatus.COMPLETED);
         bookingRepository.save(booking);
 
@@ -175,6 +203,15 @@ public class WashSessionService {
 
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy Booking với id: " + bookingId));
+
+        /**
+         * For Eazy Testing, we commented these statements...
+         */
+        // LocalTime scheduledStartTime = booking.getAvailableSlots().getFirst().getTimeSlot().getStartTime();
+        // LocalTime now = LocalTime.now();
+        // if (!now.isAfter(scheduledStartTime.minusMinutes(5L))) {
+        //     throw new EarlyWashSessionException("Chỉ có thể bắt đầu phiên rửa xe trước 5 phút");
+        // }
 
         booking.setStatus(BookingStatus.COMPLETED);
         bookingRepository.save(booking);
