@@ -337,6 +337,36 @@ export default function Booking() {
         });
     };
 
+    // Kiểm tra xem khung giờ đã qua so với thời gian hiện tại hay chưa (nếu đặt lịch cho ngày hôm nay)
+    const isSlotTimeDisabled = (slot) => {
+        if (!selectedDate || !slot.startTime) return false;
+
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const todayStr = `${yyyy}-${mm}-${dd}`;
+
+        if (selectedDate !== todayStr) return false;
+
+        const [slotHour, slotMinute] = slot.startTime.split(':').map(Number);
+        const slotTotalMinutes = slotHour * 60 + slotMinute;
+
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        const currentTotalMinutes = currentHour * 60 + currentMinute;
+
+        // Nếu thời gian thực trễ hơn 5 phút so với giờ bắt đầu của slot
+        return currentTotalMinutes > slotTotalMinutes + 5;
+    };
+
+    // Kiểm tra xem slot hiện tại đang chọn có bị quá hạn hay không
+    const isSelectedSlotExpired = () => {
+        if (!selectedTimeSlotId) return false;
+        const currentSlot = timeSlots.find(s => s.timeSlotId === selectedTimeSlotId);
+        return currentSlot ? isSlotTimeDisabled(currentSlot) : false;
+    };
+
     // Set ngày đặt lịch mặc định là ngày mai
     useEffect(() => {
         const tomorrow = new Date();
@@ -811,7 +841,7 @@ export default function Booking() {
                                                                 {getSlotsForPeriod('morning').map(slot => {
                                                                     const timeStr = slot.startTime.substring(0, 5);
                                                                     const isSelected = selectedTime === timeStr;
-                                                                    const isDisabled = slot.availableBayCount === 0 || !(slot.isAvailable ?? slot.available);
+                                                                    const isDisabled = slot.availableBayCount === 0 || !(slot.isAvailable ?? slot.available) || isSlotTimeDisabled(slot);
                                                                     return (
                                                                         <button
                                                                             key={slot.timeSlotId}
@@ -843,7 +873,7 @@ export default function Booking() {
                                                                 {getSlotsForPeriod('afternoon').map(slot => {
                                                                     const timeStr = slot.startTime.substring(0, 5);
                                                                     const isSelected = selectedTime === timeStr;
-                                                                    const isDisabled = slot.availableBayCount === 0 || !(slot.isAvailable ?? slot.available);
+                                                                    const isDisabled = slot.availableBayCount === 0 || !(slot.isAvailable ?? slot.available) || isSlotTimeDisabled(slot);
                                                                     return (
                                                                         <button
                                                                             key={slot.timeSlotId}
@@ -875,7 +905,7 @@ export default function Booking() {
                                                                 {getSlotsForPeriod('evening').map(slot => {
                                                                     const timeStr = slot.startTime.substring(0, 5);
                                                                     const isSelected = selectedTime === timeStr;
-                                                                    const isDisabled = slot.availableBayCount === 0 || !(slot.isAvailable ?? slot.available);
+                                                                    const isDisabled = slot.availableBayCount === 0 || !(slot.isAvailable ?? slot.available) || isSlotTimeDisabled(slot);
                                                                     return (
                                                                         <button
                                                                             key={slot.timeSlotId}
@@ -983,7 +1013,7 @@ export default function Booking() {
                             <button
                                 type="button"
                                 className="sidebar-btn-next"
-                                disabled={!selectedDate || !selectedTime || !!conflictError}
+                                disabled={!selectedDate || !selectedTime || !!conflictError || (currentStep === 3 && isSelectedSlotExpired())}
                                 onClick={handleNextStep}
                             >
                                 TIẾP TỤC
