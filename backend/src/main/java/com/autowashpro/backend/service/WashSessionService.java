@@ -1,6 +1,8 @@
 package com.autowashpro.backend.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.autowashpro.backend.exception.BookingNotFoundException;
+import com.autowashpro.backend.exception.EarlyWashSessionException;
+import com.autowashpro.backend.exception.StaffNotFoundException;
 import com.autowashpro.backend.exception.UserNotFoundException;
 import com.autowashpro.backend.mapper.WashSessionMapper;
 import com.autowashpro.backend.model.dto.StartWashSessionRequest;
@@ -31,17 +35,19 @@ public class WashSessionService {
     private final CustomerRepository customerRepository;
     private final WashSessionMapper washSessionMapper;
     private final BillingService billingService;
+    private final StaffService staffService;
 
     @Autowired
     public WashSessionService(WashSessionRepository repository, StaffRepository staffRepository,
             BookingRepository bookingRepository, CustomerRepository customerRepository,
-            WashSessionMapper washSessionMapper, BillingService billingService) {
+            WashSessionMapper washSessionMapper, BillingService billingService, StaffService staffService) {
         this.repository = repository;
         this.staffRepository = staffRepository;
         this.bookingRepository = bookingRepository;
         this.customerRepository = customerRepository;
         this.washSessionMapper = washSessionMapper;
         this.billingService = billingService;
+        this.staffService = staffService;
     }
 
     @Transactional
@@ -53,6 +59,15 @@ public class WashSessionService {
 
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy Booking với id: " + bookingId));
+
+        /**
+         * For Eazy Testing, we commented these statements...
+         */
+        // LocalTime scheduledStartTime = booking.getAvailableSlots().getFirst().getTimeSlot().getStartTime();
+        // LocalTime now = LocalTime.now();
+        // if (!now.isAfter(scheduledStartTime.minusMinutes(5L))) {
+        //     throw new EarlyWashSessionException("Chỉ có thể bắt đầu phiên rửa xe trước 5 phút");
+        // }
 
         booking.setStatus(BookingStatus.COMPLETED);
         bookingRepository.save(booking);
@@ -80,6 +95,14 @@ public class WashSessionService {
 
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy Booking với id: " + bookingId));
+        /**
+         * For Eazy Testing, we commented these statements...
+         */
+        // LocalTime scheduledStartTime = booking.getAvailableSlots().getFirst().getTimeSlot().getStartTime();
+        // LocalTime now = LocalTime.now();
+        // if (!now.isAfter(scheduledStartTime.minusMinutes(5L))) {
+        //     throw new EarlyWashSessionException("Chỉ có thể bắt đầu phiên rửa xe trước 5 phút");
+        // }
 
         booking.setStatus(BookingStatus.COMPLETED);
         bookingRepository.save(booking);
@@ -101,7 +124,7 @@ public class WashSessionService {
     public List<WashSessionResponse> completeWashSession(Long bookingId, String email) {
         Staff staff = staffRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("Không tìm thấy staff"));
-        staff.setOccupied(true);
+        staff.setOccupied(false);
         staffRepository.save(staff);
         
         List<WashSession> washSessions = repository.findByBookingId(bookingId);
@@ -147,6 +170,15 @@ public class WashSessionService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy Booking với id: " + bookingId));
 
+        /**
+         * For Eazy Testing, we commented these statements...
+         */
+        // LocalTime scheduledStartTime = booking.getAvailableSlots().getFirst().getTimeSlot().getStartTime();
+        // LocalTime now = LocalTime.now();
+        // if (!now.isAfter(scheduledStartTime.minusMinutes(5L))) {
+        //     throw new EarlyWashSessionException("Chỉ có thể bắt đầu phiên rửa xe trước 5 phút");
+        // }
+
         booking.setStatus(BookingStatus.COMPLETED);
         bookingRepository.save(booking);
 
@@ -176,6 +208,15 @@ public class WashSessionService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy Booking với id: " + bookingId));
 
+        /**
+         * For Eazy Testing, we commented these statements...
+         */
+        // LocalTime scheduledStartTime = booking.getAvailableSlots().getFirst().getTimeSlot().getStartTime();
+        // LocalTime now = LocalTime.now();
+        // if (!now.isAfter(scheduledStartTime.minusMinutes(5L))) {
+        //     throw new EarlyWashSessionException("Chỉ có thể bắt đầu phiên rửa xe trước 5 phút");
+        // }
+
         booking.setStatus(BookingStatus.COMPLETED);
         bookingRepository.save(booking);
 
@@ -200,6 +241,10 @@ public class WashSessionService {
             washSession.setStatus(WashSessionStatus.COMPLETED);
             washSession.setEndTime(LocalDateTime.now());
             repository.save(washSession);
+
+            Staff staff = washSession.getStaff();
+            staff.setOccupied(false);
+            staffRepository.save(staff);
         }
 
         List<WashSession> savedWashSessions = repository.findByBookingId(bookingId);
@@ -209,6 +254,22 @@ public class WashSessionService {
          */
         // billingService.createPendingBilling(bookingId);
         return washSessionMapper.toResponseList(savedWashSessions);
+    }
+
+    @Transactional
+    public List<WashSessionResponse> startWashSessionAssigningNullStaff(StartWashSessionRequest request, Long staffId) {
+
+        Staff staff = null;
+
+        if (staffId == null) {
+            LocalDate presentBookingDate = LocalDate.now();
+            staff = staffService.getSpecificAlgorithmedStaff(presentBookingDate);
+        } else {
+            staff = staffRepository.findById(staffId)
+                    .orElseThrow(() -> new StaffNotFoundException("Không tìm thấy nhân viên với id: "+ staffId));
+        }
+        return startWashSessionAssigningStaffVersion3(request, staff.getId());
+
     }
 
 }

@@ -364,4 +364,96 @@ public class BillingService {
         return billingMapper.toBillingResponses(customerBillings);
     }
 
+    public BillingResponse completeBankingPaymentWhenVNPayProviderIsInvalidUsingBookingCode(String bookingCode) {
+        Booking booking = bookingRepository.findByBookingCodeForInvalidVNPay(bookingCode)
+                .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy lịch hẹn: " + bookingCode));
+        Billing billing = booking.getBilling();
+        if (billing != null) {
+            return completeBankingPaymentWhenVNPayProviderIsInvalid(billing.getId());
+        } else {
+            throw new RuntimeException("Lỗi không tồn tại hóa đơn");
+        }
+    }
+
+    @Transactional
+    private BillingResponse completeBankingPaymentWhenVNPayProviderIsInvalid(Long billingId) {
+        Billing billing = billingRepository.findById(billingId)
+                .orElseThrow(() -> new BillingNotFoundException(
+                        "Hóa đơn " + billingId + " không tồn tại"));
+        if (billing.getDepositStatus().equals(DepositStatus.PENDING)) {
+            billing.setDepositStatus(DepositStatus.PAID);
+            billing.setDepositPaidAt(LocalDateTime.now());
+            Billing savedBilling = billingRepository.save(billing);
+
+            Booking booking = billing.getBooking();
+            booking.setStatus(BookingStatus.CONFIRMED);
+            Booking savedBooking = bookingRepository.save(booking);
+            savedBooking.setStatus(BookingStatus.CONFIRMED);
+
+            notificationService.createBookingConfirmedNotification(savedBooking);
+            return billingMapper.toBillingResponse(savedBilling);
+        }
+
+        if (billing.getPaymentStatus() == PaymentStatus.PAID) {
+            log.warn("completeBankingPayment() - billing {} already paid, returning idempotent response", billingId);
+            BillingResponse billingResponse = billingMapper.toBillingResponse(billing);
+            billingResponse.setPointsChange(0L);
+            return billingResponse;
+        }
+
+        billing.setPaymentStatus(PaymentStatus.PAID);
+        billing.setPaymentMethod(PaymentMethod.BANK_TRANSFER);
+        billing.setPaidAt(LocalDateTime.now());
+
+        for (WashSession washSession : billing.getBooking().getWashSessions()) {
+            washSession.setStatus(WashSessionStatus.PAID);
+            washSessionRepository.save(washSession);
+        }
+
+        Billing savedBilling = billingRepository.save(billing);
+
+        Customer customer = billing.getBooking().getCustomer();
+        MembershipTier customerTier = customer.getTier();
+        BigDecimal tempPointsChange = billing.getFinalAmount();
+
+        for (WashSession washSession: billing.getBooking().getWashSessions()) {
+            Service service = washSession.getServicePrice().getService();
+            log.info("service {} has pointsMultiplier: {}", service.getServiceName(), service.getPointMultiplier());
+            tempPointsChange = tempPointsChange.multiply(service.getPointMultiplier());
+        }
+        
+        Long pointsChange = billing.getFinalAmount().divide(BigDecimal.valueOf(1000L)).longValue();
+
+        log.info("pointsChange after getting services: {}", pointsChange);
+
+        pointsChange = pointsChange * customerTier.getPointEarnRate().longValue();
+        
+        log.info("pointsChange after applying membershipTier points earn rate: {}", pointsChange);
+        customer.setCurrentPoints(customer.getCurrentPoints() + pointsChange);
+        customer.setLifetimePoints(customer.getLifetimePoints() + pointsChange);
+
+        PointTransaction newPointTransaction = PointTransaction
+                .builder()
+                .customer(billing.getBooking().getCustomer())
+                .billing(savedBilling)
+                .transactionType(TransactionType.EARN)
+                .pointsChange(pointsChange)
+                .balanceAfter(customer.getCurrentPoints())
+                .description(null)
+                .expiryDate(LocalDate.now().plusMonths(6))
+                .staff(null)
+                .build();
+        customerRepository.save(customer);
+        pointTransactionRepository.save(newPointTransaction);
+
+        BillingResponse billingResponse = billingMapper.toBillingResponse(savedBilling);
+        billingResponse.setPointsChange(pointsChange);
+
+        Promotion promotion = billing.getBooking().getPromotion();
+        promotionService.commitPromotionUsage(promotion == null ? null : promotion.getId(), billingId);
+
+        notificationService.createPointEarnNotification(newPointTransaction);
+        return billingResponse;
+    }
+
 }

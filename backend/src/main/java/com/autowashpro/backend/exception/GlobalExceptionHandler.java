@@ -227,4 +227,16 @@ public class GlobalExceptionHandler {
         ErrorResponse error = createErrorResponse(HttpStatus.BAD_REQUEST, ex.getClass().getSimpleName(), ex.getMessage(), request);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
+
+    @ExceptionHandler(EarlyWashSessionException.class)
+    public ResponseEntity<ErrorResponse> handleEarlyWashSessionException(EarlyWashSessionException ex, WebRequest request) {
+        ErrorResponse error = createErrorResponse(HttpStatus.BAD_REQUEST, ex.getClass().getSimpleName(), ex.getMessage(), request);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(StaffNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleStaffNotFoundException(StaffNotFoundException ex, WebRequest request) {
+        ErrorResponse error = createErrorResponse(HttpStatus.BAD_REQUEST, ex.getClass().getSimpleName(), ex.getMessage(), request);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
 }
