@@ -68,7 +68,7 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
                 booking.id = availableSlot.booking_id
                 AND availableSlot.date = :bookingDate
             LEFT JOIN users user ON user.id = staff.id
-            WHERE user.role = 'WASH_STAFF'
+            WHERE user.role = 'WASH_STAFF' AND staff.is_occupied = false
             GROUP BY staff.id
             HAVING total_slot = (
                 SELECT 
