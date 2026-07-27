@@ -63,10 +63,12 @@ public class WashSessionService {
         /**
          * For Eazy Testing, we commented these statements...
          */
-        // LocalTime scheduledStartTime = booking.getAvailableSlots().getFirst().getTimeSlot().getStartTime();
+        // LocalTime scheduledStartTime =
+        // booking.getAvailableSlots().getFirst().getTimeSlot().getStartTime();
         // LocalTime now = LocalTime.now();
         // if (!now.isAfter(scheduledStartTime.minusMinutes(5L))) {
-        //     throw new EarlyWashSessionException("Chỉ có thể bắt đầu phiên rửa xe trước 5 phút");
+        // throw new EarlyWashSessionException("Chỉ có thể bắt đầu phiên rửa xe trước 5
+        // phút");
         // }
 
         booking.setStatus(BookingStatus.COMPLETED);
@@ -98,10 +100,12 @@ public class WashSessionService {
         /**
          * For Eazy Testing, we commented these statements...
          */
-        // LocalTime scheduledStartTime = booking.getAvailableSlots().getFirst().getTimeSlot().getStartTime();
+        // LocalTime scheduledStartTime =
+        // booking.getAvailableSlots().getFirst().getTimeSlot().getStartTime();
         // LocalTime now = LocalTime.now();
         // if (!now.isAfter(scheduledStartTime.minusMinutes(5L))) {
-        //     throw new EarlyWashSessionException("Chỉ có thể bắt đầu phiên rửa xe trước 5 phút");
+        // throw new EarlyWashSessionException("Chỉ có thể bắt đầu phiên rửa xe trước 5
+        // phút");
         // }
 
         booking.setStatus(BookingStatus.COMPLETED);
@@ -126,7 +130,7 @@ public class WashSessionService {
                 .orElseThrow(() -> new UserNotFoundException("Không tìm thấy staff"));
         staff.setOccupied(false);
         staffRepository.save(staff);
-        
+
         List<WashSession> washSessions = repository.findByBookingId(bookingId);
         for (WashSession washSession : washSessions) {
             washSession.setStaff(staff);
@@ -173,10 +177,12 @@ public class WashSessionService {
         /**
          * For Eazy Testing, we commented these statements...
          */
-        // LocalTime scheduledStartTime = booking.getAvailableSlots().getFirst().getTimeSlot().getStartTime();
+        // LocalTime scheduledStartTime =
+        // booking.getAvailableSlots().getFirst().getTimeSlot().getStartTime();
         // LocalTime now = LocalTime.now();
         // if (!now.isAfter(scheduledStartTime.minusMinutes(5L))) {
-        //     throw new EarlyWashSessionException("Chỉ có thể bắt đầu phiên rửa xe trước 5 phút");
+        // throw new EarlyWashSessionException("Chỉ có thể bắt đầu phiên rửa xe trước 5
+        // phút");
         // }
 
         booking.setStatus(BookingStatus.COMPLETED);
@@ -195,7 +201,8 @@ public class WashSessionService {
     }
 
     @Transactional
-    public List<WashSessionResponse> startWashSessionAssigningStaffVersion3(StartWashSessionRequest request, Long staffId) {
+    public List<WashSessionResponse> startWashSessionAssigningStaffVersion3(StartWashSessionRequest request,
+            Long staffId) {
 
         Long bookingId = request.getBookingId();
         String staffNote = request.getStaffNote();
@@ -211,10 +218,12 @@ public class WashSessionService {
         /**
          * For Eazy Testing, we commented these statements...
          */
-        // LocalTime scheduledStartTime = booking.getAvailableSlots().getFirst().getTimeSlot().getStartTime();
+        // LocalTime scheduledStartTime =
+        // booking.getAvailableSlots().getFirst().getTimeSlot().getStartTime();
         // LocalTime now = LocalTime.now();
         // if (!now.isAfter(scheduledStartTime.minusMinutes(5L))) {
-        //     throw new EarlyWashSessionException("Chỉ có thể bắt đầu phiên rửa xe trước 5 phút");
+        // throw new EarlyWashSessionException("Chỉ có thể bắt đầu phiên rửa xe trước 5
+        // phút");
         // }
 
         booking.setStatus(BookingStatus.COMPLETED);
@@ -235,7 +244,7 @@ public class WashSessionService {
 
     @Transactional
     public List<WashSessionResponse> completeWashSessionVersion2(Long bookingId) {
-        
+
         List<WashSession> washSessions = repository.findByBookingId(bookingId);
         for (WashSession washSession : washSessions) {
             washSession.setStatus(WashSessionStatus.COMPLETED);
@@ -259,14 +268,22 @@ public class WashSessionService {
     @Transactional
     public List<WashSessionResponse> startWashSessionAssigningNullStaff(StartWashSessionRequest request, Long staffId) {
 
+        Long bookingId = request.getBookingId();
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy mã đặt lịch với id: " + bookingId));
+
         Staff staff = null;
 
         if (staffId == null) {
-            LocalDate presentBookingDate = LocalDate.now();
-            staff = staffService.getSpecificAlgorithmedStaff(presentBookingDate);
+            WashSession washSession = booking.getWashSessions().getFirst();
+            staff = washSession.getStaff();
+            if (staff == null) {
+                LocalDate presentBookingDate = LocalDate.now();
+                staff = staffService.getSpecificAlgorithmedStaff(presentBookingDate);
+            }
         } else {
             staff = staffRepository.findById(staffId)
-                    .orElseThrow(() -> new StaffNotFoundException("Không tìm thấy nhân viên với id: "+ staffId));
+                    .orElseThrow(() -> new StaffNotFoundException("Không tìm thấy nhân viên với id: " + staffId));
         }
         return startWashSessionAssigningStaffVersion3(request, staff.getId());
 
