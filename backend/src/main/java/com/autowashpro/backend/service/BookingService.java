@@ -684,8 +684,9 @@ public class BookingService {
                 .orElseThrow(() -> new SlotInavailabilityException("Không tìm thấy slot phù hợp"));
 
         if (bookingDay.equals(now)) {
-            LocalTime minStartTime = LocalTime.now().plusMinutes(5L);
-            if (startTimeSlot.getStartTime().isBefore(minStartTime)) {
+            LocalTime minStartTime = startTimeSlot.getStartTime().plusMinutes(5L);
+            LocalTime present = LocalTime.now();
+            if (present.isAfter(minStartTime)) {
                 throw new SlotInavailabilityException(
                         "Giờ đặt lịch phải sau thời điểm hiện tại trễ nhất 5 phút");
             }
