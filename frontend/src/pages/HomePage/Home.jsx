@@ -18,14 +18,23 @@ const PolicyNotificationContent = () => (
                 from { transform: scaleX(1); }
                 to   { transform: scaleX(0); }
             }
+            .policy-btn-navy {
+                background-color: #002b7f !important;
+                border-color: #002b7f !important;
+                color: #ffffff !important;
+            }
+            .policy-btn-navy:hover {
+                background-color: #001f5c !important;
+                border-color: #001f5c !important;
+            }
         `}</style>
         <p style={{ margin: "0 0 10px 0" }}>
             Vui lòng đọc chính sách đặt lịch và hoàn cọc trước khi sử dụng dịch vụ.
         </p>
-        <div style={{ height: 4, background: "#e6f0ff", borderRadius: 2, overflow: "hidden" }}>
+        <div style={{ height: 4, background: "#f0f5ff", borderRadius: 2, overflow: "hidden" }}>
             <div style={{
                 height: "100%",
-                background: "#1677ff",
+                background: "#002b7f",
                 borderRadius: 2,
                 transformOrigin: "left center",
                 animation: `policy-bar-shrink ${DURATION}s linear forwards`,
@@ -79,12 +88,13 @@ export default function Home() {
             key: "policy-notice",
             message: "Chính sách & Quy định",
             description: <PolicyNotificationContent />,
-            icon: <FileTextOutlined style={{ color: "#1677ff" }} />,
+            icon: <FileTextOutlined style={{ color: "#002b7f" }} />,
             duration: DURATION,
             btn: (
                 <Button
                     type="primary"
                     size="small"
+                    className="policy-btn-navy"
                     onClick={() => {
                         setIsPolicyModalOpen(true);
                         notification.destroy("policy-notice");

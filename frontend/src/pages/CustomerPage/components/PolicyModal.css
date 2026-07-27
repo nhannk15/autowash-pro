@@ -70,8 +70,8 @@
     margin-top: 0;
     margin-bottom: 12px;
     font-size: 1.1rem;
-    color: #1a73e8;
-    border-left: 4px solid #1a73e8;
+    color: #002b7f;
+    border-left: 4px solid #002b7f;
     padding-left: 10px;
 }
 
@@ -87,10 +87,10 @@
 }
 
 .policy-section.highlight {
-    background-color: #f8faff;
+    background-color: #f0f5ff;
     padding: 16px 20px;
     border-radius: 8px;
-    border: 1px solid #e1ebff;
+    border: 1px solid #d0e1ff;
 }
 
 .policy-table-container {
@@ -154,7 +154,7 @@
 }
 
 .policy-btn-primary {
-    background-color: #1a73e8;
+    background-color: #002b7f;
     color: #fff;
     border: none;
     padding: 10px 24px;
@@ -166,7 +166,7 @@
 }
 
 .policy-btn-primary:hover {
-    background-color: #1557b0;
+    background-color: #001f5c;
 }
 
 @keyframes policyFadeIn {
