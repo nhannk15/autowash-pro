@@ -73,7 +73,15 @@ const PolicyModal = ({ isOpen, onClose }) => {
                     </section>
 
                     <section className="policy-section">
-                        <h3>Điều 4: Chính sách đền bù từ phía Trung tâm</h3>
+                        <h3>Điều 4: Chính sách Đặt cọc & Áp dụng Voucher</h3>
+                        <ul>
+                            <li>Khi đặt lịch trực tuyến, quý khách bắt buộc phải thanh toán khoản đặt cọc tương đương <strong>30% tổng giá trị dịch vụ sau khuyến mãi</strong> để hệ thống giữ chỗ.</li>
+                            <li>Voucher giảm giá (bao gồm voucher hủy lịch) sẽ được áp dụng vào <strong>70% tổng giá trị dịch vụ còn lại</strong> (thanh toán tại trung tâm sau khi hoàn thành dịch vụ).</li>
+                        </ul>
+                    </section>
+
+                    <section className="policy-section">
+                        <h3>Điều 5: Chính sách đền bù từ phía Trung tâm</h3>
                         <ul>
                             <li>Trong trường hợp bất khả kháng trung tâm phải hủy lịch hẹn của quý khách, trung tâm sẽ hoàn 100% cọc (quy đổi thành voucher hoặc hoàn tiền trực tiếp tùy trường hợp) và tặng kèm ưu đãi cho lần đặt tiếp theo.</li>
                         </ul>
