@@ -7,5 +7,6 @@ public enum NotificationType {
     POINTS_EXPIRY,
     BOOKING_CONFIRMED,
     BOOKING_REMINDER,
-    POINTS_ADJUST
+    POINTS_ADJUST,
+    VOUCHER_EXCHANGED
 }

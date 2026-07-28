@@ -26,7 +26,10 @@ import com.autowashpro.backend.repository.CustomerRepository;
 import com.autowashpro.backend.repository.StaffRepository;
 import com.autowashpro.backend.repository.WashSessionRepository;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Service
+@Slf4j
 public class WashSessionService {
 
     private final WashSessionRepository repository;
@@ -218,12 +221,13 @@ public class WashSessionService {
         /**
          * For Eazy Testing, we commented these statements...
          */
-        // LocalTime scheduledStartTime =
-        // booking.getAvailableSlots().getFirst().getTimeSlot().getStartTime();
+        // LocalTime scheduledStartTime = booking.getAvailableSlots().getFirst().getTimeSlot().getStartTime();
         // LocalTime now = LocalTime.now();
-        // if (!now.isAfter(scheduledStartTime.minusMinutes(5L))) {
-        // throw new EarlyWashSessionException("Chỉ có thể bắt đầu phiên rửa xe trước 5
-        // phút");
+        // if (now.isAfter(scheduledStartTime.minusMinutes(5L))) {
+        //     log.info("startWashSessionAsigningStaff() - start the wash for the booking {}", booking.getBookingCode());
+        //     log.info("scheduled start time: {}", scheduledStartTime.toString());
+        //     log.info("Now: {}", now.toString());
+        //     throw new EarlyWashSessionException("Chỉ có thể bắt đầu phiên rửa xe trước 5 phút");
         // }
 
         booking.setStatus(BookingStatus.COMPLETED);

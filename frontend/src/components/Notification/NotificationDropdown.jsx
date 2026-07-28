@@ -23,6 +23,7 @@ const TYPE_LABEL = {
     POINTS_EARN:       'Điểm +',
     POINTS_EXPIRY:     'HH điểm',
     POINTS_ADJUST:     'ĐC điểm',
+    VOUCHER_EXCHANGED:  '+Voucher'
 };
 
 /**
@@ -83,6 +84,7 @@ const NOTIF_ACTION_MAP = {
     POINTS_ADJUST:     '/ca-nhan/tong-quan?action=points',
     TIER_UPGRADE:      '/ca-nhan/tong-quan',
     TIER_DOWNGRADE:    '/ca-nhan/tong-quan',
+    VOUCHER_EXCHANGED:  '/ca-nhan/tong-quan?action=vouchers'
 };
 
 function NotificationItem({ notification, onRead, onClose }) {

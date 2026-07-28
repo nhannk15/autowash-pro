@@ -16,6 +16,7 @@ import com.autowashpro.backend.model.entity.Customer;
 import com.autowashpro.backend.model.entity.MembershipTier;
 import com.autowashpro.backend.model.entity.Notification;
 import com.autowashpro.backend.model.entity.PointTransaction;
+import com.autowashpro.backend.model.entity.Voucher;
 import com.autowashpro.backend.model.enums.NotificationType;
 import com.autowashpro.backend.repository.CustomerRepository;
 import com.autowashpro.backend.repository.NotificationRepository;
@@ -31,7 +32,8 @@ public class NotificationService {
     private final NotificationMapper notificationMapper;
 
     @Autowired
-    public NotificationService(NotificationRepository repository, CustomerRepository customerRepository, NotificationMapper notificationMapper) {
+    public NotificationService(NotificationRepository repository, CustomerRepository customerRepository,
+            NotificationMapper notificationMapper) {
         this.notificationRepository = repository;
         this.customerRepository = customerRepository;
         this.notificationMapper = notificationMapper;
@@ -115,6 +117,20 @@ public class NotificationService {
                 newNotification.getCustomer().getFullName(), NotificationType.POINTS_EXPIRY);
     }
 
+    @Transactional
+    public void createVoucherExchangedNotification(Voucher voucher) {
+        Notification notification = Notification
+                .builder()
+                .customer(voucher.getCustomer())
+                .notificationType(NotificationType.VOUCHER_EXCHANGED)
+                .title("Voucher mới!")
+                .body("Voucher " + voucher.getVoucherCode() + " vừa được quy đổi")
+                .refId(voucher.getId())
+                .refType("VOUCHER_EXCHANGED")
+                .build();
+        notificationRepository.save(notification);
+    }
+
     @Transactional(readOnly = true)
     public List<NotificationResponse> getCustomerAllNotifications(String email) {
         Customer customer = customerRepository.findByEmail(email)
@@ -136,7 +152,7 @@ public class NotificationService {
         Customer customer = customerRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("Không tìm thấy khách hàng với email: " + email));
         List<Notification> result = notificationRepository.findCustomerUnreadNotifications(customer.getId());
-        
+
         HashMap<String, Integer> map = new HashMap<>();
         map.put("unreadsCount", result.size());
         return map;
@@ -156,7 +172,7 @@ public class NotificationService {
         Customer customer = customerRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("Không tìm thấy khách hàng với email: " + email));
         List<Notification> unreadNotifications = notificationRepository.findCustomerAllNotifications(customer.getId());
-        for (Notification notification: unreadNotifications) {
+        for (Notification notification : unreadNotifications) {
             notification.setRead(true);
             notificationRepository.save(notification);
         }
