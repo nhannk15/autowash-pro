@@ -14,13 +14,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import com.autowashpro.backend.event.BookingConfirmationEmailRequestedEvent;
 import com.autowashpro.backend.exception.ExceedBookingWindowException;
 import com.autowashpro.backend.exception.SlotInavailabilityException;
 import com.autowashpro.backend.exception.UserNotFoundException;
@@ -34,6 +35,7 @@ import com.autowashpro.backend.model.entity.BookingDetail;
 import com.autowashpro.backend.model.entity.Customer;
 import com.autowashpro.backend.model.entity.MembershipTier;
 import com.autowashpro.backend.model.entity.Promotion;
+import com.autowashpro.backend.model.entity.Reward;
 import com.autowashpro.backend.model.entity.Service;
 import com.autowashpro.backend.model.entity.ServicePrice;
 import com.autowashpro.backend.model.entity.TimeSlot;
@@ -42,12 +44,15 @@ import com.autowashpro.backend.model.entity.VehicleType;
 import com.autowashpro.backend.model.entity.WashBay;
 import com.autowashpro.backend.model.enums.BayStatus;
 import com.autowashpro.backend.model.enums.BookingStatus;
+import com.autowashpro.backend.model.enums.DepositStatus;
+import com.autowashpro.backend.model.enums.PaymentStatus;
 import com.autowashpro.backend.model.enums.PromotionDiscountType;
 import com.autowashpro.backend.repository.AvailableSlotRepository;
 import com.autowashpro.backend.repository.BookingDetailRepository;
 import com.autowashpro.backend.repository.BookingRepository;
 import com.autowashpro.backend.repository.CustomerRepository;
 import com.autowashpro.backend.repository.PromotionRepository;
+import com.autowashpro.backend.repository.RewardRepository;
 import com.autowashpro.backend.repository.ServicePriceRepository;
 import com.autowashpro.backend.repository.ServiceRepository;
 import com.autowashpro.backend.repository.TimeSlotRepository;
@@ -60,7 +65,7 @@ import com.autowashpro.backend.repository.WashSessionRepository;
 import com.autowashpro.backend.service.BillingService;
 import com.autowashpro.backend.service.PromotionService;
 import com.autowashpro.backend.utils.BookingCodeGenerator;
-import com.autowashpro.backend.utils.QrCodeGenerator;
+import com.autowashpro.backend.utils.VoucherCodeGenerator;
 
 @ExtendWith(MockitoExtension.class)
 @Tag("unit")
@@ -104,10 +109,6 @@ public class BookingServiceTest {
     @Mock
     private BookingCodeGenerator bookingCodeGenerator;
     @Mock
-    private QrCodeGenerator qrCodeGenerator;
-    @Mock
-    private EmailService emailService;
-    @Mock
     private UserRepository userRepository;
     @Mock
     private PromotionService promotionService;
@@ -115,6 +116,14 @@ public class BookingServiceTest {
     private BillingService billingService;
     @Mock
     private BillingRepository billingRepository;
+    @Mock
+    private RewardRepository rewardRepository;
+    @Mock
+    private VoucherCodeGenerator voucherCodeGenerator;
+    @Mock
+    private NotificationService notificationService;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     // Fixtures.
     private MembershipTier tier;
@@ -132,7 +141,6 @@ public class BookingServiceTest {
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(bookingService, "useEmailService", false);
         tier = new MembershipTier();
         tier.setId(1L);
         tier.setTierName("BRONZE");
@@ -293,10 +301,9 @@ public class BookingServiceTest {
     }
 
     @Test
-    void createBooking_success_emailNotSent_useEmailServiceIsNo() {
+    void createBooking_onlineDoesNotRequestConfirmationEmailBeforeDeposit() {
         // Arrange
         request.setPromotionId(null);
-        ReflectionTestUtils.setField(bookingService, "useEmailService", false);
         commonMockStubs();
 
         // Act
@@ -304,23 +311,90 @@ public class BookingServiceTest {
 
         // Assert
         assertNotNull(response);
-        verify(emailService, never()).sendBookingSuccessToEmail(any(), any(), any(), any());
+        verify(eventPublisher, never()).publishEvent(any(BookingConfirmationEmailRequestedEvent.class));
     }
 
     @Test
-    void createBooking_success_emailSent_useEmailSeriveIsYes() {
+    void createBooking_walkInRequestsConfirmationEmailAfterBillingIsReady() {
         // Arrange
         request.setPromotionId(null);
-        ReflectionTestUtils.setField(bookingService, "useEmailService", true);
+        request.setWalkIn(true);
         commonMockStubs();
-        when(qrCodeGenerator.generateQrCode(any())).thenReturn(new byte[] { 1, 2, 3 });
 
         // Act
         CreateBookingResponse response = bookingService.createBooking(request);
 
         // Assert
         assertNotNull(response);
-        verify(emailService, times(1)).sendBookingSuccessToEmail(any(), any(), any(), any());
+        verify(eventPublisher).publishEvent(org.mockito.ArgumentMatchers.<Object>argThat(event ->
+                event instanceof BookingConfirmationEmailRequestedEvent emailEvent
+                        && savedBooking.getId().equals(emailEvent.bookingId())));
+    }
+
+    @Test
+    void cancelBooking_pendingDepositDoesNotCreateRefundVoucher() {
+        // Arrange
+        tier.setMinCancelHours(2L);
+        tier.setPercentageRefund(new BigDecimal("100"));
+        availableSlot.setSlotDate(LocalDate.now().plusDays(2));
+        savedBooking.getAvailableSlots().add(availableSlot);
+
+        Billing billing = Billing.builder()
+                .id(1L)
+                .booking(savedBooking)
+                .depositAmount(new BigDecimal("45000"))
+                .depositStatus(DepositStatus.PENDING)
+                .paymentStatus(PaymentStatus.PENDING)
+                .finalAmount(new BigDecimal("105000"))
+                .build();
+        savedBooking.setBilling(billing);
+        when(bookingRepository.findByBookingCodeForCanceling(savedBooking.getBookingCode()))
+                .thenReturn(Optional.of(savedBooking));
+
+        // Act
+        bookingService.cancelCustomerBooking(
+                new com.autowashpro.backend.model.dto.CancelBookingRequest(savedBooking.getBookingCode(), "Đổi lịch"));
+
+        // Assert
+        assertEquals(DepositStatus.CANCELLED, billing.getDepositStatus());
+        assertEquals(BookingStatus.CANCELLED, savedBooking.getStatus());
+        verify(rewardRepository, never()).findById(anyLong());
+        verify(voucherRepository, never()).save(any());
+    }
+
+    @Test
+    void cancelBooking_paidDepositStillCreatesConfiguredRefundVoucher() {
+        // Arrange
+        tier.setMinCancelHours(2L);
+        tier.setPercentageRefund(new BigDecimal("50"));
+        availableSlot.setSlotDate(LocalDate.now().plusDays(2));
+        savedBooking.getAvailableSlots().add(availableSlot);
+
+        Billing billing = Billing.builder()
+                .id(1L)
+                .booking(savedBooking)
+                .depositAmount(new BigDecimal("45000"))
+                .depositStatus(DepositStatus.PAID)
+                .paymentStatus(PaymentStatus.PENDING)
+                .finalAmount(new BigDecimal("105000"))
+                .build();
+        savedBooking.setBilling(billing);
+
+        Reward refundReward = new Reward();
+        refundReward.setId(4L);
+        refundReward.setValidityDays(30);
+        when(bookingRepository.findByBookingCodeForCanceling(savedBooking.getBookingCode()))
+                .thenReturn(Optional.of(savedBooking));
+        when(rewardRepository.findById(4L)).thenReturn(Optional.of(refundReward));
+        when(voucherCodeGenerator.generate()).thenReturn("REFUND1");
+
+        // Act
+        bookingService.cancelCustomerBooking(
+                new com.autowashpro.backend.model.dto.CancelBookingRequest(savedBooking.getBookingCode(), "Đổi lịch"));
+
+        // Assert
+        verify(voucherRepository).save(argThat(voucher ->
+                new BigDecimal("22500").compareTo(voucher.getDiscountValue()) == 0));
     }
 
     @Test

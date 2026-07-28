@@ -1,6 +1,8 @@
 package com.autowashpro.backend.service;
 
+import java.math.BigDecimal;
 import java.text.NumberFormat;
+import java.util.Comparator;
 import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,9 +11,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-import com.autowashpro.backend.model.dto.BookingDetailResponse;
-import com.autowashpro.backend.model.dto.CreateBookingResponse;
 import com.autowashpro.backend.model.entity.AvailableSlot;
+import com.autowashpro.backend.model.entity.Billing;
 import com.autowashpro.backend.model.entity.Booking;
 import com.autowashpro.backend.model.entity.BookingDetail;
 
@@ -105,7 +106,8 @@ public class EmailService {
                 .formatted(otp);
     }
 
-    public void sendBookingSuccessToEmail(String toEmail, String bookingCode, CreateBookingResponse bookingResponse, byte[] qrCodeImage) {
+    public void sendBookingSuccessToEmail(Booking booking, byte[] qrCodeImage) {
+        String toEmail = booking.getCustomer().getEmail();
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -115,7 +117,7 @@ public class EmailService {
             helper.setSubject("Đặt lịch thành công - AutoWash Pro");
 
             // Set HTML content TRƯỚC khi addInline
-            String htmlContent = buildBookingSuccessHtml(bookingResponse, bookingCode);
+            String htmlContent = buildBookingSuccessHtml(booking);
             helper.setText(htmlContent, true);
 
             // Nhúng QR Code inline vào email (phải gọi SAU setText)
@@ -129,14 +131,27 @@ public class EmailService {
         }
     }
 
-    private String buildBookingSuccessHtml(CreateBookingResponse bookingResponse, String bookingCode) {
+    String buildBookingSuccessHtml(Booking booking) {
 
         StringBuilder services = new StringBuilder("");
-        for (BookingDetailResponse bookingDetailResponse : bookingResponse.getBookingDetails()) {
+        for (BookingDetail bookingDetail : booking.getBookingDetails()) {
             if (!services.isEmpty()) {
                 services.append(" + ");
             }
-            services.append(bookingDetailResponse.getServiceName());
+            services.append(bookingDetail.getServicePrice().getService().getServiceName());
+        }
+
+        AvailableSlot firstSlot = booking.getAvailableSlots().stream()
+                .min(Comparator.comparing(AvailableSlot::getSlotDate)
+                        .thenComparing(slot -> slot.getTimeSlot().getStartTime()))
+                .orElseThrow(() -> new IllegalStateException("Booking không có khung giờ"));
+        AvailableSlot lastSlot = booking.getAvailableSlots().stream()
+                .max(Comparator.comparing(AvailableSlot::getSlotDate)
+                        .thenComparing(slot -> slot.getTimeSlot().getEndTime()))
+                .orElseThrow(() -> new IllegalStateException("Booking không có khung giờ"));
+        Billing billing = booking.getBilling();
+        if (billing == null) {
+            throw new IllegalStateException("Booking chưa có hóa đơn");
         }
 
         // Tạo formatter với locale Vietnam - Cách 1 (Java 19+)
@@ -144,9 +159,12 @@ public class EmailService {
         formatter.setMaximumFractionDigits(0);
         formatter.setMinimumFractionDigits(0);
 
-        String formattedOriginal = formatter.format(bookingResponse.getTotalOriginalPrice());
-        String formattedDiscount = formatter.format(bookingResponse.getTotalDiscount());
-        String formattedFinal = formatter.format(bookingResponse.getTotalFinalPrice());
+        BigDecimal depositAmount = defaultZero(billing.getDepositAmount());
+        BigDecimal remainingAmount = defaultZero(billing.getFinalAmount());
+        BigDecimal totalAfterDiscount = depositAmount.add(remainingAmount).max(BigDecimal.ZERO);
+        String formattedOriginal = formatter.format(defaultZero(billing.getOriginalAmount()));
+        String formattedDiscount = formatter.format(defaultZero(billing.getDiscountAmount()));
+        String formattedFinal = formatter.format(totalAfterDiscount);
 
         return """
                 <!DOCTYPE html>
@@ -215,7 +233,7 @@ public class EmailService {
                                         <td style="color:#333; font-size:14px; text-align:right;">{totalOriginal}đ</td>
                                     </tr>
                                     <tr>
-                                        <td style="color:#555; font-size:14px; padding:6px 0;">Khuyến mãi</td>
+                                        <td style="color:#555; font-size:14px; padding:6px 0;">Tổng giảm (khuyến mãi/voucher)</td>
                                         <td style="color:#e53935; font-size:14px; text-align:right;">- {totalDiscount}đ</td>
                                     </tr>
                                     <tr style="border-top:1px solid #eee;">
@@ -255,18 +273,22 @@ public class EmailService {
 
                 </html>
                 """
-                .replace("{customerName}", bookingResponse.getCustomerName())
-                .replace("{bookingCode}", bookingCode)
-                .replace("{bookingDate}", bookingResponse.getBookingDate().toString())
-                .replace("{startTime}", bookingResponse.getStartTime().toString())
-                .replace("{endTime}", bookingResponse.getEndTime().toString())
-                .replace("{bayName}", bookingResponse.getBayName())
-                .replace("{licensePlate}", bookingResponse.getVehicleLicensePlate())
-                .replace("{vehicleType}", bookingResponse.getVehicleTypeName())
+                .replace("{customerName}", booking.getCustomer().getFullName())
+                .replace("{bookingCode}", booking.getBookingCode())
+                .replace("{bookingDate}", firstSlot.getSlotDate().toString())
+                .replace("{startTime}", firstSlot.getTimeSlot().getStartTime().toString())
+                .replace("{endTime}", lastSlot.getTimeSlot().getEndTime().toString())
+                .replace("{bayName}", firstSlot.getWashBay().getName())
+                .replace("{licensePlate}", booking.getVehicle().getLicensePlate())
+                .replace("{vehicleType}", booking.getVehicle().getVehicleType().getTypeName())
                 .replace("{services}", services.toString())
                 .replace("{totalOriginal}", formattedOriginal)
                 .replace("{totalDiscount}", formattedDiscount)
                 .replace("{totalFinal}", formattedFinal);
+    }
+
+    private BigDecimal defaultZero(BigDecimal amount) {
+        return amount == null ? BigDecimal.ZERO : amount;
     }
 
     /**
