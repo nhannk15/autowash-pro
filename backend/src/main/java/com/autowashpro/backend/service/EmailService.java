@@ -253,7 +253,7 @@ public class EmailService {
                             <div style="border-left:4px solid #0d1b4b; padding:10px 15px; margin:20px 0; background:#f9f9ff;">
                                 <p style="color:#555; font-size:14px; margin:0; line-height:1.8;">
                                     📌 Vui lòng có mặt trước <strong>10 phút</strong>.<br>
-                                    ❌ Hủy lịch trước <strong>2 tiếng</strong> để không bị tính phí.
+                                    ❌ Hủy lịch trước <strong>1 ngày</strong> để không bị tính phí.
                                 </p>
                             </div>
 
@@ -297,7 +297,8 @@ public class EmailService {
     }
 
     /**
-     * Gửi email nhắc nhở booking cho khách 1 ngày trước lịch rửa xe, kèm QR check-in.
+     * Gửi email nhắc nhở booking cho khách 1 ngày trước lịch rửa xe, kèm QR
+     * check-in.
      */
     public void sendBookingReminderEmail(Booking booking, byte[] qrCodeImage) {
         try {
@@ -410,7 +411,7 @@ public class EmailService {
                             <div style="border-left:4px solid #0d1b4b; padding:10px 15px; margin:20px 0; background:#f9f9ff;">
                                 <p style="color:#555; font-size:14px; margin:0; line-height:1.8;">
                                     📌 Vui lòng có mặt trước <strong>10 phút</strong>.<br>
-                                    ❌ Hủy lịch trước <strong>2 tiếng</strong> để không bị tính phí.<br>
+                                    ❌ Hủy lịch trước <strong>1 ngày</strong> để không bị tính phí.<br>
                                     📞 Hotline: <strong>0945692584</strong> nếu cần hỗ trợ.
                                 </p>
                             </div>
@@ -440,8 +441,11 @@ public class EmailService {
 
     /**
      * Gửi email chào mừng đăng ký tài khoản thành công.
-     * @param defaultPassword nếu != null thì hiển thị mật khẩu mặc định trong email (cho walk-in).
-     * nếu == null thì chỉ thông báo đăng ký thành công (cho đăng ký thường).
+     * 
+     * @param defaultPassword nếu != null thì hiển thị mật khẩu mặc định trong email
+     *                        (cho walk-in).
+     *                        nếu == null thì chỉ thông báo đăng ký thành công (cho
+     *                        đăng ký thường).
      */
     public void sendWelcomeEmail(String toEmail, String fullName, String defaultPassword) {
         try {
@@ -466,19 +470,19 @@ public class EmailService {
         String passwordSection = "";
         if (defaultPassword != null) {
             passwordSection = """
-                <tr>
-                <td style="padding: 16px 24px; background-color: #fff3e0; border-radius: 8px; margin: 16px 0;">
-                <p style="margin: 0; color: #e65100; font-weight: bold;">🔑 Thông tin đăng nhập của bạn:</p>
-                <p style="margin: 8px 0 0 0; color: #333;">
-                Email: <strong>%s</strong><br/>
-                Mật khẩu: <strong>%s</strong>
-                </p>
-                <p style="margin: 8px 0 0 0; color: #999; font-size: 12px;">
-                Vui lòng đổi mật khẩu sau khi đăng nhập lần đầu.
-                </p>
-                </td>
-                </tr>
-                """.formatted(fullName, defaultPassword);
+                    <tr>
+                    <td style="padding: 16px 24px; background-color: #fff3e0; border-radius: 8px; margin: 16px 0;">
+                    <p style="margin: 0; color: #e65100; font-weight: bold;">🔑 Thông tin đăng nhập của bạn:</p>
+                    <p style="margin: 8px 0 0 0; color: #333;">
+                    Email: <strong>%s</strong><br/>
+                    Mật khẩu: <strong>%s</strong>
+                    </p>
+                    <p style="margin: 8px 0 0 0; color: #999; font-size: 12px;">
+                    Vui lòng đổi mật khẩu sau khi đăng nhập lần đầu.
+                    </p>
+                    </td>
+                    </tr>
+                    """.formatted(fullName, defaultPassword);
         }
 
         return """
@@ -513,6 +517,7 @@ public class EmailService {
                 </table>
                 </body>
                 </html>
-                """.formatted(fullName, passwordSection);
+                """
+                .formatted(fullName, passwordSection);
     }
 }
