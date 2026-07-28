@@ -2,6 +2,7 @@ package com.autowashpro.backend.service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -11,10 +12,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.autowashpro.backend.exception.AccountExistedException;
+import com.autowashpro.backend.exception.StaffNotFoundException;
 import com.autowashpro.backend.exception.UserNotFoundException;
 import com.autowashpro.backend.mapper.StaffMapper;
 import com.autowashpro.backend.model.dto.CreateStaffRequest;
 import com.autowashpro.backend.model.dto.StaffAdminResponse;
+import com.autowashpro.backend.model.dto.StaffAndTotalSlotQueryResponse;
 import com.autowashpro.backend.model.dto.StaffInfoResponse;
 import com.autowashpro.backend.model.dto.UpdateStaffRequest;
 import com.autowashpro.backend.model.entity.Staff;
@@ -167,5 +170,38 @@ public class StaffService {
     public List<StaffInfoResponse> getAvailableStaffsForASpecificDay(Long timeSlotId, LocalDate bookingDate) {
         List<Staff> staffs = repository.findAvailableStaff(timeSlotId, bookingDate);
         return staffMapper.toStaffInfoResponses(staffs);
+    }
+
+    @Transactional(readOnly = true)
+    public List<StaffAndTotalSlotQueryResponse> getAlgorithmedStaffs(LocalDate bookingDate) {
+        List<Object[]> queryResponse = repository.findLeastJobsStaff(bookingDate);
+        List<StaffAndTotalSlotQueryResponse> leastJobsHavingStaffs = queryResponse.stream()
+            .map((row) -> {
+                Long staffId = ((Number) row[0]).longValue();
+                Long totalSlot = ((Number) row[1]).longValue();
+
+                StaffAndTotalSlotQueryResponse staffAndTotalSlotQueyrResponse = new StaffAndTotalSlotQueryResponse(staffId, totalSlot);
+                return staffAndTotalSlotQueyrResponse;
+            })
+            .toList();
+        return leastJobsHavingStaffs;
+    }
+
+    public Staff getSpecificAlgorithmedStaff(LocalDate bookingDate) {
+        List<StaffAndTotalSlotQueryResponse> algorithmedStaff = getAlgorithmedStaffs(bookingDate);
+        int algorithmedStaffSize = algorithmedStaff.size();
+
+        Random random = new Random();
+        int randomId = random.nextInt(algorithmedStaffSize);
+
+        Long staffId = algorithmedStaff.get(randomId).getId();
+        Staff staff = repository.findById(staffId)
+                .orElseThrow(() -> new StaffNotFoundException("Không tìm thấy nhân viên rửa xe với id: " + staffId));
+        return staff;
+    }
+
+    public StaffInfoResponse getSpecificAlgorithmedStaffInfoResponse(LocalDate bookingDate) {
+        Staff staff = getSpecificAlgorithmedStaff(bookingDate);
+        return staffMapper.toStaffInfoResponse(staff);
     }
 }
