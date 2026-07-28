@@ -1143,9 +1143,16 @@ export default function Booking() {
                                         const expDate = new Date(v.expiresAt);
                                         const now = new Date();
                                         const diffDays = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
+                                        let discountText = "";
+                                        if (v.reward?.id === 4) {
+                                            const discountVal = v.discountValue != null ? v.discountValue : v.reward?.discountValue;
+                                            if (discountVal > 0) {
+                                                discountText = ` (giá trị: ${Number(discountVal).toLocaleString('vi-VN')}đ)`;
+                                            }
+                                        }
                                         return (
                                             <Select.Option key={v.voucherCode} value={v.voucherCode}>
-                                                [{v.voucherCode}] {v.reward?.rewardName || 'Voucher'} (Hạn còn {diffDays} ngày)
+                                                [{v.voucherCode}] {v.reward?.rewardName || 'Voucher'}{discountText} (Hạn còn {diffDays} ngày)
                                             </Select.Option>
                                         );
                                     })}
@@ -1203,7 +1210,7 @@ export default function Booking() {
                                 let voucherDiscount = 0;
                                 if (selectedVoucher) {
                                     const rType = selectedVoucher.reward.rewardType;
-                                    const vVal = selectedVoucher.reward.discountValue;
+                                    const vVal = selectedVoucher.discountValue != null ? selectedVoucher.discountValue : selectedVoucher.reward.discountValue;
                                     if (rType === 'DISCOUNT_FLAT') {
                                         voucherDiscount = vVal;
                                     } else if (rType === 'DISCOUNT_PERCENTAGE') {
@@ -1363,9 +1370,11 @@ export default function Booking() {
                             </div>
 
                             {(() => {
+                                const bill = createdBooking && createdBooking.billing;
+
+                                // --- Promotion: client-side calculation (same as sidebar) ---
                                 const appPromo = getApplicablePromotion();
                                 const originalTotal = calculateTotal();
-
                                 let promoDiscount = 0;
                                 if (appPromo) {
                                     if (appPromo.discountType === 'PERCENTAGE') {
@@ -1375,32 +1384,39 @@ export default function Booking() {
                                     }
                                     promoDiscount = Math.min(promoDiscount, originalTotal);
                                 }
-                                const totalAfterPromo = originalTotal - promoDiscount;
-                                const depositAmount = totalAfterPromo * 0.3;
-                                const remainingBeforeVoucher = totalAfterPromo - depositAmount;
 
+                                // --- Voucher: server-side total discount minus client-side promo ---
                                 let voucherDiscount = 0;
-                                if (selectedVoucher) {
-                                    const rType = selectedVoucher.reward.rewardType;
-                                    const vVal = selectedVoucher.reward.discountValue;
-                                    if (rType === 'DISCOUNT_FLAT') {
-                                        voucherDiscount = vVal;
-                                    } else if (rType === 'DISCOUNT_PERCENTAGE') {
-                                        voucherDiscount = remainingBeforeVoucher * (vVal / 100);
-                                    } else if (rType === 'FREE_WASH') {
-                                        voucherDiscount = remainingBeforeVoucher;
+                                let totalFinal = 0;
+                                
+                                if (bill) {
+                                    const serverTotalDiscount = Number(bill.discountAmount) || 0;
+                                    voucherDiscount = Math.max(0, serverTotalDiscount - promoDiscount);
+                                    // True total = deposit amount + remaining balance
+                                    totalFinal = Number(bill.depositAmount || 0) + Number(bill.finalAmount || 0);
+                                } else {
+                                    // Fallback: full client-side calculation
+                                    const totalAfterPromo = originalTotal - promoDiscount;
+                                    const dep = totalAfterPromo * 0.3;
+                                    const remaining = totalAfterPromo - dep;
+                                    if (selectedVoucher) {
+                                        const rType = selectedVoucher.reward.rewardType;
+                                        const vVal = selectedVoucher.discountValue != null ? selectedVoucher.discountValue : selectedVoucher.reward.discountValue;
+                                        if (rType === 'DISCOUNT_FLAT') voucherDiscount = vVal;
+                                        else if (rType === 'DISCOUNT_PERCENTAGE') voucherDiscount = remaining * (vVal / 100);
+                                        else if (rType === 'FREE_WASH') voucherDiscount = remaining;
+                                        voucherDiscount = Math.min(voucherDiscount, remaining);
                                     }
-                                    voucherDiscount = Math.min(voucherDiscount, remainingBeforeVoucher);
+                                    totalFinal = remaining - voucherDiscount + dep;
                                 }
 
-                                const finalTotal = remainingBeforeVoucher - voucherDiscount;
-                                const finalAfterProAndVou = finalTotal + depositAmount;
+                                const hasDiscount = promoDiscount > 0 || voucherDiscount > 0;
 
                                 return (
                                     <>
                                         <div className="success-detail-item" style={{ borderTop: '1px solid #e2e8f0', paddingTop: '8px', marginTop: '4px' }}>
                                             <span>Giá gốc:</span>
-                                            <span style={{ textDecoration: promoDiscount > 0 || voucherDiscount > 0 ? 'line-through' : 'none', color: '#64748b' }}>{formatCurrency(originalTotal)}</span>
+                                            <span style={{ textDecoration: hasDiscount ? 'line-through' : 'none', color: '#64748b' }}>{formatCurrency(originalTotal)}</span>
                                         </div>
                                         {promoDiscount > 0 && (
                                             <div className="success-detail-item">
@@ -1408,15 +1424,15 @@ export default function Booking() {
                                                 <span style={{ color: '#10b981' }}>{appPromo.promotionName} (-{formatCurrency(promoDiscount)})</span>
                                             </div>
                                         )}
-                                        {voucherDiscount > 0 && (
+                                        {voucherDiscount > 0 && selectedVoucher && (
                                             <div className="success-detail-item">
-                                                <span>Voucher:</span>
-                                                <span style={{ color: '#faad14' }}>{selectedVoucher.reward.rewardName} (-{formatCurrency(voucherDiscount)})</span>
+                                                <span>Voucher ({selectedVoucher.reward?.rewardName || 'Voucher'}):</span>
+                                                <span style={{ color: '#faad14' }}>-{formatCurrency(voucherDiscount)}</span>
                                             </div>
                                         )}
                                         <div className="success-detail-item" style={{ fontWeight: 'bold', color: '#ef4444' }}>
                                             <span>Tổng thanh toán:</span>
-                                            <strong>{formatCurrency(finalAfterProAndVou)}</strong>
+                                            <strong>{formatCurrency(totalFinal)}</strong>
                                         </div>
                                     </>
                                 );
@@ -1430,18 +1446,7 @@ export default function Booking() {
                                 </div>
                                 <div style={{ fontSize: '14px', marginBottom: '16px' }}>
                                     Số tiền cần cọc: <strong style={{ color: '#cf1322', fontSize: '18px' }}>
-                                        {(() => {
-                                            const appPromo = getApplicablePromotion();
-                                            const originalTotal = calculateTotal();
-                                            let promoDiscount = 0;
-                                            if (appPromo) {
-                                                promoDiscount = appPromo.discountType === 'PERCENTAGE' ? originalTotal * (appPromo.discountValue / 100) : appPromo.discountValue;
-                                                promoDiscount = Math.min(promoDiscount, originalTotal);
-                                            }
-                                            const totalAfterPromo = originalTotal - promoDiscount;
-                                            const depositAmount = totalAfterPromo * 0.3;
-                                            return depositAmount.toLocaleString();
-                                        })()} VND
+                                        {Number(createdBooking.billing.depositAmount).toLocaleString('vi-VN')} VND
                                     </strong>
                                 </div>
                                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
