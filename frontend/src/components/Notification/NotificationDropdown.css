@@ -266,6 +266,12 @@
     border: 2px solid #fa8c16;
 }
 
+.notif-type-badge.VOUCHER_EXCHANGED {
+    background-color: #fff7e6;
+    color: #874d00;
+    border: 2px solid #fa8c16;
+}
+
 .notif-type-badge.TIER_UPGRADE {
     background-color: #fffbe6;
     color: #7c5a00;

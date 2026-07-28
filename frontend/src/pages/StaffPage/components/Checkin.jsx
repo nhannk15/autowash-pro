@@ -57,7 +57,7 @@ export default function Checkin() {
             navigate('/staff/dashboard');
         } catch (error) {
             console.error('Failed to confirm booking', error);
-            message.error('Lỗi khi xác nhận check-in!');
+            message.error(error.response.data.message);
         }
     };
 

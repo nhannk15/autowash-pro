@@ -39,12 +39,13 @@ public class VoucherService {
     private final CodeGenerator codeGenerator;
     private final PointTransactionRepository pointTransactionRepository;
     private final VoucherMapper voucherMapper;
+    private final NotificationService notificationService;
 
     @Autowired
     public VoucherService(VoucherRepository voucherRepository, CustomerRepository customerRepository,
             RewardRepository rewardRepository, VoucherCodeGenerator voucherCodeGenerator,
             PointTransactionRepository pointTransactionRepository, VoucherMapper voucherMapper,
-            RewardService rewardService) {
+            RewardService rewardService, NotificationService notificationService) {
         this.voucherRepository = voucherRepository;
         this.customerRepository = customerRepository;
         this.rewardRepository = rewardRepository;
@@ -52,6 +53,7 @@ public class VoucherService {
         this.codeGenerator = voucherCodeGenerator;
         this.pointTransactionRepository = pointTransactionRepository;
         this.voucherMapper = voucherMapper;
+        this.notificationService = notificationService;
     }
 
     public VoucherResponse exchangeVoucherForCustomer(ExchangeVoucherRequest request) {
@@ -80,6 +82,8 @@ public class VoucherService {
 
         customer.setCurrentPoints(customer.getCurrentPoints() - reward.getPointCost());
         Customer savedCustomer = customerRepository.save(customer);
+
+        notificationService.createVoucherExchangedNotification(savedVoucher);
 
         PointTransaction pointTransaction = PointTransaction
                 .builder()
