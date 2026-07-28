@@ -108,6 +108,7 @@ public class VoucherService {
                     .expiresAt(voucher.getExpiresAt())
                     .reward(rewardResponse)
                     .status(voucher.getStatus())
+                    .discountValue(voucher.getDiscountValue())
                     .build();
             result.add(newVoucherResponse);
         }
