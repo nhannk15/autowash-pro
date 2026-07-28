@@ -161,10 +161,10 @@ public class EmailService {
 
         BigDecimal depositAmount = defaultZero(billing.getDepositAmount());
         BigDecimal remainingAmount = defaultZero(billing.getFinalAmount());
-        BigDecimal totalAfterDiscount = depositAmount.add(remainingAmount).max(BigDecimal.ZERO);
         String formattedOriginal = formatter.format(defaultZero(billing.getOriginalAmount()));
         String formattedDiscount = formatter.format(defaultZero(billing.getDiscountAmount()));
-        String formattedFinal = formatter.format(totalAfterDiscount);
+        String formattedDeposit = formatter.format(depositAmount);
+        String formattedFinal = formatter.format(remainingAmount.max(BigDecimal.ZERO));
 
         return """
                 <!DOCTYPE html>
@@ -236,6 +236,10 @@ public class EmailService {
                                         <td style="color:#555; font-size:14px; padding:6px 0;">Tổng giảm (khuyến mãi/voucher)</td>
                                         <td style="color:#e53935; font-size:14px; text-align:right;">- {totalDiscount}đ</td>
                                     </tr>
+                                    <tr>
+                                        <td style="color:#555; font-size:14px; padding:6px 0;">Tiền đặt cọc</td>
+                                        <td style="color:#e53935; font-size:14px; text-align:right;">- {depositAmount}đ</td>
+                                    </tr>
                                     <tr style="border-top:1px solid #eee;">
                                         <td style="color:#0d1b4b; font-size:16px; font-weight:bold; padding:10px 0 0;">Thành tiền</td>
                                         <td
@@ -284,6 +288,7 @@ public class EmailService {
                 .replace("{services}", services.toString())
                 .replace("{totalOriginal}", formattedOriginal)
                 .replace("{totalDiscount}", formattedDiscount)
+                .replace("{depositAmount}", formattedDeposit)
                 .replace("{totalFinal}", formattedFinal);
     }
 

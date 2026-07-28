@@ -1,5 +1,6 @@
 package com.autowashpro.backend.service;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
@@ -26,7 +27,7 @@ import com.autowashpro.backend.model.entity.WashBay;
 class EmailServiceTest {
 
     @Test
-    void bookingEmailUsesBillingTotalAfterVoucher() {
+    void bookingEmailSubtractsVoucherAndDepositFromFinalAmount() {
         EmailService emailService = new EmailService(null);
 
         Customer customer = new Customer();
@@ -77,7 +78,12 @@ class EmailServiceTest {
 
         assertTrue(html.contains("500.000đ"));
         assertTrue(html.contains("150.000đ"));
-        assertTrue(html.contains("350.000đ"));
+        assertTrue(html.contains("135.000đ"));
+        assertTrue(html.contains("215.000đ"));
+        assertFalse(html.contains("350.000đ"));
         assertTrue(html.contains("Tổng giảm (khuyến mãi/voucher)"));
+        assertTrue(html.contains("Tiền đặt cọc"));
+        assertTrue(html.indexOf("Tổng giảm (khuyến mãi/voucher)") < html.indexOf("Tiền đặt cọc"));
+        assertTrue(html.indexOf("Tiền đặt cọc") < html.indexOf("Thành tiền"));
     }
 }
