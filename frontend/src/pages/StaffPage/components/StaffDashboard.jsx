@@ -342,7 +342,7 @@ export default function StaffDashboard() {
             });
             bookingForm.resetFields();
 
-            const todayStr = new Date().toISOString().split('T')[0];
+            const todayStr = new Date().toLocaleDateString('sv-SE');
             const slotsRes = await getAvailableSlots(todayStr);
             const slotData = slotsRes.data || slotsRes;
             const slots = (slotData.timeSlotAvailabilityResponses || []).filter(s => s.available || s.isAvailable);
@@ -387,7 +387,7 @@ export default function StaffDashboard() {
                 return;
             }
 
-            const todayStr = new Date().toISOString().split('T')[0];
+            const todayStr = new Date().toLocaleDateString('sv-SE');
 
             await createBooking({
                 customerId: foundCustomer.customerId,

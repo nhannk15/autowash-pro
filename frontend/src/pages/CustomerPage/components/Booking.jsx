@@ -810,11 +810,11 @@ export default function Booking() {
                                                     setSelectedTimeSlotId(null);
                                                     setMaxUnlockedStep(3); // Reset step progress to Step 3 (chọn giờ)
                                                 }}
-                                                min={new Date().toISOString().split('T')[0]}
+                                                min={new Date().toLocaleDateString('sv-SE')}
                                                 max={(() => {
                                                     const maxDate = new Date();
                                                     maxDate.setDate(maxDate.getDate() + bookingWindowDays);
-                                                    return maxDate.toISOString().split('T')[0];
+                                                    return maxDate.toLocaleDateString('sv-SE');
                                                 })()}
                                             />
                                         </div>
