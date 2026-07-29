@@ -318,7 +318,7 @@ export default function Payment() {
                 {/* Header */}
                 <div className="payment-header">
                     <div>
-                        <Title level={2} className="payment-title">LỊCH SỬ THANH TOÁN</Title>
+                        <Title level={2} className="customer-payment-title" style={{ color: '#002b7f' }}>LỊCH SỬ THANH TOÁN</Title>
                         <Text type="secondary">Theo dõi hóa đơn, lịch sử giao dịch đặt cọc và thống kê chi tiêu dịch vụ của bạn.</Text>
                     </div>
                 </div>
