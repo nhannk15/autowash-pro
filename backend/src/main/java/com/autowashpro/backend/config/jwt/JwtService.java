@@ -25,7 +25,7 @@ public class JwtService {
 
     public String generateAccessToken(User user) throws KeyLengthException, JOSEException {
         Date issuedTime = new Date();
-        Date expiredTime = Date.from(issuedTime.toInstant().plus(15, ChronoUnit.MINUTES));
+        Date expiredTime = Date.from(issuedTime.toInstant().plus(40, ChronoUnit.MINUTES));
 
         /**
          * Generate JWT Header.
