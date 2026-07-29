@@ -5,6 +5,7 @@ import com.autowashpro.backend.repository.WashSessionRepository;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -179,7 +180,9 @@ public class BillingService {
             log.info("service {} has pointsMultiplier: {}", service.getServiceName(), service.getPointMultiplier());
             tempPointsChange = tempPointsChange.multiply(service.getPointMultiplier());
         }
-        Long pointsChange = tempPointsChange.divide(BigDecimal.valueOf(1000L)).longValue();
+        log.info("Rounding Check: {}", tempPointsChange.divide(BigDecimal.valueOf(1000L), 0, RoundingMode.FLOOR));
+        Long pointsChange = tempPointsChange.divide(BigDecimal.valueOf(1000L), 0, RoundingMode.FLOOR).longValue();
+
         log.info("pointsChange after getting services: {}", pointsChange);
 
         pointsChange = pointsChange * customerTier.getPointEarnRate().longValue();
@@ -324,7 +327,8 @@ public class BillingService {
             tempPointsChange = tempPointsChange.multiply(service.getPointMultiplier());
         }
         
-        Long pointsChange = billing.getFinalAmount().divide(BigDecimal.valueOf(1000L)).longValue();
+        log.info("Rounding Check: {}", tempPointsChange.divide(BigDecimal.valueOf(1000L), 0, RoundingMode.FLOOR));
+        Long pointsChange = tempPointsChange.divide(BigDecimal.valueOf(1000L), 0, RoundingMode.FLOOR).longValue();
 
         log.info("pointsChange after getting services: {}", pointsChange);
 

@@ -45,14 +45,27 @@ public class PointTransactionService {
         this.notificationService = notificationService;
     }
 
+    @Transactional
     public void evaluatePointTransactionExpiryDate() {
         LocalDate today = LocalDate.now();
         List<PointTransaction> pointTransactions = pointTransactionRepository.getExpiredAndEarnPointTransactions(today);
         for (PointTransaction pointTransaction : pointTransactions) {
-            pointTransaction.setTransactionType(TransactionType.EXPIRE);
-            pointTransaction.setDescription("Điểm Transaction tại ngày " + pointTransaction.getCreatedAt().toLocalDate() + " đã hết hạn.");
-            pointTransaction.setCreatedAt(LocalDateTime.now());
-            pointTransactionRepository.save(pointTransaction);
+
+            PointTransaction newPointTransaction = new PointTransaction();
+            newPointTransaction.setId(null);
+            newPointTransaction.setTransactionType(TransactionType.EXPIRE);
+            newPointTransaction.setDescription("Điểm thưởng từ lịch " + pointTransaction.getBilling().getBooking().getBookingCode() + " đã hết hạn.");
+            newPointTransaction.setCreatedAt(LocalDateTime.now());
+            newPointTransaction.setCustomer(pointTransaction.getCustomer());
+            newPointTransaction.setBilling(null);
+            newPointTransaction.setPointsChange(pointTransaction.getPointsChange());
+            newPointTransaction.setBalanceAfter(pointTransaction.getCustomer().getCurrentPoints() - pointTransaction.getPointsChange());
+            newPointTransaction.setExpiryDate(pointTransaction.getExpiryDate());
+
+            log.info("New new Point Transaction id: {}", newPointTransaction.getId());
+            pointTransactionRepository.save(newPointTransaction);
+
+            log.info("The code goes here...");
 
             Customer customer = pointTransaction.getCustomer();
             Long pointsChange = pointTransaction.getPointsChange();

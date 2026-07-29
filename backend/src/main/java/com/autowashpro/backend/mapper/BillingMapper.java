@@ -42,14 +42,30 @@ public interface BillingMapper {
     @Mapping(target = "totalAmount", source = "finalAmount")
     RecentTransactionItem toRecentTransactionItem(Billing billing);
 
+
     List<RecentTransactionItem> toRecentTransactionItems(List<Billing> billings);
 
     @Mapping(target = "day", expression = "java(toDate(billing))")
-    @Mapping(target = "revenue", source = "finalAmount")
+    @Mapping(target = "revenue", expression = "java(calculateTotalAmount(billing))")
     @Mapping(target = "totalOrders", ignore = true)
     RevenueDataResponse toRevenueDataResponse(Billing billing);
 
     List<RevenueDataResponse> toRevenueDataResponses(List<Billing> billings);
+
+    
+    default BigDecimal calculateTotalAmount(Billing billing) {
+        
+        PaymentStatus paymentStatus = billing.getPaymentStatus();
+        DepositStatus depositStatus = billing.getDepositStatus();
+        
+        if (paymentStatus.equals(PaymentStatus.PAID)) {
+            return billing.getDepositAmount().add(billing.getFinalAmount());
+        } else if (paymentStatus.equals(PaymentStatus.PENDING) && depositStatus.equals(DepositStatus.PAID)) {
+            return billing.getDepositAmount();
+        } else {
+            return BigDecimal.ZERO;
+        }
+    }
 
     BookingBillingResponse toBookingBillingResponse(Billing billing);
 

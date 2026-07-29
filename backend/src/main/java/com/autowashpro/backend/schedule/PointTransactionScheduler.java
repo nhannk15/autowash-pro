@@ -16,7 +16,7 @@ public class PointTransactionScheduler {
         this.pointTransactionService = pointTransactionService;
     }
 
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "0 0 1 * * *")
     public void evaluatePointTransaction() {
         pointTransactionService.evaluatePointTransactionExpiryDate();
     }
