@@ -249,12 +249,41 @@ public class EmailService {
                                 </table>
                             </div>
 
-                            <!-- Note -->
+                            <!-- Note & Policy Accordion -->
                             <div style="border-left:4px solid #0d1b4b; padding:10px 15px; margin:20px 0; background:#f9f9ff;">
-                                <p style="color:#555; font-size:14px; margin:0; line-height:1.8;">
-                                    📌 Vui lòng có mặt trước <strong>10 phút</strong>.<br>
-                                    ❌ Hủy lịch trước <strong>1 ngày</strong> để không bị tính phí.
+                                <p style="color:#555; font-size:14px; margin:0 0 10px 0; line-height:1.8;">
+                                    📌 Vui lòng có mặt trước <strong>10 phút</strong>.
                                 </p>
+                                <details style="color:#555; font-size:13px; margin-top:5px;">
+                                    <summary style="color:#0d1b4b; font-weight:bold; cursor:pointer; padding:2px 0;">
+                                        ℹ️ Xem Chính sách Hủy lịch &amp; Hoàn cọc
+                                    </summary>
+                                    <div style="background:#ffffff; padding:10px; border-radius:6px; margin-top:8px; border:1px solid #e0e4f0;">
+                                        <p style="margin:0 0 8px 0; font-size:12px; color:#666;">
+                                            Tỷ lệ hoàn cọc phụ thuộc vào hạng thành viên và thời gian hủy trước:
+                                        </p>
+                                        <table style="width:100%; border-collapse:collapse; font-size:12px; text-align:left;">
+                                            <thead>
+                                                <tr style="border-bottom:1px solid #ddd; color:#0d1b4b;">
+                                                    <th style="padding:4px;">Hạng thành viên</th>
+                                                    <th style="padding:4px;">Hủy trước</th>
+                                                    <th style="padding:4px;">Hoàn cọc</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr><td style="padding:4px;">Đồng (Bronze)</td><td style="padding:4px;">36 giờ</td><td style="padding:4px;">50%</td></tr>
+                                                <tr><td style="padding:4px;">Bạc (Silver)</td><td style="padding:4px;">24 giờ</td><td style="padding:4px;">50%</td></tr>
+                                                <tr><td style="padding:4px;">Vàng (Gold)</td><td style="padding:4px;">24 giờ</td><td style="padding:4px;">70%</td></tr>
+                                                <tr><td style="padding:4px;">Bạch Kim (Platinum)</td><td style="padding:4px;">12 giờ</td><td style="padding:4px;">80%</td></tr>
+                                            </tbody>
+                                        </table>
+                                        <div style="margin-top:10px; padding-top:8px; border-top:1px dashed #e0e4f0; font-size:11px; color:#666; line-height:1.5;">
+                                            <strong style="color:#d32f2f;">* Lưu ý quan trọng:</strong><br>
+                                            • Tiền hoàn cọc sẽ được hệ thống quy đổi thành <strong>voucher</strong> tương ứng để sử dụng cho các lần đặt dịch vụ sau.<br>
+                                            • Các trường hợp hủy muộn hơn thời gian quy định ở trên sẽ <strong>không được hoàn cọc (0%)</strong>.
+                                        </div>
+                                    </div>
+                                </details>
                             </div>
 
                             <!-- QR Code -->
@@ -407,13 +436,42 @@ public class EmailService {
                                 <p style="color:#999; font-size:12px; margin:12px 0 0;">Mã booking: <strong style="color:#0d1b4b;">#{bookingCode}</strong></p>
                             </div>
 
-                            <!-- Note -->
+                            <!-- Note & Policy Accordion -->
                             <div style="border-left:4px solid #0d1b4b; padding:10px 15px; margin:20px 0; background:#f9f9ff;">
-                                <p style="color:#555; font-size:14px; margin:0; line-height:1.8;">
+                                <p style="color:#555; font-size:14px; margin:0 0 10px 0; line-height:1.8;">
                                     📌 Vui lòng có mặt trước <strong>10 phút</strong>.<br>
-                                    ❌ Hủy lịch trước <strong>1 ngày</strong> để không bị tính phí.<br>
                                     📞 Hotline: <strong>0945692584</strong> nếu cần hỗ trợ.
                                 </p>
+                                <details style="color:#555; font-size:13px; margin-top:5px;">
+                                    <summary style="color:#0d1b4b; font-weight:bold; cursor:pointer; padding:2px 0;">
+                                        ℹ️ Xem Chính sách Hủy lịch &amp; Hoàn cọc
+                                    </summary>
+                                    <div style="background:#ffffff; padding:10px; border-radius:6px; margin-top:8px; border:1px solid #e0e4f0;">
+                                        <p style="margin:0 0 8px 0; font-size:12px; color:#666;">
+                                            Tỷ lệ hoàn cọc phụ thuộc vào hạng thành viên và thời gian hủy trước:
+                                        </p>
+                                        <table style="width:100%; border-collapse:collapse; font-size:12px; text-align:left;">
+                                            <thead>
+                                                <tr style="border-bottom:1px solid #ddd; color:#0d1b4b;">
+                                                    <th style="padding:4px;">Hạng thành viên</th>
+                                                    <th style="padding:4px;">Hủy trước</th>
+                                                    <th style="padding:4px;">Hoàn cọc</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr><td style="padding:4px;">Đồng (Bronze)</td><td style="padding:4px;">36 giờ</td><td style="padding:4px;">50%</td></tr>
+                                                <tr><td style="padding:4px;">Bạc (Silver)</td><td style="padding:4px;">24 giờ</td><td style="padding:4px;">50%</td></tr>
+                                                <tr><td style="padding:4px;">Vàng (Gold)</td><td style="padding:4px;">24 giờ</td><td style="padding:4px;">70%</td></tr>
+                                                <tr><td style="padding:4px;">Bạch Kim (Platinum)</td><td style="padding:4px;">12 giờ</td><td style="padding:4px;">80%</td></tr>
+                                            </tbody>
+                                        </table>
+                                        <div style="margin-top:10px; padding-top:8px; border-top:1px dashed #e0e4f0; font-size:11px; color:#666; line-height:1.5;">
+                                            <strong style="color:#d32f2f;">* Lưu ý quan trọng:</strong><br>
+                                            • Tiền hoàn cọc sẽ được hệ thống quy đổi thành <strong>voucher</strong> tương ứng để sử dụng cho các lần đặt dịch vụ sau.<br>
+                                            • Các trường hợp hủy muộn hơn thời gian quy định ở trên sẽ <strong>không được hoàn cọc (0%)</strong>.
+                                        </div>
+                                    </div>
+                                </details>
                             </div>
                         </div>
 

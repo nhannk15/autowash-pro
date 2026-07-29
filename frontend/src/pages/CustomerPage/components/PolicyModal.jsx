@@ -58,7 +58,7 @@ const PolicyModal = ({ isOpen, onClose }) => {
                                         <td>70%</td>
                                     </tr>
                                     <tr>
-                                        <td>Kim Cương (Diamond)</td>
+                                        <td>Bạch Kim (Platinum)</td>
                                         <td>12 giờ</td>
                                         <td>80%</td>
                                     </tr>
