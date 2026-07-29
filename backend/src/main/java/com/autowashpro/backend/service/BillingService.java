@@ -100,12 +100,12 @@ public class BillingService {
         BigDecimal depositAmount;
         DepositStatus depositStatus;
         if (walkIn) {
-            // Khách vãng lai: không cần đặt cọc
+            // --- Walk-in: No Deposit
             depositAmount = BigDecimal.ZERO;
             depositStatus = DepositStatus.PAID;
             log.info("createPendingBilling() - walkIn=true, skipping deposit");
         } else {
-            // Khách đặt lịch online: đặt cọc 30%
+            // --- Online Booking: 30% Deposit
             log.info("createPendingBilling() - finalAmount before deposit: {}", finalAmount);
             depositAmount = finalAmount.multiply(DEPOSIT_PERCENTAGE).divide(new BigDecimal(100L));
             log.info("createPendingBilling() - depositAmount: {}", depositAmount);

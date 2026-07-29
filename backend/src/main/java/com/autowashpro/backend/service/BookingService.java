@@ -607,6 +607,7 @@ public class BookingService {
                     .expiresAt(LocalDateTime.now().plusDays(customReward.getValidityDays()))
                     .build();
             voucherRepository.save(newVoucher);
+            notificationService.createVoucherExchangedNotification(newVoucher);
             log.info("cancelCustomerBooking() - Voucher exchanged!...");
             log.info("cancelCustomerBooking() - Sorry, we are testing...");
         }
@@ -703,8 +704,8 @@ public class BookingService {
         int slotsNeeded = (int) Math.ceil((double) totalDuration / SLOT_DURATION);
         log.info("createBooking() - slotsNeeded: {}", slotsNeeded);
 
-        checkVehicleSchedulingConflict(startTimeSlot.getStartTime(), createBookingRequest.getVehicleId(), slotsNeeded,
-                bookingDay);
+        // checkVehicleSchedulingConflict(startTimeSlot.getStartTime(), createBookingRequest.getVehicleId(), slotsNeeded,
+        //         bookingDay);
 
         /**
          * Step 3. Get all the succcessive/consecutive slots start from the selected
@@ -737,6 +738,9 @@ public class BookingService {
         if (consecutiveSlots.size() < slotsNeeded) {
             throw new SlotInavailabilityException("Không đủ slot để thực hiện các dịch vụ!");
         }
+
+        checkVehicleSchedulingConflict(startTimeSlot.getStartTime(), createBookingRequest.getVehicleId(), slotsNeeded,
+                bookingDay);
 
         /**
          * Step 4. Check if the consecutive slots are available.
@@ -984,7 +988,7 @@ public class BookingService {
             List<AvailableSlot> consecutiveSlots = availableSlotRepository
                     .findAllBookedSlotsForCheckingVehicleConfliction(bookingDate, startTime, washBay.getId(),
                             PageRequest.of(0, slotsNeed));
-            log.info("checkVehicleSchedulingConflict() - consecutiveSlots of washBay {} is {}}", washBay.getId(),
+            log.info("checkVehicleSchedulingConflict() - consecutiveSlots of washBay {} is {}", washBay.getId(),
                     consecutiveSlots.size());
             if (consecutiveSlots.isEmpty()) {
                 return;
