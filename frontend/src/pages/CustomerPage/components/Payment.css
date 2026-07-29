@@ -7,11 +7,12 @@
     margin-bottom: 24px;
 }
 
-.payment-title {
-    color: #0d1b4b !important;
+.customer-payment-title {
+    color: #002b7f !important;
     font-weight: 800 !important;
     letter-spacing: -0.02em;
     margin-bottom: 4px !important;
+    text-transform: uppercase;
 }
 
 /* Stats Cards */

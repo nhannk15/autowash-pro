@@ -1,8 +1,6 @@
 .mycars-container {
     padding: 24px;
-    max-width: 1000px;
     width: 100%;
-    margin: 0 auto;
 }
 
 .mycars-header {
@@ -15,10 +13,11 @@
 .mycars-title {
     font-size: 26px;
     font-weight: 800;
-    color: #002b7f;
+    color: #002b7f !important;
     margin: 0;
     font-family: system-ui, -apple-system, sans-serif;
     letter-spacing: -0.5px;
+    text-transform: uppercase;
 }
 
 .mycars-subtitle {

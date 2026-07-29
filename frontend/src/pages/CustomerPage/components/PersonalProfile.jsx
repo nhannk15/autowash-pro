@@ -105,7 +105,7 @@ export default function PersonalProfile() {
 
     return (
         <div className="profile-container">
-            <h1 className="profile-title">QUẢN LÝ HỒ SƠ</h1>
+            <h1 className="profile-title" style={{ color: '#002b7f' }}>QUẢN LÝ HỒ SƠ</h1>
             <p className="profile-subtitle">Thông tin tài khoản của bạn</p>
             
             <div className="profile-info-card">

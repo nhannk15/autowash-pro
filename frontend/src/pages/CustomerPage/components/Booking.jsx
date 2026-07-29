@@ -1388,7 +1388,7 @@ export default function Booking() {
                                 // --- Voucher: server-side total discount minus client-side promo ---
                                 let voucherDiscount = 0;
                                 let totalFinal;
-                                
+
                                 if (bill) {
                                     const serverTotalDiscount = Number(bill.discountAmount) || 0;
                                     voucherDiscount = Math.max(0, serverTotalDiscount - promoDiscount);

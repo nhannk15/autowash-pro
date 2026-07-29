@@ -561,7 +561,7 @@ export default function Overview() {
         <div className="overview-container">
             {/* Tiêu đề chào mừng */}
             <div className="welcome-banner">
-                <Title level={2} className="welcome-title">Xin chào, {user?.fullname || 'Khách hàng'} 👋</Title>
+                <Title level={2} className="welcome-title" style={{ color: '#002b7f' }}>XIN CHÀO, {(user?.fullname || 'Khách hàng').toUpperCase()} 👋</Title>
                 <Text type="secondary" className="welcome-subtitle">Chào mừng bạn quay trở lại. Hãy quản lý lịch đặt và xe của bạn tại đây.</Text>
             </div>
 
