@@ -1,6 +1,7 @@
 package com.autowashpro.backend.model.dto;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -40,6 +41,8 @@ public class BookingResponse {
 
     private StaffInfoDTO staffInfoDTO;
     private String staffNotes;
+
+    private LocalTime checkInTime;
 
 
     

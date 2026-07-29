@@ -64,6 +64,7 @@ public interface BookingMapper {
     @Mapping(target = "washSessionStatus", source = "washSessions", qualifiedByName = "toWashSessionStatus")
     @Mapping(target = "staffInfoDTO", source = "washSessions", qualifiedByName = "toStaffInfoDTO")
     @Mapping(target = "staffNotes", source = "washSessions", qualifiedByName = "toStaffNotes")
+    @Mapping(target = "checkInTime", source = "washSessions", qualifiedByName = "toCheckInTime")
     BookingResponse toBookingResponse(Booking booking);
 
     @Named("toStaffInfoDTO")
@@ -71,6 +72,16 @@ public interface BookingMapper {
         WashSession washSession = washSessions.getFirst();
         if (washSession.getStaff() != null) {
             return washSession.getStaff();
+        } else {
+            return null;
+        }
+    }
+
+    @Named("toCheckInTime")
+    default LocalTime toCheckInTime(List<WashSession> washSessions) {
+        WashSession washSession = washSessions.getFirst();
+        if (washSession.getStaff() != null) {
+            return washSession.getStartTime().toLocalTime();
         } else {
             return null;
         }
