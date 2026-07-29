@@ -208,7 +208,7 @@ public interface AvailableSlotRepository extends JpaRepository<AvailableSlot, Lo
             WHERE
                 washBay.status = 'ACTIVE'
                 AND washBay.id = :washBayId
-                AND availableSlot.booking_id IS NOT NULL
+                
                 AND
             		(
             			(timeSlot.start_time >= :startTime AND availableSlot.date = :date)
@@ -226,4 +226,5 @@ public interface AvailableSlotRepository extends JpaRepository<AvailableSlot, Lo
             """)
     List<AvailableSlot> findByIdAndBookingdate(@Param("timeSlotId") Long timeSlotId,
             @Param("bookingDate") LocalDate bookingDate);
+    // AND availableSlot.booking_id IS NOT NULL
 }
