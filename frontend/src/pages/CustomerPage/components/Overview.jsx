@@ -194,6 +194,20 @@ export default function Overview() {
                 el.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
             setSearchParams({}, { replace: true });
+        } else if (action === 'vouchers') {
+            if (!loading) {
+                (async () => {
+                    try {
+                        const data = await getVoucher();
+                        setMyVouchers(data || []);
+                        setIsMyVoucherModalOpen(true);
+                    } catch (error) {
+                        message.error("Không thể tải danh sách voucher!");
+                    } finally {
+                        setSearchParams({}, { replace: true });
+                    }
+                })();
+            }
         }
     }, [searchParams, loading, setSearchParams]);
 
