@@ -131,6 +131,20 @@ public class NotificationService {
         notificationRepository.save(notification);
     }
 
+    @Transactional
+    public void createBookingCancelledNotification(Booking booking) {
+        Notification notification = Notification
+                .builder()
+                .customer(booking.getCustomer())
+                .notificationType(NotificationType.BOOKING_CANCELLED)
+                .title("Hủy lịch")
+                .body("Lịch hẹn " + booking.getBookingCode() + " vừa được hủy")
+                .refId(booking.getId())
+                .refType("BOOKING_CANCELLED")
+                .build();
+        notificationRepository.save(notification);
+    }
+
     @Transactional(readOnly = true)
     public List<NotificationResponse> getCustomerAllNotifications(String email) {
         Customer customer = customerRepository.findByEmail(email)

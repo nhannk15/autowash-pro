@@ -284,6 +284,12 @@
     border: 2px solid #ff4d4f;
 }
 
+.notif-type-badge.BOOKING_CANCELLED {
+    background-color: #fff1f0;
+    color: #a8071a;
+    border: 2px solid #ff4d4f;
+}
+
 .notif-type-badge.POINTS_EARN {
     background-color: #e6f4ff;
     color: #003a8c;
