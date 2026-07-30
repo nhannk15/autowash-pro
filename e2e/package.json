@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "e2e:env:up": "docker compose -f ../docker-compose.e2e.yml up -d --build --wait",
+    "e2e:backend:package": "mvn --batch-mode -f ../backend/pom.xml package -DskipTests",
+    "e2e:env:up": "npm run e2e:backend:package && docker compose -f ../docker-compose.e2e.yml up -d --build --wait --wait-timeout 300",
     "e2e:env:down": "docker compose -f ../docker-compose.e2e.yml down -v",
     "infra:up": "npm run e2e:env:up",
     "infra:down": "docker compose -f ../docker-compose.e2e.yml down",

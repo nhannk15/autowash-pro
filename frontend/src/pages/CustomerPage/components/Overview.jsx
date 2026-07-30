@@ -194,6 +194,20 @@ export default function Overview() {
                 el.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
             setSearchParams({}, { replace: true });
+        } else if (action === 'vouchers') {
+            if (!loading) {
+                (async () => {
+                    try {
+                        const data = await getVoucher();
+                        setMyVouchers(data || []);
+                        setIsMyVoucherModalOpen(true);
+                    } catch (error) {
+                        message.error("Không thể tải danh sách voucher!");
+                    } finally {
+                        setSearchParams({}, { replace: true });
+                    }
+                })();
+            }
         }
     }, [searchParams, loading, setSearchParams]);
 
@@ -547,7 +561,7 @@ export default function Overview() {
         <div className="overview-container">
             {/* Tiêu đề chào mừng */}
             <div className="welcome-banner">
-                <Title level={2} className="welcome-title">Xin chào, {user?.fullname || 'Khách hàng'} 👋</Title>
+                <Title level={2} className="welcome-title" style={{ color: '#002b7f' }}>XIN CHÀO, {(user?.fullname || 'Khách hàng').toUpperCase()} 👋</Title>
                 <Text type="secondary" className="welcome-subtitle">Chào mừng bạn quay trở lại. Hãy quản lý lịch đặt và xe của bạn tại đây.</Text>
             </div>
 
@@ -851,7 +865,7 @@ export default function Overview() {
                         columns={columns}
                         dataSource={recentActivities}
                         rowKey={(record, index) => record.createdAt + index}
-                        pagination={{ pageSize: 5 }}
+                        pagination={{ pageSize: 4 }}
                         className="custom-table"
                     />
                 </Card>
@@ -873,7 +887,7 @@ export default function Overview() {
                     columns={upcomingTableColumns}
                     dataSource={upcomingBookings}
                     rowKey="id"
-                    pagination={{ pageSize: 5 }}
+                    pagination={{ pageSize: 4 }}
                     className="custom-table"
                     style={{ marginTop: '16px' }}
                     locale={{ emptyText: <Empty description="Bạn không có lịch đặt sắp tới" /> }}
@@ -891,7 +905,7 @@ export default function Overview() {
                     columns={pendingTableColumns}
                     dataSource={depositPending}
                     rowKey="id"
-                    pagination={{ pageSize: 5 }}
+                    pagination={{ pageSize: 4 }}
                     className="custom-table"
                     style={{ marginTop: '16px' }}
                     locale={{ emptyText: <Empty description="Bạn không có lịch chờ cọc" /> }}
@@ -903,11 +917,12 @@ export default function Overview() {
                 onCancel={() => setIsRewardModalOpen(false)}
                 footer={null}
                 width={800}
+                centered
             >
                 <Table
                     dataSource={rewards}
                     rowKey="id"
-                    pagination={{ pageSize: 5 }}
+                    pagination={{ pageSize: 4 }}
                     style={{ marginTop: '16px' }}
                     className="custom-table"
                     columns={[
@@ -951,11 +966,12 @@ export default function Overview() {
                 onCancel={() => setIsMyVoucherModalOpen(false)}
                 footer={null}
                 width={800}
+                centered
             >
                 <Table
                     dataSource={myVouchers}
                     rowKey="voucherCode"
-                    pagination={{ pageSize: 5 }}
+                    pagination={{ pageSize: 4 }}
                     style={{ marginTop: '16px' }}
                     className="custom-table"
                     columns={[
@@ -969,7 +985,19 @@ export default function Overview() {
                             title: 'TÊN PHẦN THƯỞNG',
                             dataIndex: ['reward', 'rewardName'],
                             key: 'rewardName',
-                            render: (text) => <Text strong>{text}</Text>
+                            render: (text, record) => {
+                                const discountVal = record.discountValue != null ? record.discountValue : record.reward?.discountValue;
+                                let discountText = "";
+                                if (record.reward?.id === 4 && discountVal > 0) {
+                                    discountText = " (gi\u00e1 tr\u1ecb: " + Number(discountVal).toLocaleString('vi-VN') + "\u0111)";
+                                }
+                                return (
+                                    <span>
+                                        <Text strong>{text}</Text>
+                                        {discountText && <Text type="warning" style={{ marginLeft: 8 }}>{discountText}</Text>}
+                                    </span>
+                                );
+                            }
                         },
                         {
                             title: 'MÔ TẢ',

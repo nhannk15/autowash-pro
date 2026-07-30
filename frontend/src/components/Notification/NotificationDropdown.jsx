@@ -23,6 +23,8 @@ const TYPE_LABEL = {
     POINTS_EARN:       'Điểm +',
     POINTS_EXPIRY:     'HH điểm',
     POINTS_ADJUST:     'ĐC điểm',
+    VOUCHER_EXCHANGED: '+Voucher',
+    BOOKING_CANCELLED: 'Hủy Lịch'
 };
 
 /**
@@ -78,11 +80,13 @@ function TypeBadge({ type }) {
 const NOTIF_ACTION_MAP = {
     BOOKING_CONFIRMED: '/ca-nhan/tong-quan?action=bookings',
     BOOKING_REMINDER:  '/ca-nhan/tong-quan?action=bookings',
+    BOOKING_CANCELLED: '/ca-nhan/tong-quan?action=bookings',
     POINTS_EARN:       '/ca-nhan/tong-quan?action=points',
     POINTS_EXPIRY:     '/ca-nhan/tong-quan?action=points',
     POINTS_ADJUST:     '/ca-nhan/tong-quan?action=points',
     TIER_UPGRADE:      '/ca-nhan/tong-quan',
     TIER_DOWNGRADE:    '/ca-nhan/tong-quan',
+    VOUCHER_EXCHANGED: '/ca-nhan/tong-quan?action=vouchers',
 };
 
 function NotificationItem({ notification, onRead, onClose }) {

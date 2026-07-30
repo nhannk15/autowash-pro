@@ -1,5 +1,6 @@
 package com.autowashpro.backend.model.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import com.autowashpro.backend.model.enums.VoucherStatus;
@@ -21,5 +22,6 @@ public class CustomerVoucherResponse {
     private LocalDateTime expiresAt;
     private RewardResponse reward;
     private VoucherStatus status;
+    private BigDecimal discountValue;
 
 }

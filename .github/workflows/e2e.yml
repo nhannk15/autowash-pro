@@ -32,9 +32,9 @@ jobs:
             frontend/package-lock.json
             e2e/package-lock.json
 
-      - name: Backend tests
+      - name: Backend tests and package
         working-directory: backend
-        run: mvn --batch-mode test
+        run: mvn --batch-mode package
 
       - name: Frontend lint and build
         working-directory: frontend
@@ -52,7 +52,7 @@ jobs:
       - name: Start isolated E2E backend, MariaDB, and Mailpit
         run: |
           docker compose -f docker-compose.e2e.yml down -v
-          docker compose -f docker-compose.e2e.yml up -d --build --wait
+          docker compose -f docker-compose.e2e.yml up -d --build --wait --wait-timeout 300
 
       - name: Run P0 suite on pull requests
         if: github.event_name == 'pull_request'

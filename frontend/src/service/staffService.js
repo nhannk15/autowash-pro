@@ -74,6 +74,14 @@ export async function confirmBookingV3(bookingId, staffId, staffNote) {
     return response.data;
 }
 
+export async function confirmBookingV4(bookingId, staffNote) {
+    const response = await axios.post(`${API}/api/staff/v4/wash-sessions/start`,
+        { bookingId, staffNote },
+        { withCredentials: true }
+    );
+    return response.data;
+}
+
 export async function getWashStaffsForBooking(slotDate, startTime) {
     // B1: Lấy danh sách slots theo ngày để tìm timeSlotId tương ứng với startTime của booking
     const slotsRes = await axios.get(`${API}/api/bookings/available-slots`, {

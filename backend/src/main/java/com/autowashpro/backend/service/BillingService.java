@@ -5,6 +5,7 @@ import com.autowashpro.backend.repository.WashSessionRepository;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -12,8 +13,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.autowashpro.backend.event.BookingConfirmationEmailRequestedEvent;
 import com.autowashpro.backend.exception.BillingNotFoundException;
 import com.autowashpro.backend.exception.BookingNotFoundException;
 import com.autowashpro.backend.exception.UserNotFoundException;
@@ -62,13 +65,14 @@ public class BillingService {
     private final PointTransactionRepository pointTransactionRepository;
     private final PromotionService promotionService;
     private final NotificationService notificationService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Autowired
     public BillingService(BillingRepository billingRepository, BookingRepository bookingRepository,
             BillingMapper billingMapper, WashSessionRepository washSessionRepository,
             VoucherRepository voucherRepository, CustomerRepository customerRepository, VoucherMapper voucherMapper,
             PointTransactionRepository pointTransactionRepository, PromotionService promotionService,
-            NotificationService notificationService) {
+            NotificationService notificationService, ApplicationEventPublisher eventPublisher) {
         this.billingRepository = billingRepository;
         this.bookingRepository = bookingRepository;
         this.billingMapper = billingMapper;
@@ -79,6 +83,7 @@ public class BillingService {
         this.pointTransactionRepository = pointTransactionRepository;
         this.promotionService = promotionService;
         this.notificationService = notificationService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -96,12 +101,12 @@ public class BillingService {
         BigDecimal depositAmount;
         DepositStatus depositStatus;
         if (walkIn) {
-            // Khách vãng lai: không cần đặt cọc
+            // --- Walk-in: No Deposit
             depositAmount = BigDecimal.ZERO;
             depositStatus = DepositStatus.PAID;
             log.info("createPendingBilling() - walkIn=true, skipping deposit");
         } else {
-            // Khách đặt lịch online: đặt cọc 30%
+            // --- Online Booking: 30% Deposit
             log.info("createPendingBilling() - finalAmount before deposit: {}", finalAmount);
             depositAmount = finalAmount.multiply(DEPOSIT_PERCENTAGE).divide(new BigDecimal(100L));
             log.info("createPendingBilling() - depositAmount: {}", depositAmount);
@@ -175,7 +180,9 @@ public class BillingService {
             log.info("service {} has pointsMultiplier: {}", service.getServiceName(), service.getPointMultiplier());
             tempPointsChange = tempPointsChange.multiply(service.getPointMultiplier());
         }
-        Long pointsChange = tempPointsChange.divide(BigDecimal.valueOf(1000L)).longValue();
+        log.info("Rounding Check: {}", tempPointsChange.divide(BigDecimal.valueOf(1000L), 0, RoundingMode.FLOOR));
+        Long pointsChange = tempPointsChange.divide(BigDecimal.valueOf(1000L), 0, RoundingMode.FLOOR).longValue();
+
         log.info("pointsChange after getting services: {}", pointsChange);
 
         pointsChange = pointsChange * customerTier.getPointEarnRate().longValue();
@@ -288,6 +295,7 @@ public class BillingService {
             savedBooking.setStatus(BookingStatus.CONFIRMED);
 
             notificationService.createBookingConfirmedNotification(savedBooking);
+            eventPublisher.publishEvent(new BookingConfirmationEmailRequestedEvent(savedBooking.getId()));
             return billingMapper.toBillingResponse(savedBilling);
         }
 
@@ -319,7 +327,8 @@ public class BillingService {
             tempPointsChange = tempPointsChange.multiply(service.getPointMultiplier());
         }
         
-        Long pointsChange = billing.getFinalAmount().divide(BigDecimal.valueOf(1000L)).longValue();
+        log.info("Rounding Check: {}", tempPointsChange.divide(BigDecimal.valueOf(1000L), 0, RoundingMode.FLOOR));
+        Long pointsChange = tempPointsChange.divide(BigDecimal.valueOf(1000L), 0, RoundingMode.FLOOR).longValue();
 
         log.info("pointsChange after getting services: {}", pointsChange);
 
@@ -364,6 +373,7 @@ public class BillingService {
         return billingMapper.toBillingResponses(customerBillings);
     }
 
+    @Transactional
     public BillingResponse completeBankingPaymentWhenVNPayProviderIsInvalidUsingBookingCode(String bookingCode) {
         Booking booking = bookingRepository.findByBookingCodeForInvalidVNPay(bookingCode)
                 .orElseThrow(() -> new BookingNotFoundException("Không tìm thấy lịch hẹn: " + bookingCode));
@@ -375,7 +385,6 @@ public class BillingService {
         }
     }
 
-    @Transactional
     private BillingResponse completeBankingPaymentWhenVNPayProviderIsInvalid(Long billingId) {
         Billing billing = billingRepository.findById(billingId)
                 .orElseThrow(() -> new BillingNotFoundException(
@@ -391,6 +400,7 @@ public class BillingService {
             savedBooking.setStatus(BookingStatus.CONFIRMED);
 
             notificationService.createBookingConfirmedNotification(savedBooking);
+            eventPublisher.publishEvent(new BookingConfirmationEmailRequestedEvent(savedBooking.getId()));
             return billingMapper.toBillingResponse(savedBilling);
         }
 

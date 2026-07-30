@@ -19,7 +19,7 @@ const PolicyModal = ({ isOpen, onClose }) => {
                             <li>Trung tâm có quyền từ chối phục vụ nếu tình trạng xe không đúng với thông tin đã đăng ký (ví dụ: xe chở hàng nguy hiểm, quá khổ...).</li>
                         </ul>
                     </section>
-                    
+
                     <section className="policy-section">
                         <h3>Điều 2: Thời gian chờ & Đi trễ</h3>
                         <ul>
@@ -30,14 +30,14 @@ const PolicyModal = ({ isOpen, onClose }) => {
 
                     <section className="policy-section highlight">
                         <h3>Điều 3: Chính sách Hủy lịch & Hoàn cọc</h3>
-                        <p style={{ color: '#555', marginBottom: '12px' }}>Khi khách hàng chủ động hủy lịch, tỷ lệ hoàn cọc sẽ phụ thuộc vào hạng thành viên và thời gian báo trước:</p>
-                        
+                        <p style={{ color: '#555', marginBottom: '12px' }}>Khi khách hàng chủ động hủy lịch, tỷ lệ hoàn cọc sẽ phụ thuộc vào hạng thành viên và thời gian hủy trước:</p>
+
                         <div className="policy-table-container">
                             <table className="policy-table">
                                 <thead>
                                     <tr>
                                         <th>Hạng thành viên</th>
-                                        <th>Báo trước (Tối thiểu)</th>
+                                        <th>Hủy trước (Tối thiểu)</th>
                                         <th>Tỷ lệ hoàn cọc</th>
                                     </tr>
                                 </thead>
@@ -58,7 +58,7 @@ const PolicyModal = ({ isOpen, onClose }) => {
                                         <td>70%</td>
                                     </tr>
                                     <tr>
-                                        <td>Kim Cương (Diamond)</td>
+                                        <td>Bạch Kim (Platinum)</td>
                                         <td>12 giờ</td>
                                         <td>80%</td>
                                     </tr>
@@ -73,7 +73,15 @@ const PolicyModal = ({ isOpen, onClose }) => {
                     </section>
 
                     <section className="policy-section">
-                        <h3>Điều 4: Chính sách đền bù từ phía Trung tâm</h3>
+                        <h3>Điều 4: Chính sách Đặt cọc & Áp dụng Voucher</h3>
+                        <ul>
+                            <li>Khi đặt lịch trực tuyến, quý khách bắt buộc phải thanh toán khoản đặt cọc tương đương <strong>30% tổng giá trị dịch vụ sau khuyến mãi</strong> để hệ thống giữ chỗ.</li>
+                            <li>Voucher giảm giá (bao gồm voucher hủy lịch) sẽ được áp dụng vào <strong>70% tổng giá trị dịch vụ còn lại</strong> (thanh toán tại trung tâm sau khi hoàn thành dịch vụ).</li>
+                        </ul>
+                    </section>
+
+                    <section className="policy-section">
+                        <h3>Điều 5: Chính sách đền bù từ phía Trung tâm</h3>
                         <ul>
                             <li>Trong trường hợp bất khả kháng trung tâm phải hủy lịch hẹn của quý khách, trung tâm sẽ hoàn 100% cọc (quy đổi thành voucher hoặc hoàn tiền trực tiếp tùy trường hợp) và tặng kèm ưu đãi cho lần đặt tiếp theo.</li>
                         </ul>

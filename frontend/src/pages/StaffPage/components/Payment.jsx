@@ -201,11 +201,11 @@ export default function StaffPayment() {
         });
     }
 
-    const checkinTime = billData.booking?.startTime
-        ? new Date(`1970-01-01T${billData.booking.startTime}Z`).toLocaleTimeString('vi-VN')
-        : billData.session?.startTime
-            ? new Date(billData.session.startTime).toLocaleString('vi-VN')
-            : (billData.checkinTime || 'N/A');
+    const checkinTime = billData.booking?.checkInTime
+        ? new Date(`1970-01-01T${billData.booking.checkInTime}`).toLocaleTimeString('vi-VN')
+        : billData.session?.checkInTime
+            ? new Date(billData.session.checkInTime).toLocaleString('vi-VN')
+            : (billData.checkInTime || 'N/A');
 
     const billId = billData.billingId || billData.id || null;
 

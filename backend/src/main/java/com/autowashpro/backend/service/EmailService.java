@@ -1,6 +1,8 @@
 package com.autowashpro.backend.service;
 
+import java.math.BigDecimal;
 import java.text.NumberFormat;
+import java.util.Comparator;
 import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,9 +11,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-import com.autowashpro.backend.model.dto.BookingDetailResponse;
-import com.autowashpro.backend.model.dto.CreateBookingResponse;
 import com.autowashpro.backend.model.entity.AvailableSlot;
+import com.autowashpro.backend.model.entity.Billing;
 import com.autowashpro.backend.model.entity.Booking;
 import com.autowashpro.backend.model.entity.BookingDetail;
 
@@ -105,7 +106,8 @@ public class EmailService {
                 .formatted(otp);
     }
 
-    public void sendBookingSuccessToEmail(String toEmail, String bookingCode, CreateBookingResponse bookingResponse, byte[] qrCodeImage) {
+    public void sendBookingSuccessToEmail(Booking booking, byte[] qrCodeImage) {
+        String toEmail = booking.getCustomer().getEmail();
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -115,7 +117,7 @@ public class EmailService {
             helper.setSubject("Đặt lịch thành công - AutoWash Pro");
 
             // Set HTML content TRƯỚC khi addInline
-            String htmlContent = buildBookingSuccessHtml(bookingResponse, bookingCode);
+            String htmlContent = buildBookingSuccessHtml(booking);
             helper.setText(htmlContent, true);
 
             // Nhúng QR Code inline vào email (phải gọi SAU setText)
@@ -129,14 +131,27 @@ public class EmailService {
         }
     }
 
-    private String buildBookingSuccessHtml(CreateBookingResponse bookingResponse, String bookingCode) {
+    String buildBookingSuccessHtml(Booking booking) {
 
         StringBuilder services = new StringBuilder("");
-        for (BookingDetailResponse bookingDetailResponse : bookingResponse.getBookingDetails()) {
+        for (BookingDetail bookingDetail : booking.getBookingDetails()) {
             if (!services.isEmpty()) {
                 services.append(" + ");
             }
-            services.append(bookingDetailResponse.getServiceName());
+            services.append(bookingDetail.getServicePrice().getService().getServiceName());
+        }
+
+        AvailableSlot firstSlot = booking.getAvailableSlots().stream()
+                .min(Comparator.comparing(AvailableSlot::getSlotDate)
+                        .thenComparing(slot -> slot.getTimeSlot().getStartTime()))
+                .orElseThrow(() -> new IllegalStateException("Booking không có khung giờ"));
+        AvailableSlot lastSlot = booking.getAvailableSlots().stream()
+                .max(Comparator.comparing(AvailableSlot::getSlotDate)
+                        .thenComparing(slot -> slot.getTimeSlot().getEndTime()))
+                .orElseThrow(() -> new IllegalStateException("Booking không có khung giờ"));
+        Billing billing = booking.getBilling();
+        if (billing == null) {
+            throw new IllegalStateException("Booking chưa có hóa đơn");
         }
 
         // Tạo formatter với locale Vietnam - Cách 1 (Java 19+)
@@ -144,9 +159,12 @@ public class EmailService {
         formatter.setMaximumFractionDigits(0);
         formatter.setMinimumFractionDigits(0);
 
-        String formattedOriginal = formatter.format(bookingResponse.getTotalOriginalPrice());
-        String formattedDiscount = formatter.format(bookingResponse.getTotalDiscount());
-        String formattedFinal = formatter.format(bookingResponse.getTotalFinalPrice());
+        BigDecimal depositAmount = defaultZero(billing.getDepositAmount());
+        BigDecimal remainingAmount = defaultZero(billing.getFinalAmount());
+        String formattedOriginal = formatter.format(defaultZero(billing.getOriginalAmount()));
+        String formattedDiscount = formatter.format(defaultZero(billing.getDiscountAmount()));
+        String formattedDeposit = formatter.format(depositAmount);
+        String formattedFinal = formatter.format(remainingAmount.max(BigDecimal.ZERO));
 
         return """
                 <!DOCTYPE html>
@@ -215,8 +233,12 @@ public class EmailService {
                                         <td style="color:#333; font-size:14px; text-align:right;">{totalOriginal}đ</td>
                                     </tr>
                                     <tr>
-                                        <td style="color:#555; font-size:14px; padding:6px 0;">Khuyến mãi</td>
+                                        <td style="color:#555; font-size:14px; padding:6px 0;">Tổng giảm (khuyến mãi/voucher)</td>
                                         <td style="color:#e53935; font-size:14px; text-align:right;">- {totalDiscount}đ</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="color:#555; font-size:14px; padding:6px 0;">Tiền đặt cọc</td>
+                                        <td style="color:#e53935; font-size:14px; text-align:right;">- {depositAmount}đ</td>
                                     </tr>
                                     <tr style="border-top:1px solid #eee;">
                                         <td style="color:#0d1b4b; font-size:16px; font-weight:bold; padding:10px 0 0;">Thành tiền</td>
@@ -227,12 +249,41 @@ public class EmailService {
                                 </table>
                             </div>
 
-                            <!-- Note -->
+                            <!-- Note & Policy Accordion -->
                             <div style="border-left:4px solid #0d1b4b; padding:10px 15px; margin:20px 0; background:#f9f9ff;">
-                                <p style="color:#555; font-size:14px; margin:0; line-height:1.8;">
-                                    📌 Vui lòng có mặt trước <strong>10 phút</strong>.<br>
-                                    ❌ Hủy lịch trước <strong>2 tiếng</strong> để không bị tính phí.
+                                <p style="color:#555; font-size:14px; margin:0 0 10px 0; line-height:1.8;">
+                                    📌 Vui lòng có mặt trước <strong>10 phút</strong>.
                                 </p>
+                                <details style="color:#555; font-size:13px; margin-top:5px;">
+                                    <summary style="color:#0d1b4b; font-weight:bold; cursor:pointer; padding:2px 0;">
+                                        ℹ️ Xem Chính sách Hủy lịch &amp; Hoàn cọc
+                                    </summary>
+                                    <div style="background:#ffffff; padding:10px; border-radius:6px; margin-top:8px; border:1px solid #e0e4f0;">
+                                        <p style="margin:0 0 8px 0; font-size:12px; color:#666;">
+                                            Tỷ lệ hoàn cọc phụ thuộc vào hạng thành viên và thời gian hủy trước:
+                                        </p>
+                                        <table style="width:100%; border-collapse:collapse; font-size:12px; text-align:left;">
+                                            <thead>
+                                                <tr style="border-bottom:1px solid #ddd; color:#0d1b4b;">
+                                                    <th style="padding:4px;">Hạng thành viên</th>
+                                                    <th style="padding:4px;">Hủy trước</th>
+                                                    <th style="padding:4px;">Hoàn cọc</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr><td style="padding:4px;">Đồng (Bronze)</td><td style="padding:4px;">36 giờ</td><td style="padding:4px;">50%</td></tr>
+                                                <tr><td style="padding:4px;">Bạc (Silver)</td><td style="padding:4px;">24 giờ</td><td style="padding:4px;">50%</td></tr>
+                                                <tr><td style="padding:4px;">Vàng (Gold)</td><td style="padding:4px;">24 giờ</td><td style="padding:4px;">70%</td></tr>
+                                                <tr><td style="padding:4px;">Bạch Kim (Platinum)</td><td style="padding:4px;">12 giờ</td><td style="padding:4px;">80%</td></tr>
+                                            </tbody>
+                                        </table>
+                                        <div style="margin-top:10px; padding-top:8px; border-top:1px dashed #e0e4f0; font-size:11px; color:#666; line-height:1.5;">
+                                            <strong style="color:#d32f2f;">* Lưu ý quan trọng:</strong><br>
+                                            • Tiền hoàn cọc sẽ được hệ thống quy đổi thành <strong>voucher</strong> tương ứng để sử dụng cho các lần đặt dịch vụ sau.<br>
+                                            • Các trường hợp hủy muộn hơn thời gian quy định ở trên sẽ <strong>không được hoàn cọc (0%)</strong>.
+                                        </div>
+                                    </div>
+                                </details>
                             </div>
 
                             <!-- QR Code -->
@@ -255,22 +306,28 @@ public class EmailService {
 
                 </html>
                 """
-                .replace("{customerName}", bookingResponse.getCustomerName())
-                .replace("{bookingCode}", bookingCode)
-                .replace("{bookingDate}", bookingResponse.getBookingDate().toString())
-                .replace("{startTime}", bookingResponse.getStartTime().toString())
-                .replace("{endTime}", bookingResponse.getEndTime().toString())
-                .replace("{bayName}", bookingResponse.getBayName())
-                .replace("{licensePlate}", bookingResponse.getVehicleLicensePlate())
-                .replace("{vehicleType}", bookingResponse.getVehicleTypeName())
+                .replace("{customerName}", booking.getCustomer().getFullName())
+                .replace("{bookingCode}", booking.getBookingCode())
+                .replace("{bookingDate}", firstSlot.getSlotDate().toString())
+                .replace("{startTime}", firstSlot.getTimeSlot().getStartTime().toString())
+                .replace("{endTime}", lastSlot.getTimeSlot().getEndTime().toString())
+                .replace("{bayName}", firstSlot.getWashBay().getName())
+                .replace("{licensePlate}", booking.getVehicle().getLicensePlate())
+                .replace("{vehicleType}", booking.getVehicle().getVehicleType().getTypeName())
                 .replace("{services}", services.toString())
                 .replace("{totalOriginal}", formattedOriginal)
                 .replace("{totalDiscount}", formattedDiscount)
+                .replace("{depositAmount}", formattedDeposit)
                 .replace("{totalFinal}", formattedFinal);
     }
 
+    private BigDecimal defaultZero(BigDecimal amount) {
+        return amount == null ? BigDecimal.ZERO : amount;
+    }
+
     /**
-     * Gửi email nhắc nhở booking cho khách 1 ngày trước lịch rửa xe, kèm QR check-in.
+     * Gửi email nhắc nhở booking cho khách 1 ngày trước lịch rửa xe, kèm QR
+     * check-in.
      */
     public void sendBookingReminderEmail(Booking booking, byte[] qrCodeImage) {
         try {
@@ -379,13 +436,42 @@ public class EmailService {
                                 <p style="color:#999; font-size:12px; margin:12px 0 0;">Mã booking: <strong style="color:#0d1b4b;">#{bookingCode}</strong></p>
                             </div>
 
-                            <!-- Note -->
+                            <!-- Note & Policy Accordion -->
                             <div style="border-left:4px solid #0d1b4b; padding:10px 15px; margin:20px 0; background:#f9f9ff;">
-                                <p style="color:#555; font-size:14px; margin:0; line-height:1.8;">
+                                <p style="color:#555; font-size:14px; margin:0 0 10px 0; line-height:1.8;">
                                     📌 Vui lòng có mặt trước <strong>10 phút</strong>.<br>
-                                    ❌ Hủy lịch trước <strong>2 tiếng</strong> để không bị tính phí.<br>
                                     📞 Hotline: <strong>0945692584</strong> nếu cần hỗ trợ.
                                 </p>
+                                <details style="color:#555; font-size:13px; margin-top:5px;">
+                                    <summary style="color:#0d1b4b; font-weight:bold; cursor:pointer; padding:2px 0;">
+                                        ℹ️ Xem Chính sách Hủy lịch &amp; Hoàn cọc
+                                    </summary>
+                                    <div style="background:#ffffff; padding:10px; border-radius:6px; margin-top:8px; border:1px solid #e0e4f0;">
+                                        <p style="margin:0 0 8px 0; font-size:12px; color:#666;">
+                                            Tỷ lệ hoàn cọc phụ thuộc vào hạng thành viên và thời gian hủy trước:
+                                        </p>
+                                        <table style="width:100%; border-collapse:collapse; font-size:12px; text-align:left;">
+                                            <thead>
+                                                <tr style="border-bottom:1px solid #ddd; color:#0d1b4b;">
+                                                    <th style="padding:4px;">Hạng thành viên</th>
+                                                    <th style="padding:4px;">Hủy trước</th>
+                                                    <th style="padding:4px;">Hoàn cọc</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr><td style="padding:4px;">Đồng (Bronze)</td><td style="padding:4px;">36 giờ</td><td style="padding:4px;">50%</td></tr>
+                                                <tr><td style="padding:4px;">Bạc (Silver)</td><td style="padding:4px;">24 giờ</td><td style="padding:4px;">50%</td></tr>
+                                                <tr><td style="padding:4px;">Vàng (Gold)</td><td style="padding:4px;">24 giờ</td><td style="padding:4px;">70%</td></tr>
+                                                <tr><td style="padding:4px;">Bạch Kim (Platinum)</td><td style="padding:4px;">12 giờ</td><td style="padding:4px;">80%</td></tr>
+                                            </tbody>
+                                        </table>
+                                        <div style="margin-top:10px; padding-top:8px; border-top:1px dashed #e0e4f0; font-size:11px; color:#666; line-height:1.5;">
+                                            <strong style="color:#d32f2f;">* Lưu ý quan trọng:</strong><br>
+                                            • Tiền hoàn cọc sẽ được hệ thống quy đổi thành <strong>voucher</strong> tương ứng để sử dụng cho các lần đặt dịch vụ sau.<br>
+                                            • Các trường hợp hủy muộn hơn thời gian quy định ở trên sẽ <strong>không được hoàn cọc (0%)</strong>.
+                                        </div>
+                                    </div>
+                                </details>
                             </div>
                         </div>
 
@@ -413,8 +499,11 @@ public class EmailService {
 
     /**
      * Gửi email chào mừng đăng ký tài khoản thành công.
-     * @param defaultPassword nếu != null thì hiển thị mật khẩu mặc định trong email (cho walk-in).
-     * nếu == null thì chỉ thông báo đăng ký thành công (cho đăng ký thường).
+     * 
+     * @param defaultPassword nếu != null thì hiển thị mật khẩu mặc định trong email
+     *                        (cho walk-in).
+     *                        nếu == null thì chỉ thông báo đăng ký thành công (cho
+     *                        đăng ký thường).
      */
     public void sendWelcomeEmail(String toEmail, String fullName, String defaultPassword) {
         try {
@@ -439,19 +528,19 @@ public class EmailService {
         String passwordSection = "";
         if (defaultPassword != null) {
             passwordSection = """
-                <tr>
-                <td style="padding: 16px 24px; background-color: #fff3e0; border-radius: 8px; margin: 16px 0;">
-                <p style="margin: 0; color: #e65100; font-weight: bold;">🔑 Thông tin đăng nhập của bạn:</p>
-                <p style="margin: 8px 0 0 0; color: #333;">
-                Email: <strong>%s</strong><br/>
-                Mật khẩu: <strong>%s</strong>
-                </p>
-                <p style="margin: 8px 0 0 0; color: #999; font-size: 12px;">
-                Vui lòng đổi mật khẩu sau khi đăng nhập lần đầu.
-                </p>
-                </td>
-                </tr>
-                """.formatted(fullName, defaultPassword);
+                    <tr>
+                    <td style="padding: 16px 24px; background-color: #fff3e0; border-radius: 8px; margin: 16px 0;">
+                    <p style="margin: 0; color: #e65100; font-weight: bold;">🔑 Thông tin đăng nhập của bạn:</p>
+                    <p style="margin: 8px 0 0 0; color: #333;">
+                    Email: <strong>%s</strong><br/>
+                    Mật khẩu: <strong>%s</strong>
+                    </p>
+                    <p style="margin: 8px 0 0 0; color: #999; font-size: 12px;">
+                    Vui lòng đổi mật khẩu sau khi đăng nhập lần đầu.
+                    </p>
+                    </td>
+                    </tr>
+                    """.formatted(fullName, defaultPassword);
         }
 
         return """
@@ -486,6 +575,7 @@ public class EmailService {
                 </table>
                 </body>
                 </html>
-                """.formatted(fullName, passwordSection);
+                """
+                .formatted(fullName, passwordSection);
     }
 }

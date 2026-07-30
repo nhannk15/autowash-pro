@@ -85,7 +85,7 @@ export default function Footer() {
                         <div className="footer__hours-list">
                             <div className="footer__hours-row">
                                 <span className="footer__hours-day">Thứ 2 – Thứ 6</span>
-                                <span className="footer__hours-time">07:00 – 21:00</span>
+                                <span className="footer__hours-time">07:00 – 17:00</span>
                             </div>
                             <div className="footer__hours-row">
                                 <span className="footer__hours-day">Thứ 7 – Chủ Nhật</span>

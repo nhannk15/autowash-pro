@@ -96,7 +96,7 @@ function transformBillings(rawList) {
                 depositAmount,
                 finalAmount,
                 discount: discountAmount,
-                status: billing.paymentStatus === 'PAID' ? 'SUCCESS' : 'CANCELLED',
+                status: billing.paymentStatus === 'PAID' ? 'SUCCESS' : (billing.paymentStatus === 'PENDING' ? 'PENDING' : 'CANCELLED'),
                 isForfeited,
                 quarter: month ? getQuarter(month) : null,
                 year,
@@ -138,9 +138,11 @@ export default function Payment() {
 
     useEffect(() => {
         let isMounted = true;
+        let isFirstLoad = true;
+
         async function fetchHistory() {
             try {
-                setLoading(true);
+                if (isFirstLoad) setLoading(true);
                 const raw = await getCustomerBillingHistory();
                 const transformed = transformBillings(raw);
                 if (isMounted) {
@@ -149,13 +151,22 @@ export default function Payment() {
                 }
             } catch (err) {
                 console.error('Payment history error:', err);
-                if (isMounted) setError('Không thể tải lịch sử thanh toán. Vui lòng thử lại.');
+                if (isMounted && isFirstLoad) setError('Không thể tải lịch sử thanh toán. Vui lòng thử lại.');
             } finally {
-                if (isMounted) setLoading(false);
+                if (isMounted) {
+                    setLoading(false);
+                    isFirstLoad = false;
+                }
             }
         }
+
         fetchHistory();
-        return () => { isMounted = false; };
+        const intervalId = setInterval(fetchHistory, 5000);
+
+        return () => {
+            isMounted = false;
+            clearInterval(intervalId);
+        };
     }, []);
 
     // Tổng tích lũy: bao gồm COMPLETED (SUCCESS) và cọc bị mất (FORFEITED)
@@ -241,7 +252,7 @@ export default function Payment() {
             key: 'amount',
             render: (amount, record) => (
                 <Space direction="vertical" size={0}>
-                    <Text strong style={{ color: record.status === 'CANCELLED' ? '#ef4444' : '#10b981' }}>
+                    <Text strong style={{ color: record.status === 'CANCELLED' ? '#ef4444' : (record.status === 'PENDING' ? '#faad14' : '#10b981') }}>
                         {formatCurrency(amount)}
                     </Text>
                     {record.discount > 0 && (
@@ -261,17 +272,27 @@ export default function Payment() {
             title: 'Trạng thái',
             dataIndex: 'status',
             key: 'status',
-            render: (status) => (
-                status === 'SUCCESS' ? (
-                    <Tag color="success" icon={<CheckCircleOutlined />} style={{ borderRadius: '12px', padding: '2px 10px', fontWeight: '500' }}>
-                        Thành công
-                    </Tag>
-                ) : (
-                    <Tag color="error" icon={<CloseCircleOutlined />} style={{ borderRadius: '12px', padding: '2px 10px', fontWeight: '500' }}>
-                        Bị hủy
-                    </Tag>
-                )
-            )
+            render: (status) => {
+                if (status === 'SUCCESS') {
+                    return (
+                        <Tag color="success" icon={<CheckCircleOutlined />} style={{ borderRadius: '12px', padding: '2px 10px', fontWeight: '500' }}>
+                            Thành công
+                        </Tag>
+                    );
+                } else if (status === 'PENDING') {
+                    return (
+                        <Tag color="warning" icon={<ClockCircleOutlined />} style={{ borderRadius: '12px', padding: '2px 10px', fontWeight: '500' }}>
+                            Chờ thanh toán
+                        </Tag>
+                    );
+                } else {
+                    return (
+                        <Tag color="error" icon={<CloseCircleOutlined />} style={{ borderRadius: '12px', padding: '2px 10px', fontWeight: '500' }}>
+                            Bị hủy
+                        </Tag>
+                    );
+                }
+            }
         }
     ];
 
@@ -297,7 +318,7 @@ export default function Payment() {
                 {/* Header */}
                 <div className="payment-header">
                     <div>
-                        <Title level={2} className="payment-title">LỊCH SỬ THANH TOÁN</Title>
+                        <Title level={2} className="customer-payment-title" style={{ color: '#002b7f' }}>LỊCH SỬ THANH TOÁN</Title>
                         <Text type="secondary">Theo dõi hóa đơn, lịch sử giao dịch đặt cọc và thống kê chi tiêu dịch vụ của bạn.</Text>
                     </div>
                 </div>
@@ -452,7 +473,7 @@ export default function Payment() {
                 styles={{ body: { padding: '16px 24px 24px' } }}
             >
                 {selectedRecord && (() => {
-                    const r = selectedRecord;
+                    const r = payments.find(p => p.bookingCode === selectedRecord?.bookingCode) || selectedRecord;
                     const sessionInfo = WASH_SESSION_LABEL[r.washSessionStatus] ?? { label: r.washSessionStatus ?? '—', color: 'default' };
 
                     // Ghép ngày + giờ để hiển thị
@@ -469,12 +490,22 @@ export default function Payment() {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
 
                             {/* TRẠNG THÁI - full width */}
-                            <div style={{ padding: '10px 16px', backgroundColor: r.status === 'SUCCESS' ? '#f0fdf4' : '#fff1f0', borderRadius: '10px', border: `1px solid ${r.status === 'SUCCESS' ? '#4ade80' : '#ffa39e'}` }}>
+                            <div style={{ 
+                                padding: '10px 16px', 
+                                backgroundColor: r.status === 'SUCCESS' ? '#f0fdf4' : (r.status === 'PENDING' ? '#fffbe6' : '#fff1f0'), 
+                                borderRadius: '10px', 
+                                border: `1px solid ${r.status === 'SUCCESS' ? '#4ade80' : (r.status === 'PENDING' ? '#ffe58f' : '#ffa39e')}` 
+                            }}>
                                 <Text type="secondary" style={{ fontSize: '0.72rem', display: 'block', marginBottom: '3px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Trạng thái đơn</Text>
-                                {r.status === 'SUCCESS'
-                                    ? <Tag color="success" style={{ borderRadius: '8px', fontWeight: 600, display: 'inline-flex', alignItems: 'center' }}><CheckCircleOutlined style={{ marginRight: '4px' }} />Thành công</Tag>
-                                    : <Tag color="error" style={{ borderRadius: '8px', fontWeight: 600, display: 'inline-flex', alignItems: 'center' }}><CloseCircleOutlined style={{ marginRight: '4px' }} />Bị hủy{r.isForfeited ? ' (Mất cọc)' : ''}</Tag>
-                                }
+                                {r.status === 'SUCCESS' && (
+                                    <Tag color="success" style={{ borderRadius: '8px', fontWeight: 600, display: 'inline-flex', alignItems: 'center' }}><CheckCircleOutlined style={{ marginRight: '4px' }} />Thành công</Tag>
+                                )}
+                                {r.status === 'PENDING' && (
+                                    <Tag color="warning" style={{ borderRadius: '8px', fontWeight: 600, display: 'inline-flex', alignItems: 'center' }}><ClockCircleOutlined style={{ marginRight: '4px' }} />Chờ thanh toán</Tag>
+                                )}
+                                {r.status === 'CANCELLED' && (
+                                    <Tag color="error" style={{ borderRadius: '8px', fontWeight: 600, display: 'inline-flex', alignItems: 'center' }}><CloseCircleOutlined style={{ marginRight: '4px' }} />Bị hủy{r.isForfeited ? ' (Mất cọc)' : ''}</Tag>
+                                )}
                             </div>
 
                             {/* 2 CỘT CHÍNH */}

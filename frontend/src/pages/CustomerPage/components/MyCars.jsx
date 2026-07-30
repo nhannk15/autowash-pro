@@ -254,7 +254,7 @@ export default function MyCars() {
             {/* Header */}
             <div className="mycars-header">
                 <div>
-                    <h1 className="mycars-title">XE CỦA TÔI</h1>
+                    <h1 className="mycars-title" style={{ color: '#002b7f' }}>XE CỦA TÔI</h1>
                     <p className="mycars-subtitle">Quản lý danh sách phương tiện của bạn đăng ký trong hệ thống.</p>
                 </div>
                 <Button

@@ -14,11 +14,12 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.autowashpro.backend.event.BookingConfirmationEmailRequestedEvent;
 import com.autowashpro.backend.exception.BookingNotFoundException;
 import com.autowashpro.backend.exception.ExceedBookingWindowException;
 import com.autowashpro.backend.exception.SlotInavailabilityException;
@@ -75,7 +76,6 @@ import com.autowashpro.backend.repository.UserRepository;
 import com.autowashpro.backend.repository.VehicleRepository;
 import com.autowashpro.backend.repository.WashSessionRepository;
 import com.autowashpro.backend.utils.BookingCodeGenerator;
-import com.autowashpro.backend.utils.QrCodeGenerator;
 import com.autowashpro.backend.utils.VoucherCodeGenerator;
 
 import lombok.extern.slf4j.Slf4j;
@@ -87,9 +87,6 @@ public class BookingService {
     private static final int SLOT_DURATION = 60;
     private static final BigDecimal DEPOSIT_PERCENTAGE = new BigDecimal(30L);
     private static Long CUSTOM_REWARD_FOR_VOUCHER = 4L;
-
-    @Value("${email.sendbooking}")
-    private boolean useEmailService;
 
     private final VoucherRepository voucherRepository;
     private final CustomerRepository customerRepository;
@@ -104,9 +101,7 @@ public class BookingService {
     private final WashSessionRepository washSessionRepository;
     private final BookingMapper bookingMapper;
     private final BookingCodeGenerator bookingCodeGenerator;
-    private final QrCodeGenerator qrCodeGenerator;
     private final VoucherCodeGenerator voucherCodeGenerator;
-    private final EmailService emailService;
     private final UserRepository userRepository;
     private final BillingService billingService;
     private final BillingRepository billingRepository;
@@ -114,6 +109,7 @@ public class BookingService {
     private final NotificationService notificationService;
     private final StaffRepository staffRepository;
     private final WashBayRepository washBayRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Autowired
     public BookingService(CustomerRepository customerRepository, ServicePriceRepository servicePriceRepository,
@@ -121,13 +117,12 @@ public class BookingService {
             VehicleRepository vehicleRepository, PromotionRepository promotionRepository,
             BookingRepository bookingRepository, BookingDetailRepository bookingDetailRepository,
             WashSessionRepository washSessionRepository, BookingMapper bookingMapper,
-            BookingCodeGenerator bookingCodeGenerator, QrCodeGenerator qrCodeGenerator,
-            EmailService emailService,
+            BookingCodeGenerator bookingCodeGenerator,
             UserRepository userRepository, PromotionService promotionService, BillingService billingService,
             BillingRepository billingRepository, VoucherRepository voucherRepository,
             VoucherCodeGenerator voucherCodeGenerator, RewardRepository rewardRepository,
             NotificationService notificationService, StaffRepository staffRepository,
-            WashBayRepository washBayRepository) {
+            WashBayRepository washBayRepository, ApplicationEventPublisher eventPublisher) {
         this.customerRepository = customerRepository;
         this.servicePriceRepository = servicePriceRepository;
         this.availableSlotRepository = availableSlotRepository;
@@ -140,9 +135,7 @@ public class BookingService {
         this.washSessionRepository = washSessionRepository;
         this.bookingMapper = bookingMapper;
         this.bookingCodeGenerator = bookingCodeGenerator;
-        this.qrCodeGenerator = qrCodeGenerator;
         this.voucherCodeGenerator = voucherCodeGenerator;
-        this.emailService = emailService;
         this.userRepository = userRepository;
         this.billingService = billingService;
         this.billingRepository = billingRepository;
@@ -151,6 +144,7 @@ public class BookingService {
         this.notificationService = notificationService;
         this.staffRepository = staffRepository;
         this.washBayRepository = washBayRepository;
+        this.eventPublisher = eventPublisher;
     }
 
     public SlotAvailabilityByDateResponse getAvailableTimeSlots(LocalDate date) {
@@ -490,18 +484,6 @@ public class BookingService {
                 .depositAmount(totalFinalPrice.multiply(DEPOSIT_PERCENTAGE).divide(new BigDecimal(100L)))
                 .build();
 
-        /**
-         * Step 11. Generate QR Code and send booking confirmation email.
-         */
-        log.info("EmailService enabled: " + useEmailService);
-        if (useEmailService) {
-            byte[] qrCodeBytes = qrCodeGenerator.generateQrCode(savedBooking.getBookingCode());
-            emailService.sendBookingSuccessToEmail(customer.getEmail(),
-                    savedBooking.getBookingCode(),
-                    bookingResponse,
-                    qrCodeBytes);
-        }
-
         savedBooking = bookingRepository.findByIdWithDetails(savedBooking.getId())
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
@@ -517,6 +499,9 @@ public class BookingService {
                     .voucherCode(createBookingRequest.getVoucherCode())
                     .build();
             billingService.applyVoucherForBilling(request);
+        }
+        if (createBookingRequest.isWalkIn()) {
+            eventPublisher.publishEvent(new BookingConfirmationEmailRequestedEvent(savedBooking.getId()));
         }
         return bookingResponse;
 
@@ -581,6 +566,9 @@ public class BookingService {
         Customer customer = booking.getCustomer();
         MembershipTier customerMembershipTier = customer.getTier();
         long minCancelHours = customerMembershipTier.getMinCancelHours().longValue();
+        boolean depositWasPaid = DepositStatus.PAID.equals(billing.getDepositStatus())
+                && billing.getDepositAmount() != null
+                && billing.getDepositAmount().compareTo(BigDecimal.ZERO) > 0;
 
         if (billing.getDepositStatus().equals(DepositStatus.PENDING)) {
             billing.setDepositStatus(DepositStatus.CANCELLED);
@@ -593,7 +581,9 @@ public class BookingService {
         log.info("cancelCustomerBooking() - It's {} hours till the booking's wash session starts.",
                 hoursFromNowToBookingDate);
         log.info("cancelCustomerBooking() - the minimum time to get deposit is {}.", minCancelHours);
-        if (hoursFromNowToBookingDate < minCancelHours) {
+        if (!depositWasPaid) {
+            log.info("cancelCustomerBooking() - deposit was not paid, skipping refund voucher");
+        } else if (hoursFromNowToBookingDate < minCancelHours) {
             log.info("cancelCustomerBooking() - too late for deposit refund, better luck next time!");
         } else {
             BigDecimal depositAmount = billing.getDepositAmount();
@@ -617,6 +607,7 @@ public class BookingService {
                     .expiresAt(LocalDateTime.now().plusDays(customReward.getValidityDays()))
                     .build();
             voucherRepository.save(newVoucher);
+            notificationService.createVoucherExchangedNotification(newVoucher);
             log.info("cancelCustomerBooking() - Voucher exchanged!...");
             log.info("cancelCustomerBooking() - Sorry, we are testing...");
         }
@@ -650,6 +641,8 @@ public class BookingService {
         booking.setCancelReason(cancelReason);
         log.info("BookingService - complete canceling a booking: {}", bookingCode);
         bookingRepository.save(booking);
+
+        notificationService.createBookingCancelledNotification(booking);
 
     }
 
@@ -713,8 +706,8 @@ public class BookingService {
         int slotsNeeded = (int) Math.ceil((double) totalDuration / SLOT_DURATION);
         log.info("createBooking() - slotsNeeded: {}", slotsNeeded);
 
-        checkVehicleSchedulingConflict(startTimeSlot.getStartTime(), createBookingRequest.getVehicleId(), slotsNeeded,
-                bookingDay);
+        // checkVehicleSchedulingConflict(startTimeSlot.getStartTime(), createBookingRequest.getVehicleId(), slotsNeeded,
+        //         bookingDay);
 
         /**
          * Step 3. Get all the succcessive/consecutive slots start from the selected
@@ -747,6 +740,9 @@ public class BookingService {
         if (consecutiveSlots.size() < slotsNeeded) {
             throw new SlotInavailabilityException("Không đủ slot để thực hiện các dịch vụ!");
         }
+
+        checkVehicleSchedulingConflict(startTimeSlot.getStartTime(), createBookingRequest.getVehicleId(), slotsNeeded,
+                bookingDay);
 
         /**
          * Step 4. Check if the consecutive slots are available.
@@ -953,18 +949,6 @@ public class BookingService {
                 .staffName(staff == null ? "Chưa chọn nhân viên rửa xe" : staff.getFullName())
                 .build();
 
-        /**
-         * Step 11. Generate QR Code and send booking confirmation email.
-         */
-        log.info("EmailService enabled: " + useEmailService);
-        if (useEmailService) {
-            byte[] qrCodeBytes = qrCodeGenerator.generateQrCode(savedBooking.getBookingCode());
-            emailService.sendBookingSuccessToEmail(customer.getEmail(),
-                    savedBooking.getBookingCode(),
-                    bookingResponse,
-                    qrCodeBytes);
-        }
-
         savedBooking = bookingRepository.findByIdWithDetails(savedBooking.getId())
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
@@ -980,6 +964,9 @@ public class BookingService {
                     .voucherCode(createBookingRequest.getVoucherCode())
                     .build();
             billingService.applyVoucherForBilling(request);
+        }
+        if (createBookingRequest.isWalkIn()) {
+            eventPublisher.publishEvent(new BookingConfirmationEmailRequestedEvent(savedBooking.getId()));
         }
         return bookingResponse;
 
@@ -1003,7 +990,7 @@ public class BookingService {
             List<AvailableSlot> consecutiveSlots = availableSlotRepository
                     .findAllBookedSlotsForCheckingVehicleConfliction(bookingDate, startTime, washBay.getId(),
                             PageRequest.of(0, slotsNeed));
-            log.info("checkVehicleSchedulingConflict() - consecutiveSlots of washBay {} is {}}", washBay.getId(),
+            log.info("checkVehicleSchedulingConflict() - consecutiveSlots of washBay {} is {}", washBay.getId(),
                     consecutiveSlots.size());
             if (consecutiveSlots.isEmpty()) {
                 return;
