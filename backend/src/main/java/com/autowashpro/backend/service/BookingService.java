@@ -642,6 +642,8 @@ public class BookingService {
         log.info("BookingService - complete canceling a booking: {}", bookingCode);
         bookingRepository.save(booking);
 
+        notificationService.createBookingCancelledNotification(booking);
+
     }
 
     @Transactional(readOnly = true)
