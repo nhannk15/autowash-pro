@@ -12,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.scheduling.annotation.Async;
 
 import com.autowashpro.backend.model.entity.Booking;
 import com.autowashpro.backend.repository.BookingRepository;
@@ -31,6 +32,16 @@ class BookingConfirmationEmailListenerTest {
     private QrCodeGenerator qrCodeGenerator;
     @Mock
     private EmailService emailService;
+
+    @Test
+    void confirmationEmailIsConfiguredToRunAsynchronously() throws NoSuchMethodException {
+        Async async = BookingConfirmationEmailListener.class
+                .getMethod("sendBookingConfirmationEmail", BookingConfirmationEmailRequestedEvent.class)
+                .getAnnotation(Async.class);
+
+        org.junit.jupiter.api.Assertions.assertNotNull(async);
+        org.junit.jupiter.api.Assertions.assertEquals("bookingEmailExecutor", async.value());
+    }
 
     @Test
     void committedRequestLoadsBookingAndSendsEmail() {
