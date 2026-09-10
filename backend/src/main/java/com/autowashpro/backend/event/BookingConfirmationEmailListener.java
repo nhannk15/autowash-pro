@@ -2,6 +2,7 @@ package com.autowashpro.backend.event;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
@@ -33,6 +34,7 @@ public class BookingConfirmationEmailListener {
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Async("bookingEmailExecutor")
     @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
     public void sendBookingConfirmationEmail(BookingConfirmationEmailRequestedEvent event) {
         if (!useEmailService) {
